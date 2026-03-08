@@ -6,9 +6,16 @@ import { SetupChecklist } from './SetupChecklist';
 
 interface AdminDashboardProps {
   onNavigate?: (screen: string) => void;
+  checklist?: {
+    workingHours?: boolean;
+    address?: boolean;
+    phone?: boolean;
+    service?: boolean;
+    staff?: boolean;
+  } | null;
 }
 
-export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+export function AdminDashboard({ onNavigate, checklist }: AdminDashboardProps) {
   const stats = [
     {
       title: "Bugünün Cirosu",
@@ -51,7 +58,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       {/* Setup Checklist - Displayed only if empty state is true */}
       {onNavigate && (
         <div className="px-4">
-          <SetupChecklist onNavigate={onNavigate} />
+          <SetupChecklist onNavigate={onNavigate} checklist={checklist} />
         </div>
       )}
 
@@ -138,11 +145,11 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       <div className="px-4">
         <h2 className="text-lg font-semibold mb-3">Hızlı Erişim</h2>
         <div className="grid grid-cols-2 gap-3">
-          <button className="p-4 bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
+          <button onClick={() => onNavigate?.('/app/customers')} className="p-4 bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
             <Users className="w-6 h-6 mb-2" />
             <p className="font-medium text-sm">Tüm Müşteriler</p>
           </button>
-          <button className="p-4 bg-gradient-to-br from-[var(--deep-indigo)] to-[var(--deep-indigo-light)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
+          <button onClick={() => onNavigate?.('/app/analytics')} className="p-4 bg-gradient-to-br from-[var(--deep-indigo)] to-[var(--deep-indigo-light)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
             <TrendingUp className="w-6 h-6 mb-2" />
             <p className="font-medium text-sm">Analiz Raporu</p>
           </button>

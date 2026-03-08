@@ -13,49 +13,55 @@ interface SetupTask {
 
 interface SetupChecklistProps {
   onNavigate: (screen: string) => void;
+  checklist?: {
+    workingHours?: boolean;
+    address?: boolean;
+    phone?: boolean;
+    service?: boolean;
+    staff?: boolean;
+  } | null;
 }
 
-export function SetupChecklist({ onNavigate }: SetupChecklistProps) {
-  // Zorunlu kurulum adımları - sıralı
+export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
   const tasks: SetupTask[] = [
     {
       id: 'hours',
       label: 'Çalışma Saatleri',
       description: 'Salon çalışma saatlerini belirleyin',
-      done: false,
-      navigateTo: 'salon-info',
+      done: Boolean(checklist?.workingHours),
+      navigateTo: '/app/salon-info',
       order: 1,
     },
     {
       id: 'address',
       label: 'Adres Bilgisi',
       description: 'Salon adresini ekleyin',
-      done: false,
-      navigateTo: 'salon-info',
+      done: Boolean(checklist?.address),
+      navigateTo: '/app/salon-info',
       order: 2,
     },
     {
       id: 'phone',
       label: 'Telefon Numarası',
       description: 'Salon iletişim numarasını girin',
-      done: false,
-      navigateTo: 'salon-info',
+      done: Boolean(checklist?.phone),
+      navigateTo: '/app/salon-info',
       order: 3,
     },
     {
       id: 'service',
       label: 'Hizmet Ekle',
       description: 'En az 1 hizmet tanımlayın',
-      done: false,
-      navigateTo: 'service-management',
+      done: Boolean(checklist?.service),
+      navigateTo: '/app/services',
       order: 4,
     },
     {
       id: 'staff',
       label: 'Personel Ekle',
       description: 'En az 1 çalışan ekleyin',
-      done: false,
-      navigateTo: 'staff-management',
+      done: Boolean(checklist?.staff),
+      navigateTo: '/app/staff',
       order: 5,
     },
   ];

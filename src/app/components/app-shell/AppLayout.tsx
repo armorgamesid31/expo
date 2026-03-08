@@ -4,6 +4,15 @@ import { useAuth } from '../../context/AuthContext';
 
 function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/schedule')) return 'schedule';
+  if (pathname.startsWith('/app/customers')) return 'features';
+  if (pathname.startsWith('/app/analytics')) return 'features';
+  if (pathname.startsWith('/app/inventory')) return 'features';
+  if (pathname.startsWith('/app/campaigns')) return 'features';
+  if (pathname.startsWith('/app/automations')) return 'features';
+  if (pathname.startsWith('/app/blacklist')) return 'features';
+  if (pathname.startsWith('/app/salon-info')) return 'features';
+  if (pathname.startsWith('/app/services')) return 'features';
+  if (pathname.startsWith('/app/staff')) return 'features';
   if (pathname.startsWith('/app/features')) return 'features';
   if (pathname.startsWith('/app/settings')) return 'settings';
   return 'dashboard';

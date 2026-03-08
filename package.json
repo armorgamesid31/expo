@@ -6,6 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "start": "node server.mjs",
     "cap:sync": "npx cap sync",
     "cap:copy": "npx cap copy",
     "cap:open:ios": "npx cap open ios",

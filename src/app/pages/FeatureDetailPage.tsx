@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { WhatsAppAgent } from '../components/more/WhatsAppAgent';
 import { WhatsAppSetup } from '../components/more/WhatsAppSetup';
 import { WebsiteBuilder } from '../components/more/WebsiteBuilder';
@@ -28,6 +28,9 @@ export function FeatureDetailPage() {
   if (featureKey === 'campaigns') return <Campaigns onBack={onBack} />;
   if (featureKey === 'automations') return <Automations onBack={onBack} />;
   if (featureKey === 'help-center') return <HelpCenter onBack={onBack} />;
+  if (featureKey === 'crm') return <Navigate to="/app/customers" replace />;
+  if (featureKey === 'analytics') return <Navigate to="/app/analytics" replace />;
+  if (featureKey === 'inventory') return <Navigate to="/app/inventory" replace />;
 
   return (
     <div className="p-4">

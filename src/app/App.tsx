@@ -9,6 +9,14 @@ import { CustomersPage } from './pages/CustomersPage';
 import { FeaturesPage } from './pages/FeaturesPage';
 import { FeatureDetailPage } from './pages/FeatureDetailPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { SalonSetupPage } from './pages/SalonSetupPage';
+import { ServicesCrudPage } from './pages/ServicesCrudPage';
+import { StaffCrudPage } from './pages/StaffCrudPage';
+import { InventoryPage } from './pages/InventoryPage';
+import { CampaignsCrudPage } from './pages/CampaignsCrudPage';
+import { AutomationsCrudPage } from './pages/AutomationsCrudPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { BlacklistPage } from './pages/BlacklistPage';
 
 function RootRedirect() {
   const { isLoading, isAuthenticated } = useAuth();
@@ -36,6 +44,14 @@ function AppRoutes() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="schedule" element={<SchedulePage />} />
           <Route path="customers" element={<CustomersPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="campaigns" element={<CampaignsCrudPage />} />
+          <Route path="automations" element={<AutomationsCrudPage />} />
+          <Route path="blacklist" element={<BlacklistPage />} />
+          <Route path="salon-info" element={<SalonSetupPage />} />
+          <Route path="services" element={<ServicesCrudPage />} />
+          <Route path="staff" element={<StaffCrudPage />} />
           <Route path="features" element={<FeaturesPage />} />
           <Route path="features/:featureKey" element={<FeatureDetailPage />} />
           <Route path="settings" element={<SettingsPage />} />

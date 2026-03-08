@@ -19,6 +19,20 @@ export interface BootstrapResponse {
     plan: string;
     status: string;
   };
+  setupChecklist?: {
+    workingHours: boolean;
+    address: boolean;
+    phone: boolean;
+    service: boolean;
+    staff: boolean;
+    completed: boolean;
+  };
+  setup?: {
+    workStartHour: number | null;
+    workEndHour: number | null;
+    slotInterval: number | null;
+    workingDays: string[] | null;
+  };
 }
 
 export interface AdminAppointmentItem {
