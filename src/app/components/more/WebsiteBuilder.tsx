@@ -1,37 +1,257 @@
-import { useState } from 'react';
-import { ArrowLeft, Globe, Instagram, MessageCircle, Camera, Check, ExternalLink, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ChangeEventHandler } from 'react';
+import { ArrowLeft, Globe, Instagram, MessageCircle, Camera, Check, Sparkles, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { motion } from 'motion/react';
+import { useAuth } from '../../context/AuthContext';
 
 interface WebsiteBuilderProps {
   onBack: () => void;
 }
 
-const galleryImages = [
-  { id: 1, label: 'Saç Boyama', emoji: '💇‍♀️' },
-  { id: 2, label: 'Manikür', emoji: '💅' },
-  { id: 3, label: 'Cilt Bakımı', emoji: '✨' },
-  { id: 4, label: 'Salon', emoji: '🌸' },
+interface GalleryImageItem {
+  id: string;
+  label: string;
+  imageUrl?: string;
+  emoji?: string;
+}
+
+interface WebsiteContentResponse {
+  salon: {
+    name: string;
+    tagline: string | null;
+    heroText: string | null;
+    about: string | null;
+    instagramUrl: string | null;
+    whatsappPhone: string | null;
+  };
+  gallery: Array<{
+    id: number;
+    imageUrl: string;
+    altText: string | null;
+    displayOrder: number | null;
+  }>;
+}
+
+const defaultGalleryImages: GalleryImageItem[] = [
+  { id: 'seed-1', label: 'Saç Boyama', emoji: '💇‍♀️' },
+  { id: 'seed-2', label: 'Manikür', emoji: '💅' },
+  { id: 'seed-3', label: 'Cilt Bakımı', emoji: '✨' },
+  { id: 'seed-4', label: 'Salon', emoji: '🌸' },
 ];
 
+function normalizeInstagram(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  const username = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
+  return `https://instagram.com/${username}`;
+}
+
+function buildLocalWebsiteCopy(name: string, cityHint?: string) {
+  const salonName = name.trim() || 'Salonunuz';
+  const city = cityHint?.trim() || 'şehrinizde';
+
+  return {
+    heroText: `${salonName} ile kendinize iyi bakın`,
+    tagline: `${city} profesyonel güzellik deneyimi`,
+    description:
+      `${salonName}, uzman ekibiyle saç, cilt ve bakım hizmetlerinde güvenilir sonuçlar sunar. ` +
+      'Hijyenik salon ortamı, kaliteli ürünler ve kişiselleştirilmiş dokunuşlarla her ziyareti keyifli bir deneyime dönüştürür.',
+  };
+}
+
 export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
+  const { apiFetch, bootstrap } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   const [salonName, setSalonName] = useState('Beauté Salon');
   const [tagline, setTagline] = useState('Güzelliğinizi Keşfedin');
-  const [description, setDescription] = useState('Istanbul\'un kalbinde, lüks ve konforun buluştuğu özel güzellik deneyimi. Uzman ekibimizle kendinizi özel hissedin.');
+  const [description, setDescription] = useState(
+    "Istanbul'un kalbinde, lüks ve konforun buluştuğu özel güzellik deneyimi. Uzman ekibimizle kendinizi özel hissedin.",
+  );
   const [instagram, setInstagram] = useState('@beautesalon');
   const [whatsapp, setWhatsapp] = useState('+90 532 123 4567');
   const [heroText, setHeroText] = useState('Profesyonel Bakım, Kişisel Dokunuş');
-  const [saved, setSaved] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(defaultGalleryImages);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const response = await apiFetch<WebsiteContentResponse>('/api/admin/website/content');
+
+        if (!mounted) {
+          return;
+        }
+
+        setSalonName(response.salon.name || bootstrap?.salon?.name || salonName);
+        setTagline(response.salon.tagline || 'Güzelliğinizi Keşfedin');
+        setHeroText(response.salon.heroText || response.salon.tagline || 'Profesyonel Bakım, Kişisel Dokunuş');
+        setDescription(response.salon.about || description);
+        setInstagram(response.salon.instagramUrl || '@beautesalon');
+        setWhatsapp(response.salon.whatsappPhone || '+90 532 123 4567');
+
+        if (response.gallery.length > 0) {
+          setGalleryImages(
+            response.gallery.map((image) => ({
+              id: `db-${image.id}`,
+              label: image.altText || 'Salon Görseli',
+              imageUrl: image.imageUrl,
+            })),
+          );
+        } else {
+          setGalleryImages(defaultGalleryImages);
+        }
+      } catch (error) {
+        console.error('Website content load failed:', error);
+        if (mounted) {
+          setStatus({ type: 'error', message: 'Web sitesi içeriği yüklenemedi. Varsayılan içerik kullanılıyor.' });
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiFetch]);
+
+  const galleryPayload = useMemo(() => {
+    return galleryImages
+      .filter((item) => Boolean(item.imageUrl))
+      .map((item, index) => ({
+        imageUrl: item.imageUrl!,
+        altText: item.label,
+        displayOrder: index,
+      }));
+  }, [galleryImages]);
+
+  const handleGenerate = async () => {
+    setStatus(null);
+    setIsGenerating(true);
+
+    try {
+      const result = await apiFetch<{ generated: { heroText: string; tagline: string; description: string } }>(
+        '/api/admin/website/generate',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            salonName,
+            tagline,
+            description,
+            city: bootstrap?.salon?.city || null,
+          }),
+        },
+      );
+
+      setHeroText(result.generated.heroText);
+      setTagline(result.generated.tagline);
+      setDescription(result.generated.description);
+      setStatus({ type: 'success', message: 'Yeni metin önerileri üretildi.' });
+    } catch (error) {
+      console.warn('Website generate endpoint failed, using local fallback:', error);
+      const fallback = buildLocalWebsiteCopy(salonName, bootstrap?.salon?.city || undefined);
+      setHeroText(fallback.heroText);
+      setTagline(fallback.tagline);
+      setDescription(fallback.description);
+      setStatus({ type: 'success', message: 'Yerel yedek metin önerileri üretildi.' });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setStatus(null);
+    setIsSaving(true);
+
+    try {
+      await apiFetch('/api/admin/website/content', {
+        method: 'PUT',
+        body: JSON.stringify({
+          salonName,
+          tagline,
+          heroText,
+          description,
+          instagram: normalizeInstagram(instagram),
+          whatsapp,
+          gallery: galleryPayload,
+        }),
+      });
+
+      setStatus({ type: 'success', message: 'Web sitesi içeriği kaydedildi ve yayınlandı.' });
+    } catch (error) {
+      console.error('Website content save failed:', error);
+      setStatus({ type: 'error', message: 'Kaydetme sırasında hata oluştu. Lütfen tekrar deneyin.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAddPhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoSelected: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        return;
+      }
+
+      setGalleryImages((prev) => {
+        const next = [...prev];
+        const replaceIndex = next.findIndex((item) => !item.imageUrl);
+
+        const newImage: GalleryImageItem = {
+          id: `local-${Date.now()}`,
+          label: file.name.replace(/\.[^/.]+$/, ''),
+          imageUrl: reader.result,
+        };
+
+        if (replaceIndex >= 0) {
+          next[replaceIndex] = newImage;
+          return next;
+        }
+
+        if (next.length >= 8) {
+          next[next.length - 1] = newImage;
+          return next;
+        }
+
+        return [...next, newImage];
+      });
+
+      setStatus({ type: 'success', message: 'Fotoğraf eklendi. Kaydet ile yayınlayabilirsiniz.' });
+    };
+    reader.onerror = () => {
+      setStatus({ type: 'error', message: 'Fotoğraf okunamadı.' });
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = '';
   };
 
   return (
     <div className="h-full pb-20">
-      {/* Header */}
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
         <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
           <ArrowLeft className="w-4 h-4" />
@@ -54,14 +274,31 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
       </div>
 
       <div className="p-4 space-y-5">
-        {/* Edit Form */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
           className="space-y-4"
         >
-          {/* Salon Name & Tagline */}
+          {status && (
+            <div
+              className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
+                status.type === 'success'
+                  ? 'border-green-500/30 bg-green-500/10 text-green-700'
+                  : 'border-red-500/30 bg-red-500/10 text-red-700'
+              }`}
+            >
+              {status.type === 'success' ? <Check className="w-4 h-4 mt-0.5" /> : <AlertCircle className="w-4 h-4 mt-0.5" />}
+              <span>{status.message}</span>
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+              Web sitesi içeriği yükleniyor...
+            </div>
+          )}
+
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Salon Bilgileri</CardTitle>
@@ -107,7 +344,6 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             </CardContent>
           </Card>
 
-          {/* Social & Contact */}
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Sosyal Medya & İletişim</CardTitle>
@@ -140,7 +376,6 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             </CardContent>
           </Card>
 
-          {/* Gallery */}
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -150,24 +385,40 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-4 gap-2 mb-3">
-                {galleryImages.map(img => (
+                {galleryImages.map((img) => (
                   <div
                     key={img.id}
-                    className="aspect-square rounded-lg bg-gradient-to-br from-[var(--rose-gold)]/10 to-[var(--deep-indigo)]/10 flex flex-col items-center justify-center border-2 border-[var(--rose-gold)]/20 cursor-pointer active:scale-95 transition-transform"
+                    className="aspect-square rounded-lg bg-gradient-to-br from-[var(--rose-gold)]/10 to-[var(--deep-indigo)]/10 flex flex-col items-center justify-center border-2 border-[var(--rose-gold)]/20 overflow-hidden"
                   >
-                    <span className="text-2xl">{img.emoji}</span>
-                    <span className="text-[9px] text-muted-foreground mt-1">{img.label}</span>
+                    {img.imageUrl ? (
+                      <img src={img.imageUrl} alt={img.label} className="h-full w-full object-cover" />
+                    ) : (
+                      <>
+                        <span className="text-2xl">{img.emoji || '✨'}</span>
+                        <span className="text-[9px] text-muted-foreground mt-1">{img.label}</span>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
-              <button className="w-full py-2.5 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground flex items-center justify-center gap-2 active:scale-95 transition-transform">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoSelected}
+              />
+              <button
+                type="button"
+                onClick={handleAddPhotoClick}
+                className="w-full py-2.5 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              >
                 <Camera className="w-4 h-4" />
                 Fotoğraf Ekle
               </button>
             </CardContent>
           </Card>
 
-          {/* AI Section */}
           <Card className="border-[var(--rose-gold)]/30 bg-gradient-to-r from-[var(--rose-gold)]/5 to-transparent">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -178,30 +429,29 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   <p className="text-sm font-medium">AI ile İçerik Üret</p>
                   <p className="text-xs text-muted-foreground">Salonunuz için otomatik metin oluştur</p>
                 </div>
-                <button className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform">
-                  Üret
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleGenerate();
+                  }}
+                  disabled={isGenerating}
+                  className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isGenerating ? 'Üretiliyor...' : 'Üret'}
                 </button>
               </div>
             </CardContent>
           </Card>
 
-          {/* Save Button */}
           <button
-            onClick={handleSave}
-            className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all active:scale-98 ${
-              saved
-                ? 'bg-green-500 text-white'
-                : 'bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white'
-            }`}
+            type="button"
+            onClick={() => {
+              void handleSave();
+            }}
+            disabled={isSaving}
+            className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all active:scale-98 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {saved ? (
-              <span className="flex items-center justify-center gap-2">
-                <Check className="w-4 h-4" />
-                Kaydedildi!
-              </span>
-            ) : (
-              'Değişiklikleri Kaydet & Yayınla'
-            )}
+            {isSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet & Yayınla'}
           </button>
         </motion.div>
       </div>

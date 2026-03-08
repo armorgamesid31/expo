@@ -6,11 +6,12 @@ import { UserRole } from '../../types';
 
 interface SettingsScreenProps {
   isDarkMode: boolean;
-  onToggleDarkMode: () => void;
+  onToggleDarkMode: (nextValue: boolean) => void;
   onShowHelpCenter?: () => void;
+  onLogout?: () => void;
 }
 
-export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter }: SettingsScreenProps) {
+export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter, onLogout }: SettingsScreenProps) {
   const settingGroups = [
     {
       title: "Hesap & İşletme",
@@ -88,6 +89,7 @@ export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter 
           <Button
             variant="outline"
             className="w-full border-red-500/20 text-red-600 hover:bg-red-500/10 hover:border-red-500/30 transition-all font-medium py-6 rounded-xl"
+            onClick={onLogout}
           >
             <LogOut className="w-4 h-4 mr-2" />
             Çıkış Yap
