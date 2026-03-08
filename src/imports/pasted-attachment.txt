@@ -1,0 +1,278 @@
+Revise and upgrade the Salon Management Mobile SaaS UI to align with a real production SaaS architecture.
+
+Important context:
+This system is not just a booking app. It includes:
+- AI WhatsApp booking agent
+- Automatic website builder
+- Customer risk detection system
+- Multi-language SEO website
+- Multi-tenant architecture
+
+The mobile app should function as the **Salon Operating System** for owners and staff.
+
+Improve the product with the following upgrades.
+
+--------------------------------
+
+1. Role System (Upgrade)
+
+Roles must be expanded to:
+
+Owner / Admin
+Specialist / Staff
+Receptionist (new role)
+
+Receptionist role:
+- primary access to schedule
+- customer creation
+- booking management
+- limited analytics
+
+Each role should see a different dashboard and navigation priorities.
+
+--------------------------------
+
+2. Admin / Owner Dashboard (Upgrade)
+
+The Admin dashboard should feel like a **business control center**, not just cards.
+
+Add these sections:
+
+Financial Overview
+- Today revenue
+- Week revenue
+- Month revenue
+- Average ticket size
+
+Salon Health Indicators
+- No-show rate
+- Booking utilization rate
+- Returning customer percentage
+
+Customer Insights
+- New vs returning
+- Top customers
+
+Service Insights
+- Top services
+- Most profitable services
+
+Staff Performance
+- Revenue by staff
+- Utilization by staff
+
+Add a "Salon Pulse" analytics chart.
+
+--------------------------------
+
+3. Staff / Specialist Dashboard (Upgrade)
+
+Staff view should focus on **daily execution**, not analytics.
+
+Show:
+
+My Next Appointment
+- service
+- customer
+- time
+- notes
+
+Today’s Earnings
+Today’s Points
+Daily Schedule preview
+
+Quick Actions
+- Start service
+- Add note
+- Mark completed
+
+--------------------------------
+
+4. Schedule / Timeline (Major Upgrade)
+
+Keep the staff-column layout but add:
+
+Drag & Drop booking
+Resize appointment blocks
+Visual overlap conflict detection
+Sequential service chain visualization
+
+Example:
+Hair Cut → Color → Blow Dry
+
+These services should appear as linked blocks.
+
+Add indicators for:
+- VIP customer
+- High-risk customer
+- First visit customer
+
+--------------------------------
+
+5. Smart Booking Creation (Upgrade)
+
+Booking drawer should include:
+
+Customer search
+Customer quick-create
+Multi-service selection
+Staff assignment
+Auto assign best staff
+Service duration + total price
+
+Add warning system:
+
+- double booking conflict
+- staff unavailable
+- high-risk customer alert
+
+--------------------------------
+
+6. Customer CRM (Upgrade)
+
+Customer list must support:
+
+Search
+Filter
+Tags
+
+Customer detail page should show:
+
+Visit history
+Total spending
+Favorite services
+Risk profile
+
+Risk badge:
+
+Low Risk
+Medium Risk
+High Risk
+
+Add AI recommendation:
+
+Example:
+"Customer has 3 no-shows. Require confirmation."
+
+--------------------------------
+
+7. AI WhatsApp Agent Panel (New)
+
+Add a section inside "More".
+
+WhatsApp AI Settings:
+
+Agent status
+On / Off
+
+Automation features:
+- booking via WhatsApp
+- appointment reminders
+- rebooking suggestions
+
+Show conversation preview examples.
+
+--------------------------------
+
+8. Website Builder Panel (New)
+
+Add a section for the **Automatic Website Builder**.
+
+Salon Website Settings:
+
+Salon description
+Instagram link
+WhatsApp link
+Gallery images
+Hero text
+
+Preview generated website.
+
+--------------------------------
+
+9. Inventory Management (Upgrade)
+
+Inventory should include:
+
+Product list
+Stock levels
+Low stock alerts
+Quick adjust buttons
+
+Add usage tracking:
+
+Example:
+Hair dye used per service.
+
+--------------------------------
+
+10. Design System Improvements
+
+Maintain a **Luxury Minimalist aesthetic**.
+
+Color theme:
+Primary: Rose Gold
+Secondary: Deep Indigo
+Background: Slate 900 (dark mode)
+
+Design principles:
+
+Large touch targets
+Smooth mobile animations
+Bottom sheet modals
+Accessible typography
+High contrast dark mode
+
+--------------------------------
+
+11. Mobile Navigation
+
+Persistent bottom tab bar:
+
+Dashboard
+Schedule
+Customers
+More
+
+Add floating action button for:
+
+Create Appointment
+
+--------------------------------
+
+12. Realistic Data
+
+Use realistic Turkish salon data:
+
+Names:
+Sevcan
+Pınar
+Ceren
+Ayşe
+
+Currency:
+₺ Turkish Lira
+
+Services:
+Saç Kesimi
+Lazer Epilasyon
+Cilt Bakımı
+Protez Tırnak
+Kaş Tasarımı
+
+--------------------------------
+
+13. UX Improvements
+
+Optimize for busy salon staff:
+
+Fast actions
+Large tap areas
+Minimal typing
+Quick customer lookup
+
+--------------------------------
+
+Goal:
+
+Create a **production-ready mobile SaaS interface for salon operations** that feels like a professional operating system rather than a simple booking app.
