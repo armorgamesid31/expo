@@ -43,7 +43,8 @@ type ChakraInstance = {
   destroy?: () => void;
 };
 
-const CONTAINER_ID = 'chakra-whatsapp-connect-container';
+const CONTAINER_ID_COMPACT = 'chakra-whatsapp-connect-container-compact';
+const CONTAINER_ID_SCALED = 'chakra-whatsapp-connect-container-scaled';
 const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
 
 function loadChakraSdk(sdkUrl: string): Promise<void> {
@@ -81,13 +82,14 @@ function isConnectedEvent(event: unknown, data: unknown): boolean {
 
 export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const { apiFetch } = useAuth();
-  const instanceRef = useRef<ChakraInstance | null>(null);
+  const instanceRef = useRef<ChakraInstance[]>([]);
 
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [creatingPlugin, setCreatingPlugin] = useState(false);
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
-  const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
+  const [compactReady, setCompactReady] = useState(false);
+  const [scaledReady, setScaledReady] = useState(false);
   const [connected, setConnected] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
@@ -108,62 +110,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
   }, [apiFetch]);
 
-  const getNativeTriggerElement = useCallback((): HTMLElement | null => {
-    const container = document.getElementById(CONTAINER_ID);
-    if (!container) {
-      return null;
-    }
-    const element = container.querySelector('button, a, [role="button"], iframe');
-    return element instanceof HTMLElement ? element : null;
-  }, []);
-
-  const ensureNativeTriggerLayout = useCallback((): boolean => {
-    const container = document.getElementById(CONTAINER_ID);
-    const trigger = getNativeTriggerElement();
-
-    if (!container || !trigger) {
-      return false;
-    }
-
-    container.style.width = '100%';
-    container.style.height = '56px';
-    container.style.display = 'block';
-    container.style.position = 'relative';
-    container.style.inset = '';
-    container.style.zIndex = '';
-    container.style.pointerEvents = 'auto';
-
-    trigger.style.width = '100%';
-    trigger.style.height = '56px';
-    trigger.style.display = 'block';
-    trigger.style.margin = '0';
-    trigger.style.opacity = '1';
-    trigger.style.border = '0';
-    trigger.style.background = 'transparent';
-    trigger.style.position = 'relative';
-    trigger.style.inset = '';
-    trigger.style.pointerEvents = 'auto';
-
-    return true;
-  }, [getNativeTriggerElement]);
-
-  const markNativeTriggerReady = useCallback(() => {
-    let attempts = 0;
-    const maxAttempts = 60;
-
-    const probe = () => {
-      const ready = ensureNativeTriggerLayout();
-      setNativeTriggerReady(ready);
-      if (ready || attempts >= maxAttempts) {
-        return;
-      }
-      attempts += 1;
-      window.setTimeout(probe, 150);
-    };
-
-    probe();
-  }, [ensureNativeTriggerLayout]);
-
   const prepareConnect = useCallback(async () => {
     setPreparingConnect(true);
     setError(null);
@@ -173,26 +119,30 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
       await loadChakraSdk(token.sdkUrl);
 
-      if (instanceRef.current?.destroy) {
-        instanceRef.current.destroy();
+      for (const instance of instanceRef.current) {
+        if (instance?.destroy) {
+          instance.destroy();
+        }
       }
+      instanceRef.current = [];
 
       const chakraGlobal = (window as any).ChakraWhatsappConnect;
       if (!chakraGlobal?.init) {
         throw new Error('Chakra SDK init fonksiyonu bulunamadı.');
       }
 
-      setNativeTriggerReady(false);
+      setCompactReady(false);
+      setScaledReady(false);
       setConnected(false);
 
-      instanceRef.current = chakraGlobal.init({
+      const compactInstance = chakraGlobal.init({
         connectToken: token.connectToken,
-        container: `#${CONTAINER_ID}`,
-        width: '100%',
-        height: '56px',
+        container: `#${CONTAINER_ID_COMPACT}`,
+        width: '240px',
+        height: '80px',
         style: {
-          width: '100%',
-          height: '56px',
+          width: '240px',
+          height: '80px',
           opacity: '1',
           border: '0',
           background: 'transparent',
@@ -211,24 +161,59 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           }
         },
         onReady: () => {
-          setStatusText('Bağlantıyı tamamlamak için devam edin.');
-          markNativeTriggerReady();
-          window.setTimeout(() => {
-            setNativeTriggerReady((prev) => prev || ensureNativeTriggerLayout());
-          }, 800);
+          setCompactReady(true);
+          setStatusText('Butonlar hazır, test edip sonucu paylaşın.');
         },
         onError: (sdkError: any) => {
-          console.error('Chakra SDK error:', sdkError);
+          console.error('Chakra SDK error (compact):', sdkError);
           setError(sdkError?.message || 'Chakra popup akışında hata oluştu.');
         },
       });
+
+      const scaledInstance = chakraGlobal.init({
+        connectToken: token.connectToken,
+        container: `#${CONTAINER_ID_SCALED}`,
+        width: '240px',
+        height: '80px',
+        style: {
+          width: '240px',
+          height: '80px',
+          transform: 'scale(1.55)',
+          transformOrigin: 'top left',
+          border: '0',
+          background: 'transparent',
+          display: 'block',
+          margin: '0',
+          position: 'relative',
+          inset: '',
+          zIndex: '',
+          pointerEvents: 'auto',
+        },
+        onMessage: (event: any, data: any) => {
+          void captureEvent(event, data, token.pluginId);
+          if (isConnectedEvent(event, data)) {
+            setConnected(true);
+            setStatusText('WhatsApp bağlantısı tamamlandı.');
+          }
+        },
+        onReady: () => {
+          setScaledReady(true);
+          setStatusText('Butonlar hazır, test edip sonucu paylaşın.');
+        },
+        onError: (sdkError: any) => {
+          console.error('Chakra SDK error (scaled):', sdkError);
+          setError(sdkError?.message || 'Chakra popup akışında hata oluştu.');
+        },
+      });
+
+      instanceRef.current = [compactInstance, scaledInstance];
     } catch (err: any) {
       setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
       setStatusText('Facebook bağlantısı başlatılamadı.');
     } finally {
       setPreparingConnect(false);
     }
-  }, [apiFetch, captureEvent, markNativeTriggerReady, ensureNativeTriggerLayout]);
+  }, [apiFetch, captureEvent]);
 
   useEffect(() => {
     let mounted = true;
@@ -246,11 +231,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
         if (status.pluginId) {
           setStatusText('Facebook ile devam ederek bağlantıyı tamamlayın.');
-          setNativeTriggerReady(false);
+          setCompactReady(false);
+          setScaledReady(false);
           await prepareConnect();
         } else {
           setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
-          setNativeTriggerReady(false);
+          setCompactReady(false);
+          setScaledReady(false);
         }
       } catch (err: any) {
         if (mounted) {
@@ -266,10 +253,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
     return () => {
       mounted = false;
-      if (instanceRef.current?.destroy) {
-        instanceRef.current.destroy();
+      for (const instance of instanceRef.current) {
+        if (instance?.destroy) {
+          instance.destroy();
+        }
       }
-      instanceRef.current = null;
+      instanceRef.current = [];
     };
   }, [apiFetch, prepareConnect]);
 
@@ -282,7 +271,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         method: 'POST',
       });
       setPluginId(response.pluginId);
-      setNativeTriggerReady(false);
+      setCompactReady(false);
+      setScaledReady(false);
       await prepareConnect();
     } catch (err: any) {
       setError(err?.message || 'Kurulum başlatılamadı.');
@@ -290,27 +280,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     } finally {
       setCreatingPlugin(false);
     }
-  };
-
-  const handleMaskedContinue = () => {
-    setError(null);
-
-    const tryTrigger = (attempt = 0) => {
-      const trigger = getNativeTriggerElement();
-      if (trigger) {
-        trigger.click();
-        return;
-      }
-
-      if (attempt >= 12) {
-        setError('Chakra butonu henüz hazır değil. Lütfen tekrar deneyin.');
-        return;
-      }
-
-      window.setTimeout(() => tryTrigger(attempt + 1), 150);
-    };
-
-    tryTrigger();
   };
 
   return (
@@ -382,29 +351,37 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">1) Chakra Orijinal Buton</p>
-                <div className="w-full min-h-[56px] rounded-md border border-border/60 bg-white p-2">
-                  <div id={CONTAINER_ID} aria-label="Chakra orijinal bağlantı butonu alanı" className="w-full min-h-[56px]" />
+                <p className="text-xs text-muted-foreground">1) Kompakt Chakra (boşluksuz)</p>
+                <div className="inline-block rounded-md border border-border/60 bg-white p-2">
+                  <div
+                    id={CONTAINER_ID_COMPACT}
+                    aria-label="Kompakt Chakra butonu"
+                    className="w-[240px] h-[80px]"
+                  />
                 </div>
-                {!nativeTriggerReady ? (
+                {!compactReady ? (
                   <div className="rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Chakra butonu hazırlanıyor...
+                    Kompakt buton hazırlanıyor...
                   </div>
                 ) : null}
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">2) Maske Butonu (üstteki Chakra butonunu tetikler)</p>
-                <Button
-                  type="button"
-                  onClick={handleMaskedContinue}
-                  disabled={!nativeTriggerReady}
-                  className="w-full h-14 text-sm font-semibold"
-                  style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-                >
-                  Facebook ile Devam Et (Maske)
-                </Button>
+                <p className="text-xs text-muted-foreground">2) Ölçeklenmiş Chakra (scale)</p>
+                <div className="w-full max-w-[388px] h-[132px] overflow-hidden rounded-md border border-border/60 bg-white p-2">
+                  <div
+                    id={CONTAINER_ID_SCALED}
+                    aria-label="Ölçeklenmiş Chakra butonu"
+                    className="w-[240px] h-[80px]"
+                  />
+                </div>
+                {!scaledReady ? (
+                  <div className="rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Ölçeklenmiş buton hazırlanıyor...
+                  </div>
+                ) : null}
               </div>
 
               {error ? (
