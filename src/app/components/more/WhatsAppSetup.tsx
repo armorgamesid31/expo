@@ -126,22 +126,22 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
 
     container.style.width = '100%';
-    container.style.height = '100%';
+    container.style.height = '56px';
     container.style.display = 'block';
-    container.style.position = 'absolute';
-    container.style.inset = '0';
-    container.style.zIndex = '10';
+    container.style.position = 'relative';
+    container.style.inset = '';
+    container.style.zIndex = '';
     container.style.pointerEvents = 'auto';
 
     trigger.style.width = '100%';
-    trigger.style.height = '100%';
+    trigger.style.height = '56px';
     trigger.style.display = 'block';
     trigger.style.margin = '0';
-    trigger.style.opacity = '0';
+    trigger.style.opacity = '1';
     trigger.style.border = '0';
     trigger.style.background = 'transparent';
-    trigger.style.position = 'absolute';
-    trigger.style.inset = '0';
+    trigger.style.position = 'relative';
+    trigger.style.inset = '';
     trigger.style.pointerEvents = 'auto';
 
     return true;
@@ -193,14 +193,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         style: {
           width: '100%',
           height: '56px',
-          opacity: '0',
+          opacity: '1',
           border: '0',
           background: 'transparent',
           display: 'block',
           margin: '0',
-          position: 'absolute',
-          inset: '0',
-          zIndex: '10',
+          position: 'relative',
+          inset: '',
+          zIndex: '',
           pointerEvents: 'auto',
         },
         onMessage: (event: any, data: any) => {
@@ -292,6 +292,27 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
   };
 
+  const handleMaskedContinue = () => {
+    setError(null);
+
+    const tryTrigger = (attempt = 0) => {
+      const trigger = getNativeTriggerElement();
+      if (trigger) {
+        trigger.click();
+        return;
+      }
+
+      if (attempt >= 12) {
+        setError('Chakra butonu henüz hazır değil. Lütfen tekrar deneyin.');
+        return;
+      }
+
+      window.setTimeout(() => tryTrigger(attempt + 1), 150);
+    };
+
+    tryTrigger();
+  };
+
   return (
     <div className="h-full pb-20 overflow-y-auto">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
@@ -359,22 +380,32 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           </Card>
         ) : (
           <Card className="border-border/50">
-            <CardContent className="p-4 space-y-3">
-              <div className="relative h-14 w-full rounded-md overflow-hidden">
-                <div className="absolute inset-0 rounded-md bg-[var(--rose-gold)] text-white text-sm font-semibold flex items-center justify-center">
-                  Facebook ile Devam Et
+            <CardContent className="p-4 space-y-4">
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">1) Chakra Orijinal Buton</p>
+                <div className="w-full min-h-[56px] rounded-md border border-border/60 bg-white p-2">
+                  <div id={CONTAINER_ID} aria-label="Chakra orijinal bağlantı butonu alanı" className="w-full min-h-[56px]" />
                 </div>
-                <div id={CONTAINER_ID} aria-label="Facebook bağlantı alanı" className="absolute inset-0 z-10" />
                 {!nativeTriggerReady ? (
-                  <div className="absolute inset-0 z-20 rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
+                  <div className="rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Hazırlanıyor...
+                    Chakra butonu hazırlanıyor...
                   </div>
                 ) : null}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Butona dokunduğunuzda Facebook popup ekranı açılır.
-              </p>
+
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">2) Maske Butonu (üstteki Chakra butonunu tetikler)</p>
+                <Button
+                  type="button"
+                  onClick={handleMaskedContinue}
+                  disabled={!nativeTriggerReady}
+                  className="w-full h-14 text-sm font-semibold"
+                  style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+                >
+                  Facebook ile Devam Et (Maske)
+                </Button>
+              </div>
 
               {error ? (
                 <Button
