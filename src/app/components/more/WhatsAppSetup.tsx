@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, MessageCircle, CheckCircle2, Circle, Loader2, AlertCircle, PlugZap } from 'lucide-react';
+import { ArrowLeft, MessageCircle, CheckCircle2, Circle, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -9,38 +9,58 @@ interface WhatsAppSetupProps {
   onBack: () => void;
 }
 
-interface ChakraSetupConnectResponse {
+interface ChakraStatusResponse {
   salonId: number;
-  pluginId: string;
-  pluginCreated: boolean;
-  connectToken: string;
+  salonName: string;
+  slug: string | null;
+  pluginId: string | null;
+  hasPlugin: boolean;
   sdkUrl: string;
-  containerId: string;
 }
 
-const CHAKRA_SCRIPT_ELEMENT_ID = 'chakra-whatsapp-sdk-script';
-const CHAKRA_CONTAINER_ID = 'chakra-whatsapp-connect-container';
+interface CreatePluginResponse {
+  success: boolean;
+  pluginId: string;
+  salonId: number;
+  pluginCreated: boolean;
+}
+
+interface ConnectTokenResponse {
+  connectToken: string;
+  pluginId: string;
+  sdkUrl: string;
+}
+
+interface ConnectEventResponse {
+  ok: boolean;
+  pluginId: string;
+  connected: boolean;
+  event: string | null;
+}
 
 type ChakraInstance = {
   destroy?: () => void;
 };
 
+const CONTAINER_ID = 'chakra-whatsapp-connect-container';
+const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
+
 function loadChakraSdk(sdkUrl: string): Promise<void> {
-  if ((window as any).ChakraWhatsappConnect) {
+  if ((window as any).ChakraWhatsappConnect?.init) {
     return Promise.resolve();
   }
 
-  const existingScript = document.getElementById(CHAKRA_SCRIPT_ELEMENT_ID) as HTMLScriptElement | null;
-  if (existingScript) {
+  const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
+  if (existing) {
     return new Promise((resolve, reject) => {
-      existingScript.addEventListener('load', () => resolve(), { once: true });
-      existingScript.addEventListener('error', () => reject(new Error('Chakra SDK yüklenemedi.')), { once: true });
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Chakra SDK yüklenemedi.')), { once: true });
     });
   }
 
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.id = CHAKRA_SCRIPT_ELEMENT_ID;
+    script.id = SCRIPT_ID;
     script.src = sdkUrl;
     script.async = true;
     script.onload = () => resolve();
@@ -49,108 +69,156 @@ function loadChakraSdk(sdkUrl: string): Promise<void> {
   });
 }
 
+function isConnectedEvent(event: unknown, data: unknown): boolean {
+  const eventText = typeof event === 'string' ? event.toLowerCase() : '';
+  const dataObj = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, any>) : null;
+  const status = typeof dataObj?.status === 'string' ? dataObj.status.toLowerCase() : '';
+  const state = typeof dataObj?.state === 'string' ? dataObj.state.toLowerCase() : '';
+  const pattern = /(connected|success|complete|completed|linked)/i;
+  return pattern.test(eventText) || pattern.test(status) || pattern.test(state);
+}
+
 export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const { apiFetch } = useAuth();
-  const chakraInstanceRef = useRef<ChakraInstance | null>(null);
+  const instanceRef = useRef<ChakraInstance | null>(null);
 
-  const [isStarting, setIsStarting] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [creatingPlugin, setCreatingPlugin] = useState(false);
+  const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
-  const [connectTokenReady, setConnectTokenReady] = useState(false);
+  const [sdkUrl, setSdkUrl] = useState('https://embed.chakrahq.com/whatsapp-partner-connect/v1_0_1/sdk.js');
   const [iframeReady, setIframeReady] = useState(false);
-  const [connectionCompleted, setConnectionCompleted] = useState(false);
+  const [connected, setConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string>('Henüz bağlantı başlatılmadı.');
+  const [statusText, setStatusText] = useState('Başlat ile plugin oluşturun.');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (chakraInstanceRef.current?.destroy) {
-        chakraInstanceRef.current.destroy();
+    let mounted = true;
+
+    (async () => {
+      setLoadingStatus(true);
+      setError(null);
+      try {
+        const status = await apiFetch<ChakraStatusResponse>('/api/app/chakra/status');
+        if (!mounted) {
+          return;
+        }
+        setPluginId(status.pluginId || null);
+        setSdkUrl(status.sdkUrl || sdkUrl);
+        setStatusText(status.pluginId ? 'Plugin mevcut. Facebook bağlama adımına geçebilirsiniz.' : 'Başlat ile plugin oluşturun.');
+      } catch (err: any) {
+        if (mounted) {
+          setError(err?.message || 'WhatsApp kurulum durumu alınamadı.');
+        }
+      } finally {
+        if (mounted) {
+          setLoadingStatus(false);
+        }
       }
-      chakraInstanceRef.current = null;
+    })();
+
+    return () => {
+      mounted = false;
+      if (instanceRef.current?.destroy) {
+        instanceRef.current.destroy();
+      }
+      instanceRef.current = null;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiFetch]);
 
-  const handleStartConnection = async () => {
-    setIsStarting(true);
+  const handleCreatePlugin = async () => {
+    setCreatingPlugin(true);
     setError(null);
-    setStatusMessage('Plugin ve bağlantı tokenı hazırlanıyor...');
-    setConnectionCompleted(false);
-    setIframeReady(false);
-    setLastEvent(null);
-
+    setStatusText('Plugin oluşturuluyor...');
     try {
-      const response = await apiFetch<ChakraSetupConnectResponse>('/api/app/chakra/setup-connect', {
+      const response = await apiFetch<CreatePluginResponse>('/api/app/chakra/create-plugin', {
         method: 'POST',
       });
-
       setPluginId(response.pluginId);
-      setConnectTokenReady(Boolean(response.connectToken));
+      setStatusText(response.pluginCreated ? 'Plugin oluşturuldu. Şimdi Facebook\'a bağlanın.' : 'Plugin zaten mevcut. Facebook\'a bağlanın.');
+    } catch (err: any) {
+      setError(err?.message || 'Plugin oluşturulamadı.');
+      setStatusText('Plugin oluşturma başarısız.');
+    } finally {
+      setCreatingPlugin(false);
+    }
+  };
 
-      await loadChakraSdk(response.sdkUrl);
+  const captureEvent = async (event: unknown, data: unknown, pluginIdValue: string) => {
+    try {
+      const response = await apiFetch<ConnectEventResponse>('/api/app/chakra/connect-event', {
+        method: 'POST',
+        body: JSON.stringify({ event, data, pluginId: pluginIdValue }),
+      });
 
-      if (chakraInstanceRef.current?.destroy) {
-        chakraInstanceRef.current.destroy();
+      if (response.connected) {
+        setConnected(true);
+        setStatusText('WhatsApp bağlantısı tamamlandı.');
+      }
+    } catch (err) {
+      console.warn('Connect event capture failed:', err);
+    }
+  };
+
+  const handleConnectFacebook = async () => {
+    if (!pluginId) {
+      setError('Önce plugin oluşturmanız gerekiyor.');
+      return;
+    }
+
+    setPreparingConnect(true);
+    setError(null);
+    setStatusText('Connect token hazırlanıyor...');
+
+    try {
+      const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
+      setSdkUrl(token.sdkUrl || sdkUrl);
+      await loadChakraSdk(token.sdkUrl || sdkUrl);
+
+      if (instanceRef.current?.destroy) {
+        instanceRef.current.destroy();
       }
 
       const chakraGlobal = (window as any).ChakraWhatsappConnect;
       if (!chakraGlobal?.init) {
-        throw new Error('Chakra SDK hazır ama init fonksiyonu bulunamadı.');
+        throw new Error('Chakra SDK init fonksiyonu bulunamadı.');
       }
 
-      chakraInstanceRef.current = chakraGlobal.init({
-        connectToken: response.connectToken,
-        container: `#${CHAKRA_CONTAINER_ID}`,
-        onMessage: (event: any, data: any) => {
-          const normalizedEvent = String(event || 'unknown');
-          setLastEvent(normalizedEvent);
-          setStatusMessage(`SDK event: ${normalizedEvent}`);
+      setIframeReady(false);
+      setConnected(false);
+      setLastEvent(null);
 
-          if (/(connected|success|complete|linked)/i.test(normalizedEvent)) {
-            setConnectionCompleted(true);
-          }
-          if (data?.status && /(connected|success|complete)/i.test(String(data.status))) {
-            setConnectionCompleted(true);
+      instanceRef.current = chakraGlobal.init({
+        connectToken: token.connectToken,
+        container: `#${CONTAINER_ID}`,
+        onMessage: (event: any, data: any) => {
+          const eventText = typeof event === 'string' ? event : JSON.stringify(event);
+          setLastEvent(eventText);
+          setStatusText(`SDK event: ${eventText}`);
+          void captureEvent(event, data, token.pluginId);
+          if (isConnectedEvent(event, data)) {
+            setConnected(true);
+            setStatusText('WhatsApp bağlantısı tamamlandı.');
           }
         },
         onReady: () => {
           setIframeReady(true);
-          setStatusMessage('Bağlantı iframe’i hazır. WhatsApp hesabını bağlayabilirsiniz.');
+          setStatusText('Facebook\'a bağlan butonu hazır.');
         },
         onError: (sdkError: any) => {
           console.error('Chakra SDK error:', sdkError);
-          setError(sdkError?.message || 'Chakra SDK bağlantısında hata oluştu.');
+          setError(sdkError?.message || 'Chakra popup akışında hata oluştu.');
         },
       });
     } catch (err: any) {
-      setError(err?.message || 'WhatsApp bağlantısı başlatılamadı.');
-      setStatusMessage('Bağlantı başlatılamadı.');
+      setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
+      setStatusText('Facebook bağlantısı başlatılamadı.');
     } finally {
-      setIsStarting(false);
+      setPreparingConnect(false);
     }
   };
-
-  const steps = [
-    {
-      title: 'Plugin oluştur ve salona kaydet',
-      completed: Boolean(pluginId),
-      detail: pluginId ? `Plugin ID: ${pluginId}` : 'Henüz oluşturulmadı.',
-    },
-    {
-      title: 'Connect token üret',
-      completed: connectTokenReady,
-      detail: connectTokenReady ? 'Token üretildi.' : 'Henüz üretilmedi.',
-    },
-    {
-      title: 'Chakra SDK ile WhatsApp bağla',
-      completed: connectionCompleted,
-      detail: connectionCompleted
-        ? 'Bağlantı tamamlandı.'
-        : iframeReady
-        ? 'Iframe hazır, Meta/WhatsApp bağlantısını tamamlayın.'
-        : 'Iframe henüz hazır değil.',
-    },
-  ];
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -161,11 +229,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold">WhatsApp Kurulumu</h1>
-            <p className="text-sm text-muted-foreground">Plugin oluştur, token üret ve Chakra SDK ile bağla</p>
+            <p className="text-sm text-muted-foreground">Başlat ile plugin oluştur, sonra Facebook popup ile bağla</p>
           </div>
-          {connectionCompleted ? (
-            <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Bağlandı</Badge>
-          ) : null}
+          {connected ? <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Bağlandı</Badge> : null}
         </div>
       </div>
 
@@ -176,9 +242,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
               <div className="w-10 h-10 rounded-lg bg-[#22C55E]/20 flex items-center justify-center">
                 <MessageCircle className="w-5 h-5 text-[#22C55E]" />
               </div>
-              <div>
-                <h3 className="font-semibold">Chakra WhatsApp Connect</h3>
-                <p className="text-xs text-muted-foreground">{statusMessage}</p>
+              <div className="flex-1">
+                <h3 className="font-semibold">Chakra Connect Durumu</h3>
+                <p className="text-xs text-muted-foreground">{statusText}</p>
               </div>
             </div>
           </CardContent>
@@ -186,46 +252,76 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
         <Card className="border-border/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <PlugZap className="w-4 h-4" />
-              Kurulum Adımları
-            </CardTitle>
+            <CardTitle className="text-base">Adımlar</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {steps.map((step, index) => (
-              <div key={step.title} className="rounded-lg border border-border p-3">
-                <div className="flex items-center gap-2">
-                  {step.completed ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <Circle className="w-4 h-4 text-muted-foreground" />
-                  )}
-                  <p className="text-sm font-medium">
-                    {index + 1}. {step.title}
-                  </p>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{step.detail}</p>
+            <div className="rounded-lg border border-border p-3">
+              <div className="flex items-center gap-2">
+                {pluginId ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
+                <p className="text-sm font-medium">1. Plugin oluştur (slug adıyla)</p>
               </div>
-            ))}
+              <p className="text-xs text-muted-foreground mt-1">{pluginId ? `Plugin ID: ${pluginId}` : 'Henüz plugin yok.'}</p>
+            </div>
 
-            <Button
-              type="button"
-              onClick={() => {
-                void handleStartConnection();
-              }}
-              disabled={isStarting}
-              className="w-full"
-              style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-            >
-              {isStarting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Bağlantı Başlatılıyor...
-                </>
-              ) : (
-                'WhatsApp Bağlantısını Başlat'
-              )}
-            </Button>
+            <div className="rounded-lg border border-border p-3">
+              <div className="flex items-center gap-2">
+                {iframeReady ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
+                <p className="text-sm font-medium">2. Facebook&apos;a bağlan popup&apos;ını aç</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {iframeReady ? 'Popup tetikleyici hazır.' : 'Plugin sonrası bu adımı başlatın.'}
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-border p-3">
+              <div className="flex items-center gap-2">
+                {connected ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
+                <p className="text-sm font-medium">3. Popup response&apos;unu yakala</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {lastEvent ? `Son event: ${lastEvent}` : 'Henüz event gelmedi.'}
+              </p>
+            </div>
+
+            {!pluginId ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  void handleCreatePlugin();
+                }}
+                disabled={creatingPlugin || loadingStatus}
+                className="w-full"
+                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+              >
+                {creatingPlugin ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Plugin Oluşturuluyor...
+                  </>
+                ) : (
+                  'Başlat (Plugin Oluştur)'
+                )}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => {
+                  void handleConnectFacebook();
+                }}
+                disabled={preparingConnect}
+                className="w-full"
+                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+              >
+                {preparingConnect ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Facebook Bağlantısı Hazırlanıyor...
+                  </>
+                ) : (
+                  "Facebook'a Bağlan"
+                )}
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -238,25 +334,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           </Card>
         ) : null}
 
-        {lastEvent ? (
-          <Card className="border-border/50 bg-muted/20">
-            <CardContent className="p-3">
-              <p className="text-xs text-muted-foreground">Son SDK event: {lastEvent}</p>
-            </CardContent>
-          </Card>
-        ) : null}
-
         <Card className="border-border/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Chakra Connect</CardTitle>
+            <CardTitle className="text-sm">Chakra Popup Container</CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              id={CHAKRA_CONTAINER_ID}
-              className="min-h-[280px] rounded-lg border border-dashed border-border p-2 bg-background"
-            />
+            <div id={CONTAINER_ID} className="min-h-[280px] rounded-lg border border-dashed border-border p-2 bg-background" />
             <p className="text-xs text-muted-foreground mt-2">
-              Iframe hazır olduktan sonra Meta/WhatsApp onay adımlarını bu alandan tamamlayın.
+              Facebook&apos;a Bağlan tıklandıktan sonra Chakra butonu burada görünür; buton popup açar.
             </p>
           </CardContent>
         </Card>
