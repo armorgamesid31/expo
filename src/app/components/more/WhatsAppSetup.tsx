@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, MessageCircle, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -89,7 +89,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [pluginId, setPluginId] = useState<string | null>(null);
   const [connectReady, setConnectReady] = useState(false);
   const [connected, setConnected] = useState(false);
-  const [statusText, setStatusText] = useState('WhatsApp kurulumu için Başla butonuna dokunun.');
+  const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
 
   const captureEvent = useCallback(async (event: unknown, data: unknown, pluginIdValue: string) => {
@@ -171,10 +171,10 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         setPluginId(status.pluginId || null);
 
         if (status.pluginId) {
-          setStatusText("Facebook'a bağlan butonu hazırlanıyor...");
+          setStatusText('Facebook ile devam ederek bağlantıyı tamamlayın.');
           await prepareConnect();
         } else {
-          setStatusText('WhatsApp kurulumu için Başla butonuna dokunun.');
+          setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
         }
       } catch (err: any) {
         if (mounted) {
@@ -281,48 +281,29 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             </CardContent>
           </Card>
         ) : (
-          <Card className="border-border/50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <span>Kurulum başlatıldı. Plugin hazır.</span>
+          <div className="rounded-xl border border-border bg-card p-3">
+            <div id={CONTAINER_ID} className="min-h-[64px] flex items-center" />
+            {!connectReady && preparingConnect ? (
+              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Bağlantı butonu hazırlanıyor...
               </div>
-              {!connectReady && preparingConnect ? (
-                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Facebook bağlantı butonu hazırlanıyor...
-                </div>
-              ) : null}
-              {error ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full mt-3"
-                  onClick={() => {
-                    void prepareConnect();
-                  }}
-                  disabled={preparingConnect}
-                >
-                  Butonu Yeniden Yükle
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
+            ) : null}
+            {error ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mt-3"
+                onClick={() => {
+                  void prepareConnect();
+                }}
+                disabled={preparingConnect}
+              >
+                Tekrar Dene
+              </Button>
+            ) : null}
+          </div>
         )}
-
-        {pluginId ? (
-          <Card className="border-border/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Bağlantı Alanı</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div id={CONTAINER_ID} className="min-h-[280px] rounded-lg border border-dashed border-border p-2 bg-background" />
-              <p className="text-xs text-muted-foreground mt-2">
-                Buradaki buton popup açar. Popup tamamlanınca bağlantı otomatik algılanır.
-              </p>
-            </CardContent>
-          </Card>
-        ) : null}
 
         {error ? (
           <Card className="border-red-500/30 bg-red-500/5">
