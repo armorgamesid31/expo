@@ -1,70 +1,159 @@
-import { useState } from 'react';
-import { ArrowLeft, MessageCircle, CheckCircle2, Circle, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, MessageCircle, CheckCircle2, Circle, Loader2, AlertCircle, PlugZap } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { useAuth } from '../../context/AuthContext';
 
 interface WhatsAppSetupProps {
   onBack: () => void;
 }
 
-type SetupStep = 'business' | 'waba' | 'complete';
+interface ChakraSetupConnectResponse {
+  salonId: number;
+  pluginId: string;
+  pluginCreated: boolean;
+  connectToken: string;
+  sdkUrl: string;
+  containerId: string;
+}
+
+const CHAKRA_SCRIPT_ELEMENT_ID = 'chakra-whatsapp-sdk-script';
+const CHAKRA_CONTAINER_ID = 'chakra-whatsapp-connect-container';
+
+type ChakraInstance = {
+  destroy?: () => void;
+};
+
+function loadChakraSdk(sdkUrl: string): Promise<void> {
+  if ((window as any).ChakraWhatsappConnect) {
+    return Promise.resolve();
+  }
+
+  const existingScript = document.getElementById(CHAKRA_SCRIPT_ELEMENT_ID) as HTMLScriptElement | null;
+  if (existingScript) {
+    return new Promise((resolve, reject) => {
+      existingScript.addEventListener('load', () => resolve(), { once: true });
+      existingScript.addEventListener('error', () => reject(new Error('Chakra SDK yüklenemedi.')), { once: true });
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.id = CHAKRA_SCRIPT_ELEMENT_ID;
+    script.src = sdkUrl;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Chakra SDK yüklenemedi.'));
+    document.head.appendChild(script);
+  });
+}
 
 export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
-  const [currentStep, setCurrentStep] = useState<SetupStep>('business');
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [businessConnected, setBusinessConnected] = useState(false);
-  const [wabaConnected, setWabaConnected] = useState(false);
+  const { apiFetch } = useAuth();
+  const chakraInstanceRef = useRef<ChakraInstance | null>(null);
 
-  const handleConnectBusiness = async () => {
-    setIsConnecting(true);
-    
-    // Simüle edilmiş bağlantı - gerçek BSP SDK entegrasyonunda bu kısımda
-    // Meta Business SDK çağrısı yapılacak
-    setTimeout(() => {
-      setBusinessConnected(true);
-      setIsConnecting(false);
-      setCurrentStep('waba');
-    }, 2000);
-  };
+  const [isStarting, setIsStarting] = useState(false);
+  const [pluginId, setPluginId] = useState<string | null>(null);
+  const [connectTokenReady, setConnectTokenReady] = useState(false);
+  const [iframeReady, setIframeReady] = useState(false);
+  const [connectionCompleted, setConnectionCompleted] = useState(false);
+  const [lastEvent, setLastEvent] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string>('Henüz bağlantı başlatılmadı.');
+  const [error, setError] = useState<string | null>(null);
 
-  const handleConnectWABA = async () => {
-    setIsConnecting(true);
-    
-    // Simüle edilmiş WABA bağlantısı - gerçek BSP SDK entegrasyonunda bu kısımda
-    // WhatsApp Business API bağlantısı yapılacak
-    setTimeout(() => {
-      setWabaConnected(true);
-      setIsConnecting(false);
-      setCurrentStep('complete');
-    }, 2000);
+  useEffect(() => {
+    return () => {
+      if (chakraInstanceRef.current?.destroy) {
+        chakraInstanceRef.current.destroy();
+      }
+      chakraInstanceRef.current = null;
+    };
+  }, []);
+
+  const handleStartConnection = async () => {
+    setIsStarting(true);
+    setError(null);
+    setStatusMessage('Plugin ve bağlantı tokenı hazırlanıyor...');
+    setConnectionCompleted(false);
+    setIframeReady(false);
+    setLastEvent(null);
+
+    try {
+      const response = await apiFetch<ChakraSetupConnectResponse>('/api/app/chakra/setup-connect', {
+        method: 'POST',
+      });
+
+      setPluginId(response.pluginId);
+      setConnectTokenReady(Boolean(response.connectToken));
+
+      await loadChakraSdk(response.sdkUrl);
+
+      if (chakraInstanceRef.current?.destroy) {
+        chakraInstanceRef.current.destroy();
+      }
+
+      const chakraGlobal = (window as any).ChakraWhatsappConnect;
+      if (!chakraGlobal?.init) {
+        throw new Error('Chakra SDK hazır ama init fonksiyonu bulunamadı.');
+      }
+
+      chakraInstanceRef.current = chakraGlobal.init({
+        connectToken: response.connectToken,
+        container: `#${CHAKRA_CONTAINER_ID}`,
+        onMessage: (event: any, data: any) => {
+          const normalizedEvent = String(event || 'unknown');
+          setLastEvent(normalizedEvent);
+          setStatusMessage(`SDK event: ${normalizedEvent}`);
+
+          if (/(connected|success|complete|linked)/i.test(normalizedEvent)) {
+            setConnectionCompleted(true);
+          }
+          if (data?.status && /(connected|success|complete)/i.test(String(data.status))) {
+            setConnectionCompleted(true);
+          }
+        },
+        onReady: () => {
+          setIframeReady(true);
+          setStatusMessage('Bağlantı iframe’i hazır. WhatsApp hesabını bağlayabilirsiniz.');
+        },
+        onError: (sdkError: any) => {
+          console.error('Chakra SDK error:', sdkError);
+          setError(sdkError?.message || 'Chakra SDK bağlantısında hata oluştu.');
+        },
+      });
+    } catch (err: any) {
+      setError(err?.message || 'WhatsApp bağlantısı başlatılamadı.');
+      setStatusMessage('Bağlantı başlatılamadı.');
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const steps = [
     {
-      id: 'business' as SetupStep,
-      title: 'Meta Business Hesabı',
-      description: 'WhatsApp Business platformuna erişmek için Meta Business hesabınızı bağlayın',
-      completed: businessConnected,
-      action: handleConnectBusiness,
-      actionLabel: 'Business Hesabı Bağla',
+      title: 'Plugin oluştur ve salona kaydet',
+      completed: Boolean(pluginId),
+      detail: pluginId ? `Plugin ID: ${pluginId}` : 'Henüz oluşturulmadı.',
     },
     {
-      id: 'waba' as SetupStep,
-      title: 'WhatsApp Business Hesabı',
-      description: 'WhatsApp Business API (WABA) hesabınızı sisteme entegre edin',
-      completed: wabaConnected,
-      action: handleConnectWABA,
-      actionLabel: 'WABA Hesabı Bağla',
-      disabled: !businessConnected,
+      title: 'Connect token üret',
+      completed: connectTokenReady,
+      detail: connectTokenReady ? 'Token üretildi.' : 'Henüz üretilmedi.',
+    },
+    {
+      title: 'Chakra SDK ile WhatsApp bağla',
+      completed: connectionCompleted,
+      detail: connectionCompleted
+        ? 'Bağlantı tamamlandı.'
+        : iframeReady
+        ? 'Iframe hazır, Meta/WhatsApp bağlantısını tamamlayın.'
+        : 'Iframe henüz hazır değil.',
     },
   ];
 
-  const allCompleted = businessConnected && wabaConnected;
-
   return (
     <div className="h-full pb-20 overflow-y-auto">
-      {/* Header */}
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
@@ -72,192 +161,103 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold">WhatsApp Kurulumu</h1>
-            <p className="text-sm text-muted-foreground">Meta Business ve WABA hesaplarını bağlayın</p>
+            <p className="text-sm text-muted-foreground">Plugin oluştur, token üret ve Chakra SDK ile bağla</p>
           </div>
-          {allCompleted && (
-            <Badge className="bg-green-500/10 text-green-700 border-green-500/20">
-              Tamamlandı
-            </Badge>
-          )}
+          {connectionCompleted ? (
+            <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Bağlandı</Badge>
+          ) : null}
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
-        {/* Status Card */}
+      <div className="p-4 space-y-4">
         <Card className="border-[#22C55E]/30 bg-gradient-to-br from-[#22C55E]/5 to-transparent">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-[#22C55E]/20 flex items-center justify-center">
                 <MessageCircle className="w-5 h-5 text-[#22C55E]" />
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold">AI WhatsApp Ajanı</h3>
-                <p className="text-xs text-muted-foreground">Otomatik müşteri iletişimi ve randevu yönetimi</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <div className="flex items-center gap-1">
-                {businessConnected ? (
-                  <CheckCircle2 className="w-3 h-3 text-green-600" />
-                ) : (
-                  <Circle className="w-3 h-3 text-muted-foreground" />
-                )}
-                <span className={businessConnected ? 'text-green-700' : 'text-muted-foreground'}>
-                  Business Hesabı
-                </span>
-              </div>
-              <span className="text-muted-foreground">•</span>
-              <div className="flex items-center gap-1">
-                {wabaConnected ? (
-                  <CheckCircle2 className="w-3 h-3 text-green-600" />
-                ) : (
-                  <Circle className="w-3 h-3 text-muted-foreground" />
-                )}
-                <span className={wabaConnected ? 'text-green-700' : 'text-muted-foreground'}>
-                  WABA Hesabı
-                </span>
+              <div>
+                <h3 className="font-semibold">Chakra WhatsApp Connect</h3>
+                <p className="text-xs text-muted-foreground">{statusMessage}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Info Alert */}
-        {!allCompleted && (
-          <Card className="border-[var(--rose-gold)]/30 bg-[var(--rose-gold)]/5">
-            <CardContent className="p-4">
-              <div className="flex gap-3">
-                <AlertCircle className="w-5 h-5 text-[var(--rose-gold)] shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">WhatsApp Business API Kurulumu</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    WhatsApp Ajanı'nı kullanabilmek için Meta tarafından onaylı bir Business Service Provider (BSP) üzerinden bağlantı kurmanız gerekmektedir. 
-                    Bu işlem birkaç dakika sürebilir.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Setup Steps */}
-        <div className="space-y-4">
-          {steps.map((step, index) => {
-            const isActive = currentStep === step.id;
-            const isPending = !step.completed && !step.disabled;
-            
-            return (
-              <Card
-                key={step.id}
-                className={`border-border/50 transition-all ${
-                  isActive ? 'ring-2 ring-[var(--rose-gold)]/50' : ''
-                } ${step.disabled ? 'opacity-50' : ''}`}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-sm font-bold shrink-0">
-                      {step.completed ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <span className="text-muted-foreground">{index + 1}</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-base mb-1">{step.title}</CardTitle>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {step.description}
-                      </p>
-                    </div>
-                    {step.completed && (
-                      <Badge className="bg-green-500/10 text-green-700 border-green-500/20 text-xs">
-                        Bağlandı
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {!step.completed && (
-                    <Button
-                      onClick={step.action}
-                      disabled={step.disabled || isConnecting}
-                      className="w-full rounded-lg"
-                      style={{
-                        backgroundColor: step.disabled ? undefined : 'var(--rose-gold)',
-                        color: step.disabled ? undefined : 'white',
-                      }}
-                      variant={step.disabled ? 'outline' : 'default'}
-                    >
-                      {isConnecting && isActive ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Bağlanıyor...
-                        </>
-                      ) : (
-                        <>
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          {step.actionLabel}
-                        </>
-                      )}
-                    </Button>
-                  )}
-                  {step.completed && (
-                    <div className="text-xs text-muted-foreground bg-green-500/5 p-3 rounded-lg border border-green-500/20">
-                      ✓ Hesap başarıyla bağlandı ve doğrulandı
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Completion Card */}
-        {allCompleted && (
-          <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 to-transparent">
-            <CardContent className="p-5">
-              <div className="text-center space-y-3">
-                <div className="w-14 h-14 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
-                  <CheckCircle2 className="w-7 h-7 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Kurulum Tamamlandı!</h3>
-                  <p className="text-sm text-muted-foreground">
-                    WhatsApp Ajanı artık aktif ve müşterilerinizle iletişim kurmaya hazır
-                  </p>
-                </div>
-                <Button
-                  onClick={onBack}
-                  className="w-full rounded-lg"
-                  style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-                >
-                  Ana Sayfaya Dön
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Technical Info */}
-        <Card className="border-border/50 bg-muted/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Teknik Bilgi</CardTitle>
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <PlugZap className="w-4 h-4" />
+              Kurulum Adımları
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-xs text-muted-foreground">
-            <div className="flex items-start gap-2">
-              <span className="text-[var(--rose-gold)] font-bold">•</span>
-              <p>BSP (Business Service Provider) üzerinden güvenli bağlantı sağlanır</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-[var(--rose-gold)] font-bold">•</span>
-              <p>Meta Business Manager hesabınıza erişim izni gereklidir</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-[var(--rose-gold)] font-bold">•</span>
-              <p>WABA hesabı Meta tarafından onaylanmış olmalıdır</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-[var(--rose-gold)] font-bold">•</span>
-              <p>Kurulum sonrası mesaj şablonlarınızı yönetebilirsiniz</p>
-            </div>
+          <CardContent className="space-y-3">
+            {steps.map((step, index) => (
+              <div key={step.title} className="rounded-lg border border-border p-3">
+                <div className="flex items-center gap-2">
+                  {step.completed ? (
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-muted-foreground" />
+                  )}
+                  <p className="text-sm font-medium">
+                    {index + 1}. {step.title}
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{step.detail}</p>
+              </div>
+            ))}
+
+            <Button
+              type="button"
+              onClick={() => {
+                void handleStartConnection();
+              }}
+              disabled={isStarting}
+              className="w-full"
+              style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+            >
+              {isStarting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bağlantı Başlatılıyor...
+                </>
+              ) : (
+                'WhatsApp Bağlantısını Başlat'
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {error ? (
+          <Card className="border-red-500/30 bg-red-500/5">
+            <CardContent className="p-3 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 mt-0.5" />
+              <p className="text-sm text-red-700">{error}</p>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {lastEvent ? (
+          <Card className="border-border/50 bg-muted/20">
+            <CardContent className="p-3">
+              <p className="text-xs text-muted-foreground">Son SDK event: {lastEvent}</p>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Chakra Connect</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              id={CHAKRA_CONTAINER_ID}
+              className="min-h-[280px] rounded-lg border border-dashed border-border p-2 bg-background"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Iframe hazır olduktan sonra Meta/WhatsApp onay adımlarını bu alandan tamamlayın.
+            </p>
           </CardContent>
         </Card>
       </div>
