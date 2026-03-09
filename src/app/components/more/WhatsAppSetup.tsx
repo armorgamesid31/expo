@@ -87,7 +87,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [creatingPlugin, setCreatingPlugin] = useState(false);
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
-  const [connectReady, setConnectReady] = useState(false);
+  const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
   const [connected, setConnected] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +108,32 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
   }, [apiFetch]);
 
+  const getNativeTriggerElement = useCallback((): HTMLElement | null => {
+    const container = document.getElementById(CONTAINER_ID);
+    if (!container) {
+      return null;
+    }
+    const element = container.querySelector('button, a, [role="button"]');
+    return element instanceof HTMLElement ? element : null;
+  }, []);
+
+  const markNativeTriggerReady = useCallback(() => {
+    let attempts = 0;
+    const maxAttempts = 12;
+
+    const probe = () => {
+      const ready = Boolean(getNativeTriggerElement());
+      setNativeTriggerReady(ready);
+      if (ready || attempts >= maxAttempts) {
+        return;
+      }
+      attempts += 1;
+      window.setTimeout(probe, 120);
+    };
+
+    probe();
+  }, [getNativeTriggerElement]);
+
   const prepareConnect = useCallback(async () => {
     setPreparingConnect(true);
     setError(null);
@@ -126,7 +152,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         throw new Error('Chakra SDK init fonksiyonu bulunamadı.');
       }
 
-      setConnectReady(false);
+      setNativeTriggerReady(false);
       setConnected(false);
 
       instanceRef.current = chakraGlobal.init({
@@ -140,8 +166,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           }
         },
         onReady: () => {
-          setConnectReady(true);
-          setStatusText("Facebook'a bağlan butonu hazır.");
+          setStatusText('Bağlantıyı tamamlamak için devam edin.');
+          markNativeTriggerReady();
         },
         onError: (sdkError: any) => {
           console.error('Chakra SDK error:', sdkError);
@@ -154,7 +180,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     } finally {
       setPreparingConnect(false);
     }
-  }, [apiFetch, captureEvent]);
+  }, [apiFetch, captureEvent, markNativeTriggerReady]);
 
   useEffect(() => {
     let mounted = true;
@@ -213,6 +239,19 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     } finally {
       setCreatingPlugin(false);
     }
+  };
+
+  const handleContinueWithFacebook = () => {
+    setError(null);
+    const trigger = getNativeTriggerElement();
+
+    if (!trigger) {
+      setNativeTriggerReady(false);
+      setError('Bağlantı butonu henüz hazır değil. Lütfen birkaç saniye sonra tekrar deneyin.');
+      return;
+    }
+
+    trigger.click();
   };
 
   return (
@@ -281,28 +320,46 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             </CardContent>
           </Card>
         ) : (
-          <div className="rounded-xl border border-border bg-card p-3">
-            <div id={CONTAINER_ID} className="min-h-[64px] flex items-center" />
-            {!connectReady && preparingConnect ? (
-              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Bağlantı butonu hazırlanıyor...
-              </div>
-            ) : null}
-            {error ? (
+          <Card className="border-border/50">
+            <CardContent className="p-4 space-y-3">
               <Button
                 type="button"
-                variant="outline"
-                className="w-full mt-3"
-                onClick={() => {
-                  void prepareConnect();
-                }}
-                disabled={preparingConnect}
+                onClick={handleContinueWithFacebook}
+                disabled={!nativeTriggerReady || preparingConnect}
+                className="w-full"
+                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
               >
-                Tekrar Dene
+                {!nativeTriggerReady || preparingConnect ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Hazırlanıyor...
+                  </>
+                ) : (
+                  'Facebook ile Devam Et'
+                )}
               </Button>
-            ) : null}
-          </div>
+
+              <div
+                id={CONTAINER_ID}
+                aria-hidden="true"
+                className="sr-only absolute -left-[9999px] top-auto h-px w-px overflow-hidden opacity-0 pointer-events-none"
+              />
+
+              {error ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    void prepareConnect();
+                  }}
+                  disabled={preparingConnect}
+                >
+                  Tekrar Dene
+                </Button>
+              ) : null}
+            </CardContent>
+          </Card>
         )}
 
         {error ? (
