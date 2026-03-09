@@ -242,19 +242,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
   };
 
-  const handleMaskedContinue = () => {
-    setError(null);
-
-    const container = document.getElementById(CONTAINER_ID);
-    const trigger = container?.querySelector('iframe, button, a, [role="button"]') as HTMLElement | null;
-    if (!trigger) {
-      setError('Chakra butonu henüz hazır değil. Lütfen tekrar deneyin.');
-      return;
-    }
-
-    trigger.click();
-  };
-
   return (
     <div className="h-full pb-20 overflow-y-auto">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
@@ -329,19 +316,17 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   <div
                     id={CONTAINER_ID}
                     aria-label="Büyütülmüş Chakra butonu"
-                    className="w-[260px] h-[80px]"
+                    className="absolute left-2 right-2 top-2 h-[58px]"
                   />
                   {nativeTriggerReady ? (
-                    <Button
-                      type="button"
-                      onClick={handleMaskedContinue}
-                      className="absolute left-2 right-2 top-2 h-[58px] text-base font-semibold"
+                    <div
+                      className="pointer-events-none absolute left-2 right-2 top-2 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
                       style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
                     >
                       Facebook ile Devam Et (Maske)
-                    </Button>
+                    </div>
                   ) : (
-                    <div className="absolute left-2 right-2 top-2 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                    <div className="pointer-events-none absolute left-2 right-2 top-2 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Buton hazırlanıyor...
                     </div>
