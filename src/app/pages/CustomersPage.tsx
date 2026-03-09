@@ -24,7 +24,37 @@ interface CustomerAppointmentItem {
 
 interface CustomerDetailResponse {
   customer: AdminCustomerItem;
+  summary: {
+    totalAppointmentDays: number;
+    totalRevenue: number;
+    favoriteStaff: { id: number; name: string; count: number } | null;
+    noShowRiskScore: number;
+    noShowRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+    noShowCount: number;
+    totalBookings: number;
+  };
+  discount: {
+    kind: 'PERCENT' | 'FIXED';
+    value: number;
+    note: string | null;
+    notifyCustomer: boolean;
+    messageTemplate: string | null;
+    lastNotificationStatus: string | null;
+    updatedAt: string;
+  } | null;
   appointments: CustomerAppointmentItem[];
+}
+
+interface DiscountUpdateResponse {
+  discount: {
+    kind: 'PERCENT' | 'FIXED';
+    value: number;
+    note: string | null;
+    notifyCustomer: boolean;
+    messageTemplate: string | null;
+    lastNotificationStatus: string | null;
+    updatedAt: string;
+  };
 }
 
 export function CustomersPage() {
@@ -41,6 +71,14 @@ export function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetailResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [discountKind, setDiscountKind] = useState<'PERCENT' | 'FIXED'>('PERCENT');
+  const [discountValue, setDiscountValue] = useState('');
+  const [discountNote, setDiscountNote] = useState('');
+  const [discountNotify, setDiscountNotify] = useState(false);
+  const [discountMessage, setDiscountMessage] = useState('');
+  const [discountSaving, setDiscountSaving] = useState(false);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [discountSuccess, setDiscountSuccess] = useState<string | null>(null);
 
   const loadPage = async (nextCursor?: string | null) => {
     const query = new URLSearchParams({ limit: String(PAGE_LIMIT) });
@@ -136,11 +174,83 @@ export function CustomersPage() {
     try {
       const response = await apiFetch<CustomerDetailResponse>(`/api/admin/customers/${customerId}`);
       setSelectedCustomer(response);
+      setDiscountKind(response.discount?.kind || 'PERCENT');
+      setDiscountValue(response.discount ? String(response.discount.value) : '');
+      setDiscountNote(response.discount?.note || '');
+      setDiscountNotify(Boolean(response.discount?.notifyCustomer));
+      setDiscountMessage(response.discount?.messageTemplate || '');
+      setDiscountError(null);
+      setDiscountSuccess(null);
     } catch (err: any) {
       setDetailError(err?.message || 'Müşteri profili açılamadı.');
     } finally {
       setDetailLoading(false);
     }
+  };
+
+  const handleSaveDiscount = async () => {
+    if (!selectedCustomer) {
+      return;
+    }
+
+    const parsedValue = Number(discountValue);
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+      setDiscountError('Geçerli bir indirim değeri girin.');
+      return;
+    }
+    if (discountKind === 'PERCENT' && parsedValue > 100) {
+      setDiscountError('Yüzde indirim 100\'ü geçemez.');
+      return;
+    }
+
+    setDiscountSaving(true);
+    setDiscountError(null);
+    setDiscountSuccess(null);
+
+    try {
+      const response = await apiFetch<DiscountUpdateResponse>(`/api/admin/customers/${selectedCustomer.customer.id}/discount`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          kind: discountKind,
+          value: parsedValue,
+          note: discountNote.trim() || null,
+          notifyCustomer: discountNotify,
+          messageTemplate: discountMessage.trim() || null,
+        }),
+      });
+
+      setSelectedCustomer((prev) =>
+        prev
+          ? {
+              ...prev,
+              discount: response.discount,
+            }
+          : prev,
+      );
+      setDiscountSuccess('İndirim kaydedildi.');
+    } catch (err: any) {
+      setDiscountError(err?.message || 'İndirim kaydedilemedi.');
+    } finally {
+      setDiscountSaving(false);
+    }
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
+      maximumFractionDigits: 0,
+    }).format(value || 0);
+  };
+
+  const riskBadgeClass = (level: 'LOW' | 'MEDIUM' | 'HIGH') => {
+    if (level === 'HIGH') {
+      return 'bg-red-500/10 text-red-700 border-red-500/30';
+    }
+    if (level === 'MEDIUM') {
+      return 'bg-amber-500/10 text-amber-700 border-amber-500/30';
+    }
+    return 'bg-green-500/10 text-green-700 border-green-500/30';
   };
 
   return (
@@ -243,6 +353,128 @@ export function CustomersPage() {
                   <p className="text-xs text-muted-foreground">
                     Oluşturulma: {new Date(selectedCustomer.customer.createdAt).toLocaleString('tr-TR')}
                   </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Toplam Randevu (gün)</p>
+                    <p className="text-lg font-semibold">{selectedCustomer.summary.totalAppointmentDays}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Toplam Ciro</p>
+                    <p className="text-lg font-semibold">{formatCurrency(selectedCustomer.summary.totalRevenue)}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Favori Çalışan</p>
+                    <p className="text-sm font-medium">
+                      {selectedCustomer.summary.favoriteStaff
+                        ? `${selectedCustomer.summary.favoriteStaff.name} (${selectedCustomer.summary.favoriteStaff.count})`
+                        : 'Henüz yok'}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">No-Show Risk Skoru</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-lg font-semibold">{selectedCustomer.summary.noShowRiskScore}</span>
+                      <span
+                        className={`text-[11px] px-2 py-0.5 rounded border ${riskBadgeClass(
+                          selectedCustomer.summary.noShowRiskLevel,
+                        )}`}
+                      >
+                        {selectedCustomer.summary.noShowRiskLevel}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      No-show: {selectedCustomer.summary.noShowCount} / {selectedCustomer.summary.totalBookings}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border p-3 space-y-3">
+                  <p className="text-sm font-medium">İndirim Tanımla</p>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDiscountKind('PERCENT')}
+                      className={`rounded-md border px-3 py-2 text-sm ${
+                        discountKind === 'PERCENT'
+                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
+                          : 'border-border'
+                      }`}
+                    >
+                      Yüzde (%)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDiscountKind('FIXED')}
+                      className={`rounded-md border px-3 py-2 text-sm ${
+                        discountKind === 'FIXED'
+                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
+                          : 'border-border'
+                      }`}
+                    >
+                      Tutar (TL)
+                    </button>
+                  </div>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                    placeholder={discountKind === 'PERCENT' ? 'Örn: 15' : 'Örn: 250'}
+                    value={discountValue}
+                    onChange={(event) => setDiscountValue(event.target.value)}
+                  />
+
+                  <textarea
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
+                    rows={2}
+                    placeholder="İndirim notu (opsiyonel)"
+                    value={discountNote}
+                    onChange={(event) => setDiscountNote(event.target.value)}
+                  />
+
+                  <div className="rounded-md border border-border p-2">
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={discountNotify}
+                        onChange={(event) => setDiscountNotify(event.target.checked)}
+                      />
+                      Mesaj bildirimi gönder
+                    </label>
+                    {discountNotify ? (
+                      <textarea
+                        className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
+                        rows={2}
+                        placeholder="Müşteriye gidecek mesaj (opsiyonel)"
+                        value={discountMessage}
+                        onChange={(event) => setDiscountMessage(event.target.value)}
+                      />
+                    ) : null}
+                  </div>
+
+                  {selectedCustomer.discount ? (
+                    <p className="text-xs text-muted-foreground">
+                      Aktif indirim: {selectedCustomer.discount.kind === 'PERCENT' ? `%${selectedCustomer.discount.value}` : `${selectedCustomer.discount.value} TL`}
+                      {' • '}
+                      Son durum: {selectedCustomer.discount.lastNotificationStatus || 'bilinmiyor'}
+                    </p>
+                  ) : null}
+
+                  {discountError ? <p className="text-sm text-red-500">{discountError}</p> : null}
+                  {discountSuccess ? <p className="text-sm text-green-600">{discountSuccess}</p> : null}
+
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveDiscount()}
+                    disabled={discountSaving}
+                    className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
+                  >
+                    {discountSaving ? 'Kaydediliyor...' : 'İndirimi Kaydet'}
+                  </button>
                 </div>
 
                 <div className="space-y-2">
