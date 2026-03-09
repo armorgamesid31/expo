@@ -419,28 +419,70 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           </Card>
         ) : (
           <Card className="border-border/50">
-            <CardContent className="p-4">
-              <div className="relative h-12 w-full rounded-md overflow-hidden">
-                <div
-                  id={CONTAINER_ID}
-                  aria-hidden="true"
-                  className="absolute inset-0 opacity-0 pointer-events-none"
-                />
-                {!nativeTriggerReady ? (
-                  <div className="absolute inset-0 rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Hazırlanıyor...
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleMaskedContinue}
-                    className="absolute inset-0 rounded-md bg-[var(--rose-gold)] text-white text-sm font-medium flex items-center justify-center"
-                  >
-                    Facebook ile Devam Et
-                  </button>
-                )}
-              </div>
+            <CardContent className="p-4 space-y-3">
+              <div
+                id={CONTAINER_ID}
+                aria-hidden="true"
+                className="absolute -left-[9999px] top-0 h-10 w-10 overflow-hidden opacity-0 pointer-events-none"
+              />
+
+              {!nativeTriggerReady ? (
+                <div className="rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Hazırlanıyor...
+                </div>
+              ) : null}
+
+              <p className="text-xs text-muted-foreground">Buton testleri (1-2-3-4-5)</p>
+
+              <button
+                type="button"
+                onClick={handleMaskedContinue}
+                disabled={!nativeTriggerReady}
+                className="w-full h-12 rounded-md bg-[#1877F2] text-white text-sm font-semibold disabled:opacity-60"
+              >
+                1. Continue with Facebook
+              </button>
+
+              <Button
+                type="button"
+                onClick={() => void runStrategy(2)}
+                disabled={!nativeTriggerReady}
+                className="w-full h-12"
+                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+              >
+                2. MouseEvent dispatch
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => void runStrategy(3)}
+                disabled={!nativeTriggerReady}
+                variant="outline"
+                className="w-full h-12"
+              >
+                3. Focus + Enter
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => void runStrategy(4)}
+                disabled={!nativeTriggerReady}
+                variant="outline"
+                className="w-full h-12"
+              >
+                4. Container firstChild click
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => void runStrategy(5)}
+                disabled={preparingConnect}
+                variant="outline"
+                className="w-full h-12"
+              >
+                5. Re-init + click
+              </Button>
 
               {error ? (
                 <Button
@@ -456,27 +498,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                 </Button>
               ) : null}
 
-              <div className="mt-4 space-y-2">
-                <p className="text-xs text-muted-foreground">Deneme Stratejileri</p>
-                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(1)}>
-                  1. Native .click()
-                </Button>
-                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(2)}>
-                  2. MouseEvent dispatch
-                </Button>
-                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(3)}>
-                  3. Focus + Enter
-                </Button>
-                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(4)}>
-                  4. Container firstChild click
-                </Button>
-                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(5)}>
-                  5. Re-init + click
-                </Button>
-                {strategyResult ? (
-                  <p className="text-xs text-green-700">{strategyResult}</p>
-                ) : null}
-              </div>
+              {strategyResult ? (
+                <p className="text-xs text-green-700">{strategyResult}</p>
+              ) : null}
             </CardContent>
           </Card>
         )}
