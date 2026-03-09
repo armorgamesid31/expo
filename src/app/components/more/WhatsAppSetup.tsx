@@ -135,10 +135,10 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       const scaledInstance = chakraGlobal.init({
         connectToken: token.connectToken,
         container: `#${CONTAINER_ID}`,
-        width: '240px',
+        width: '260px',
         height: '80px',
         style: {
-          width: '240px',
+          width: '260px',
           height: '80px',
           transform: 'scale(2.17)',
           transformOrigin: 'top left',
@@ -324,29 +324,28 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Büyütülmüş Chakra + Maske</p>
-                <div className="relative w-full h-[186px] overflow-hidden rounded-md border border-border/60 bg-white p-2">
+                <div className="relative w-full h-[74px] overflow-hidden rounded-md border border-border/60 bg-white p-2">
                   <div
                     id={CONTAINER_ID}
                     aria-label="Büyütülmüş Chakra butonu"
-                    className="w-[240px] h-[80px]"
+                    className="w-[260px] h-[80px]"
                   />
                   {nativeTriggerReady ? (
                     <Button
                       type="button"
                       onClick={handleMaskedContinue}
-                      className="absolute left-2 right-2 top-2 h-[170px] text-base font-semibold"
-                      style={{ backgroundColor: 'rgba(178, 112, 127, 0.60)', color: 'white' }}
+                      className="absolute left-2 right-2 top-2 h-[58px] text-base font-semibold"
+                      style={{ backgroundColor: 'rgba(178, 112, 127, 0.28)', color: 'white' }}
                     >
                       Facebook ile Devam Et (Maske)
                     </Button>
-                  ) : null}
+                  ) : (
+                    <div className="absolute left-2 right-2 top-2 h-[58px] rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Buton hazırlanıyor...
+                    </div>
+                  )}
                 </div>
-                {!nativeTriggerReady ? (
-                  <div className="rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Buton hazırlanıyor...
-                  </div>
-                ) : null}
               </div>
 
               {error ? (
