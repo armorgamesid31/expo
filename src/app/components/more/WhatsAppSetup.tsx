@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, MessageCircle, CheckCircle2, Circle, Loader2, AlertCircle } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, MessageCircle, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { useAuth } from '../../context/AuthContext';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 interface WhatsAppSetupProps {
   onBack: () => void;
@@ -86,12 +87,74 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [creatingPlugin, setCreatingPlugin] = useState(false);
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
-  const [sdkUrl, setSdkUrl] = useState('https://embed.chakrahq.com/whatsapp-partner-connect/v1_0_1/sdk.js');
-  const [iframeReady, setIframeReady] = useState(false);
+  const [connectReady, setConnectReady] = useState(false);
   const [connected, setConnected] = useState(false);
-  const [lastEvent, setLastEvent] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState('Başlat ile plugin oluşturun.');
+  const [statusText, setStatusText] = useState('WhatsApp kurulumu için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
+
+  const captureEvent = useCallback(async (event: unknown, data: unknown, pluginIdValue: string) => {
+    try {
+      const response = await apiFetch<ConnectEventResponse>('/api/app/chakra/connect-event', {
+        method: 'POST',
+        body: JSON.stringify({ event, data, pluginId: pluginIdValue }),
+      });
+
+      if (response.connected) {
+        setConnected(true);
+        setStatusText('WhatsApp bağlantısı tamamlandı.');
+      }
+    } catch (err) {
+      console.warn('Connect event capture failed:', err);
+    }
+  }, [apiFetch]);
+
+  const prepareConnect = useCallback(async () => {
+    setPreparingConnect(true);
+    setError(null);
+    setStatusText('Facebook bağlantısı hazırlanıyor...');
+
+    try {
+      const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
+      await loadChakraSdk(token.sdkUrl);
+
+      if (instanceRef.current?.destroy) {
+        instanceRef.current.destroy();
+      }
+
+      const chakraGlobal = (window as any).ChakraWhatsappConnect;
+      if (!chakraGlobal?.init) {
+        throw new Error('Chakra SDK init fonksiyonu bulunamadı.');
+      }
+
+      setConnectReady(false);
+      setConnected(false);
+
+      instanceRef.current = chakraGlobal.init({
+        connectToken: token.connectToken,
+        container: `#${CONTAINER_ID}`,
+        onMessage: (event: any, data: any) => {
+          void captureEvent(event, data, token.pluginId);
+          if (isConnectedEvent(event, data)) {
+            setConnected(true);
+            setStatusText('WhatsApp bağlantısı tamamlandı.');
+          }
+        },
+        onReady: () => {
+          setConnectReady(true);
+          setStatusText("Facebook'a bağlan butonu hazır.");
+        },
+        onError: (sdkError: any) => {
+          console.error('Chakra SDK error:', sdkError);
+          setError(sdkError?.message || 'Chakra popup akışında hata oluştu.');
+        },
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
+      setStatusText('Facebook bağlantısı başlatılamadı.');
+    } finally {
+      setPreparingConnect(false);
+    }
+  }, [apiFetch, captureEvent]);
 
   useEffect(() => {
     let mounted = true;
@@ -104,12 +167,19 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         if (!mounted) {
           return;
         }
+
         setPluginId(status.pluginId || null);
-        setSdkUrl(status.sdkUrl || sdkUrl);
-        setStatusText(status.pluginId ? 'Plugin mevcut. Facebook bağlama adımına geçebilirsiniz.' : 'Başlat ile plugin oluşturun.');
+
+        if (status.pluginId) {
+          setStatusText("Facebook'a bağlan butonu hazırlanıyor...");
+          await prepareConnect();
+        } else {
+          setStatusText('WhatsApp kurulumu için Başla butonuna dokunun.');
+        }
       } catch (err: any) {
         if (mounted) {
           setError(err?.message || 'WhatsApp kurulum durumu alınamadı.');
+          setStatusText('Durum alınamadı. Sayfayı yenileyin.');
         }
       } finally {
         if (mounted) {
@@ -125,98 +195,23 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       }
       instanceRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiFetch]);
+  }, [apiFetch, prepareConnect]);
 
-  const handleCreatePlugin = async () => {
+  const handleStart = async () => {
     setCreatingPlugin(true);
     setError(null);
-    setStatusText('Plugin oluşturuluyor...');
+    setStatusText('Kurulum başlatılıyor...');
     try {
       const response = await apiFetch<CreatePluginResponse>('/api/app/chakra/create-plugin', {
         method: 'POST',
       });
       setPluginId(response.pluginId);
-      setStatusText(response.pluginCreated ? 'Plugin oluşturuldu. Şimdi Facebook\'a bağlanın.' : 'Plugin zaten mevcut. Facebook\'a bağlanın.');
+      await prepareConnect();
     } catch (err: any) {
-      setError(err?.message || 'Plugin oluşturulamadı.');
-      setStatusText('Plugin oluşturma başarısız.');
+      setError(err?.message || 'Kurulum başlatılamadı.');
+      setStatusText('Kurulum başlatılamadı.');
     } finally {
       setCreatingPlugin(false);
-    }
-  };
-
-  const captureEvent = async (event: unknown, data: unknown, pluginIdValue: string) => {
-    try {
-      const response = await apiFetch<ConnectEventResponse>('/api/app/chakra/connect-event', {
-        method: 'POST',
-        body: JSON.stringify({ event, data, pluginId: pluginIdValue }),
-      });
-
-      if (response.connected) {
-        setConnected(true);
-        setStatusText('WhatsApp bağlantısı tamamlandı.');
-      }
-    } catch (err) {
-      console.warn('Connect event capture failed:', err);
-    }
-  };
-
-  const handleConnectFacebook = async () => {
-    if (!pluginId) {
-      setError('Önce plugin oluşturmanız gerekiyor.');
-      return;
-    }
-
-    setPreparingConnect(true);
-    setError(null);
-    setStatusText('Connect token hazırlanıyor...');
-
-    try {
-      const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
-      setSdkUrl(token.sdkUrl || sdkUrl);
-      await loadChakraSdk(token.sdkUrl || sdkUrl);
-
-      if (instanceRef.current?.destroy) {
-        instanceRef.current.destroy();
-      }
-
-      const chakraGlobal = (window as any).ChakraWhatsappConnect;
-      if (!chakraGlobal?.init) {
-        throw new Error('Chakra SDK init fonksiyonu bulunamadı.');
-      }
-
-      setIframeReady(false);
-      setConnected(false);
-      setLastEvent(null);
-
-      instanceRef.current = chakraGlobal.init({
-        connectToken: token.connectToken,
-        container: `#${CONTAINER_ID}`,
-        onMessage: (event: any, data: any) => {
-          const eventText = typeof event === 'string' ? event : JSON.stringify(event);
-          setLastEvent(eventText);
-          setStatusText(`SDK event: ${eventText}`);
-          void captureEvent(event, data, token.pluginId);
-          if (isConnectedEvent(event, data)) {
-            setConnected(true);
-            setStatusText('WhatsApp bağlantısı tamamlandı.');
-          }
-        },
-        onReady: () => {
-          setIframeReady(true);
-          setStatusText('Facebook\'a bağlan butonu hazır.');
-        },
-        onError: (sdkError: any) => {
-          console.error('Chakra SDK error:', sdkError);
-          setError(sdkError?.message || 'Chakra popup akışında hata oluştu.');
-        },
-      });
-    } catch (err: any) {
-      setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
-      setStatusText('Facebook bağlantısı başlatılamadı.');
-    } finally {
-      setPreparingConnect(false);
     }
   };
 
@@ -229,65 +224,46 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold">WhatsApp Kurulumu</h1>
-            <p className="text-sm text-muted-foreground">Başlat ile plugin oluştur, sonra Facebook popup ile bağla</p>
+            <p className="text-sm text-muted-foreground">Hızlı kurulum ile WhatsApp hesabını bağlayın</p>
           </div>
           {connected ? <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Bağlandı</Badge> : null}
         </div>
       </div>
 
       <div className="p-4 space-y-4">
+        {loadingStatus ? (
+          <Card className="border-border/50">
+            <CardContent className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Kurulum durumu yükleniyor...
+            </CardContent>
+          </Card>
+        ) : null}
+
         <Card className="border-[#22C55E]/30 bg-gradient-to-br from-[#22C55E]/5 to-transparent">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-[#22C55E]/20 flex items-center justify-center">
                 <MessageCircle className="w-5 h-5 text-[#22C55E]" />
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold">Chakra Connect Durumu</h3>
+              <div>
+                <h3 className="font-semibold">WhatsApp Bağlantısı</h3>
                 <p className="text-xs text-muted-foreground">{statusText}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Adımlar</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="rounded-lg border border-border p-3">
-              <div className="flex items-center gap-2">
-                {pluginId ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
-                <p className="text-sm font-medium">1. Plugin oluştur (slug adıyla)</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{pluginId ? `Plugin ID: ${pluginId}` : 'Henüz plugin yok.'}</p>
-            </div>
-
-            <div className="rounded-lg border border-border p-3">
-              <div className="flex items-center gap-2">
-                {iframeReady ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
-                <p className="text-sm font-medium">2. Facebook&apos;a bağlan popup&apos;ını aç</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {iframeReady ? 'Popup tetikleyici hazır.' : 'Plugin sonrası bu adımı başlatın.'}
+        {!pluginId ? (
+          <Card className="border-border/50">
+            <CardContent className="p-4 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Bu işlem yalnızca ilk kurulumda gereklidir.
               </p>
-            </div>
-
-            <div className="rounded-lg border border-border p-3">
-              <div className="flex items-center gap-2">
-                {connected ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
-                <p className="text-sm font-medium">3. Popup response&apos;unu yakala</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {lastEvent ? `Son event: ${lastEvent}` : 'Henüz event gelmedi.'}
-              </p>
-            </div>
-
-            {!pluginId ? (
               <Button
                 type="button"
                 onClick={() => {
-                  void handleCreatePlugin();
+                  void handleStart();
                 }}
                 disabled={creatingPlugin || loadingStatus}
                 className="w-full"
@@ -296,34 +272,57 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                 {creatingPlugin ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Plugin Oluşturuluyor...
+                    Başlatılıyor...
                   </>
                 ) : (
-                  'Başlat (Plugin Oluştur)'
+                  'Başla'
                 )}
               </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={() => {
-                  void handleConnectFacebook();
-                }}
-                disabled={preparingConnect}
-                className="w-full"
-                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-              >
-                {preparingConnect ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Facebook Bağlantısı Hazırlanıyor...
-                  </>
-                ) : (
-                  "Facebook'a Bağlan"
-                )}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <span>Kurulum başlatıldı. Plugin hazır.</span>
+              </div>
+              {!connectReady && preparingConnect ? (
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Facebook bağlantı butonu hazırlanıyor...
+                </div>
+              ) : null}
+              {error ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-3"
+                  onClick={() => {
+                    void prepareConnect();
+                  }}
+                  disabled={preparingConnect}
+                >
+                  Butonu Yeniden Yükle
+                </Button>
+              ) : null}
+            </CardContent>
+          </Card>
+        )}
+
+        {pluginId ? (
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Bağlantı Alanı</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div id={CONTAINER_ID} className="min-h-[280px] rounded-lg border border-dashed border-border p-2 bg-background" />
+              <p className="text-xs text-muted-foreground mt-2">
+                Buradaki buton popup açar. Popup tamamlanınca bağlantı otomatik algılanır.
+              </p>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {error ? (
           <Card className="border-red-500/30 bg-red-500/5">
@@ -336,13 +335,35 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
         <Card className="border-border/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Chakra Popup Container</CardTitle>
+            <CardTitle className="text-sm">Yardım</CardTitle>
           </CardHeader>
           <CardContent>
-            <div id={CONTAINER_ID} className="min-h-[280px] rounded-lg border border-dashed border-border p-2 bg-background" />
-            <p className="text-xs text-muted-foreground mt-2">
-              Facebook&apos;a Bağlan tıklandıktan sonra Chakra butonu burada görünür; buton popup açar.
-            </p>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="faq-1">
+                <AccordionTrigger>Başla butonu ne yapar?</AccordionTrigger>
+                <AccordionContent>
+                  Salonunuz için bir kez plugin oluşturur ve bağlantı butonunu hazırlar.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-2">
+                <AccordionTrigger>Her girişte tekrar Başla&apos;ya basmalı mıyım?</AccordionTrigger>
+                <AccordionContent>
+                  Hayır. İlk kurulumdan sonra ekran açıldığında bağlantı butonu otomatik gelir.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-3">
+                <AccordionTrigger>Popup kapandıysa ne olur?</AccordionTrigger>
+                <AccordionContent>
+                  Kurulum tamamlanmadıysa yeniden bağlantı butonuna tıklayarak popup&apos;ı tekrar açabilirsiniz.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-4">
+                <AccordionTrigger>Bağlantının tamamlandığını nasıl anlarım?</AccordionTrigger>
+                <AccordionContent>
+                  Üstteki durum alanında “WhatsApp bağlantısı tamamlandı” bilgisi görünür.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </CardContent>
         </Card>
       </div>
