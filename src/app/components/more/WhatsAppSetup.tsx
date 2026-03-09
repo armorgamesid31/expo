@@ -43,8 +43,7 @@ type ChakraInstance = {
   destroy?: () => void;
 };
 
-const CONTAINER_ID_COMPACT = 'chakra-whatsapp-connect-container-compact';
-const CONTAINER_ID_SCALED = 'chakra-whatsapp-connect-container-scaled';
+const CONTAINER_ID = 'chakra-whatsapp-connect-container';
 const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
 
 function loadChakraSdk(sdkUrl: string): Promise<void> {
@@ -88,8 +87,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [creatingPlugin, setCreatingPlugin] = useState(false);
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
-  const [compactReady, setCompactReady] = useState(false);
-  const [scaledReady, setScaledReady] = useState(false);
+  const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
   const [connected, setConnected] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
@@ -131,54 +129,18 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         throw new Error('Chakra SDK init fonksiyonu bulunamadı.');
       }
 
-      setCompactReady(false);
-      setScaledReady(false);
+      setNativeTriggerReady(false);
       setConnected(false);
-
-      const compactInstance = chakraGlobal.init({
-        connectToken: token.connectToken,
-        container: `#${CONTAINER_ID_COMPACT}`,
-        width: '240px',
-        height: '80px',
-        style: {
-          width: '240px',
-          height: '80px',
-          opacity: '1',
-          border: '0',
-          background: 'transparent',
-          display: 'block',
-          margin: '0',
-          position: 'relative',
-          inset: '',
-          zIndex: '',
-          pointerEvents: 'auto',
-        },
-        onMessage: (event: any, data: any) => {
-          void captureEvent(event, data, token.pluginId);
-          if (isConnectedEvent(event, data)) {
-            setConnected(true);
-            setStatusText('WhatsApp bağlantısı tamamlandı.');
-          }
-        },
-        onReady: () => {
-          setCompactReady(true);
-          setStatusText('Butonlar hazır, test edip sonucu paylaşın.');
-        },
-        onError: (sdkError: any) => {
-          console.error('Chakra SDK error (compact):', sdkError);
-          setError(sdkError?.message || 'Chakra popup akışında hata oluştu.');
-        },
-      });
 
       const scaledInstance = chakraGlobal.init({
         connectToken: token.connectToken,
-        container: `#${CONTAINER_ID_SCALED}`,
+        container: `#${CONTAINER_ID}`,
         width: '240px',
         height: '80px',
         style: {
           width: '240px',
           height: '80px',
-          transform: 'scale(1.55)',
+          transform: 'scale(2.17)',
           transformOrigin: 'top left',
           border: '0',
           background: 'transparent',
@@ -197,16 +159,16 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           }
         },
         onReady: () => {
-          setScaledReady(true);
-          setStatusText('Butonlar hazır, test edip sonucu paylaşın.');
+          setNativeTriggerReady(true);
+          setStatusText('Bağlantı butonu hazır.');
         },
         onError: (sdkError: any) => {
-          console.error('Chakra SDK error (scaled):', sdkError);
+          console.error('Chakra SDK error:', sdkError);
           setError(sdkError?.message || 'Chakra popup akışında hata oluştu.');
         },
       });
 
-      instanceRef.current = [compactInstance, scaledInstance];
+      instanceRef.current = [scaledInstance];
     } catch (err: any) {
       setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
       setStatusText('Facebook bağlantısı başlatılamadı.');
@@ -231,13 +193,11 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
         if (status.pluginId) {
           setStatusText('Facebook ile devam ederek bağlantıyı tamamlayın.');
-          setCompactReady(false);
-          setScaledReady(false);
+          setNativeTriggerReady(false);
           await prepareConnect();
         } else {
           setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
-          setCompactReady(false);
-          setScaledReady(false);
+          setNativeTriggerReady(false);
         }
       } catch (err: any) {
         if (mounted) {
@@ -271,8 +231,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         method: 'POST',
       });
       setPluginId(response.pluginId);
-      setCompactReady(false);
-      setScaledReady(false);
+      setNativeTriggerReady(false);
       await prepareConnect();
     } catch (err: any) {
       setError(err?.message || 'Kurulum başlatılamadı.');
@@ -280,6 +239,19 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     } finally {
       setCreatingPlugin(false);
     }
+  };
+
+  const handleMaskedContinue = () => {
+    setError(null);
+
+    const container = document.getElementById(CONTAINER_ID);
+    const trigger = container?.querySelector('iframe, button, a, [role="button"]') as HTMLElement | null;
+    if (!trigger) {
+      setError('Chakra butonu henüz hazır değil. Lütfen tekrar deneyin.');
+      return;
+    }
+
+    trigger.click();
   };
 
   return (
@@ -351,35 +323,28 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">1) Kompakt Chakra (boşluksuz)</p>
-                <div className="inline-block rounded-md border border-border/60 bg-white p-2">
+                <p className="text-xs text-muted-foreground">Büyütülmüş Chakra + Maske</p>
+                <div className="relative w-full h-[186px] overflow-hidden rounded-md border border-border/60 bg-white p-2">
                   <div
-                    id={CONTAINER_ID_COMPACT}
-                    aria-label="Kompakt Chakra butonu"
+                    id={CONTAINER_ID}
+                    aria-label="Büyütülmüş Chakra butonu"
                     className="w-[240px] h-[80px]"
                   />
+                  {nativeTriggerReady ? (
+                    <Button
+                      type="button"
+                      onClick={handleMaskedContinue}
+                      className="absolute left-2 right-2 top-2 h-[170px] text-base font-semibold"
+                      style={{ backgroundColor: 'rgba(178, 112, 127, 0.60)', color: 'white' }}
+                    >
+                      Facebook ile Devam Et (Maske)
+                    </Button>
+                  ) : null}
                 </div>
-                {!compactReady ? (
+                {!nativeTriggerReady ? (
                   <div className="rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Kompakt buton hazırlanıyor...
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">2) Ölçeklenmiş Chakra (scale)</p>
-                <div className="w-full max-w-[388px] h-[132px] overflow-hidden rounded-md border border-border/60 bg-white p-2">
-                  <div
-                    id={CONTAINER_ID_SCALED}
-                    aria-label="Ölçeklenmiş Chakra butonu"
-                    className="w-[240px] h-[80px]"
-                  />
-                </div>
-                {!scaledReady ? (
-                  <div className="rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Ölçeklenmiş buton hazırlanıyor...
+                    Buton hazırlanıyor...
                   </div>
                 ) : null}
               </div>
