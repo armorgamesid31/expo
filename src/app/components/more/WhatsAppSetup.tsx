@@ -142,6 +142,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           height: '80px',
           transform: 'scale(2.17)',
           transformOrigin: 'top left',
+          opacity: '0',
           border: '0',
           background: 'transparent',
           display: 'block',
@@ -335,12 +336,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                       type="button"
                       onClick={handleMaskedContinue}
                       className="absolute left-2 right-2 top-2 h-[58px] text-base font-semibold"
-                      style={{ backgroundColor: 'rgba(178, 112, 127, 0.28)', color: 'white' }}
+                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
                     >
                       Facebook ile Devam Et (Maske)
                     </Button>
                   ) : (
-                    <div className="absolute left-2 right-2 top-2 h-[58px] rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                    <div className="absolute left-2 right-2 top-2 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Buton hazırlanıyor...
                     </div>
