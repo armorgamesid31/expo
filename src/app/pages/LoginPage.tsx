@@ -25,7 +25,7 @@ export function LoginPage() {
       await login(email, password);
       navigate('/app/dashboard', { replace: true });
     } catch (err: any) {
-      setError(err?.message || 'Giris basarisiz oldu.');
+      setError(err?.message || 'Giriş başarısız oldu.');
     } finally {
       setSubmitting(false);
     }
@@ -34,8 +34,8 @@ export function LoginPage() {
   return (
     <div className="min-h-screen grid place-items-center bg-[var(--luxury-bg)] px-4">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Salon Mobile Giris</h1>
-        <p className="text-sm text-muted-foreground mt-1">Hesabiniz ile giris yapin.</p>
+        <h1 className="text-xl font-semibold">Salon Mobile Giriş</h1>
+        <p className="text-sm text-muted-foreground mt-1">Hesabınız ile giriş yapın.</p>
 
         <form className="mt-5 space-y-4" onSubmit={onSubmit}>
           <div>
@@ -50,7 +50,7 @@ export function LoginPage() {
           </div>
 
           <div>
-            <label className="text-sm block mb-1">Sifre</label>
+            <label className="text-sm block mb-1">Şifre</label>
             <input
               type="password"
               value={password}
@@ -67,7 +67,7 @@ export function LoginPage() {
             disabled={submitting}
             className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
-            {submitting ? 'Giris yapiliyor...' : 'Giris Yap'}
+            {submitting ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
       </div>

@@ -34,9 +34,9 @@ export function FeatureDetailPage() {
 
   return (
     <div className="p-4">
-      <p className="text-sm text-muted-foreground">Ozellik bulunamadi.</p>
+      <p className="text-sm text-muted-foreground">Özellik bulunamadı.</p>
       <button type="button" onClick={onBack} className="mt-3 text-sm underline">
-        Geri Don
+        Geri Dön
       </button>
     </div>
   );

@@ -24,7 +24,7 @@ export function BlacklistPage() {
       const response = await apiFetch<{ items: BlacklistItem[] }>('/api/admin/blacklist');
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || 'Kara liste alinamadi.');
+      setError(err?.message || 'Kara liste alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export function BlacklistPage() {
       setItems((prev) => [response.item, ...prev]);
       setForm({ fullName: '', phone: '', reason: '' });
     } catch (err: any) {
-      setError(err?.message || 'Kayit eklenemedi.');
+      setError(err?.message || 'Kayıt eklenemedi.');
     } finally {
       setSaving(false);
     }
@@ -64,7 +64,7 @@ export function BlacklistPage() {
       });
       setItems((prev) => prev.map((current) => (current.id === item.id ? response.item : current)));
     } catch (err: any) {
-      setError(err?.message || 'Kayit guncellenemedi.');
+      setError(err?.message || 'Kayıt güncellenemedi.');
     }
   };
 
@@ -72,7 +72,7 @@ export function BlacklistPage() {
     <div className="p-4 space-y-4">
       <div>
         <h1 className="text-xl font-semibold">Kara Liste</h1>
-        <p className="text-xs text-muted-foreground">Create/read + aktif/pasif guncelleme aktif.</p>
+        <p className="text-xs text-muted-foreground">Create/read + aktif/pasif güncelleme aktif.</p>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -84,7 +84,7 @@ export function BlacklistPage() {
         <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Kara Listeye Ekle'}</button>
       </form>
 
-      {loading ? <p className="text-sm text-muted-foreground">Yukleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       <div className="space-y-2">
         {items.map((item) => (
@@ -102,7 +102,7 @@ export function BlacklistPage() {
         ))}
       </div>
 
-      {!loading && !items.length ? <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Kara liste bos.</div> : null}
+      {!loading && !items.length ? <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Kara liste boş.</div> : null}
     </div>
   );
 }

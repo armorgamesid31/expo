@@ -7,6 +7,7 @@ interface SetupTask {
   label: string;
   description: string;
   done: boolean;
+  rawDone: boolean;
   navigateTo: string;
   order: number;
 }
@@ -28,7 +29,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
       id: 'hours',
       label: 'Çalışma Saatleri',
       description: 'Salon çalışma saatlerini belirleyin',
-      done: Boolean(checklist?.workingHours),
+      done: false,
+      rawDone: Boolean(checklist?.workingHours),
       navigateTo: '/app/salon-info',
       order: 1,
     },
@@ -36,7 +38,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
       id: 'address',
       label: 'Adres Bilgisi',
       description: 'Salon adresini ekleyin',
-      done: Boolean(checklist?.address),
+      done: false,
+      rawDone: Boolean(checklist?.address),
       navigateTo: '/app/salon-info',
       order: 2,
     },
@@ -44,7 +47,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
       id: 'phone',
       label: 'Telefon Numarası',
       description: 'Salon iletişim numarasını girin',
-      done: Boolean(checklist?.phone),
+      done: false,
+      rawDone: Boolean(checklist?.phone),
       navigateTo: '/app/salon-info',
       order: 3,
     },
@@ -52,7 +56,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
       id: 'service',
       label: 'Hizmet Ekle',
       description: 'En az 1 hizmet tanımlayın',
-      done: Boolean(checklist?.service),
+      done: false,
+      rawDone: Boolean(checklist?.service),
       navigateTo: '/app/services',
       order: 4,
     },
@@ -60,13 +65,20 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
       id: 'staff',
       label: 'Personel Ekle',
       description: 'En az 1 çalışan ekleyin',
-      done: Boolean(checklist?.staff),
+      done: false,
+      rawDone: Boolean(checklist?.staff),
       navigateTo: '/app/staff',
       order: 5,
     },
   ];
 
-  const sortedTasks = tasks.sort((a, b) => a.order - b.order);
+  const sortedTasks = tasks
+    .sort((a, b) => a.order - b.order)
+    .map((task, index, arr) => {
+      const previousTasksDone = arr.slice(0, index).every((item) => item.rawDone);
+      return { ...task, done: previousTasksDone && task.rawDone };
+    });
+  const nextRequiredTask = sortedTasks.find((task) => !task.done) || null;
   const completedCount = sortedTasks.filter(t => t.done).length;
   const totalCount = sortedTasks.length;
   const progressPercentage = (completedCount / totalCount) * 100;
@@ -102,7 +114,7 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
         {sortedTasks.map((task, index) => (
           <motion.button
             key={task.id}
-            onClick={() => onNavigate(task.navigateTo)}
+            onClick={() => onNavigate(nextRequiredTask?.navigateTo || task.navigateTo)}
             className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all group ${
               task.done
                 ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10'

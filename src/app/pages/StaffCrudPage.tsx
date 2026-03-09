@@ -23,7 +23,7 @@ export function StaffCrudPage() {
       const response = await apiFetch<{ items: StaffItem[] }>('/api/admin/staff');
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || 'Calisanlar alinamadi.');
+      setError(err?.message || 'Çalışanlar alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -49,7 +49,7 @@ export function StaffCrudPage() {
       setItems((prev) => [response.item, ...prev]);
       setForm({ name: '', title: '', phone: '' });
     } catch (err: any) {
-      setError(err?.message || 'Calisan eklenemedi.');
+      setError(err?.message || 'Çalışan eklenemedi.');
     } finally {
       setSaving(false);
     }
@@ -58,7 +58,7 @@ export function StaffCrudPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Calisan Yonetimi</h1>
+        <h1 className="text-xl font-semibold">Çalışan Yönetimi</h1>
         <p className="text-xs text-muted-foreground">Temel create/read aktif.</p>
       </div>
 
@@ -68,10 +68,10 @@ export function StaffCrudPage() {
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Ad soyad" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Unvan" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Telefon" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
-        <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Calisan Ekle'}</button>
+        <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Çalışan Ekle'}</button>
       </form>
 
-      {loading ? <p className="text-sm text-muted-foreground">Yukleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       <div className="space-y-2">
         {items.map((item) => (
@@ -86,7 +86,7 @@ export function StaffCrudPage() {
       </div>
 
       {!loading && !items.length ? (
-        <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Calisan bulunmuyor.</div>
+        <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Çalışan bulunmuyor.</div>
       ) : null}
     </div>
   );

@@ -24,7 +24,7 @@ export function CampaignsCrudPage() {
       const response = await apiFetch<{ items: CampaignItem[] }>('/api/admin/campaigns');
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || 'Kampanyalar alinamadi.');
+      setError(err?.message || 'Kampanyalar alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export function CampaignsCrudPage() {
       setItems((prev) => [response.item, ...prev]);
       setForm({ name: '', type: 'LOYALTY', description: '' });
     } catch (err: any) {
-      setError(err?.message || 'Kampanya olusturulamadi.');
+      setError(err?.message || 'Kampanya oluşturulamadı.');
     } finally {
       setSaving(false);
     }
@@ -66,13 +66,13 @@ export function CampaignsCrudPage() {
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
       <form className="space-y-2 rounded-lg border border-border p-3" onSubmit={createItem}>
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Kampanya adi" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
+        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Kampanya adı" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Tip (LOYALTY, REFERRAL...)" value={form.type} onChange={(e) => setForm((prev) => ({ ...prev, type: e.target.value }))} />
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Aciklama" value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
+        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Açıklama" value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
         <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Kampanya Ekle'}</button>
       </form>
 
-      {loading ? <p className="text-sm text-muted-foreground">Yukleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       <div className="space-y-2">
         {items.map((item) => (
@@ -81,7 +81,7 @@ export function CampaignsCrudPage() {
               <p className="font-medium">{item.name}</p>
               <span className={`text-xs ${item.isActive ? 'text-green-600' : 'text-muted-foreground'}`}>{item.isActive ? 'Aktif' : 'Pasif'}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">{item.type} • {item.description || 'Aciklama yok'}</p>
+            <p className="text-xs text-muted-foreground mt-1">{item.type} • {item.description || 'Açıklama yok'}</p>
           </div>
         ))}
       </div>

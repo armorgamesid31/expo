@@ -38,7 +38,7 @@ export function AnalyticsPage() {
       setOverview(analytics);
       setPresets(presetResponse.items);
     } catch (err: any) {
-      setError(err?.message || 'Analitik veriler alinamadi.');
+      setError(err?.message || 'Analitik veriler alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -74,13 +74,13 @@ export function AnalyticsPage() {
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Yukleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       {overview ? (
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Toplam randevu</p><p className="text-lg font-semibold">{overview.metrics.totalAppointments}</p></div>
           <div className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Tamamlanan</p><p className="text-lg font-semibold">{overview.metrics.completedAppointments}</p></div>
-          <div className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Musteri</p><p className="text-lg font-semibold">{overview.metrics.totalCustomers}</p></div>
+          <div className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Müşteri</p><p className="text-lg font-semibold">{overview.metrics.totalCustomers}</p></div>
           <div className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Gelir</p><p className="text-lg font-semibold">₺{overview.metrics.revenue}</p></div>
         </div>
       ) : null}
@@ -100,7 +100,7 @@ export function AnalyticsPage() {
 
       <form className="space-y-2 rounded-lg border border-border p-3" onSubmit={addPreset}>
         <p className="text-sm font-medium">Rapor presetleri</p>
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Preset adi" value={presetName} onChange={(e) => setPresetName(e.target.value)} />
+        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Preset adı" value={presetName} onChange={(e) => setPresetName(e.target.value)} />
         <button type="submit" className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white">Preset Ekle</button>
         <div className="space-y-1">
           {presets.map((preset) => (

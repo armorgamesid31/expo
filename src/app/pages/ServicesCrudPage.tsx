@@ -24,7 +24,7 @@ export function ServicesCrudPage() {
       const response = await apiFetch<{ items: ServiceItem[] }>('/api/admin/services');
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || 'Hizmetler alinamadi.');
+      setError(err?.message || 'Hizmetler alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export function ServicesCrudPage() {
       setItems((prev) => [response.item, ...prev]);
       setForm({ name: '', category: 'OTHER', duration: 60, price: 0 });
     } catch (err: any) {
-      setError(err?.message || 'Hizmet olusturulamadi.');
+      setError(err?.message || 'Hizmet oluşturulamadı.');
     } finally {
       setSaving(false);
     }
@@ -59,21 +59,21 @@ export function ServicesCrudPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Hizmet Yonetimi</h1>
+        <h1 className="text-xl font-semibold">Hizmet Yönetimi</h1>
         <p className="text-xs text-muted-foreground">Temel create/read aktif.</p>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
       <form className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3" onSubmit={createItem}>
-        <input className="col-span-2 rounded-md border border-border px-3 py-2 text-sm" placeholder="Hizmet adi" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
+        <input className="col-span-2 rounded-md border border-border px-3 py-2 text-sm" placeholder="Hizmet adı" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
         <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Kategori" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
-        <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={5} step={5} placeholder="Sure" value={form.duration} onChange={(e) => setForm((prev) => ({ ...prev, duration: Number(e.target.value) }))} />
+        <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={5} step={5} placeholder="Süre" value={form.duration} onChange={(e) => setForm((prev) => ({ ...prev, duration: Number(e.target.value) }))} />
         <input className="col-span-2 rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} step={0.01} placeholder="Fiyat" value={form.price} onChange={(e) => setForm((prev) => ({ ...prev, price: Number(e.target.value) }))} />
         <button type="submit" disabled={saving} className="col-span-2 rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Hizmet Ekle'}</button>
       </form>
 
-      {loading ? <p className="text-sm text-muted-foreground">Yukleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       <div className="space-y-2">
         {items.map((item) => (
