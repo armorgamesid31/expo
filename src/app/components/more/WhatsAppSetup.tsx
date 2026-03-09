@@ -267,6 +267,27 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
   };
 
+  const handleMaskedContinue = () => {
+    setError(null);
+
+    const tryTrigger = (attempt = 0) => {
+      const trigger = getNativeTriggerElement();
+      if (trigger) {
+        trigger.click();
+        return;
+      }
+
+      if (attempt >= 12) {
+        setError('Facebook butonu henüz hazır değil. Lütfen tekrar deneyin.');
+        return;
+      }
+
+      window.setTimeout(() => tryTrigger(attempt + 1), 150);
+    };
+
+    tryTrigger();
+  };
+
   return (
     <div className="h-full pb-20 overflow-y-auto">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
@@ -338,8 +359,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
               <div className="relative h-12 w-full rounded-md overflow-hidden">
                 <div
                   id={CONTAINER_ID}
-                  aria-hidden={nativeTriggerReady ? 'false' : 'true'}
-                  className={nativeTriggerReady ? 'absolute inset-0' : 'absolute inset-0 opacity-0 pointer-events-none'}
+                  aria-hidden="true"
+                  className="absolute inset-0 opacity-0 pointer-events-none"
                 />
                 {!nativeTriggerReady ? (
                   <div className="absolute inset-0 rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
@@ -347,9 +368,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                     Hazırlanıyor...
                   </div>
                 ) : (
-                  <div className="pointer-events-none absolute inset-0 rounded-md bg-[var(--rose-gold)] text-white text-sm font-medium flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={handleMaskedContinue}
+                    className="absolute inset-0 rounded-md bg-[var(--rose-gold)] text-white text-sm font-medium flex items-center justify-center"
+                  >
                     Facebook ile Devam Et
-                  </div>
+                  </button>
                 )}
               </div>
 
