@@ -91,6 +91,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [connected, setConnected] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
+  const [strategyResult, setStrategyResult] = useState<string | null>(null);
 
   const captureEvent = useCallback(async (event: unknown, data: unknown, pluginIdValue: string) => {
     try {
@@ -269,11 +270,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
   const handleMaskedContinue = () => {
     setError(null);
+    setStrategyResult(null);
 
     const tryTrigger = (attempt = 0) => {
       const trigger = getNativeTriggerElement();
       if (trigger) {
         trigger.click();
+        setStrategyResult('Varsayılan tetikleme çalıştı (native click).');
         return;
       }
 
@@ -286,6 +289,67 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     };
 
     tryTrigger();
+  };
+
+  const runStrategy = async (strategyNo: number) => {
+    setError(null);
+    setStrategyResult(null);
+
+    const trigger = getNativeTriggerElement();
+    if (!trigger && strategyNo !== 5) {
+      setError('Native buton bulunamadı.');
+      return;
+    }
+
+    try {
+      if (strategyNo === 1) {
+        trigger!.click();
+        setStrategyResult('1) Doğrudan native .click() tetiklendi.');
+        return;
+      }
+
+      if (strategyNo === 2) {
+        const event = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+        trigger!.dispatchEvent(event);
+        setStrategyResult('2) MouseEvent dispatch ile tetiklendi.');
+        return;
+      }
+
+      if (strategyNo === 3) {
+        trigger!.focus();
+        const keyEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+        trigger!.dispatchEvent(keyEvent);
+        setStrategyResult('3) Focus + Enter key ile tetiklendi.');
+        return;
+      }
+
+      if (strategyNo === 4) {
+        const container = document.getElementById(CONTAINER_ID);
+        const firstChild = container?.firstElementChild as HTMLElement | null;
+        if (firstChild) {
+          firstChild.click();
+          setStrategyResult('4) Container firstChild click ile tetiklendi.');
+        } else {
+          setError('4) Container firstChild bulunamadı.');
+        }
+        return;
+      }
+
+      if (strategyNo === 5) {
+        await prepareConnect();
+        window.setTimeout(() => {
+          const retriedTrigger = getNativeTriggerElement();
+          if (!retriedTrigger) {
+            setError('5) Yeniden yükleme sonrası native buton bulunamadı.');
+            return;
+          }
+          retriedTrigger.click();
+          setStrategyResult('5) Re-init sonrası native click tetiklendi.');
+        }, 350);
+      }
+    } catch (err: any) {
+      setError(err?.message || `${strategyNo}) Strateji çalıştırılamadı.`);
+    }
   };
 
   return (
@@ -391,6 +455,28 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   Tekrar Dene
                 </Button>
               ) : null}
+
+              <div className="mt-4 space-y-2">
+                <p className="text-xs text-muted-foreground">Deneme Stratejileri</p>
+                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(1)}>
+                  1. Native .click()
+                </Button>
+                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(2)}>
+                  2. MouseEvent dispatch
+                </Button>
+                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(3)}>
+                  3. Focus + Enter
+                </Button>
+                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(4)}>
+                  4. Container firstChild click
+                </Button>
+                <Button type="button" variant="outline" className="w-full justify-start" onClick={() => void runStrategy(5)}>
+                  5. Re-init + click
+                </Button>
+                {strategyResult ? (
+                  <p className="text-xs text-green-700">{strategyResult}</p>
+                ) : null}
+              </div>
             </CardContent>
           </Card>
         )}
