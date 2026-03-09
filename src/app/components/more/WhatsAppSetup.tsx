@@ -117,12 +117,32 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     return element instanceof HTMLElement ? element : null;
   }, []);
 
+  const ensureNativeTriggerLayout = useCallback((): boolean => {
+    const container = document.getElementById(CONTAINER_ID);
+    const trigger = getNativeTriggerElement();
+
+    if (!container || !trigger) {
+      return false;
+    }
+
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.display = 'block';
+
+    trigger.style.width = '100%';
+    trigger.style.height = '100%';
+    trigger.style.display = 'block';
+    trigger.style.margin = '0';
+
+    return true;
+  }, [getNativeTriggerElement]);
+
   const markNativeTriggerReady = useCallback(() => {
     let attempts = 0;
     const maxAttempts = 60;
 
     const probe = () => {
-      const ready = Boolean(getNativeTriggerElement());
+      const ready = ensureNativeTriggerLayout();
       setNativeTriggerReady(ready);
       if (ready || attempts >= maxAttempts) {
         return;
@@ -132,7 +152,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     };
 
     probe();
-  }, [getNativeTriggerElement]);
+  }, [ensureNativeTriggerLayout]);
 
   const prepareConnect = useCallback(async () => {
     setPreparingConnect(true);
@@ -169,7 +189,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           setStatusText('Bağlantıyı tamamlamak için devam edin.');
           markNativeTriggerReady();
           window.setTimeout(() => {
-            setNativeTriggerReady((prev) => prev || Boolean(getNativeTriggerElement()));
+            setNativeTriggerReady((prev) => prev || ensureNativeTriggerLayout());
           }, 800);
         },
         onError: (sdkError: any) => {
@@ -183,7 +203,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     } finally {
       setPreparingConnect(false);
     }
-  }, [apiFetch, captureEvent, markNativeTriggerReady, getNativeTriggerElement]);
+  }, [apiFetch, captureEvent, markNativeTriggerReady, ensureNativeTriggerLayout]);
 
   useEffect(() => {
     let mounted = true;
@@ -315,14 +335,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         ) : (
           <Card className="border-border/50">
             <CardContent className="p-4">
-              <div className="relative">
+              <div className="relative h-12 w-full rounded-md overflow-hidden">
                 <div
                   id={CONTAINER_ID}
                   aria-hidden={nativeTriggerReady ? 'false' : 'true'}
-                  className={nativeTriggerReady ? 'min-h-[44px] flex items-center' : 'min-h-[44px] flex items-center opacity-0 pointer-events-none'}
+                  className={nativeTriggerReady ? 'absolute inset-0' : 'absolute inset-0 opacity-0 pointer-events-none'}
                 />
                 {!nativeTriggerReady ? (
-                  <div className="w-full rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Hazırlanıyor...
                   </div>
