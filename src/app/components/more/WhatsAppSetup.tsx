@@ -87,7 +87,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [creatingPlugin, setCreatingPlugin] = useState(false);
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
-  const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
   const [connected, setConnected] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
@@ -119,16 +118,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
   const markNativeTriggerReady = useCallback(() => {
     let attempts = 0;
-    const maxAttempts = 12;
+    const maxAttempts = 60;
 
     const probe = () => {
-      const ready = Boolean(getNativeTriggerElement());
-      setNativeTriggerReady(ready);
-      if (ready || attempts >= maxAttempts) {
+      if (Boolean(getNativeTriggerElement()) || attempts >= maxAttempts) {
         return;
       }
       attempts += 1;
-      window.setTimeout(probe, 120);
+      window.setTimeout(probe, 150);
     };
 
     probe();
@@ -152,7 +149,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         throw new Error('Chakra SDK init fonksiyonu bulunamadı.');
       }
 
-      setNativeTriggerReady(false);
       setConnected(false);
 
       instanceRef.current = chakraGlobal.init({
@@ -243,15 +239,19 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
   const handleContinueWithFacebook = () => {
     setError(null);
-    const trigger = getNativeTriggerElement();
-
-    if (!trigger) {
-      setNativeTriggerReady(false);
-      setError('Bağlantı butonu henüz hazır değil. Lütfen birkaç saniye sonra tekrar deneyin.');
-      return;
-    }
-
-    trigger.click();
+    const tryClick = (attempt = 0) => {
+      const trigger = getNativeTriggerElement();
+      if (trigger) {
+        trigger.click();
+        return;
+      }
+      if (attempt >= 25) {
+        setError('Facebook butonu henüz yüklenmedi. Lütfen tekrar deneyin.');
+        return;
+      }
+      window.setTimeout(() => tryClick(attempt + 1), 200);
+    };
+    tryClick();
   };
 
   return (
@@ -321,15 +321,15 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           </Card>
         ) : (
           <Card className="border-border/50">
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-4">
               <Button
                 type="button"
                 onClick={handleContinueWithFacebook}
-                disabled={!nativeTriggerReady || preparingConnect}
+                disabled={preparingConnect || loadingStatus}
                 className="w-full"
                 style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
               >
-                {!nativeTriggerReady || preparingConnect ? (
+                {preparingConnect ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Hazırlanıyor...
@@ -338,18 +338,11 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   'Facebook ile Devam Et'
                 )}
               </Button>
-
-              <div
-                id={CONTAINER_ID}
-                aria-hidden="true"
-                className="sr-only absolute -left-[9999px] top-auto h-px w-px overflow-hidden opacity-0 pointer-events-none"
-              />
-
               {error ? (
                 <Button
                   type="button"
-                  variant="outline"
-                  className="w-full"
+                  variant="ghost"
+                  className="w-full mt-2"
                   onClick={() => {
                     void prepareConnect();
                   }}
@@ -404,6 +397,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             </Accordion>
           </CardContent>
         </Card>
+
+        <div
+          id={CONTAINER_ID}
+          aria-hidden="true"
+          className="fixed -left-[99999px] top-0 h-px w-px overflow-hidden opacity-0 pointer-events-none"
+        />
       </div>
     </div>
   );
