@@ -91,7 +91,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [connected, setConnected] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
-  const [strategyResult, setStrategyResult] = useState<string | null>(null);
 
   const captureEvent = useCallback(async (event: unknown, data: unknown, pluginIdValue: string) => {
     try {
@@ -129,11 +128,21 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     container.style.width = '100%';
     container.style.height = '100%';
     container.style.display = 'block';
+    container.style.position = 'absolute';
+    container.style.inset = '0';
+    container.style.zIndex = '10';
+    container.style.pointerEvents = 'auto';
 
     trigger.style.width = '100%';
     trigger.style.height = '100%';
     trigger.style.display = 'block';
     trigger.style.margin = '0';
+    trigger.style.opacity = '0';
+    trigger.style.border = '0';
+    trigger.style.background = 'transparent';
+    trigger.style.position = 'absolute';
+    trigger.style.inset = '0';
+    trigger.style.pointerEvents = 'auto';
 
     return true;
   }, [getNativeTriggerElement]);
@@ -179,6 +188,21 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       instanceRef.current = chakraGlobal.init({
         connectToken: token.connectToken,
         container: `#${CONTAINER_ID}`,
+        width: '100%',
+        height: '56px',
+        style: {
+          width: '100%',
+          height: '56px',
+          opacity: '0',
+          border: '0',
+          background: 'transparent',
+          display: 'block',
+          margin: '0',
+          position: 'absolute',
+          inset: '0',
+          zIndex: '10',
+          pointerEvents: 'auto',
+        },
         onMessage: (event: any, data: any) => {
           void captureEvent(event, data, token.pluginId);
           if (isConnectedEvent(event, data)) {
@@ -268,90 +292,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
   };
 
-  const handleMaskedContinue = () => {
-    setError(null);
-    setStrategyResult(null);
-
-    const tryTrigger = (attempt = 0) => {
-      const trigger = getNativeTriggerElement();
-      if (trigger) {
-        trigger.click();
-        setStrategyResult('Varsayılan tetikleme çalıştı (native click).');
-        return;
-      }
-
-      if (attempt >= 12) {
-        setError('Facebook butonu henüz hazır değil. Lütfen tekrar deneyin.');
-        return;
-      }
-
-      window.setTimeout(() => tryTrigger(attempt + 1), 150);
-    };
-
-    tryTrigger();
-  };
-
-  const runStrategy = async (strategyNo: number) => {
-    setError(null);
-    setStrategyResult(null);
-
-    const trigger = getNativeTriggerElement();
-    if (!trigger && strategyNo !== 5) {
-      setError('Native buton bulunamadı.');
-      return;
-    }
-
-    try {
-      if (strategyNo === 1) {
-        trigger!.click();
-        setStrategyResult('1) Doğrudan native .click() tetiklendi.');
-        return;
-      }
-
-      if (strategyNo === 2) {
-        const event = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
-        trigger!.dispatchEvent(event);
-        setStrategyResult('2) MouseEvent dispatch ile tetiklendi.');
-        return;
-      }
-
-      if (strategyNo === 3) {
-        trigger!.focus();
-        const keyEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
-        trigger!.dispatchEvent(keyEvent);
-        setStrategyResult('3) Focus + Enter key ile tetiklendi.');
-        return;
-      }
-
-      if (strategyNo === 4) {
-        const container = document.getElementById(CONTAINER_ID);
-        const firstChild = container?.firstElementChild as HTMLElement | null;
-        if (firstChild) {
-          firstChild.click();
-          setStrategyResult('4) Container firstChild click ile tetiklendi.');
-        } else {
-          setError('4) Container firstChild bulunamadı.');
-        }
-        return;
-      }
-
-      if (strategyNo === 5) {
-        await prepareConnect();
-        window.setTimeout(() => {
-          const retriedTrigger = getNativeTriggerElement();
-          if (!retriedTrigger) {
-            setError('5) Yeniden yükleme sonrası native buton bulunamadı.');
-            return;
-          }
-          retriedTrigger.click();
-          setStrategyResult('5) Re-init sonrası native click tetiklendi.');
-        }, 350);
-      }
-    } catch (err: any) {
-      setError(err?.message || `${strategyNo}) Strateji çalıştırılamadı.`);
-    }
-  };
-
   return (
     <div className="h-full pb-20 overflow-y-auto">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
@@ -420,69 +360,21 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         ) : (
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-3">
-              <div
-                id={CONTAINER_ID}
-                aria-hidden="true"
-                className="absolute -left-[9999px] top-0 h-10 w-10 overflow-hidden opacity-0 pointer-events-none"
-              />
-
-              {!nativeTriggerReady ? (
-                <div className="rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Hazırlanıyor...
+              <div className="relative h-14 w-full rounded-md overflow-hidden">
+                <div className="absolute inset-0 rounded-md bg-[var(--rose-gold)] text-white text-sm font-semibold flex items-center justify-center">
+                  Facebook ile Devam Et
                 </div>
-              ) : null}
-
-              <p className="text-xs text-muted-foreground">Buton testleri (1-2-3-4-5)</p>
-
-              <button
-                type="button"
-                onClick={handleMaskedContinue}
-                disabled={!nativeTriggerReady}
-                className="w-full h-12 rounded-md bg-[#1877F2] text-white text-sm font-semibold disabled:opacity-60"
-              >
-                1. Continue with Facebook
-              </button>
-
-              <Button
-                type="button"
-                onClick={() => void runStrategy(2)}
-                disabled={!nativeTriggerReady}
-                className="w-full h-12"
-                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-              >
-                2. MouseEvent dispatch
-              </Button>
-
-              <Button
-                type="button"
-                onClick={() => void runStrategy(3)}
-                disabled={!nativeTriggerReady}
-                variant="outline"
-                className="w-full h-12"
-              >
-                3. Focus + Enter
-              </Button>
-
-              <Button
-                type="button"
-                onClick={() => void runStrategy(4)}
-                disabled={!nativeTriggerReady}
-                variant="outline"
-                className="w-full h-12"
-              >
-                4. Container firstChild click
-              </Button>
-
-              <Button
-                type="button"
-                onClick={() => void runStrategy(5)}
-                disabled={preparingConnect}
-                variant="outline"
-                className="w-full h-12"
-              >
-                5. Re-init + click
-              </Button>
+                <div id={CONTAINER_ID} aria-label="Facebook bağlantı alanı" className="absolute inset-0 z-10" />
+                {!nativeTriggerReady ? (
+                  <div className="absolute inset-0 z-20 rounded-md bg-[var(--rose-gold)]/55 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Hazırlanıyor...
+                  </div>
+                ) : null}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Butona dokunduğunuzda Facebook popup ekranı açılır.
+              </p>
 
               {error ? (
                 <Button
@@ -496,10 +388,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                 >
                   Tekrar Dene
                 </Button>
-              ) : null}
-
-              {strategyResult ? (
-                <p className="text-xs text-green-700">{strategyResult}</p>
               ) : null}
             </CardContent>
           </Card>
