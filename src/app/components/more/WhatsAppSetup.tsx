@@ -142,7 +142,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           height: '80px',
           transform: 'scale(2.17)',
           transformOrigin: 'top left',
-          opacity: '0',
+          opacity: '1',
           border: '0',
           background: 'transparent',
           display: 'block',
@@ -321,7 +321,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   {nativeTriggerReady ? (
                     <div
                       className="pointer-events-none absolute left-2 right-2 top-2 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
-                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+                      style={{ backgroundColor: 'rgba(178, 112, 127, 0.50)', color: 'white' }}
                     >
                       Facebook ile Devam Et (Maske)
                     </div>
