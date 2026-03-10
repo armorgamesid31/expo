@@ -58,6 +58,12 @@ const salonFaqQuestions = [
 export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const navigate = useNavigate();
   const [agentActive, setAgentActive] = useState(true);
+  const [isFaqEditOpen, setIsFaqEditOpen] = useState(false);
+  const [tone, setTone] = useState<'friendly' | 'professional' | 'balanced' | 'luxury'>('balanced');
+  const [answerLength, setAnswerLength] = useState<'short' | 'medium' | 'detailed'>('medium');
+  const [emojiUsage, setEmojiUsage] = useState<'off' | 'low' | 'normal'>('low');
+  const [bookingGuidance, setBookingGuidance] = useState<'low' | 'medium' | 'high'>('medium');
+  const [handoverThreshold, setHandoverThreshold] = useState<'early' | 'balanced' | 'late'>('balanced');
   const [salonFaqAnswers, setSalonFaqAnswers] = useState<Record<string, string>>({
     'faq-working-hours': 'Hafta içi 09:00-20:00, Cumartesi 10:00-18:00, Pazar kapalıyız.',
     'faq-cancellation': 'Randevu saatinden en az 4 saat önce ücretsiz iptal/değişiklik yapabilirsiniz.',
@@ -70,6 +76,12 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const conversionRate = 68;
   const totalConversations = 47;
   const resolvedByBot = 39;
+  const toneExamples: Record<typeof tone, string> = {
+    friendly: '"Merhaba, size hemen yardımcı olayım. Uygun bir saat bulalım mi?"',
+    professional: '"Talebinizi aldım. Uygun zaman aralığını kontrol ederek net bir öneri paylaşabilirim."',
+    balanced: '"Müsait saatleri kontrol edip size en uygun randevu seçeneğini hemen iletebilirim."',
+    luxury: '"Size özel, konfor odaklı bir randevu deneyimi planlayalım. Premium uygunluk saatlerinizi paylaşabilirim."',
+  };
 
   return (
     <div className="h-full pb-20">
@@ -83,9 +95,19 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
           <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
             <MessageCircle className="w-5 h-5 text-green-600" />
           </div>
-          <div>
-            <h1 className="text-xl font-semibold">AI WhatsApp Ajanı</h1>
-            <p className="text-xs text-muted-foreground">Otomatik müşteri iletişimi</p>
+          <div className="flex-1 flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-semibold">AI WhatsApp Ajanı</h1>
+              <p className="text-xs text-muted-foreground">Otomatik müşteri iletişimi</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/app/features/whatsapp-agent-faq')}
+              className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground active:opacity-70 mt-0.5"
+              aria-label="AI agent standart SSS ekranını aç"
+            >
+              <CircleHelp className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -201,15 +223,10 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         {/* Salon FAQ Management */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
           <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="font-semibold">Salon SSS Yönetimi</h2>
-            <button
-              type="button"
-              onClick={() => navigate('/app/features/whatsapp-agent-faq')}
-              className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground active:opacity-70"
-              aria-label="Standart SSS ekranını aç"
-            >
-              <CircleHelp className="w-4 h-4" />
-            </button>
+            <h2 className="font-semibold">Salon SSS ve Ajan Ayarları</h2>
+            <Button type="button" variant="outline" className="h-8 px-3 text-xs" onClick={() => setIsFaqEditOpen((prev) => !prev)}>
+              {isFaqEditOpen ? 'Düzenlemeyi Kapat' : 'Düzenle'}
+            </Button>
           </div>
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
@@ -222,21 +239,83 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                   <Card key={item.id} className="border-border/50">
                     <CardContent className="p-3">
                       <p className="text-sm font-medium">{item.question}</p>
-                      <textarea
-                        value={salonFaqAnswers[item.id] || ''}
-                        onChange={(e) => setSalonFaqAnswers((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                        placeholder="Bu soruya salonunuza özel cevabı yazın"
-                        rows={3}
-                        className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none mt-2"
-                      />
+                      {isFaqEditOpen ? (
+                        <textarea
+                          value={salonFaqAnswers[item.id] || ''}
+                          onChange={(e) => setSalonFaqAnswers((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          placeholder="Bu soruya salonunuza özel cevabı yazın"
+                          rows={3}
+                          className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none mt-2"
+                        />
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-2 leading-5">
+                          {salonFaqAnswers[item.id] || 'Henüz cevap girilmedi.'}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
-              <Button type="button" className="w-full">
-                SSS Cevaplarını Kaydet
-              </Button>
+              <Card className="border-border/50">
+                <CardContent className="p-3 space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Konuşma tonu</p>
+                    <p className="text-xs text-muted-foreground">Ajanın müşteriyle konuşurken kullanacağı genel üslup.</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => setTone('friendly')}>Sevecen ve Samimi</Button>
+                      <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => setTone('professional')}>Profesyonel</Button>
+                      <Button type="button" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => setTone('balanced')}>Dengeli</Button>
+                      <Button type="button" variant={tone === 'luxury' ? 'default' : 'outline'} onClick={() => setTone('luxury')}>Lüks / Prestij</Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground border border-border/60 rounded-md p-2 bg-muted/30">
+                      Örnek yaklaşım: {toneExamples[tone]}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Cevap uzunluğu</p>
+                    <p className="text-xs text-muted-foreground">Müşteriye kısa mı, detaylı mı yanıt verileceğini belirler.</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button type="button" variant={answerLength === 'short' ? 'default' : 'outline'} onClick={() => setAnswerLength('short')}>Kısa</Button>
+                      <Button type="button" variant={answerLength === 'medium' ? 'default' : 'outline'} onClick={() => setAnswerLength('medium')}>Orta</Button>
+                      <Button type="button" variant={answerLength === 'detailed' ? 'default' : 'outline'} onClick={() => setAnswerLength('detailed')}>Detaylı</Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Emoji kullanımı</p>
+                    <p className="text-xs text-muted-foreground">Yanıtlarda emoji yoğunluğunu kontrol eder.</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => setEmojiUsage('off')}>Kapalı</Button>
+                      <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => setEmojiUsage('low')}>Az</Button>
+                      <Button type="button" variant={emojiUsage === 'normal' ? 'default' : 'outline'} onClick={() => setEmojiUsage('normal')}>Normal</Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Randevuya yönlendirme seviyesi</p>
+                    <p className="text-xs text-muted-foreground">Konuşma içinde müşteriyi randevu adımına ne kadar aktif yönlendireceğini belirler.</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button type="button" variant={bookingGuidance === 'low' ? 'default' : 'outline'} onClick={() => setBookingGuidance('low')}>Düşük</Button>
+                      <Button type="button" variant={bookingGuidance === 'medium' ? 'default' : 'outline'} onClick={() => setBookingGuidance('medium')}>Orta</Button>
+                      <Button type="button" variant={bookingGuidance === 'high' ? 'default' : 'outline'} onClick={() => setBookingGuidance('high')}>Yüksek</Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">İnsan personele devir eşiği</p>
+                    <p className="text-xs text-muted-foreground">Müşteri memnuniyeti riski, karmaşık talep veya şikayet durumunda ajanın görüşmeyi ne kadar erken gerçek personele devredeceğini belirler.</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button type="button" variant={handoverThreshold === 'early' ? 'default' : 'outline'} onClick={() => setHandoverThreshold('early')}>Erken Devir</Button>
+                      <Button type="button" variant={handoverThreshold === 'balanced' ? 'default' : 'outline'} onClick={() => setHandoverThreshold('balanced')}>Dengeli</Button>
+                      <Button type="button" variant={handoverThreshold === 'late' ? 'default' : 'outline'} onClick={() => setHandoverThreshold('late')}>Geç Devir</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {isFaqEditOpen ? <Button type="button" className="w-full">SSS ve Ajan Ayarlarını Kaydet</Button> : null}
             </CardContent>
           </Card>
         </motion.div>
