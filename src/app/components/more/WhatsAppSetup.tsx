@@ -45,7 +45,6 @@ type ChakraInstance = {
 
 const CONTAINER_ID = 'chakra-whatsapp-connect-container';
 const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
-const CHAKRA_CONNECT_PAGE_URL = 'https://app.chakrahq.com/p/whatsapp-partner/connect';
 
 function loadChakraSdk(sdkUrl: string): Promise<void> {
   if ((window as any).ChakraWhatsappConnect?.init) {
@@ -89,7 +88,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
   const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
-  const [connectUrl, setConnectUrl] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +115,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
     try {
       const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
-      setConnectUrl(`${CHAKRA_CONNECT_PAGE_URL}?connectToken=${encodeURIComponent(token.connectToken)}`);
       await loadChakraSdk(token.sdkUrl);
 
       for (const instance of instanceRef.current) {
@@ -236,7 +233,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       });
       setPluginId(response.pluginId);
       setNativeTriggerReady(false);
-      setConnectUrl(null);
       await prepareConnect();
     } catch (err: any) {
       setError(err?.message || 'Kurulum başlatılamadı.');
@@ -244,22 +240,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     } finally {
       setCreatingPlugin(false);
     }
-  };
-
-  const handleMaskedContinue = () => {
-    setError(null);
-    if (!connectUrl) {
-      setError('Bağlantı linki henüz hazır değil. Lütfen tekrar deneyin.');
-      return;
-    }
-
-    const popup = window.open(connectUrl, 'chakra_connect_popup', 'popup=yes,width=520,height=760');
-    if (!popup) {
-      setError('Popup engellendi. Tarayıcıda popup izni verip tekrar deneyin.');
-      return;
-    }
-
-    popup.focus();
   };
 
   return (
@@ -339,14 +319,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                     className="absolute left-2 right-2 top-2 h-[58px]"
                   />
                   {nativeTriggerReady ? (
-                    <Button
-                      type="button"
-                      onClick={handleMaskedContinue}
-                      className="absolute left-2 right-2 top-2 h-[58px] text-base font-semibold"
+                    <div
+                      className="pointer-events-none absolute left-2 right-2 top-2 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
                       style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
                     >
                       Facebook ile Devam Et (Maske)
-                    </Button>
+                    </div>
                   ) : (
                     <div className="pointer-events-none absolute left-2 right-2 top-2 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
