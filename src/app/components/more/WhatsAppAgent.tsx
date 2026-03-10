@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { ArrowLeft, MessageCircle, Bot, Zap, TrendingUp, CheckCircle2, XCircle, ChevronRight, CircleHelp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, MessageCircle, Bot, Zap, TrendingUp, CheckCircle2, XCircle, ChevronRight, CircleHelp, Plus, Pencil, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../ui/card';
 import { Switch } from '../ui/switch';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { motion } from 'motion/react';
+import { useAuth } from '../../context/AuthContext';
 
 interface WhatsAppAgentProps {
   onBack: () => void;
@@ -57,9 +58,12 @@ const salonFaqQuestions = [
 
 export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const navigate = useNavigate();
+  const { apiFetch } = useAuth();
   const [agentActive, setAgentActive] = useState(true);
-  const [isFaqEditOpen, setIsFaqEditOpen] = useState(false);
-  const [tone, setTone] = useState<'friendly' | 'professional' | 'balanced' | 'luxury'>('balanced');
+  const [isFaqExpanded, setIsFaqExpanded] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [tone, setTone] = useState<'friendly' | 'professional' | 'balanced'>('balanced');
   const [answerLength, setAnswerLength] = useState<'short' | 'medium' | 'detailed'>('medium');
   const [emojiUsage, setEmojiUsage] = useState<'off' | 'low' | 'normal'>('low');
   const [bookingGuidance, setBookingGuidance] = useState<'low' | 'medium' | 'high'>('medium');
@@ -80,8 +84,62 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     friendly: '"Merhaba, size hemen yardımcı olayım. Uygun bir saat bulalım mi?"',
     professional: '"Talebinizi aldım. Uygun zaman aralığını kontrol ederek net bir öneri paylaşabilirim."',
     balanced: '"Müsait saatleri kontrol edip size en uygun randevu seçeneğini hemen iletebilirim."',
-    luxury: '"Size özel, konfor odaklı bir randevu deneyimi planlayalım. Premium uygunluk saatlerinizi paylaşabilirim."',
   };
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const response = await apiFetch<{
+          settings?: {
+            tone?: 'friendly' | 'professional' | 'balanced';
+            answerLength?: 'short' | 'medium' | 'detailed';
+            emojiUsage?: 'off' | 'low' | 'normal';
+            bookingGuidance?: 'low' | 'medium' | 'high';
+            handoverThreshold?: 'early' | 'balanced' | 'late';
+            faqAnswers?: Record<string, string>;
+          };
+        }>('/api/admin/whatsapp-agent/settings');
+
+        if (!active || !response?.settings) return;
+        if (response.settings.tone) setTone(response.settings.tone);
+        if (response.settings.answerLength) setAnswerLength(response.settings.answerLength);
+        if (response.settings.emojiUsage) setEmojiUsage(response.settings.emojiUsage);
+        if (response.settings.bookingGuidance) setBookingGuidance(response.settings.bookingGuidance);
+        if (response.settings.handoverThreshold) setHandoverThreshold(response.settings.handoverThreshold);
+        if (response.settings.faqAnswers) {
+          setSalonFaqAnswers((prev) => ({ ...prev, ...response.settings.faqAnswers }));
+        }
+      } catch (error) {
+        console.error('WhatsApp agent settings load failed:', error);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [apiFetch]);
+
+  async function saveSettings() {
+    setIsSaving(true);
+    try {
+      await apiFetch('/api/admin/whatsapp-agent/settings', {
+        method: 'PUT',
+        body: JSON.stringify({
+          tone,
+          answerLength,
+          emojiUsage,
+          bookingGuidance,
+          handoverThreshold,
+          faqAnswers: salonFaqAnswers,
+        }),
+      });
+      setEditingQuestionId(null);
+    } catch (error) {
+      console.error('WhatsApp agent settings save failed:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <div className="h-full pb-20">
@@ -224,38 +282,86 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
           <div className="flex items-center justify-between mb-3 px-1">
             <h2 className="font-semibold">Salon SSS ve Ajan Ayarları</h2>
-            <Button type="button" variant="outline" className="h-8 px-3 text-xs" onClick={() => setIsFaqEditOpen((prev) => !prev)}>
-              {isFaqEditOpen ? 'Düzenlemeyi Kapat' : 'Düzenle'}
+            <Button type="button" className="h-8 px-3 text-xs" onClick={saveSettings} disabled={isSaving}>
+              {isSaving ? 'Kaydediliyor...' : 'Ayarları Kaydet'}
             </Button>
           </div>
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
-              <p className="text-xs text-muted-foreground">
-                Sorular standarttır. Siz sadece salonunuza uygun cevapları doldurun. Bu cevaplar ajanın yanıt kalitesini artırır.
-              </p>
+              <Card className="border-border/50">
+                <CardContent className="p-3">
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between text-left"
+                    onClick={() => setIsFaqExpanded((prev) => !prev)}
+                  >
+                    <div>
+                      <p className="text-sm font-semibold">Sık Sorulan Sorular</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        WhatsApp ajanınızın salonunuza verdiği cevapları kişiselleştirmek için bu alanı doldurun.
+                      </p>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isFaqExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                </CardContent>
+              </Card>
 
-              <div className="space-y-2">
-                {salonFaqQuestions.map((item) => (
-                  <Card key={item.id} className="border-border/50">
-                    <CardContent className="p-3">
-                      <p className="text-sm font-medium">{item.question}</p>
-                      {isFaqEditOpen ? (
-                        <textarea
-                          value={salonFaqAnswers[item.id] || ''}
-                          onChange={(e) => setSalonFaqAnswers((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                          placeholder="Bu soruya salonunuza özel cevabı yazın"
-                          rows={3}
-                          className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none mt-2"
-                        />
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-2 leading-5">
-                          {salonFaqAnswers[item.id] || 'Henüz cevap girilmedi.'}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {isFaqExpanded ? (
+                <div className="space-y-2">
+                  {salonFaqQuestions.map((item) => {
+                    const answer = (salonFaqAnswers[item.id] || '').trim();
+                    const answered = answer.length > 0;
+                    const isEditing = editingQuestionId === item.id;
+                    return (
+                      <Card key={item.id} className="border-border/50">
+                        <CardContent className="p-3">
+                          <div className="flex items-start gap-2">
+                            <div className={`w-2 h-2 rounded-full mt-1.5 ${answered ? 'bg-green-500' : 'bg-amber-500'}`} />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{item.question}</p>
+                              {!isEditing ? (
+                                <p className="text-xs text-muted-foreground mt-2 leading-5">
+                                  {answered ? answer : 'Henüz cevaplanmadı.'}
+                                </p>
+                              ) : (
+                                <div className="mt-2 space-y-2">
+                                  <textarea
+                                    value={salonFaqAnswers[item.id] || ''}
+                                    onChange={(e) => setSalonFaqAnswers((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                                    placeholder="Bu soruya salonunuza özel cevabı yazın"
+                                    rows={3}
+                                    className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
+                                  />
+                                  <div className="flex gap-2">
+                                    <Button type="button" size="sm" onClick={saveSettings} disabled={isSaving}>
+                                      {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+                                    </Button>
+                                    <Button type="button" size="sm" variant="outline" onClick={() => setEditingQuestionId(null)}>
+                                      Vazgeç
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {!isEditing ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="w-8 h-8 shrink-0"
+                                onClick={() => setEditingQuestionId(item.id)}
+                                aria-label={answered ? 'Cevabı düzenle' : 'Cevap ekle'}
+                              >
+                                {answered ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : null}
 
               <Card className="border-border/50">
                 <CardContent className="p-3 space-y-4">
@@ -265,8 +371,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                     <div className="grid grid-cols-2 gap-2">
                       <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => setTone('friendly')}>Sevecen ve Samimi</Button>
                       <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => setTone('professional')}>Profesyonel</Button>
-                      <Button type="button" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => setTone('balanced')}>Dengeli</Button>
-                      <Button type="button" variant={tone === 'luxury' ? 'default' : 'outline'} onClick={() => setTone('luxury')}>Lüks / Prestij</Button>
+                      <Button type="button" className="col-span-2" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => setTone('balanced')}>Dengeli</Button>
                     </div>
                     <p className="text-xs text-muted-foreground border border-border/60 rounded-md p-2 bg-muted/30">
                       Örnek yaklaşım: {toneExamples[tone]}
@@ -315,7 +420,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                 </CardContent>
               </Card>
 
-              {isFaqEditOpen ? <Button type="button" className="w-full">SSS ve Ajan Ayarlarını Kaydet</Button> : null}
             </CardContent>
           </Card>
         </motion.div>
