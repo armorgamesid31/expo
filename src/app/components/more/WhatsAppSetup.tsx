@@ -312,7 +312,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Büyütülmüş Chakra + Maske</p>
-                <div className="relative w-full h-[74px] overflow-hidden rounded-md border border-border/60 bg-white p-2">
+                <div className="relative w-full h-[78px] overflow-hidden rounded-md border border-border/60 bg-white p-2">
                   <div
                     id={CONTAINER_ID}
                     aria-label="Büyütülmüş Chakra butonu"
@@ -320,13 +320,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   />
                   {nativeTriggerReady ? (
                     <div
-                      className="pointer-events-none absolute left-2 right-2 top-2 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
+                      className="pointer-events-none absolute left-[10px] right-[22px] top-[14px] h-[44px] rounded-md text-base font-semibold flex items-center justify-center"
                       style={{ backgroundColor: 'rgba(178, 112, 127, 0.50)', color: 'white' }}
                     >
                       Facebook ile Devam Et (Maske)
                     </div>
                   ) : (
-                    <div className="pointer-events-none absolute left-2 right-2 top-2 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                    <div className="pointer-events-none absolute left-[10px] right-[22px] top-[14px] h-[44px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Buton hazırlanıyor...
                     </div>
