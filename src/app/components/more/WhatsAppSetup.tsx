@@ -140,7 +140,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         style: {
           width: '260px',
           height: '80px',
-          transform: 'translate(-2px, -16px) scale(2.17)',
+          transform: 'scale(2.17)',
           transformOrigin: 'top left',
           opacity: '1',
           border: '0',
@@ -312,21 +312,21 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Büyütülmüş Chakra + Maske</p>
-                <div className="relative w-full h-[78px] overflow-hidden rounded-md border border-border/60 bg-white p-2">
+                <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
                   <div
                     id={CONTAINER_ID}
                     aria-label="Büyütülmüş Chakra butonu"
-                    className="absolute left-2 right-2 top-2 h-[58px]"
+                    className="absolute inset-0 h-[58px]"
                   />
                   {nativeTriggerReady ? (
                     <div
-                      className="pointer-events-none absolute left-[10px] right-[6px] top-[30px] h-[34px] rounded-md text-base font-semibold flex items-center justify-center"
+                      className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
                       style={{ backgroundColor: 'rgba(178, 112, 127, 0.50)', color: 'white' }}
                     >
                       Facebook ile Devam Et (Maske)
                     </div>
                   ) : (
-                    <div className="pointer-events-none absolute left-[10px] right-[6px] top-[30px] h-[34px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                    <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Buton hazırlanıyor...
                     </div>
