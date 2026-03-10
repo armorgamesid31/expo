@@ -10,6 +10,7 @@ import { Blacklist } from '../components/more/Blacklist';
 import { Campaigns } from '../components/more/Campaigns';
 import { Automations } from '../components/more/Automations';
 import { HelpCenter } from '../components/more/HelpCenter';
+import { WhatsAppAgentFaq } from '../components/more/WhatsAppAgentFaq';
 
 export function FeatureDetailPage() {
   const { featureKey } = useParams();
@@ -18,6 +19,7 @@ export function FeatureDetailPage() {
   const onBack = () => navigate('/app/features');
 
   if (featureKey === 'whatsapp-agent') return <WhatsAppAgent onBack={onBack} />;
+  if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={() => navigate('/app/features/whatsapp-agent')} />;
   if (featureKey === 'whatsapp-setup') return <WhatsAppSetup onBack={onBack} />;
   if (featureKey === 'website-builder') return <WebsiteBuilder onBack={onBack} />;
   if (featureKey === 'marketing') return <MarketingAutomation onBack={onBack} />;

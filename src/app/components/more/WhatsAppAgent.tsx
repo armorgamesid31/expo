@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { ArrowLeft, MessageCircle, Bot, Zap, TrendingUp, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../ui/card';
 import { Switch } from '../ui/switch';
 import { Badge } from '../ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Button } from '../ui/button';
 import { motion } from 'motion/react';
 
 interface WhatsAppAgentProps {
@@ -45,51 +46,43 @@ const conversations = [
   },
 ];
 
-const faqItems = [
-  {
-    id: 'faq-hours',
-    tag: 'Mesai',
-    question: 'Ajan mesai saatleri dışında ne yapar?',
-    answer: 'Mesai dışı mesajları nazik bir karşılama metniyle alır, müşteriye uygun saatleri sunar ve sabah vardiyasına görev olarak bırakır.',
-  },
-  {
-    id: 'faq-pricing',
-    tag: 'Fiyat',
-    question: 'Ajan fiyat sorularını nasıl yanıtlar?',
-    answer: 'Sistem, aktif hizmet listenizdeki güncel fiyatları kullanır. Belirsiz bir hizmet adı gelirse netleştirme sorusu sorar.',
-  },
-  {
-    id: 'faq-cancel',
-    tag: 'Randevu',
-    question: 'Müşteri iptal veya erteleme isterse ne olur?',
-    answer: 'Ajan talebi doğrular, uygun yeni slotları gösterir ve işlem sonucunu müşteriye tek mesajda özetler.',
-  },
-  {
-    id: 'faq-human',
-    tag: 'Operasyon',
-    question: 'Hangi durumda konuşma personele devredilir?',
-    answer: 'Şikayet, ödeme anlaşmazlığı, agresif dil veya sistem dışı özel talep algılanırsa konuşma otomatik olarak personele yönlendirilir.',
-  },
-  {
-    id: 'faq-language',
-    tag: 'Dil',
-    question: 'Ajan birden fazla dilde yanıt verebilir mi?',
-    answer: 'Evet. Müşterinin mesaj dilini algılar ve desteklenen diller arasında uygun dilde yanıt verir.',
-  },
-  {
-    id: 'faq-training',
-    tag: 'Kurulum',
-    question: 'Yanıtların salonumuza göre özelleşmesi nasıl yapılır?',
-    answer: 'Salon bilgileri, hizmetler ve uzman listesi güncel tutulduğunda ajan bu verileri sistem prompt tabanında kullanarak yanıt üretir.',
-  },
-];
+type SalonFaqItem = { id: number; question: string; answer: string };
 
 export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
+  const navigate = useNavigate();
   const [agentActive, setAgentActive] = useState(true);
+  const [newQuestion, setNewQuestion] = useState('');
+  const [newAnswer, setNewAnswer] = useState('');
+  const [salonFaqs, setSalonFaqs] = useState<SalonFaqItem[]>([
+    {
+      id: 1,
+      question: 'Pazar günleri açık mısınız?',
+      answer: 'Pazar 10:00-18:00 saatleri arasında hizmet veriyoruz.',
+    },
+    {
+      id: 2,
+      question: 'İlk randevuda indirim var mı?',
+      answer: 'Yeni müşteriler için ilk ziyarette yüzde 10 hoş geldin indirimi uygulanır.',
+    },
+  ]);
 
   const conversionRate = 68;
   const totalConversations = 47;
   const resolvedByBot = 39;
+  const nextFaqId = salonFaqs.length ? Math.max(...salonFaqs.map((item) => item.id)) + 1 : 1;
+
+  const handleAddSalonFaq = () => {
+    const question = newQuestion.trim();
+    const answer = newAnswer.trim();
+    if (!question || !answer) return;
+    setSalonFaqs((prev) => [...prev, { id: nextFaqId, question, answer }]);
+    setNewQuestion('');
+    setNewAnswer('');
+  };
+
+  const handleRemoveSalonFaq = (id: number) => {
+    setSalonFaqs((prev) => prev.filter((item) => item.id !== id));
+  };
 
   return (
     <div className="h-full pb-20">
@@ -218,28 +211,61 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
           </div>
         </motion.div>
 
-        {/* FAQ */}
+        {/* Salon FAQ Management */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
-          <h2 className="font-semibold mb-3 px-1">Sık Sorulan Sorular</h2>
+          <h2 className="font-semibold mb-3 px-1">Salon SSS Yönetimi</h2>
           <Card className="border-border/50">
-            <CardContent className="p-3">
-              <Accordion type="single" collapsible>
-                {faqItems.map((item) => (
-                  <AccordionItem key={item.id} value={item.id}>
-                    <AccordionTrigger>
-                      <div className="flex items-center gap-2 text-left">
-                        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 h-auto">
-                          {item.tag}
-                        </Badge>
-                        <span className="text-sm">{item.question}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <p className="text-sm text-muted-foreground leading-6">{item.answer}</p>
-                    </AccordionContent>
-                  </AccordionItem>
+            <CardContent className="p-4 space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Buraya yazdığınız SSS cevapları, ajanın salonunuza özel cevap üretmesine yardımcı olur.
+              </p>
+
+              <div className="space-y-2">
+                <input
+                  value={newQuestion}
+                  onChange={(e) => setNewQuestion(e.target.value)}
+                  placeholder="Soru (örn: Park yeriniz var mı?)"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                />
+                <textarea
+                  value={newAnswer}
+                  onChange={(e) => setNewAnswer(e.target.value)}
+                  placeholder="Cevap"
+                  rows={3}
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
+                />
+                <Button type="button" className="w-full" onClick={handleAddSalonFaq}>
+                  SSS Ekle
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {salonFaqs.map((item) => (
+                  <Card key={item.id} className="border-border/50">
+                    <CardContent className="p-3">
+                      <p className="text-sm font-medium">{item.question}</p>
+                      <p className="text-xs text-muted-foreground mt-1 leading-5">{item.answer}</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="mt-2 h-7 px-2 text-xs text-red-600 hover:text-red-700"
+                        onClick={() => handleRemoveSalonFaq(item.id)}
+                      >
+                        Sil
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ))}
-              </Accordion>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => navigate('/app/features/whatsapp-agent-faq')}
+              >
+                Standart SSS Ekranını Aç
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
