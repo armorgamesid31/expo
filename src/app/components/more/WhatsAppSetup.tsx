@@ -242,6 +242,16 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
   };
 
+  const handleDevBypass = () => {
+    setError(null);
+    setConnected(true);
+    setNativeTriggerReady(true);
+    setStatusText('Test modu aktif: WhatsApp bağlantısı simüle edildi.');
+    window.setTimeout(() => {
+      onBack();
+    }, 250);
+  };
+
   return (
     <div className="h-full pb-20 overflow-y-auto">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
@@ -305,6 +315,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   'Başla'
                 )}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDevBypass}
+                className="w-full"
+              >
+                Test Modu: Bağlandı Olarak Devam Et
+              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -333,6 +351,15 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   )}
                 </div>
               </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDevBypass}
+                className="w-full"
+              >
+                Test Modu: Bağlandı Olarak Devam Et
+              </Button>
 
               {error ? (
                 <Button
