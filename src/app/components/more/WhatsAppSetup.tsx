@@ -323,7 +323,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                       className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
                       style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
                     >
-                      Facebook ile Devam Et (Maske)
+                      Facebook ile Güvenli Bağlantı
                     </div>
                   ) : (
                     <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
