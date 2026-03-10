@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -45,6 +46,7 @@ type ChakraInstance = {
 
 const CONTAINER_ID = 'chakra-whatsapp-connect-container';
 const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
+const WHATSAPP_DEV_BYPASS_KEY = 'kedy_whatsapp_dev_bypass_connected';
 
 function loadChakraSdk(sdkUrl: string): Promise<void> {
   if ((window as any).ChakraWhatsappConnect?.init) {
@@ -81,6 +83,7 @@ function isConnectedEvent(event: unknown, data: unknown): boolean {
 
 export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const { apiFetch } = useAuth();
+  const navigate = useNavigate();
   const instanceRef = useRef<ChakraInstance[]>([]);
 
   const [loadingStatus, setLoadingStatus] = useState(true);
@@ -89,6 +92,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [pluginId, setPluginId] = useState<string | null>(null);
   const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [devBypassed, setDevBypassed] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
 
@@ -179,6 +183,15 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   }, [apiFetch, captureEvent]);
 
   useEffect(() => {
+    const bypass = window.localStorage.getItem(WHATSAPP_DEV_BYPASS_KEY) === '1';
+    if (bypass) {
+      setDevBypassed(true);
+      setConnected(true);
+      setStatusText('Test modu aktif: WhatsApp bağlantısı simüle edildi.');
+    }
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
 
     (async () => {
@@ -244,12 +257,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
   const handleDevBypass = () => {
     setError(null);
+    window.localStorage.setItem(WHATSAPP_DEV_BYPASS_KEY, '1');
+    setDevBypassed(true);
     setConnected(true);
     setNativeTriggerReady(true);
     setStatusText('Test modu aktif: WhatsApp bağlantısı simüle edildi.');
-    window.setTimeout(() => {
-      onBack();
-    }, 250);
+    navigate('/app/features/whatsapp-agent');
   };
 
   return (
@@ -315,14 +328,16 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   'Başla'
                 )}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDevBypass}
-                className="w-full"
-              >
-                Test Modu: Bağlandı Olarak Devam Et
-              </Button>
+              {!devBypassed ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDevBypass}
+                  className="w-full"
+                >
+                  Test Modu: Bağlandı Olarak Devam Et
+                </Button>
+              ) : null}
             </CardContent>
           </Card>
         ) : (
@@ -352,14 +367,16 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                 </div>
               </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDevBypass}
-                className="w-full"
-              >
-                Test Modu: Bağlandı Olarak Devam Et
-              </Button>
+              {!devBypassed ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDevBypass}
+                  className="w-full"
+                >
+                  Test Modu: Bağlandı Olarak Devam Et
+                </Button>
+              ) : null}
 
               {error ? (
                 <Button
