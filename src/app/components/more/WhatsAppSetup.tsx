@@ -328,16 +328,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   'Başla'
                 )}
               </Button>
-              {!devBypassed ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleDevBypass}
-                  className="w-full"
-                >
-                  Test Modu: Bağlandı Olarak Devam Et
-                </Button>
-              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDevBypass}
+                className="w-full"
+              >
+                {devBypassed ? 'Test Modu: AI Agent Ekranını Aç' : 'Test Modu: Bağlandı Olarak Devam Et'}
+              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -367,16 +365,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                 </div>
               </div>
 
-              {!devBypassed ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleDevBypass}
-                  className="w-full"
-                >
-                  Test Modu: Bağlandı Olarak Devam Et
-                </Button>
-              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDevBypass}
+                className="w-full"
+              >
+                {devBypassed ? 'Test Modu: AI Agent Ekranını Aç' : 'Test Modu: Bağlandı Olarak Devam Et'}
+              </Button>
 
               {error ? (
                 <Button
