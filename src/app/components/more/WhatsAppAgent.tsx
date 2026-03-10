@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, MessageCircle, Bot, Zap, TrendingUp, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Bot, Zap, TrendingUp, CheckCircle2, XCircle, ChevronRight, CircleHelp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../ui/card';
 import { Switch } from '../ui/switch';
@@ -46,43 +46,30 @@ const conversations = [
   },
 ];
 
-type SalonFaqItem = { id: number; question: string; answer: string };
+const salonFaqQuestions = [
+  { id: 'faq-working-hours', question: 'Çalışma saatleriniz ve uygun günleriniz nedir?' },
+  { id: 'faq-cancellation', question: 'İptal ve değişiklik politikanız nedir?' },
+  { id: 'faq-payment', question: 'Hangi ödeme yöntemlerini kabul ediyorsunuz?' },
+  { id: 'faq-late-policy', question: 'Geç kalınan randevularda politikanız nedir?' },
+  { id: 'faq-first-visit', question: 'İlk ziyaret müşterileri için özel bilgilendirme var mı?' },
+  { id: 'faq-whatsapp-response', question: 'Müşteriler mesajlara ortalama ne kadar sürede yanıt alır?' },
+];
 
 export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const navigate = useNavigate();
   const [agentActive, setAgentActive] = useState(true);
-  const [newQuestion, setNewQuestion] = useState('');
-  const [newAnswer, setNewAnswer] = useState('');
-  const [salonFaqs, setSalonFaqs] = useState<SalonFaqItem[]>([
-    {
-      id: 1,
-      question: 'Pazar günleri açık mısınız?',
-      answer: 'Pazar 10:00-18:00 saatleri arasında hizmet veriyoruz.',
-    },
-    {
-      id: 2,
-      question: 'İlk randevuda indirim var mı?',
-      answer: 'Yeni müşteriler için ilk ziyarette yüzde 10 hoş geldin indirimi uygulanır.',
-    },
-  ]);
+  const [salonFaqAnswers, setSalonFaqAnswers] = useState<Record<string, string>>({
+    'faq-working-hours': 'Hafta içi 09:00-20:00, Cumartesi 10:00-18:00, Pazar kapalıyız.',
+    'faq-cancellation': 'Randevu saatinden en az 4 saat önce ücretsiz iptal/değişiklik yapabilirsiniz.',
+    'faq-payment': 'Nakit, kredi kartı ve havale ile ödeme kabul ediyoruz.',
+    'faq-late-policy': '15 dakikadan fazla gecikmede slot uygunluğuna göre yeni saat önerilir.',
+    'faq-first-visit': 'İlk ziyarette kısa bir ihtiyaç analizi yapıyoruz ve önerilen paketleri sunuyoruz.',
+    'faq-whatsapp-response': 'Çalışma saatlerinde ortalama 5-10 dakika içinde geri dönüş sağlıyoruz.',
+  });
 
   const conversionRate = 68;
   const totalConversations = 47;
   const resolvedByBot = 39;
-  const nextFaqId = salonFaqs.length ? Math.max(...salonFaqs.map((item) => item.id)) + 1 : 1;
-
-  const handleAddSalonFaq = () => {
-    const question = newQuestion.trim();
-    const answer = newAnswer.trim();
-    if (!question || !answer) return;
-    setSalonFaqs((prev) => [...prev, { id: nextFaqId, question, answer }]);
-    setNewQuestion('');
-    setNewAnswer('');
-  };
-
-  const handleRemoveSalonFaq = (id: number) => {
-    setSalonFaqs((prev) => prev.filter((item) => item.id !== id));
-  };
 
   return (
     <div className="h-full pb-20">
@@ -213,58 +200,42 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
 
         {/* Salon FAQ Management */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
-          <h2 className="font-semibold mb-3 px-1">Salon SSS Yönetimi</h2>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 className="font-semibold">Salon SSS Yönetimi</h2>
+            <button
+              type="button"
+              onClick={() => navigate('/app/features/whatsapp-agent-faq')}
+              className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground active:opacity-70"
+              aria-label="Standart SSS ekranını aç"
+            >
+              <CircleHelp className="w-4 h-4" />
+            </button>
+          </div>
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
               <p className="text-xs text-muted-foreground">
-                Buraya yazdığınız SSS cevapları, ajanın salonunuza özel cevap üretmesine yardımcı olur.
+                Sorular standarttır. Siz sadece salonunuza uygun cevapları doldurun. Bu cevaplar ajanın yanıt kalitesini artırır.
               </p>
 
               <div className="space-y-2">
-                <input
-                  value={newQuestion}
-                  onChange={(e) => setNewQuestion(e.target.value)}
-                  placeholder="Soru (örn: Park yeriniz var mı?)"
-                  className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                />
-                <textarea
-                  value={newAnswer}
-                  onChange={(e) => setNewAnswer(e.target.value)}
-                  placeholder="Cevap"
-                  rows={3}
-                  className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
-                />
-                <Button type="button" className="w-full" onClick={handleAddSalonFaq}>
-                  SSS Ekle
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                {salonFaqs.map((item) => (
+                {salonFaqQuestions.map((item) => (
                   <Card key={item.id} className="border-border/50">
                     <CardContent className="p-3">
                       <p className="text-sm font-medium">{item.question}</p>
-                      <p className="text-xs text-muted-foreground mt-1 leading-5">{item.answer}</p>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="mt-2 h-7 px-2 text-xs text-red-600 hover:text-red-700"
-                        onClick={() => handleRemoveSalonFaq(item.id)}
-                      >
-                        Sil
-                      </Button>
+                      <textarea
+                        value={salonFaqAnswers[item.id] || ''}
+                        onChange={(e) => setSalonFaqAnswers((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                        placeholder="Bu soruya salonunuza özel cevabı yazın"
+                        rows={3}
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none mt-2"
+                      />
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/app/features/whatsapp-agent-faq')}
-              >
-                Standart SSS Ekranını Aç
+              <Button type="button" className="w-full">
+                SSS Cevaplarını Kaydet
               </Button>
             </CardContent>
           </Card>
