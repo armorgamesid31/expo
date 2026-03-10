@@ -320,13 +320,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   />
                   {nativeTriggerReady ? (
                     <div
-                      className="pointer-events-none absolute left-[10px] right-[22px] top-[14px] h-[44px] rounded-md text-base font-semibold flex items-center justify-center"
+                      className="pointer-events-none absolute left-[10px] right-[6px] top-[30px] h-[34px] rounded-md text-base font-semibold flex items-center justify-center"
                       style={{ backgroundColor: 'rgba(178, 112, 127, 0.50)', color: 'white' }}
                     >
                       Facebook ile Devam Et (Maske)
                     </div>
                   ) : (
-                    <div className="pointer-events-none absolute left-[10px] right-[22px] top-[14px] h-[44px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2.5 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                    <div className="pointer-events-none absolute left-[10px] right-[6px] top-[30px] h-[34px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Buton hazırlanıyor...
                     </div>
