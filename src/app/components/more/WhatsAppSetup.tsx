@@ -140,7 +140,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         style: {
           width: '260px',
           height: '80px',
-          transform: 'scale(2.17)',
+          transform: 'translate(-2px, -16px) scale(2.17)',
           transformOrigin: 'top left',
           opacity: '1',
           border: '0',
