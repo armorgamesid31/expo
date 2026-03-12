@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Bell, CalendarX2, ChevronRight, Clock3 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bell, CalendarX2, ChevronRight, MapPin, ShieldCheck, TriangleAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Input } from '../components/ui/input';
 import { cn } from '../components/ui/utils';
 
 interface AutomationItem {
@@ -17,79 +18,62 @@ interface AutomationItem {
   isEnabled: boolean;
 }
 
-type PresetKey = 'appointment_reminder_24h' | 'appointment_reminder_2h' | 'appointment_no_show_warning';
+type SaveKey = 'reminder' | 'no-show' | null;
+type EditingType = 'reminder' | 'no-show' | null;
 
-type AutomationPreset = {
-  key: PresetKey;
-  name: string;
-  description: string;
-  icon: typeof Bell;
-  iconClassName: string;
-  configKey: string;
-  defaultValue: number;
-  options: Array<{ value: number; label: string }>;
-  badgeLabel: (value: number) => string;
+const REMINDER_KEY = 'appointment_reminder';
+const LEGACY_REMINDER_24H_KEY = 'appointment_reminder_24h';
+const LEGACY_REMINDER_2H_KEY = 'appointment_reminder_2h';
+const NO_SHOW_KEY = 'appointment_no_show_warning';
+
+interface ReminderConfig {
+  enable2h: boolean;
+  enable24h: boolean;
+  enable72h: boolean;
+  sendLocationAt2h: boolean;
+  requestConfirmationAt24h: boolean;
+  minChangeHoursAt72h: number;
+}
+
+interface NoShowConfig {
+  delayMinutes: number;
+}
+
+const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
+  enable2h: true,
+  enable24h: true,
+  enable72h: false,
+  sendLocationAt2h: true,
+  requestConfirmationAt24h: true,
+  minChangeHoursAt72h: 12,
 };
 
-const PRESETS: AutomationPreset[] = [
-  {
-    key: 'appointment_reminder_24h',
-    name: 'Randevu Hatırlatması (24 Saat)',
-    description: 'Randevudan 24 saat önce otomatik hatırlatma',
-    icon: Bell,
-    iconClassName: 'text-[#8bb5ff] bg-[#1d2f63]',
-    configKey: 'leadHours',
-    defaultValue: 24,
-    options: [
-      { value: 48, label: '48 saat önce' },
-      { value: 24, label: '24 saat önce' },
-      { value: 12, label: '12 saat önce' },
-      { value: 6, label: '6 saat önce' },
-    ],
-    badgeLabel: (value) => `${value} saat önce`,
-  },
-  {
-    key: 'appointment_reminder_2h',
-    name: 'Randevu Hatırlatması (2 Saat)',
-    description: 'Randevudan 2 saat önce kısa hatırlatma',
-    icon: Clock3,
-    iconClassName: 'text-[#b8a7ff] bg-[#2b2455]',
-    configKey: 'leadHours',
-    defaultValue: 2,
-    options: [
-      { value: 3, label: '3 saat önce' },
-      { value: 2, label: '2 saat önce' },
-      { value: 1, label: '1 saat önce' },
-    ],
-    badgeLabel: (value) => `${value} saat önce`,
-  },
-  {
-    key: 'appointment_no_show_warning',
-    name: 'No-Show Uyarısı',
-    description: 'Randevuya gelmeyenlere otomatik bilgilendirme',
-    icon: CalendarX2,
-    iconClassName: 'text-[#ff9da8] bg-[#52263a]',
-    configKey: 'delayMinutes',
-    defaultValue: 60,
-    options: [
-      { value: 30, label: 'No-show sonrası 30 dk' },
-      { value: 60, label: 'No-show sonrası 1 saat' },
-      { value: 120, label: 'No-show sonrası 2 saat' },
-    ],
-    badgeLabel: (value) => {
-      if (value % 60 === 0) {
-        return `No-show sonrası ${value / 60} saat`;
-      }
-      return `No-show sonrası ${value} dk`;
-    },
-  },
-];
+const DEFAULT_NO_SHOW_CONFIG: NoShowConfig = {
+  delayMinutes: 60,
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function asNumber(value: unknown, fallback: number): number {
+function toBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    if (value.toLowerCase() === 'true') {
+      return true;
+    }
+    if (value.toLowerCase() === 'false') {
+      return false;
+    }
+  }
+
+  return fallback;
+}
+
+function toNumber(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value;
   }
@@ -104,31 +88,129 @@ function asNumber(value: unknown, fallback: number): number {
   return fallback;
 }
 
-function parseConfig(value: unknown): Record<string, unknown> {
-  if (isRecord(value)) {
-    return value;
+function parseReminderConfig(
+  raw: unknown,
+  legacy2hEnabled?: boolean,
+  legacy24hEnabled?: boolean
+): ReminderConfig {
+  const config = isRecord(raw) ? raw : {};
+
+  return {
+    enable2h: toBoolean(config.enable2h, legacy2hEnabled ?? DEFAULT_REMINDER_CONFIG.enable2h),
+    enable24h: toBoolean(config.enable24h, legacy24hEnabled ?? DEFAULT_REMINDER_CONFIG.enable24h),
+    enable72h: toBoolean(config.enable72h, DEFAULT_REMINDER_CONFIG.enable72h),
+    sendLocationAt2h: toBoolean(config.sendLocationAt2h, DEFAULT_REMINDER_CONFIG.sendLocationAt2h),
+    requestConfirmationAt24h: toBoolean(config.requestConfirmationAt24h, DEFAULT_REMINDER_CONFIG.requestConfirmationAt24h),
+    minChangeHoursAt72h: Math.max(1, toNumber(config.minChangeHoursAt72h, DEFAULT_REMINDER_CONFIG.minChangeHoursAt72h)),
+  };
+}
+
+function parseNoShowConfig(raw: unknown): NoShowConfig {
+  const config = isRecord(raw) ? raw : {};
+
+  return {
+    delayMinutes: Math.max(15, toNumber(config.delayMinutes, DEFAULT_NO_SHOW_CONFIG.delayMinutes)),
+  };
+}
+
+function noShowLabel(delayMinutes: number): string {
+  if (delayMinutes % 60 === 0) {
+    return `No-show sonrası ${delayMinutes / 60} saat`;
   }
-  return {};
+  return `No-show sonrası ${delayMinutes} dk`;
+}
+
+function ToggleButton({ checked, onClick, disabled, ariaLabel }: { checked: boolean; onClick: () => void; disabled?: boolean; ariaLabel: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      className={cn(
+        'relative h-6 w-11 rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0 mt-0.5',
+        checked ? 'bg-white' : 'bg-white/25'
+      )}
+    >
+      <span
+        className={cn(
+          'absolute top-0.5 h-5 w-5 rounded-full transition-all duration-200',
+          checked ? 'left-[22px] bg-[#0b1026]' : 'left-[2px] bg-white'
+        )}
+      />
+    </button>
+  );
+}
+
+function OptionRow({
+  icon: Icon,
+  title,
+  description,
+  checked,
+  onToggle,
+  disabled,
+  children,
+}: {
+  icon: any;
+  title: string;
+  description: string;
+  checked: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-border p-3 bg-muted/20">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
+            <Icon className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold leading-tight">{title}</p>
+            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={disabled}
+          className={cn(
+            'relative h-6 w-11 rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0',
+            checked ? 'bg-[var(--rose-gold)]' : 'bg-muted'
+          )}
+        >
+          <span
+            className={cn(
+              'absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all duration-200',
+              checked ? 'left-[22px]' : 'left-[2px]'
+            )}
+          />
+        </button>
+      </div>
+
+      {checked && children ? <div className="mt-3">{children}</div> : null}
+    </div>
+  );
 }
 
 export function AutomationsCrudPage() {
   const { apiFetch } = useAuth();
+
   const [items, setItems] = useState<AutomationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [savingKey, setSavingKey] = useState<PresetKey | null>(null);
+  const [savingKey, setSavingKey] = useState<SaveKey>(null);
 
-  const [editingKey, setEditingKey] = useState<PresetKey | null>(null);
-  const [editingTimingValue, setEditingTimingValue] = useState<number | null>(null);
-
-  const presetMap = useMemo(
-    () => new Map<PresetKey, AutomationPreset>(PRESETS.map((preset) => [preset.key, preset])),
-    []
-  );
+  const [editingType, setEditingType] = useState<EditingType>(null);
+  const [editReminderConfig, setEditReminderConfig] = useState<ReminderConfig | null>(null);
+  const [editNoShowDelay, setEditNoShowDelay] = useState<number>(DEFAULT_NO_SHOW_CONFIG.delayMinutes);
 
   const load = async () => {
     setLoading(true);
     setError(null);
+
     try {
       const response = await apiFetch<{ items: AutomationItem[] }>('/api/admin/automations');
       setItems(response.items || []);
@@ -143,137 +225,168 @@ export function AutomationsCrudPage() {
     void load();
   }, []);
 
-  const getRule = (key: PresetKey) => items.find((item) => item.key === key);
+  const getRule = (key: string) => items.find((item) => item.key === key);
 
-  const createRule = async (
-    preset: AutomationPreset,
-    payload: { isEnabled: boolean; config: Record<string, unknown> }
-  ): Promise<AutomationItem> => {
+  const reminderRule = getRule(REMINDER_KEY);
+  const reminderLegacy2hRule = getRule(LEGACY_REMINDER_2H_KEY);
+  const reminderLegacy24hRule = getRule(LEGACY_REMINDER_24H_KEY);
+
+  const reminderConfig = parseReminderConfig(
+    reminderRule?.config,
+    reminderLegacy2hRule?.isEnabled,
+    reminderLegacy24hRule?.isEnabled
+  );
+
+  const reminderEnabled =
+    reminderRule?.isEnabled ??
+    reminderLegacy2hRule?.isEnabled ??
+    reminderLegacy24hRule?.isEnabled ??
+    true;
+
+  const noShowRule = getRule(NO_SHOW_KEY);
+  const noShowConfig = parseNoShowConfig(noShowRule?.config);
+  const noShowEnabled = noShowRule?.isEnabled ?? true;
+
+  const reminderBadges: string[] = [];
+  if (reminderConfig.enable2h) {
+    reminderBadges.push(reminderConfig.sendLocationAt2h ? '2 saat kala + konum' : '2 saat kala');
+  }
+  if (reminderConfig.enable24h) {
+    reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 saat kala + katılım onayı' : '24 saat kala');
+  }
+  if (reminderConfig.enable72h) {
+    reminderBadges.push(`72 saat kala + en az ${reminderConfig.minChangeHoursAt72h} saat kala değişiklik uyarısı`);
+  }
+
+  const upsertRule = async (payload: {
+    key: string;
+    name: string;
+    description: string;
+    isEnabled: boolean;
+    config: Record<string, unknown>;
+  }) => {
+    const current = getRule(payload.key);
+
+    if (current) {
+      const response = await apiFetch<{ item: AutomationItem }>(`/api/admin/automations/${current.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isEnabled: payload.isEnabled, config: payload.config }),
+      });
+      const updated = response.item;
+      setItems((prev) => prev.map((item) => (item.id === current.id ? updated : item)));
+      return;
+    }
+
     const response = await apiFetch<{ item: AutomationItem }>('/api/admin/automations', {
       method: 'POST',
-      body: JSON.stringify({
-        key: preset.key,
-        name: preset.name,
-        description: preset.description,
-        isEnabled: payload.isEnabled,
-        config: payload.config,
-      }),
-    });
-    return response.item;
-  };
-
-  const updateRule = async (
-    ruleId: number,
-    payload: { isEnabled?: boolean; config?: Record<string, unknown> }
-  ): Promise<AutomationItem> => {
-    const response = await apiFetch<{ item: AutomationItem }>(`/api/admin/automations/${ruleId}`, {
-      method: 'PATCH',
       body: JSON.stringify(payload),
     });
-    return response.item;
+    setItems((prev) => [response.item, ...prev]);
   };
 
-  const upsertRule = async (
-    preset: AutomationPreset,
-    payload: { isEnabled: boolean; config: Record<string, unknown> }
-  ) => {
-    const current = getRule(preset.key);
+  const handleReminderToggle = async () => {
+    setSavingKey('reminder');
+    setError(null);
 
-    let updated: AutomationItem;
-    if (current) {
-      updated = await updateRule(current.id, {
-        isEnabled: payload.isEnabled,
-        config: payload.config,
+    try {
+      await upsertRule({
+        key: REMINDER_KEY,
+        name: 'Randevu Hatırlatma',
+        description: '2 saat, 24 saat ve 72 saat kala randevu hatırlatma otomasyonu',
+        isEnabled: !reminderEnabled,
+        config: reminderConfig,
       });
-      setItems((prev) => prev.map((item) => (item.id === current.id ? updated : item)));
-    } else {
-      updated = await createRule(preset, payload);
-      setItems((prev) => [updated, ...prev]);
-    }
-  };
-
-  const cards = PRESETS.map((preset) => {
-    const rule = getRule(preset.key);
-    const config = parseConfig(rule?.config);
-    const timingValue = asNumber(config[preset.configKey], preset.defaultValue);
-
-    return {
-      preset,
-      rule,
-      config,
-      timingValue,
-      isEnabled: rule?.isEnabled ?? true,
-    };
-  });
-
-  const handleToggle = async (key: PresetKey) => {
-    const card = cards.find((item) => item.preset.key === key);
-    if (!card) {
-      return;
-    }
-
-    const { preset } = card;
-    const nextEnabled = !card.isEnabled;
-    const nextConfig = {
-      ...card.config,
-      [preset.configKey]: card.timingValue,
-    };
-
-    setSavingKey(key);
-    setError(null);
-    try {
-      await upsertRule(preset, { isEnabled: nextEnabled, config: nextConfig });
     } catch (err: any) {
-      setError(err?.message || 'Otomasyon güncellenemedi.');
+      setError(err?.message || 'Randevu hatırlatma güncellenemedi.');
     } finally {
       setSavingKey(null);
     }
   };
 
-  const openSettings = (key: PresetKey) => {
-    const card = cards.find((item) => item.preset.key === key);
-    if (!card) {
-      return;
-    }
-
-    setEditingKey(key);
-    setEditingTimingValue(card.timingValue);
-  };
-
-  const closeSettings = () => {
-    setEditingKey(null);
-    setEditingTimingValue(null);
-  };
-
-  const saveSettings = async () => {
-    if (!editingKey) {
-      return;
-    }
-
-    const card = cards.find((item) => item.preset.key === editingKey);
-    if (!card) {
-      return;
-    }
-
-    const timingValue = editingTimingValue ?? card.timingValue;
-    const nextConfig = {
-      ...card.config,
-      [card.preset.configKey]: timingValue,
-    };
-
-    setSavingKey(editingKey);
+  const handleNoShowToggle = async () => {
+    setSavingKey('no-show');
     setError(null);
+
     try {
-      await upsertRule(card.preset, { isEnabled: card.isEnabled, config: nextConfig });
-      closeSettings();
+      await upsertRule({
+        key: NO_SHOW_KEY,
+        name: 'No-Show Uyarısı',
+        description: 'Randevuya gelmeyen müşterilere otomatik bilgilendirme',
+        isEnabled: !noShowEnabled,
+        config: noShowConfig,
+      });
     } catch (err: any) {
-      setError(err?.message || 'Ayarlar kaydedilemedi.');
+      setError(err?.message || 'No-show otomasyonu güncellenemedi.');
     } finally {
       setSavingKey(null);
     }
   };
 
-  const editingPreset = editingKey ? presetMap.get(editingKey) ?? null : null;
+  const openReminderSettings = () => {
+    setEditReminderConfig(reminderConfig);
+    setEditingType('reminder');
+  };
+
+  const openNoShowSettings = () => {
+    setEditNoShowDelay(noShowConfig.delayMinutes);
+    setEditingType('no-show');
+  };
+
+  const closeDialog = () => {
+    setEditingType(null);
+    setEditReminderConfig(null);
+  };
+
+  const saveReminderSettings = async () => {
+    if (!editReminderConfig) {
+      return;
+    }
+
+    const payload: ReminderConfig = {
+      ...editReminderConfig,
+      minChangeHoursAt72h: Math.max(1, Number(editReminderConfig.minChangeHoursAt72h || 1)),
+    };
+
+    setSavingKey('reminder');
+    setError(null);
+
+    try {
+      await upsertRule({
+        key: REMINDER_KEY,
+        name: 'Randevu Hatırlatma',
+        description: '2 saat, 24 saat ve 72 saat kala randevu hatırlatma otomasyonu',
+        isEnabled: reminderEnabled,
+        config: payload,
+      });
+      closeDialog();
+    } catch (err: any) {
+      setError(err?.message || 'Randevu hatırlatma ayarları kaydedilemedi.');
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
+  const saveNoShowSettings = async () => {
+    const delay = Math.max(15, Number(editNoShowDelay || 15));
+
+    setSavingKey('no-show');
+    setError(null);
+
+    try {
+      await upsertRule({
+        key: NO_SHOW_KEY,
+        name: 'No-Show Uyarısı',
+        description: 'Randevuya gelmeyen müşterilere otomatik bilgilendirme',
+        isEnabled: noShowEnabled,
+        config: { delayMinutes: delay },
+      });
+      closeDialog();
+    } catch (err: any) {
+      setError(err?.message || 'No-show ayarları kaydedilemedi.');
+    } finally {
+      setSavingKey(null);
+    }
+  };
 
   return (
     <div className="h-full overflow-y-auto bg-[var(--luxury-bg)] pb-20">
@@ -293,99 +406,203 @@ export function AutomationsCrudPage() {
 
         <p className="text-xs font-semibold tracking-[0.08em] text-[#7E88A9] uppercase px-1">Hatırlatmalar</p>
 
-        <div className="space-y-3">
-          {cards.map((card) => {
-            const Icon = card.preset.icon;
-            const isSaving = savingKey === card.preset.key;
+        <Card className="border border-[#253050] bg-gradient-to-b from-[#151f3f] to-[#11182f] text-white shadow-[0_12px_28px_-20px_rgba(1,8,24,0.95)]">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[#8bb5ff] bg-[#1d2f63]">
+                  <Bell className="w-5 h-5" />
+                </div>
 
-            return (
-              <Card
-                key={card.preset.key}
-                className="border border-[#253050] bg-gradient-to-b from-[#151f3f] to-[#11182f] text-white shadow-[0_12px_28px_-20px_rgba(1,8,24,0.95)]"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', card.preset.iconClassName)}>
-                        <Icon className="w-5 h-5" />
-                      </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold leading-tight text-white">Randevu Hatırlatma</h3>
+                  <p className="mt-1 text-sm leading-tight text-white/75">
+                    Tek ayardan 2 saat, 24 saat ve 72 saat önce hatırlatma kurgusunu yönet.
+                  </p>
 
-                      <div className="min-w-0">
-                        <h3 className="text-base font-semibold leading-tight text-white">{card.preset.name}</h3>
-                        <p className="mt-1 text-sm leading-tight text-white/75">{card.preset.description}</p>
-
-                        <span className="inline-flex mt-2 rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
-                          {card.preset.badgeLabel(card.timingValue)}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {reminderBadges.length ? (
+                      reminderBadges.map((badge) => (
+                        <span key={badge} className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                          {badge}
                         </span>
-
-                        <button
-                          type="button"
-                          onClick={() => openSettings(card.preset.key)}
-                          className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#ffb7c3] hover:text-[#ffd1d9] transition-colors"
-                        >
-                          Ayarları Düzenle
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => void handleToggle(card.preset.key)}
-                      disabled={isSaving || loading}
-                      className={cn(
-                        'relative h-6 w-11 rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0 mt-0.5',
-                        card.isEnabled ? 'bg-white' : 'bg-white/25'
-                      )}
-                      aria-label={`${card.preset.name} ${card.isEnabled ? 'kapat' : 'aç'}`}
-                    >
-                      <span
-                        className={cn(
-                          'absolute top-0.5 h-5 w-5 rounded-full transition-all duration-200',
-                          card.isEnabled ? 'left-[22px] bg-[#0b1026]' : 'left-[2px] bg-white'
-                        )}
-                      />
-                    </button>
+                      ))
+                    ) : (
+                      <span className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/75">
+                        Aktif hatırlatma yok
+                      </span>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+
+                  <button
+                    type="button"
+                    onClick={openReminderSettings}
+                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#ffb7c3] hover:text-[#ffd1d9] transition-colors"
+                  >
+                    Ayarları Düzenle
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <ToggleButton
+                checked={reminderEnabled}
+                onClick={() => void handleReminderToggle()}
+                disabled={savingKey === 'reminder' || loading}
+                ariaLabel={`Randevu hatırlatma ${reminderEnabled ? 'kapat' : 'aç'}`}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-[#253050] bg-gradient-to-b from-[#151f3f] to-[#11182f] text-white shadow-[0_12px_28px_-20px_rgba(1,8,24,0.95)]">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[#ff9da8] bg-[#52263a]">
+                  <CalendarX2 className="w-5 h-5" />
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold leading-tight text-white">No-Show Uyarısı</h3>
+                  <p className="mt-1 text-sm leading-tight text-white/75">Randevuya gelmeyen müşterilere otomatik bilgilendirme.</p>
+
+                  <span className="inline-flex mt-2 rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                    {noShowLabel(noShowConfig.delayMinutes)}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={openNoShowSettings}
+                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#ffb7c3] hover:text-[#ffd1d9] transition-colors"
+                  >
+                    Ayarları Düzenle
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <ToggleButton
+                checked={noShowEnabled}
+                onClick={() => void handleNoShowToggle()}
+                disabled={savingKey === 'no-show' || loading}
+                ariaLabel={`No-show uyarısı ${noShowEnabled ? 'kapat' : 'aç'}`}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Dialog open={!!editingPreset} onOpenChange={(open) => (!open ? closeSettings() : null)}>
-        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+      <Dialog open={editingType === 'reminder'} onOpenChange={(open) => (!open ? closeDialog() : null)}>
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle>{editingPreset?.name} Ayarları</DialogTitle>
+            <DialogTitle>Randevu Hatırlatma Ayarları</DialogTitle>
           </DialogHeader>
 
-          {editingPreset ? (
+          {editReminderConfig ? (
             <div className="space-y-3 py-2">
-              <Label>Gönderim zamanı</Label>
-              <Select
-                value={String(editingTimingValue ?? editingPreset.defaultValue)}
-                onValueChange={(value) => setEditingTimingValue(Number(value))}
+              <OptionRow
+                icon={MapPin}
+                title="2 saat kala hatırlatma"
+                description="Kısa hatırlatma mesajı gönderilir."
+                checked={editReminderConfig.enable2h}
+                onToggle={() => setEditReminderConfig((prev) => (prev ? { ...prev, enable2h: !prev.enable2h } : prev))}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {editingPreset.options.map((option) => (
-                    <SelectItem key={option.value} value={String(option.value)}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <OptionRow
+                  icon={MapPin}
+                  title="Konum gönderimi"
+                  description="Mesaja salon konumu eklenir."
+                  checked={editReminderConfig.sendLocationAt2h}
+                  onToggle={() =>
+                    setEditReminderConfig((prev) => (prev ? { ...prev, sendLocationAt2h: !prev.sendLocationAt2h } : prev))
+                  }
+                />
+              </OptionRow>
+
+              <OptionRow
+                icon={ShieldCheck}
+                title="24 saat kala hatırlatma"
+                description="Müşteriye bir gün önce hatırlatma gönderilir."
+                checked={editReminderConfig.enable24h}
+                onToggle={() => setEditReminderConfig((prev) => (prev ? { ...prev, enable24h: !prev.enable24h } : prev))}
+              >
+                <OptionRow
+                  icon={ShieldCheck}
+                  title="Katılım onayı"
+                  description="Mesaja katılım onayı adımı eklenir."
+                  checked={editReminderConfig.requestConfirmationAt24h}
+                  onToggle={() =>
+                    setEditReminderConfig((prev) =>
+                      prev ? { ...prev, requestConfirmationAt24h: !prev.requestConfirmationAt24h } : prev
+                    )
+                  }
+                />
+              </OptionRow>
+
+              <OptionRow
+                icon={TriangleAlert}
+                title="72 saat kala hatırlatma"
+                description="Randevu değişiklik kuralı için ön bilgilendirme gönderilir."
+                checked={editReminderConfig.enable72h}
+                onToggle={() => setEditReminderConfig((prev) => (prev ? { ...prev, enable72h: !prev.enable72h } : prev))}
+              >
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">En az kaç saat kala değişiklik yapılmalı?</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      value={editReminderConfig.minChangeHoursAt72h}
+                      onChange={(event) => {
+                        const value = Math.max(1, Number(event.target.value || 1));
+                        setEditReminderConfig((prev) => (prev ? { ...prev, minChangeHoursAt72h: value } : prev));
+                      }}
+                    />
+                    <span className="text-sm text-muted-foreground">saat</span>
+                  </div>
+                </div>
+              </OptionRow>
             </div>
           ) : null}
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeSettings}>İptal</Button>
+            <Button variant="outline" onClick={closeDialog}>İptal</Button>
             <Button
-              onClick={() => void saveSettings()}
-              disabled={!editingPreset || savingKey === editingPreset.key}
+              onClick={() => void saveReminderSettings()}
+              disabled={savingKey === 'reminder'}
+              className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
+            >
+              Kaydet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editingType === 'no-show'} onOpenChange={(open) => (!open ? closeDialog() : null)}>
+        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>No-Show Uyarı Ayarı</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <Label>Gönderim zamanı</Label>
+            <Select value={String(editNoShowDelay)} onValueChange={(value) => setEditNoShowDelay(Number(value))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">No-show sonrası 30 dk</SelectItem>
+                <SelectItem value="60">No-show sonrası 1 saat</SelectItem>
+                <SelectItem value="120">No-show sonrası 2 saat</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDialog}>İptal</Button>
+            <Button
+              onClick={() => void saveNoShowSettings()}
+              disabled={savingKey === 'no-show'}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
             >
               Kaydet
