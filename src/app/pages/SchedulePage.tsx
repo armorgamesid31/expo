@@ -16,12 +16,21 @@ interface ServiceItem {
   name: string;
   duration: number;
   price: number;
+  requiresSpecialist?: boolean;
 }
 
 interface CustomerItem {
   id: number;
   name: string | null;
   phone: string;
+}
+
+interface ServiceStaffItem {
+  id: number;
+  name: string;
+  title?: string | null;
+  overrideDuration?: number;
+  overridePrice?: number;
 }
 
 const DAY_START_HOUR = 9;
@@ -79,12 +88,15 @@ export function SchedulePage() {
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
 
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [serviceStaffOptions, setServiceStaffOptions] = useState<Record<string, ServiceStaffItem[]>>({});
+  const [loadingServiceStaff, setLoadingServiceStaff] = useState<Record<string, boolean>>({});
+  const [selectedStaffByService, setSelectedStaffByService] = useState<Record<string, string>>({});
+
   const [form, setForm] = useState({
     customerId: '',
     customerName: '',
     customerPhone: '',
-    serviceId: '',
-    staffId: '',
     time: '10:00',
     notes: '',
   });
@@ -97,6 +109,14 @@ export function SchedulePage() {
 
   const dateText = useMemo(() => format(activeDate, 'EEEE, d MMMM', { locale: tr }), [activeDate]);
   const isToday = useMemo(() => format(activeDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'), [activeDate]);
+
+  const servicesById = useMemo(() => {
+    const map: Record<string, ServiceItem> = {};
+    for (const service of services) {
+      map[String(service.id)] = service;
+    }
+    return map;
+  }, [services]);
 
   const loadSchedule = useCallback(async () => {
     const window = toWindowQuery(activeDate);
@@ -126,22 +146,43 @@ export function SchedulePage() {
     void loadSchedule();
   }, [loadSchedule]);
 
+  const loadStaffForService = useCallback(
+    async (serviceId: string) => {
+      if (serviceStaffOptions[serviceId]) {
+        return;
+      }
+
+      setLoadingServiceStaff((prev) => ({ ...prev, [serviceId]: true }));
+      try {
+        const response = await apiFetch<{ items: ServiceStaffItem[] }>(`/api/admin/services/${serviceId}/staff`);
+        setServiceStaffOptions((prev) => ({ ...prev, [serviceId]: response.items || [] }));
+
+        if (response.items?.length === 1) {
+          setSelectedStaffByService((prev) => ({ ...prev, [serviceId]: String(response.items[0].id) }));
+        }
+      } catch {
+        setServiceStaffOptions((prev) => ({ ...prev, [serviceId]: [] }));
+      } finally {
+        setLoadingServiceStaff((prev) => ({ ...prev, [serviceId]: false }));
+      }
+    },
+    [apiFetch, serviceStaffOptions],
+  );
+
   const openCreateModal = useCallback(async () => {
     setCreateOpen(true);
     setCreateError(null);
 
-    if (customers.length > 0) {
-      return;
-    }
-
-    setLoadingCustomers(true);
-    try {
-      const response = await apiFetch<{ items: CustomerItem[] }>('/api/admin/customers?limit=30');
-      setCustomers(response.items || []);
-    } catch {
-      // Customer list is optional in create flow.
-    } finally {
-      setLoadingCustomers(false);
+    if (customers.length === 0) {
+      setLoadingCustomers(true);
+      try {
+        const response = await apiFetch<{ items: CustomerItem[] }>('/api/admin/customers?limit=30');
+        setCustomers(response.items || []);
+      } catch {
+        // Optional list for fast selection.
+      } finally {
+        setLoadingCustomers(false);
+      }
     }
   }, [apiFetch, customers.length]);
 
@@ -173,15 +214,52 @@ export function SchedulePage() {
     });
   };
 
+  const toggleService = (serviceId: string) => {
+    setSelectedServiceIds((prev) => {
+      if (prev.includes(serviceId)) {
+        const next = prev.filter((id) => id !== serviceId);
+        return next;
+      }
+      return [...prev, serviceId];
+    });
+
+    if (!selectedServiceIds.includes(serviceId)) {
+      void loadStaffForService(serviceId);
+    }
+  };
+
   const submitCreate = async () => {
-    if (!form.serviceId || !form.staffId || !form.time) {
-      setCreateError('Hizmet, personel ve saat seçimi zorunlu.');
+    if (!form.time) {
+      setCreateError('Saat seçimi zorunlu.');
+      return;
+    }
+
+    if (selectedServiceIds.length === 0) {
+      setCreateError('En az bir hizmet seçmelisiniz.');
       return;
     }
 
     if (!form.customerId && !form.customerPhone.trim()) {
       setCreateError('Müşteri telefonu zorunlu.');
       return;
+    }
+
+    for (const serviceId of selectedServiceIds) {
+      const service = servicesById[serviceId];
+      if (!service) {
+        continue;
+      }
+
+      const options = serviceStaffOptions[serviceId] || [];
+      if (options.length === 0) {
+        setCreateError(`${service.name} için uygun uzman bulunamadı.`);
+        return;
+      }
+
+      if (service.requiresSpecialist && options.length > 1 && !selectedStaffByService[serviceId]) {
+        setCreateError(`${service.name} için uzman seçmelisiniz.`);
+        return;
+      }
     }
 
     setSaving(true);
@@ -194,14 +272,18 @@ export function SchedulePage() {
           customerId: form.customerId ? Number(form.customerId) : null,
           customerName: form.customerName.trim(),
           customerPhone: form.customerPhone.trim(),
-          serviceId: Number(form.serviceId),
-          staffId: Number(form.staffId),
           startTime: combineDateTime(activeDate, form.time),
           notes: form.notes.trim() || null,
+          services: selectedServiceIds.map((serviceId) => ({
+            serviceId: Number(serviceId),
+            staffId: selectedStaffByService[serviceId] ? Number(selectedStaffByService[serviceId]) : null,
+          })),
         }),
       });
 
       setCreateOpen(false);
+      setSelectedServiceIds([]);
+      setSelectedStaffByService({});
       setForm((prev) => ({ ...prev, customerId: '', customerName: '', customerPhone: '', notes: '' }));
       await loadSchedule();
     } catch (err: any) {
@@ -396,40 +478,72 @@ export function SchedulePage() {
                 />
               </label>
 
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Hizmet</span>
-                <select
-                  value={form.serviceId}
-                  onChange={(event) => setForm((prev) => ({ ...prev, serviceId: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                >
-                  <option value="">Hizmet seçin</option>
-                  {services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name} ({service.duration} dk)
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Hizmetler (birden fazla seçebilirsiniz)</p>
+                <div className="space-y-2 max-h-44 overflow-y-auto rounded-lg border border-border p-2">
+                  {services.map((service) => {
+                    const serviceId = String(service.id);
+                    const checked = selectedServiceIds.includes(serviceId);
+                    return (
+                      <label key={service.id} className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-muted/30">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleService(serviceId)}
+                          className="mt-1"
+                        />
+                        <span className="text-sm flex-1">
+                          <span className="font-medium">{service.name}</span>
+                          <span className="text-muted-foreground"> • {service.duration} dk</span>
+                          {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Uzman seçimi</span> : null}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {selectedServiceIds.map((serviceId) => {
+                const service = servicesById[serviceId];
+                const options = serviceStaffOptions[serviceId] || [];
+                const loadingOptions = loadingServiceStaff[serviceId];
+                const required = Boolean(service?.requiresSpecialist && options.length > 1);
+
+                return (
+                  <div key={serviceId} className="space-y-1 rounded-lg border border-border p-2">
+                    <p className="text-sm font-medium">{service?.name}</p>
+                    {loadingOptions ? <p className="text-xs text-muted-foreground">Uzmanlar yükleniyor...</p> : null}
+
+                    {!loadingOptions && options.length === 0 ? (
+                      <p className="text-xs text-red-500">Bu hizmet için uygun uzman bulunamadı.</p>
+                    ) : null}
+
+                    {!loadingOptions && options.length === 1 ? (
+                      <p className="text-xs text-muted-foreground">Atanacak uzman: {options[0].name}</p>
+                    ) : null}
+
+                    {!loadingOptions && options.length > 1 ? (
+                      <select
+                        value={selectedStaffByService[serviceId] || ''}
+                        onChange={(event) =>
+                          setSelectedStaffByService((prev) => ({ ...prev, [serviceId]: event.target.value }))
+                        }
+                        className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                      >
+                        <option value="">{required ? 'Uzman seçin' : 'Otomatik ata'}</option>
+                        {options.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                  </div>
+                );
+              })}
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Personel</span>
-                <select
-                  value={form.staffId}
-                  onChange={(event) => setForm((prev) => ({ ...prev, staffId: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                >
-                  <option value="">Personel seçin</option>
-                  {staff.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Saat</span>
+                <span className="text-muted-foreground">Başlangıç Saati</span>
                 <input
                   type="time"
                   value={form.time}
@@ -460,7 +574,7 @@ export function SchedulePage() {
               </button>
 
               <p className="text-[11px] text-muted-foreground">
-                Müsaitlik backend tarafında doğrulanır. Çakışma varsa kayıt oluşturulmaz.
+                Müsaitlik backend’de tüm seçili hizmetler için sırayla kontrol edilir.
               </p>
             </div>
           </div>
