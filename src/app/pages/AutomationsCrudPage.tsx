@@ -32,11 +32,11 @@ interface ReminderConfig {
   enable72h: boolean;
   sendLocationAt2h: boolean;
   requestConfirmationAt24h: boolean;
-  minChangeHoursAt72h: number;
 }
 
 interface NoShowConfig {
   delayMinutes: number;
+  minimumChangeHours: number;
 }
 
 const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
@@ -45,11 +45,11 @@ const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
   enable72h: false,
   sendLocationAt2h: true,
   requestConfirmationAt24h: true,
-  minChangeHoursAt72h: 12,
 };
 
 const DEFAULT_NO_SHOW_CONFIG: NoShowConfig = {
   delayMinutes: 60,
+  minimumChangeHours: 12,
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -101,15 +101,18 @@ function parseReminderConfig(
     enable72h: toBoolean(config.enable72h, DEFAULT_REMINDER_CONFIG.enable72h),
     sendLocationAt2h: toBoolean(config.sendLocationAt2h, DEFAULT_REMINDER_CONFIG.sendLocationAt2h),
     requestConfirmationAt24h: toBoolean(config.requestConfirmationAt24h, DEFAULT_REMINDER_CONFIG.requestConfirmationAt24h),
-    minChangeHoursAt72h: Math.max(1, toNumber(config.minChangeHoursAt72h, DEFAULT_REMINDER_CONFIG.minChangeHoursAt72h)),
   };
 }
 
-function parseNoShowConfig(raw: unknown): NoShowConfig {
+function parseNoShowConfig(raw: unknown, fallbackMinimumChangeHours: number): NoShowConfig {
   const config = isRecord(raw) ? raw : {};
 
   return {
     delayMinutes: Math.max(15, toNumber(config.delayMinutes, DEFAULT_NO_SHOW_CONFIG.delayMinutes)),
+    minimumChangeHours: Math.max(
+      1,
+      toNumber(config.minimumChangeHours, fallbackMinimumChangeHours || DEFAULT_NO_SHOW_CONFIG.minimumChangeHours)
+    ),
   };
 }
 
@@ -206,6 +209,9 @@ export function AutomationsCrudPage() {
   const [editingType, setEditingType] = useState<EditingType>(null);
   const [editReminderConfig, setEditReminderConfig] = useState<ReminderConfig | null>(null);
   const [editNoShowDelay, setEditNoShowDelay] = useState<number>(DEFAULT_NO_SHOW_CONFIG.delayMinutes);
+  const [editNoShowMinChangeHours, setEditNoShowMinChangeHours] = useState<number>(
+    DEFAULT_NO_SHOW_CONFIG.minimumChangeHours
+  );
 
   const load = async () => {
     setLoading(true);
@@ -243,8 +249,14 @@ export function AutomationsCrudPage() {
     reminderLegacy24hRule?.isEnabled ??
     true;
 
+  const reminderRawConfig = isRecord(reminderRule?.config) ? reminderRule.config : {};
+  const legacyReminderMinChangeHours = Math.max(
+    1,
+    toNumber(reminderRawConfig.minChangeHoursAt72h, DEFAULT_NO_SHOW_CONFIG.minimumChangeHours)
+  );
+
   const noShowRule = getRule(NO_SHOW_KEY);
-  const noShowConfig = parseNoShowConfig(noShowRule?.config);
+  const noShowConfig = parseNoShowConfig(noShowRule?.config, legacyReminderMinChangeHours);
   const noShowEnabled = noShowRule?.isEnabled ?? true;
 
   const reminderBadges: string[] = [];
@@ -255,7 +267,7 @@ export function AutomationsCrudPage() {
     reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 saat kala + katılım onayı' : '24 saat kala');
   }
   if (reminderConfig.enable72h) {
-    reminderBadges.push(`72 saat kala + en az ${reminderConfig.minChangeHoursAt72h} saat kala değişiklik uyarısı`);
+    reminderBadges.push(`72 saat kala + en az ${noShowConfig.minimumChangeHours} saat kala değişiklik uyarısı`);
   }
 
   const upsertRule = async (payload: {
@@ -329,6 +341,7 @@ export function AutomationsCrudPage() {
 
   const openNoShowSettings = () => {
     setEditNoShowDelay(noShowConfig.delayMinutes);
+    setEditNoShowMinChangeHours(noShowConfig.minimumChangeHours);
     setEditingType('no-show');
   };
 
@@ -342,11 +355,6 @@ export function AutomationsCrudPage() {
       return;
     }
 
-    const payload: ReminderConfig = {
-      ...editReminderConfig,
-      minChangeHoursAt72h: Math.max(1, Number(editReminderConfig.minChangeHoursAt72h || 1)),
-    };
-
     setSavingKey('reminder');
     setError(null);
 
@@ -356,7 +364,7 @@ export function AutomationsCrudPage() {
         name: 'Randevu Hatırlatma',
         description: '2 saat, 24 saat ve 72 saat kala randevu hatırlatma otomasyonu',
         isEnabled: reminderEnabled,
-        config: payload,
+        config: editReminderConfig,
       });
       closeDialog();
     } catch (err: any) {
@@ -368,6 +376,7 @@ export function AutomationsCrudPage() {
 
   const saveNoShowSettings = async () => {
     const delay = Math.max(15, Number(editNoShowDelay || 15));
+    const minimumChangeHours = Math.max(1, Number(editNoShowMinChangeHours || 1));
 
     setSavingKey('no-show');
     setError(null);
@@ -378,7 +387,7 @@ export function AutomationsCrudPage() {
         name: 'No-Show Uyarısı',
         description: 'Randevuya gelmeyen müşterilere otomatik bilgilendirme',
         isEnabled: noShowEnabled,
-        config: { delayMinutes: delay },
+        config: { delayMinutes: delay, minimumChangeHours },
       });
       closeDialog();
     } catch (err: any) {
@@ -546,21 +555,9 @@ export function AutomationsCrudPage() {
                 checked={editReminderConfig.enable72h}
                 onToggle={() => setEditReminderConfig((prev) => (prev ? { ...prev, enable72h: !prev.enable72h } : prev))}
               >
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">En az kaç saat kala değişiklik yapılmalı?</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min={1}
-                      value={editReminderConfig.minChangeHoursAt72h}
-                      onChange={(event) => {
-                        const value = Math.max(1, Number(event.target.value || 1));
-                        setEditReminderConfig((prev) => (prev ? { ...prev, minChangeHoursAt72h: value } : prev));
-                      }}
-                    />
-                    <span className="text-sm text-muted-foreground">saat</span>
-                  </div>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Bu mesajdaki “en az X saat kala değişiklik” değeri No-Show ayarlarından yönetilir.
+                </p>
               </OptionRow>
             </div>
           ) : null}
@@ -596,6 +593,22 @@ export function AutomationsCrudPage() {
                 <SelectItem value="120">No-show sonrası 2 saat</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="space-y-2">
+              <Label>Randevu değişikliği için minimum süre</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  value={editNoShowMinChangeHours}
+                  onChange={(event) => {
+                    const value = Math.max(1, Number(event.target.value || 1));
+                    setEditNoShowMinChangeHours(value);
+                  }}
+                />
+                <span className="text-sm text-muted-foreground">saat</span>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
