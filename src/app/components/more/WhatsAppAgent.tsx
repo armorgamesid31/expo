@@ -63,11 +63,13 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const [isFaqExpanded, setIsFaqExpanded] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [savedField, setSavedField] = useState<string | null>(null);
   const [tone, setTone] = useState<'friendly' | 'professional' | 'balanced'>('balanced');
   const [answerLength, setAnswerLength] = useState<'short' | 'medium' | 'detailed'>('medium');
   const [emojiUsage, setEmojiUsage] = useState<'off' | 'low' | 'normal'>('low');
   const [bookingGuidance, setBookingGuidance] = useState<'low' | 'medium' | 'high'>('medium');
   const [handoverThreshold, setHandoverThreshold] = useState<'early' | 'balanced' | 'late'>('balanced');
+  const [aiDisclosure, setAiDisclosure] = useState<'always' | 'onQuestion' | 'never'>('onQuestion');
   const [salonFaqAnswers, setSalonFaqAnswers] = useState<Record<string, string>>({
     'faq-working-hours': 'Hafta içi 09:00-20:00, Cumartesi 10:00-18:00, Pazar kapalıyız.',
     'faq-cancellation': 'Randevu saatinden en az 4 saat önce ücretsiz iptal/değişiklik yapabilirsiniz.',
@@ -97,6 +99,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
             emojiUsage?: 'off' | 'low' | 'normal';
             bookingGuidance?: 'low' | 'medium' | 'high';
             handoverThreshold?: 'early' | 'balanced' | 'late';
+            aiDisclosure?: 'always' | 'onQuestion' | 'never';
             faqAnswers?: Record<string, string>;
           };
         }>('/api/admin/whatsapp-agent/settings');
@@ -107,6 +110,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         if (response.settings.emojiUsage) setEmojiUsage(response.settings.emojiUsage);
         if (response.settings.bookingGuidance) setBookingGuidance(response.settings.bookingGuidance);
         if (response.settings.handoverThreshold) setHandoverThreshold(response.settings.handoverThreshold);
+        if (response.settings.aiDisclosure) setAiDisclosure(response.settings.aiDisclosure);
         if (response.settings.faqAnswers) {
           setSalonFaqAnswers((prev) => ({ ...prev, ...response.settings.faqAnswers }));
         }
@@ -119,20 +123,31 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     };
   }, [apiFetch]);
 
-  async function saveSettings() {
+  async function saveSettings(fieldKey: string, overrides?: Partial<{
+    tone: 'friendly' | 'professional' | 'balanced';
+    answerLength: 'short' | 'medium' | 'detailed';
+    emojiUsage: 'off' | 'low' | 'normal';
+    bookingGuidance: 'low' | 'medium' | 'high';
+    handoverThreshold: 'early' | 'balanced' | 'late';
+    aiDisclosure: 'always' | 'onQuestion' | 'never';
+    faqAnswers: Record<string, string>;
+  }>) {
     setIsSaving(true);
     try {
       await apiFetch('/api/admin/whatsapp-agent/settings', {
         method: 'PUT',
         body: JSON.stringify({
-          tone,
-          answerLength,
-          emojiUsage,
-          bookingGuidance,
-          handoverThreshold,
-          faqAnswers: salonFaqAnswers,
+          tone: overrides?.tone ?? tone,
+          answerLength: overrides?.answerLength ?? answerLength,
+          emojiUsage: overrides?.emojiUsage ?? emojiUsage,
+          bookingGuidance: overrides?.bookingGuidance ?? bookingGuidance,
+          handoverThreshold: overrides?.handoverThreshold ?? handoverThreshold,
+          aiDisclosure: overrides?.aiDisclosure ?? aiDisclosure,
+          faqAnswers: overrides?.faqAnswers ?? salonFaqAnswers,
         }),
       });
+      setSavedField(fieldKey);
+      setTimeout(() => setSavedField((prev) => (prev === fieldKey ? null : prev)), 1800);
       setEditingQuestionId(null);
     } catch (error) {
       console.error('WhatsApp agent settings save failed:', error);
@@ -282,9 +297,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
           <div className="flex items-center justify-between mb-3 px-1">
             <h2 className="font-semibold">Salon SSS ve Ajan Ayarları</h2>
-            <Button type="button" className="h-8 px-3 text-xs" onClick={saveSettings} disabled={isSaving}>
-              {isSaving ? 'Kaydediliyor...' : 'Ayarları Kaydet'}
-            </Button>
           </div>
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
@@ -333,13 +345,14 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                                     className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
                                   />
                                   <div className="flex gap-2">
-                                    <Button type="button" size="sm" onClick={saveSettings} disabled={isSaving}>
+                                    <Button type="button" size="sm" onClick={() => saveSettings('faq', { faqAnswers: salonFaqAnswers })} disabled={isSaving}>
                                       {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
                                     </Button>
                                     <Button type="button" size="sm" variant="outline" onClick={() => setEditingQuestionId(null)}>
                                       Vazgeç
                                     </Button>
                                   </div>
+                                  {savedField === 'faq' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                                 </div>
                               )}
                             </div>
@@ -369,53 +382,69 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                     <p className="text-sm font-medium">Konuşma tonu</p>
                     <p className="text-xs text-muted-foreground">Ajanın müşteriyle konuşurken kullanacağı genel üslup.</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => setTone('friendly')}>Sevecen ve Samimi</Button>
-                      <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => setTone('professional')}>Profesyonel</Button>
-                      <Button type="button" className="col-span-2" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => setTone('balanced')}>Dengeli</Button>
+                      <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => { setTone('friendly'); void saveSettings('tone', { tone: 'friendly' }); }}>Sevecen ve Samimi</Button>
+                      <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => { setTone('professional'); void saveSettings('tone', { tone: 'professional' }); }}>Profesyonel</Button>
+                      <Button type="button" className="col-span-2" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => { setTone('balanced'); void saveSettings('tone', { tone: 'balanced' }); }}>Dengeli</Button>
                     </div>
                     <p className="text-xs text-muted-foreground border border-border/60 rounded-md p-2 bg-muted/30">
                       Örnek yaklaşım: {toneExamples[tone]}
                     </p>
+                    {savedField === 'tone' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Cevap uzunluğu</p>
                     <p className="text-xs text-muted-foreground">Müşteriye kısa mı, detaylı mı yanıt verileceğini belirler.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={answerLength === 'short' ? 'default' : 'outline'} onClick={() => setAnswerLength('short')}>Kısa</Button>
-                      <Button type="button" variant={answerLength === 'medium' ? 'default' : 'outline'} onClick={() => setAnswerLength('medium')}>Orta</Button>
-                      <Button type="button" variant={answerLength === 'detailed' ? 'default' : 'outline'} onClick={() => setAnswerLength('detailed')}>Detaylı</Button>
+                      <Button type="button" variant={answerLength === 'short' ? 'default' : 'outline'} onClick={() => { setAnswerLength('short'); void saveSettings('answerLength', { answerLength: 'short' }); }}>Kısa</Button>
+                      <Button type="button" variant={answerLength === 'medium' ? 'default' : 'outline'} onClick={() => { setAnswerLength('medium'); void saveSettings('answerLength', { answerLength: 'medium' }); }}>Orta</Button>
+                      <Button type="button" variant={answerLength === 'detailed' ? 'default' : 'outline'} onClick={() => { setAnswerLength('detailed'); void saveSettings('answerLength', { answerLength: 'detailed' }); }}>Detaylı</Button>
                     </div>
+                    {savedField === 'answerLength' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Emoji kullanımı</p>
                     <p className="text-xs text-muted-foreground">Yanıtlarda emoji yoğunluğunu kontrol eder.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => setEmojiUsage('off')}>Kapalı</Button>
-                      <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => setEmojiUsage('low')}>Az</Button>
-                      <Button type="button" variant={emojiUsage === 'normal' ? 'default' : 'outline'} onClick={() => setEmojiUsage('normal')}>Normal</Button>
+                      <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('off'); void saveSettings('emojiUsage', { emojiUsage: 'off' }); }}>Kapalı</Button>
+                      <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('low'); void saveSettings('emojiUsage', { emojiUsage: 'low' }); }}>Az</Button>
+                      <Button type="button" variant={emojiUsage === 'normal' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('normal'); void saveSettings('emojiUsage', { emojiUsage: 'normal' }); }}>Normal</Button>
                     </div>
+                    {savedField === 'emojiUsage' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Randevuya yönlendirme seviyesi</p>
                     <p className="text-xs text-muted-foreground">Konuşma içinde müşteriyi randevu adımına ne kadar aktif yönlendireceğini belirler.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={bookingGuidance === 'low' ? 'default' : 'outline'} onClick={() => setBookingGuidance('low')}>Düşük</Button>
-                      <Button type="button" variant={bookingGuidance === 'medium' ? 'default' : 'outline'} onClick={() => setBookingGuidance('medium')}>Orta</Button>
-                      <Button type="button" variant={bookingGuidance === 'high' ? 'default' : 'outline'} onClick={() => setBookingGuidance('high')}>Yüksek</Button>
+                      <Button type="button" variant={bookingGuidance === 'low' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('low'); void saveSettings('bookingGuidance', { bookingGuidance: 'low' }); }}>Düşük</Button>
+                      <Button type="button" variant={bookingGuidance === 'medium' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('medium'); void saveSettings('bookingGuidance', { bookingGuidance: 'medium' }); }}>Orta</Button>
+                      <Button type="button" variant={bookingGuidance === 'high' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('high'); void saveSettings('bookingGuidance', { bookingGuidance: 'high' }); }}>Yüksek</Button>
                     </div>
+                    {savedField === 'bookingGuidance' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">İnsan personele devir eşiği</p>
                     <p className="text-xs text-muted-foreground">Müşteri memnuniyeti riski, karmaşık talep veya şikayet durumunda ajanın görüşmeyi ne kadar erken gerçek personele devredeceğini belirler.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={handoverThreshold === 'early' ? 'default' : 'outline'} onClick={() => setHandoverThreshold('early')}>Erken Devir</Button>
-                      <Button type="button" variant={handoverThreshold === 'balanced' ? 'default' : 'outline'} onClick={() => setHandoverThreshold('balanced')}>Dengeli</Button>
-                      <Button type="button" variant={handoverThreshold === 'late' ? 'default' : 'outline'} onClick={() => setHandoverThreshold('late')}>Geç Devir</Button>
+                      <Button type="button" variant={handoverThreshold === 'early' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('early'); void saveSettings('handoverThreshold', { handoverThreshold: 'early' }); }}>Erken Devir</Button>
+                      <Button type="button" variant={handoverThreshold === 'balanced' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('balanced'); void saveSettings('handoverThreshold', { handoverThreshold: 'balanced' }); }}>Dengeli</Button>
+                      <Button type="button" variant={handoverThreshold === 'late' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('late'); void saveSettings('handoverThreshold', { handoverThreshold: 'late' }); }}>Geç Devir</Button>
                     </div>
+                    {savedField === 'handoverThreshold' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Yapay zeka olduğunu belirtme</p>
+                    <p className="text-xs text-muted-foreground">Ajanın konuşmada kendisini yapay zeka olarak ne sıklıkta ifade edeceğini belirler.</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button type="button" variant={aiDisclosure === 'always' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('always'); void saveSettings('aiDisclosure', { aiDisclosure: 'always' }); }}>Her zaman</Button>
+                      <Button type="button" variant={aiDisclosure === 'onQuestion' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('onQuestion'); void saveSettings('aiDisclosure', { aiDisclosure: 'onQuestion' }); }}>Sorulursa</Button>
+                      <Button type="button" variant={aiDisclosure === 'never' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('never'); void saveSettings('aiDisclosure', { aiDisclosure: 'never' }); }}>Belirtme</Button>
+                    </div>
+                    {savedField === 'aiDisclosure' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>
                 </CardContent>
               </Card>
