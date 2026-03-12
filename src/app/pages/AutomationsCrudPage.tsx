@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, CalendarX2, ChevronRight, MapPin, ShieldCheck, TriangleAlert } from 'lucide-react';
+import { Bell, CalendarX2, ChevronRight, CircleAlert, Clock3, MapPin, ShieldCheck, TriangleAlert, UserRoundX } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
@@ -18,13 +18,22 @@ interface AutomationItem {
   isEnabled: boolean;
 }
 
-type SaveKey = 'reminder' | 'no-show' | null;
-type EditingType = 'reminder' | 'no-show' | null;
+type SaveKey = 'reminder' | 'attendance' | null;
+type EditingType = 'reminder' | 'attendance' | null;
+
+type ValidityWindow = '1m' | '3m' | '6m' | '1y' | 'unlimited';
+type AttendanceRangeKey = '0_3' | '4_5' | '6_7' | '8_9' | '10_plus';
+type AttendancePenaltyAction =
+  | 'normal'
+  | 'simple_warning'
+  | 'possible_block'
+  | 'manual_approval'
+  | 'full_block';
 
 const REMINDER_KEY = 'appointment_reminder';
 const LEGACY_REMINDER_24H_KEY = 'appointment_reminder_24h';
 const LEGACY_REMINDER_2H_KEY = 'appointment_reminder_2h';
-const NO_SHOW_KEY = 'appointment_no_show_warning';
+const ATTENDANCE_KEY = 'appointment_no_show_warning';
 
 interface ReminderConfig {
   enable2h: boolean;
@@ -32,12 +41,45 @@ interface ReminderConfig {
   enable72h: boolean;
   sendLocationAt2h: boolean;
   requestConfirmationAt24h: boolean;
+  showAttendanceWarningAt72h: boolean;
 }
 
-interface NoShowConfig {
+interface AttendanceConfig {
   delayMinutes: number;
   minimumChangeHours: number;
+  countMissedAppointments: boolean;
+  countLateCancellations: boolean;
+  countLateReschedules: boolean;
+  lateCancellationHours: number;
+  lateRescheduleHours: number;
+  validityWindow: ValidityWindow;
+  warningProfiles: Record<AttendanceRangeKey, boolean>;
+  penaltyPolicy: Record<AttendanceRangeKey, AttendancePenaltyAction>;
 }
+
+const ATTENDANCE_RANGES: Array<{ key: AttendanceRangeKey; label: string }> = [
+  { key: '0_3', label: '0-3' },
+  { key: '4_5', label: '4-5' },
+  { key: '6_7', label: '6-7' },
+  { key: '8_9', label: '8-9' },
+  { key: '10_plus', label: '10+' },
+];
+
+const PENALTY_ACTION_OPTIONS: Array<{ value: AttendancePenaltyAction; label: string }> = [
+  { value: 'normal', label: 'Normal' },
+  { value: 'simple_warning', label: 'Basit uyarı' },
+  { value: 'possible_block', label: 'Randevu almanız engellenebilir uyarısı' },
+  { value: 'manual_approval', label: 'Randevular salon ön onayına düşsün' },
+  { value: 'full_block', label: 'Randevuyu tamamen engelle' },
+];
+
+const VALIDITY_OPTIONS: Array<{ value: ValidityWindow; label: string }> = [
+  { value: '1m', label: '1 ay' },
+  { value: '3m', label: '3 ay' },
+  { value: '6m', label: '6 ay' },
+  { value: '1y', label: '1 yıl' },
+  { value: 'unlimited', label: 'Sınırsız' },
+];
 
 const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
   enable2h: true,
@@ -45,11 +87,32 @@ const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
   enable72h: false,
   sendLocationAt2h: true,
   requestConfirmationAt24h: true,
+  showAttendanceWarningAt72h: true,
 };
 
-const DEFAULT_NO_SHOW_CONFIG: NoShowConfig = {
+const DEFAULT_ATTENDANCE_CONFIG: AttendanceConfig = {
   delayMinutes: 60,
   minimumChangeHours: 12,
+  countMissedAppointments: true,
+  countLateCancellations: true,
+  countLateReschedules: true,
+  lateCancellationHours: 24,
+  lateRescheduleHours: 12,
+  validityWindow: '6m',
+  warningProfiles: {
+    '0_3': false,
+    '4_5': true,
+    '6_7': true,
+    '8_9': true,
+    '10_plus': true,
+  },
+  penaltyPolicy: {
+    '0_3': 'normal',
+    '4_5': 'simple_warning',
+    '6_7': 'possible_block',
+    '8_9': 'manual_approval',
+    '10_plus': 'full_block',
+  },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -88,11 +151,25 @@ function toNumber(value: unknown, fallback: number): number {
   return fallback;
 }
 
-function parseReminderConfig(
-  raw: unknown,
-  legacy2hEnabled?: boolean,
-  legacy24hEnabled?: boolean
-): ReminderConfig {
+function toValidityWindow(value: unknown, fallback: ValidityWindow): ValidityWindow {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const match = VALIDITY_OPTIONS.find((option) => option.value === value);
+  return match ? match.value : fallback;
+}
+
+function toAttendancePenaltyAction(value: unknown, fallback: AttendancePenaltyAction): AttendancePenaltyAction {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const match = PENALTY_ACTION_OPTIONS.find((option) => option.value === value);
+  return match ? match.value : fallback;
+}
+
+function parseReminderConfig(raw: unknown, legacy2hEnabled?: boolean, legacy24hEnabled?: boolean): ReminderConfig {
   const config = isRecord(raw) ? raw : {};
 
   return {
@@ -101,26 +178,72 @@ function parseReminderConfig(
     enable72h: toBoolean(config.enable72h, DEFAULT_REMINDER_CONFIG.enable72h),
     sendLocationAt2h: toBoolean(config.sendLocationAt2h, DEFAULT_REMINDER_CONFIG.sendLocationAt2h),
     requestConfirmationAt24h: toBoolean(config.requestConfirmationAt24h, DEFAULT_REMINDER_CONFIG.requestConfirmationAt24h),
-  };
-}
-
-function parseNoShowConfig(raw: unknown, fallbackMinimumChangeHours: number): NoShowConfig {
-  const config = isRecord(raw) ? raw : {};
-
-  return {
-    delayMinutes: Math.max(15, toNumber(config.delayMinutes, DEFAULT_NO_SHOW_CONFIG.delayMinutes)),
-    minimumChangeHours: Math.max(
-      1,
-      toNumber(config.minimumChangeHours, fallbackMinimumChangeHours || DEFAULT_NO_SHOW_CONFIG.minimumChangeHours)
+    showAttendanceWarningAt72h: toBoolean(
+      config.showAttendanceWarningAt72h,
+      DEFAULT_REMINDER_CONFIG.showAttendanceWarningAt72h
     ),
   };
 }
 
-function noShowLabel(delayMinutes: number): string {
+function parseAttendanceConfig(raw: unknown, fallbackMinimumChangeHours: number): AttendanceConfig {
+  const config = isRecord(raw) ? raw : {};
+  const warningProfilesRaw = isRecord(config.warningProfiles) ? config.warningProfiles : {};
+  const penaltyPolicyRaw = isRecord(config.penaltyPolicy) ? config.penaltyPolicy : {};
+
+  const warningProfiles = ATTENDANCE_RANGES.reduce<Record<AttendanceRangeKey, boolean>>((acc, range) => {
+    acc[range.key] = toBoolean(warningProfilesRaw[range.key], DEFAULT_ATTENDANCE_CONFIG.warningProfiles[range.key]);
+    return acc;
+  }, {} as Record<AttendanceRangeKey, boolean>);
+
+  const penaltyPolicy = ATTENDANCE_RANGES.reduce<Record<AttendanceRangeKey, AttendancePenaltyAction>>((acc, range) => {
+    acc[range.key] = toAttendancePenaltyAction(
+      penaltyPolicyRaw[range.key],
+      DEFAULT_ATTENDANCE_CONFIG.penaltyPolicy[range.key]
+    );
+    return acc;
+  }, {} as Record<AttendanceRangeKey, AttendancePenaltyAction>);
+
+  return {
+    delayMinutes: Math.max(15, toNumber(config.delayMinutes, DEFAULT_ATTENDANCE_CONFIG.delayMinutes)),
+    minimumChangeHours: Math.max(
+      1,
+      toNumber(config.minimumChangeHours, fallbackMinimumChangeHours || DEFAULT_ATTENDANCE_CONFIG.minimumChangeHours)
+    ),
+    countMissedAppointments: toBoolean(
+      config.countMissedAppointments,
+      DEFAULT_ATTENDANCE_CONFIG.countMissedAppointments
+    ),
+    countLateCancellations: toBoolean(
+      config.countLateCancellations,
+      DEFAULT_ATTENDANCE_CONFIG.countLateCancellations
+    ),
+    countLateReschedules: toBoolean(
+      config.countLateReschedules,
+      DEFAULT_ATTENDANCE_CONFIG.countLateReschedules
+    ),
+    lateCancellationHours: Math.max(
+      1,
+      toNumber(config.lateCancellationHours, DEFAULT_ATTENDANCE_CONFIG.lateCancellationHours)
+    ),
+    lateRescheduleHours: Math.max(
+      1,
+      toNumber(config.lateRescheduleHours, DEFAULT_ATTENDANCE_CONFIG.lateRescheduleHours)
+    ),
+    validityWindow: toValidityWindow(config.validityWindow, DEFAULT_ATTENDANCE_CONFIG.validityWindow),
+    warningProfiles,
+    penaltyPolicy,
+  };
+}
+
+function validityLabel(value: ValidityWindow): string {
+  return VALIDITY_OPTIONS.find((option) => option.value === value)?.label || '6 ay';
+}
+
+function attendanceTimingLabel(delayMinutes: number): string {
   if (delayMinutes % 60 === 0) {
-    return `No-show sonrası ${delayMinutes / 60} saat`;
+    return `İhlal sonrası ${delayMinutes / 60} saat`;
   }
-  return `No-show sonrası ${delayMinutes} dk`;
+  return `İhlal sonrası ${delayMinutes} dk`;
 }
 
 function ToggleButton({ checked, onClick, disabled, ariaLabel }: { checked: boolean; onClick: () => void; disabled?: boolean; ariaLabel: string }) {
@@ -151,7 +274,6 @@ function OptionRow({
   description,
   checked,
   onToggle,
-  disabled,
   children,
 }: {
   icon: any;
@@ -159,7 +281,6 @@ function OptionRow({
   description: string;
   checked: boolean;
   onToggle: () => void;
-  disabled?: boolean;
   children?: React.ReactNode;
 }) {
   return (
@@ -178,7 +299,6 @@ function OptionRow({
         <button
           type="button"
           onClick={onToggle}
-          disabled={disabled}
           className={cn(
             'relative h-6 w-11 rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0',
             checked ? 'bg-[var(--rose-gold)]' : 'bg-muted'
@@ -208,10 +328,7 @@ export function AutomationsCrudPage() {
 
   const [editingType, setEditingType] = useState<EditingType>(null);
   const [editReminderConfig, setEditReminderConfig] = useState<ReminderConfig | null>(null);
-  const [editNoShowDelay, setEditNoShowDelay] = useState<number>(DEFAULT_NO_SHOW_CONFIG.delayMinutes);
-  const [editNoShowMinChangeHours, setEditNoShowMinChangeHours] = useState<number>(
-    DEFAULT_NO_SHOW_CONFIG.minimumChangeHours
-  );
+  const [editAttendanceConfig, setEditAttendanceConfig] = useState<AttendanceConfig | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -250,14 +367,14 @@ export function AutomationsCrudPage() {
     true;
 
   const reminderRawConfig = isRecord(reminderRule?.config) ? reminderRule.config : {};
-  const legacyReminderMinChangeHours = Math.max(
+  const fallbackMinimumChangeHours = Math.max(
     1,
-    toNumber(reminderRawConfig.minChangeHoursAt72h, DEFAULT_NO_SHOW_CONFIG.minimumChangeHours)
+    toNumber(reminderRawConfig.minChangeHoursAt72h, DEFAULT_ATTENDANCE_CONFIG.minimumChangeHours)
   );
 
-  const noShowRule = getRule(NO_SHOW_KEY);
-  const noShowConfig = parseNoShowConfig(noShowRule?.config, legacyReminderMinChangeHours);
-  const noShowEnabled = noShowRule?.isEnabled ?? true;
+  const attendanceRule = getRule(ATTENDANCE_KEY);
+  const attendanceConfig = parseAttendanceConfig(attendanceRule?.config, fallbackMinimumChangeHours);
+  const attendanceEnabled = attendanceRule?.isEnabled ?? true;
 
   const reminderBadges: string[] = [];
   if (reminderConfig.enable2h) {
@@ -267,8 +384,16 @@ export function AutomationsCrudPage() {
     reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 saat kala + katılım onayı' : '24 saat kala');
   }
   if (reminderConfig.enable72h) {
-    reminderBadges.push(`72 saat kala + en az ${noShowConfig.minimumChangeHours} saat kala değişiklik uyarısı`);
+    reminderBadges.push(
+      reminderConfig.showAttendanceWarningAt72h
+        ? `72 saat kala + en az ${attendanceConfig.minimumChangeHours} saat kala değişiklik uyarısı`
+        : '72 saat kala bilgilendirme'
+    );
   }
+
+  const enabledWarningProfileCount = ATTENDANCE_RANGES.filter(
+    (range) => attendanceConfig.warningProfiles[range.key]
+  ).length;
 
   const upsertRule = async (payload: {
     key: string;
@@ -315,20 +440,20 @@ export function AutomationsCrudPage() {
     }
   };
 
-  const handleNoShowToggle = async () => {
-    setSavingKey('no-show');
+  const handleAttendanceToggle = async () => {
+    setSavingKey('attendance');
     setError(null);
 
     try {
       await upsertRule({
-        key: NO_SHOW_KEY,
-        name: 'No-Show Uyarısı',
-        description: 'Randevuya gelmeyen müşterilere otomatik bilgilendirme',
-        isEnabled: !noShowEnabled,
-        config: noShowConfig,
+        key: ATTENDANCE_KEY,
+        name: 'Randevuya Gelmeme Takibi',
+        description: 'Randevu ihlallerini takip eder ve yaptırım kurallarını uygular',
+        isEnabled: !attendanceEnabled,
+        config: attendanceConfig,
       });
     } catch (err: any) {
-      setError(err?.message || 'No-show otomasyonu güncellenemedi.');
+      setError(err?.message || 'Gelmeme takibi güncellenemedi.');
     } finally {
       setSavingKey(null);
     }
@@ -339,15 +464,15 @@ export function AutomationsCrudPage() {
     setEditingType('reminder');
   };
 
-  const openNoShowSettings = () => {
-    setEditNoShowDelay(noShowConfig.delayMinutes);
-    setEditNoShowMinChangeHours(noShowConfig.minimumChangeHours);
-    setEditingType('no-show');
+  const openAttendanceSettings = () => {
+    setEditAttendanceConfig(attendanceConfig);
+    setEditingType('attendance');
   };
 
   const closeDialog = () => {
     setEditingType(null);
     setEditReminderConfig(null);
+    setEditAttendanceConfig(null);
   };
 
   const saveReminderSettings = async () => {
@@ -374,24 +499,33 @@ export function AutomationsCrudPage() {
     }
   };
 
-  const saveNoShowSettings = async () => {
-    const delay = Math.max(15, Number(editNoShowDelay || 15));
-    const minimumChangeHours = Math.max(1, Number(editNoShowMinChangeHours || 1));
+  const saveAttendanceSettings = async () => {
+    if (!editAttendanceConfig) {
+      return;
+    }
 
-    setSavingKey('no-show');
+    const sanitized: AttendanceConfig = {
+      ...editAttendanceConfig,
+      delayMinutes: Math.max(15, Number(editAttendanceConfig.delayMinutes || 15)),
+      minimumChangeHours: Math.max(1, Number(editAttendanceConfig.minimumChangeHours || 1)),
+      lateCancellationHours: Math.max(1, Number(editAttendanceConfig.lateCancellationHours || 1)),
+      lateRescheduleHours: Math.max(1, Number(editAttendanceConfig.lateRescheduleHours || 1)),
+    };
+
+    setSavingKey('attendance');
     setError(null);
 
     try {
       await upsertRule({
-        key: NO_SHOW_KEY,
-        name: 'No-Show Uyarısı',
-        description: 'Randevuya gelmeyen müşterilere otomatik bilgilendirme',
-        isEnabled: noShowEnabled,
-        config: { delayMinutes: delay, minimumChangeHours },
+        key: ATTENDANCE_KEY,
+        name: 'Randevuya Gelmeme Takibi',
+        description: 'Randevu ihlallerini takip eder ve yaptırım kurallarını uygular',
+        isEnabled: attendanceEnabled,
+        config: sanitized,
       });
       closeDialog();
     } catch (err: any) {
-      setError(err?.message || 'No-show ayarları kaydedilemedi.');
+      setError(err?.message || 'Gelmeme takibi ayarları kaydedilemedi.');
     } finally {
       setSavingKey(null);
     }
@@ -432,7 +566,10 @@ export function AutomationsCrudPage() {
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {reminderBadges.length ? (
                       reminderBadges.map((badge) => (
-                        <span key={badge} className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                        <span
+                          key={badge}
+                          className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90"
+                        >
                           {badge}
                         </span>
                       ))
@@ -469,20 +606,30 @@ export function AutomationsCrudPage() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[#ff9da8] bg-[#52263a]">
-                  <CalendarX2 className="w-5 h-5" />
+                  <UserRoundX className="w-5 h-5" />
                 </div>
 
                 <div className="min-w-0">
-                  <h3 className="text-base font-semibold leading-tight text-white">No-Show Uyarısı</h3>
-                  <p className="mt-1 text-sm leading-tight text-white/75">Randevuya gelmeyen müşterilere otomatik bilgilendirme.</p>
+                  <h3 className="text-base font-semibold leading-tight text-white">Randevuya Gelmeme Takibi</h3>
+                  <p className="mt-1 text-sm leading-tight text-white/75">
+                    Geç iptal, geç değişiklik ve randevu kaçırma kurallarını tek yerden yönet.
+                  </p>
 
-                  <span className="inline-flex mt-2 rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
-                    {noShowLabel(noShowConfig.delayMinutes)}
-                  </span>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                      {attendanceTimingLabel(attendanceConfig.delayMinutes)}
+                    </span>
+                    <span className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                      Geçerlilik: {validityLabel(attendanceConfig.validityWindow)}
+                    </span>
+                    <span className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                      Uyarı profili: {enabledWarningProfileCount}
+                    </span>
+                  </div>
 
                   <button
                     type="button"
-                    onClick={openNoShowSettings}
+                    onClick={openAttendanceSettings}
                     className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#ffb7c3] hover:text-[#ffd1d9] transition-colors"
                   >
                     Ayarları Düzenle
@@ -492,10 +639,10 @@ export function AutomationsCrudPage() {
               </div>
 
               <ToggleButton
-                checked={noShowEnabled}
-                onClick={() => void handleNoShowToggle()}
-                disabled={savingKey === 'no-show' || loading}
-                ariaLabel={`No-show uyarısı ${noShowEnabled ? 'kapat' : 'aç'}`}
+                checked={attendanceEnabled}
+                onClick={() => void handleAttendanceToggle()}
+                disabled={savingKey === 'attendance' || loading}
+                ariaLabel={`Randevuya gelmeme takibi ${attendanceEnabled ? 'kapat' : 'aç'}`}
               />
             </div>
           </CardContent>
@@ -511,7 +658,7 @@ export function AutomationsCrudPage() {
           {editReminderConfig ? (
             <div className="space-y-3 py-2">
               <OptionRow
-                icon={MapPin}
+                icon={Clock3}
                 title="2 saat kala hatırlatma"
                 description="Kısa hatırlatma mesajı gönderilir."
                 checked={editReminderConfig.enable2h}
@@ -555,9 +702,17 @@ export function AutomationsCrudPage() {
                 checked={editReminderConfig.enable72h}
                 onToggle={() => setEditReminderConfig((prev) => (prev ? { ...prev, enable72h: !prev.enable72h } : prev))}
               >
-                <p className="text-xs text-muted-foreground">
-                  Bu mesajdaki “en az X saat kala değişiklik” değeri No-Show ayarlarından yönetilir.
-                </p>
+                <OptionRow
+                  icon={CircleAlert}
+                  title="Gelmeme uyarısını ekle"
+                  description={`Mesajda “en az ${attendanceConfig.minimumChangeHours} saat kala değişiklik” uyarısı gösterilir.`}
+                  checked={editReminderConfig.showAttendanceWarningAt72h}
+                  onToggle={() =>
+                    setEditReminderConfig((prev) =>
+                      prev ? { ...prev, showAttendanceWarningAt72h: !prev.showAttendanceWarningAt72h } : prev
+                    )
+                  }
+                />
               </OptionRow>
             </div>
           ) : null}
@@ -575,47 +730,224 @@ export function AutomationsCrudPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={editingType === 'no-show'} onOpenChange={(open) => (!open ? closeDialog() : null)}>
-        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+      <Dialog open={editingType === 'attendance'} onOpenChange={(open) => (!open ? closeDialog() : null)}>
+        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle>No-Show Uyarı Ayarı</DialogTitle>
+            <DialogTitle>Randevuya Gelmeme Takibi Ayarları</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3 py-2">
-            <Label>Gönderim zamanı</Label>
-            <Select value={String(editNoShowDelay)} onValueChange={(value) => setEditNoShowDelay(Number(value))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="30">No-show sonrası 30 dk</SelectItem>
-                <SelectItem value="60">No-show sonrası 1 saat</SelectItem>
-                <SelectItem value="120">No-show sonrası 2 saat</SelectItem>
-              </SelectContent>
-            </Select>
+          {editAttendanceConfig ? (
+            <div className="space-y-4 py-2">
+              <div className="space-y-3">
+                <Label>Hangi durumlar ihlal sayılsın?</Label>
 
-            <div className="space-y-2">
-              <Label>Randevu değişikliği için minimum süre</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={1}
-                  value={editNoShowMinChangeHours}
-                  onChange={(event) => {
-                    const value = Math.max(1, Number(event.target.value || 1));
-                    setEditNoShowMinChangeHours(value);
-                  }}
+                <OptionRow
+                  icon={UserRoundX}
+                  title="Randevu kaçırma"
+                  description="Müşteri randevu saatine gelmezse ihlal kaydı oluşturulur."
+                  checked={editAttendanceConfig.countMissedAppointments}
+                  onToggle={() =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, countMissedAppointments: !prev.countMissedAppointments } : prev
+                    )
+                  }
                 />
-                <span className="text-sm text-muted-foreground">saat</span>
+
+                <OptionRow
+                  icon={CalendarX2}
+                  title="Geç iptaller"
+                  description="Randevuya kısa süre kala yapılan iptaller ihlal olarak sayılır."
+                  checked={editAttendanceConfig.countLateCancellations}
+                  onToggle={() =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, countLateCancellations: !prev.countLateCancellations } : prev
+                    )
+                  }
+                >
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Kaç saat kala yapılan iptal geç sayılsın?</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={1}
+                        value={editAttendanceConfig.lateCancellationHours}
+                        onChange={(event) => {
+                          const value = Math.max(1, Number(event.target.value || 1));
+                          setEditAttendanceConfig((prev) => (prev ? { ...prev, lateCancellationHours: value } : prev));
+                        }}
+                      />
+                      <span className="text-sm text-muted-foreground">saat</span>
+                    </div>
+                  </div>
+                </OptionRow>
+
+                <OptionRow
+                  icon={TriangleAlert}
+                  title="Geç değişiklikler"
+                  description="Randevuya kısa süre kala yapılan saat/tarih değişiklikleri ihlal sayılır."
+                  checked={editAttendanceConfig.countLateReschedules}
+                  onToggle={() =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, countLateReschedules: !prev.countLateReschedules } : prev
+                    )
+                  }
+                >
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Kaç saat kala yapılan değişiklik geç sayılsın?</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={1}
+                        value={editAttendanceConfig.lateRescheduleHours}
+                        onChange={(event) => {
+                          const value = Math.max(1, Number(event.target.value || 1));
+                          setEditAttendanceConfig((prev) => (prev ? { ...prev, lateRescheduleHours: value } : prev));
+                        }}
+                      />
+                      <span className="text-sm text-muted-foreground">saat</span>
+                    </div>
+                  </div>
+                </OptionRow>
+              </div>
+
+              <div className="space-y-2">
+                <Label>İhlal kayıtları ne kadar süre geçerli olsun?</Label>
+                <Select
+                  value={editAttendanceConfig.validityWindow}
+                  onValueChange={(value) =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, validityWindow: value as ValidityWindow } : prev
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VALIDITY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Randevuya gelmeme uyarısı çıkacak profiller</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {ATTENDANCE_RANGES.map((range) => (
+                    <button
+                      type="button"
+                      key={range.key}
+                      onClick={() =>
+                        setEditAttendanceConfig((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                warningProfiles: {
+                                  ...prev.warningProfiles,
+                                  [range.key]: !prev.warningProfiles[range.key],
+                                },
+                              }
+                            : prev
+                        )
+                      }
+                      className={cn(
+                        'rounded-lg border px-3 py-2 text-sm text-left transition-colors',
+                        editAttendanceConfig.warningProfiles[range.key]
+                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground'
+                          : 'border-border text-muted-foreground hover:border-border/80'
+                      )}
+                    >
+                      {range.label} profil
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Yaptırımlar nasıl olsun?</Label>
+                <div className="space-y-2">
+                  {ATTENDANCE_RANGES.map((range) => (
+                    <div key={range.key} className="grid grid-cols-[120px_1fr] gap-2 items-center">
+                      <p className="text-sm font-medium">{range.label}</p>
+                      <Select
+                        value={editAttendanceConfig.penaltyPolicy[range.key]}
+                        onValueChange={(value) =>
+                          setEditAttendanceConfig((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  penaltyPolicy: {
+                                    ...prev.penaltyPolicy,
+                                    [range.key]: value as AttendancePenaltyAction,
+                                  },
+                                }
+                              : prev
+                          )
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PENALTY_ACTION_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>72 saat mesajı için minimum değişiklik süresi</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editAttendanceConfig.minimumChangeHours}
+                    onChange={(event) => {
+                      const value = Math.max(1, Number(event.target.value || 1));
+                      setEditAttendanceConfig((prev) => (prev ? { ...prev, minimumChangeHours: value } : prev));
+                    }}
+                  />
+                  <span className="text-sm text-muted-foreground">saat</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>İhlal sonrası bilgilendirme zamanı</Label>
+                <Select
+                  value={String(editAttendanceConfig.delayMinutes)}
+                  onValueChange={(value) =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, delayMinutes: Number(value) } : prev
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">İhlal sonrası 30 dk</SelectItem>
+                    <SelectItem value="60">İhlal sonrası 1 saat</SelectItem>
+                    <SelectItem value="120">İhlal sonrası 2 saat</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          </div>
+          ) : null}
 
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>İptal</Button>
             <Button
-              onClick={() => void saveNoShowSettings()}
-              disabled={savingKey === 'no-show'}
+              onClick={() => void saveAttendanceSettings()}
+              disabled={savingKey === 'attendance'}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
             >
               Kaydet
