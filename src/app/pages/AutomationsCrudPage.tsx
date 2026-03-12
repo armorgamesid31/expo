@@ -245,13 +245,13 @@ function ToggleButton({ checked, onClick, disabled, ariaLabel }: { checked: bool
       aria-label={ariaLabel}
       className={cn(
         'relative h-6 w-11 rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0 mt-0.5',
-        checked ? 'bg-white' : 'bg-white/25'
+        checked ? 'bg-[var(--rose-gold)]' : 'bg-muted'
       )}
     >
       <span
         className={cn(
           'absolute top-0.5 h-5 w-5 rounded-full transition-all duration-200',
-          checked ? 'left-[22px] bg-[#0b1026]' : 'left-[2px] bg-white'
+          checked ? 'left-[22px] bg-white' : 'left-[2px] bg-white'
         )}
       />
     </button>
@@ -523,19 +523,19 @@ export function AutomationsCrudPage() {
           </Card>
         ) : null}
 
-        <p className="text-xs font-semibold tracking-[0.08em] text-[#7E88A9] uppercase px-1">Hatırlatmalar</p>
+        <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Hatırlatmalar</p>
 
-        <Card className="border border-[#253050] bg-gradient-to-b from-[#151f3f] to-[#11182f] text-white shadow-[0_12px_28px_-20px_rgba(1,8,24,0.95)]">
+        <Card className="border border-border bg-card shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[#8bb5ff] bg-[#1d2f63]">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[var(--rose-gold)] bg-[var(--rose-gold)]/12">
                   <Bell className="w-5 h-5" />
                 </div>
 
                 <div className="min-w-0">
-                  <h3 className="text-base font-semibold leading-tight text-white">Randevu Hatırlatma</h3>
-                  <p className="mt-1 text-sm leading-tight text-white/75">
+                  <h3 className="text-base font-semibold leading-tight text-foreground">Randevu Hatırlatma</h3>
+                  <p className="mt-1 text-sm leading-tight text-muted-foreground">
                     Tek ayardan 2 saat, 24 saat ve 72 saat önce hatırlatma kurgusunu yönet.
                   </p>
 
@@ -544,13 +544,13 @@ export function AutomationsCrudPage() {
                       reminderBadges.map((badge) => (
                         <span
                           key={badge}
-                          className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90"
+                          className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground"
                         >
                           {badge}
                         </span>
                       ))
                     ) : (
-                      <span className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/75">
+                      <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
                         Aktif hatırlatma yok
                       </span>
                     )}
@@ -559,7 +559,7 @@ export function AutomationsCrudPage() {
                   <button
                     type="button"
                     onClick={openReminderSettings}
-                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#ffb7c3] hover:text-[#ffd1d9] transition-colors"
+                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
                   >
                     Ayarları Düzenle
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -577,25 +577,25 @@ export function AutomationsCrudPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-[#253050] bg-gradient-to-b from-[#151f3f] to-[#11182f] text-white shadow-[0_12px_28px_-20px_rgba(1,8,24,0.95)]">
+        <Card className="border border-border bg-card shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[#ff9da8] bg-[#52263a]">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[var(--rose-gold)] bg-[var(--rose-gold)]/12">
                   <UserRoundX className="w-5 h-5" />
                 </div>
 
                 <div className="min-w-0">
-                  <h3 className="text-base font-semibold leading-tight text-white">Randevuya Gelmeme Takibi</h3>
-                  <p className="mt-1 text-sm leading-tight text-white/75">
+                  <h3 className="text-base font-semibold leading-tight text-foreground">Randevuya Gelmeme Takibi</h3>
+                  <p className="mt-1 text-sm leading-tight text-muted-foreground">
                     Geç iptal, geç değişiklik ve randevu kaçırma kurallarını tek yerden yönet.
                   </p>
 
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <span className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                    <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
                       Geçerlilik: {validityLabel(attendanceConfig.validityWindow)}
                     </span>
-                    <span className="inline-flex rounded-full border border-white/10 bg-[#0b1026] px-2.5 py-1 text-[11px] font-semibold text-white/90">
+                    <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
                       Bildirim: {enabledNotificationEventCount} durum
                     </span>
                   </div>
@@ -603,7 +603,7 @@ export function AutomationsCrudPage() {
                   <button
                     type="button"
                     onClick={openAttendanceSettings}
-                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#ffb7c3] hover:text-[#ffd1d9] transition-colors"
+                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
                   >
                     Ayarları Düzenle
                     <ChevronRight className="w-3.5 h-3.5" />
