@@ -71,9 +71,9 @@ const ATTENDANCE_RANGES: Array<{ key: AttendanceRangeKey; label: string }> = [
 const PENALTY_ACTION_OPTIONS: Array<{ value: AttendancePenaltyAction; label: string }> = [
   { value: 'normal', label: 'Uyarı yok' },
   { value: 'simple_warning', label: 'Basit uyarı' },
-  { value: 'possible_block', label: 'Randevu almanız engellenebilir uyarısı' },
-  { value: 'manual_approval', label: 'Randevular salon ön onayına düşsün' },
-  { value: 'full_block', label: 'Randevuyu tamamen engelle' },
+  { value: 'possible_block', label: 'Engellenebilir uyarı' },
+  { value: 'manual_approval', label: 'Salon ön onayı' },
+  { value: 'full_block', label: 'Tam engel' },
 ];
 
 const VALIDITY_OPTIONS: Array<{ value: ValidityWindow; label: string }> = [
@@ -798,8 +798,11 @@ export function AutomationsCrudPage() {
                 <Label>Yaptırımlar nasıl olsun?</Label>
                 <div className="space-y-2">
                   {ATTENDANCE_RANGES.map((range) => (
-                    <div key={range.key} className="grid grid-cols-[120px_1fr] gap-2 items-center">
-                      <p className="text-sm font-medium">{range.label}</p>
+                    <div
+                      key={range.key}
+                      className="flex flex-col gap-2 sm:grid sm:grid-cols-[80px_1fr] sm:items-center"
+                    >
+                      <p className="text-sm font-medium leading-none sm:leading-normal">{range.label}</p>
                       <Select
                         value={editAttendanceConfig.penaltyPolicy[range.key]}
                         onValueChange={(value) =>
@@ -816,7 +819,7 @@ export function AutomationsCrudPage() {
                           )
                         }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger size="sm" className="w-full min-w-0">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
