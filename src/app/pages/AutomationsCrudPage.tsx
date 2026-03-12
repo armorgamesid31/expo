@@ -623,7 +623,10 @@ export function AutomationsCrudPage() {
       </div>
 
       <Dialog open={editingType === 'reminder'} onOpenChange={(open) => (!open ? closeDialog() : null)}>
-        <DialogContent className="max-w-md" aria-describedby={undefined}>
+        <DialogContent
+          className="max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]"
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle>Randevu Hatırlatma Ayarları</DialogTitle>
           </DialogHeader>
@@ -692,7 +695,10 @@ export function AutomationsCrudPage() {
       </Dialog>
 
       <Dialog open={editingType === 'attendance'} onOpenChange={(open) => (!open ? closeDialog() : null)}>
-        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
+        <DialogContent
+          className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]"
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle>Randevuya Gelmeme Takibi Ayarları</DialogTitle>
           </DialogHeader>
