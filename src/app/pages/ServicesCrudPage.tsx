@@ -17,6 +17,7 @@ interface ServiceItem {
   capacityOverride?: number | null;
   sequentialOverride?: boolean | null;
   bufferOverride?: number | null;
+  isActive?: boolean | null;
 }
 
 interface CategoryItem {
@@ -31,6 +32,7 @@ interface CategoryItem {
   bufferMinutes: number | null;
   marketingDescription?: string | null;
   serviceCount: number;
+  isActive?: boolean | null;
 }
 
 interface ServiceGroupItem {
@@ -42,6 +44,7 @@ interface ServiceGroupItem {
   sequentialRequired: boolean | null;
   preparationMinutes: number | null;
   serviceCount: number;
+  isActive?: boolean | null;
 }
 
 function parseNullableInt(value: string): number | null {
@@ -58,34 +61,53 @@ function colorById(id: number) {
   return COLOR_PALETTE[Math.abs(id) % COLOR_PALETTE.length];
 }
 
-function ToggleChips({
-  enabled,
+function ToggleSwitch({
+  checked,
   onChange,
-  activeLabel = 'Aktif',
-  passiveLabel = 'Pasif',
 }: {
-  enabled: boolean;
+  checked: boolean;
   onChange: (next: boolean) => void;
-  activeLabel?: string;
-  passiveLabel?: string;
 }) {
-  const base = 'h-8 rounded-md px-3 text-xs font-medium border transition-colors';
-  const activeClass = enabled
-    ? 'bg-[var(--rose-gold)] text-white border-[var(--rose-gold)]'
-    : 'bg-background text-muted-foreground border-border';
-  const passiveClass = !enabled
-    ? 'bg-[var(--rose-gold)] text-white border-[var(--rose-gold)]'
-    : 'bg-background text-muted-foreground border-border';
-
   return (
-    <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1">
-      <button type="button" onClick={() => onChange(true)} className={`${base} ${activeClass}`}>
-        {activeLabel}
-      </button>
-      <button type="button" onClick={() => onChange(false)} className={`${base} ${passiveClass}`}>
-        {passiveLabel}
-      </button>
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors ${
+        checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+          checked ? 'translate-x-5' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
+  );
+}
+
+function StatusChip({
+  active,
+  onToggle,
+  className = '',
+}: {
+  active: boolean;
+  onToggle: (next: boolean) => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(!active)}
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+        active
+          ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+          : 'border-zinc-300 bg-zinc-100 text-zinc-600'
+      } ${className}`}
+    >
+      {active ? 'Aktif' : 'Pasif'}
+    </button>
   );
 }
 
@@ -124,9 +146,8 @@ export function ServicesCrudPage() {
     requiresSpecialist: false,
     capacityOverride: '',
     preparationMinutes: '',
+    isActive: true,
   });
-  const [serviceCapacityEnabled, setServiceCapacityEnabled] = useState(false);
-  const [serviceBufferEnabled, setServiceBufferEnabled] = useState(false);
 
   const [categoryForm, setCategoryForm] = useState({
     capacity: '1',
@@ -141,10 +162,8 @@ export function ServicesCrudPage() {
     capacity: '1',
     sequentialRequired: false,
     preparationMinutes: '0',
+    isActive: true,
   });
-  const [groupCapacityEnabled, setGroupCapacityEnabled] = useState(true);
-  const [groupBufferEnabled, setGroupBufferEnabled] = useState(true);
-  const [groupSequentialEnabled, setGroupSequentialEnabled] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -238,9 +257,8 @@ export function ServicesCrudPage() {
       requiresSpecialist: false,
       capacityOverride: '',
       preparationMinutes: '',
+      isActive: true,
     });
-    setServiceCapacityEnabled(false);
-    setServiceBufferEnabled(false);
     setServiceDialogOpen(true);
   };
 
@@ -257,9 +275,8 @@ export function ServicesCrudPage() {
         item.capacityOverride === null || item.capacityOverride === undefined ? '' : String(item.capacityOverride),
       preparationMinutes:
         item.bufferOverride === null || item.bufferOverride === undefined ? '' : String(item.bufferOverride),
+      isActive: item.isActive !== false,
     });
-    setServiceCapacityEnabled(item.capacityOverride !== null && item.capacityOverride !== undefined);
-    setServiceBufferEnabled(item.bufferOverride !== null && item.bufferOverride !== undefined);
     setServiceDialogOpen(true);
   };
 
@@ -323,9 +340,10 @@ export function ServicesCrudPage() {
       duration,
       price,
       requiresSpecialist: serviceForm.requiresSpecialist,
-      capacityOverride: serviceCapacityEnabled ? parseNullableInt(serviceForm.capacityOverride) : null,
+      capacityOverride: parseNullableInt(serviceForm.capacityOverride),
       sequentialOverride: null,
-      bufferOverride: serviceBufferEnabled ? parseNullableInt(serviceForm.preparationMinutes) : null,
+      bufferOverride: parseNullableInt(serviceForm.preparationMinutes),
+      isActive: serviceForm.isActive,
     };
 
     try {
@@ -465,10 +483,8 @@ export function ServicesCrudPage() {
       capacity: '1',
       sequentialRequired: false,
       preparationMinutes: '0',
+      isActive: true,
     });
-    setGroupCapacityEnabled(true);
-    setGroupBufferEnabled(true);
-    setGroupSequentialEnabled(false);
     setGroupDialogOpen(true);
   };
 
@@ -479,10 +495,8 @@ export function ServicesCrudPage() {
       capacity: String(group.capacity ?? 1),
       sequentialRequired: Boolean(group.sequentialRequired),
       preparationMinutes: String(group.preparationMinutes ?? 0),
+      isActive: group.isActive !== false,
     });
-    setGroupCapacityEnabled(group.capacity !== null && group.capacity !== undefined);
-    setGroupBufferEnabled(group.preparationMinutes !== null && group.preparationMinutes !== undefined);
-    setGroupSequentialEnabled(Boolean(group.sequentialRequired));
     setGroupDialogOpen(true);
   };
 
@@ -496,11 +510,11 @@ export function ServicesCrudPage() {
 
     const capacity = Number(groupForm.capacity);
     const preparationMinutes = Number(groupForm.preparationMinutes);
-    if (groupCapacityEnabled && (!Number.isInteger(capacity) || capacity <= 0)) {
+    if (!Number.isInteger(capacity) || capacity <= 0) {
       setError('Grup kapasitesi pozitif bir tam sayı olmalı.');
       return;
     }
-    if (groupBufferEnabled && (!Number.isInteger(preparationMinutes) || preparationMinutes < 0)) {
+    if (!Number.isInteger(preparationMinutes) || preparationMinutes < 0) {
       setError('Hazırlık süresi sıfır veya pozitif tam sayı olmalı.');
       return;
     }
@@ -510,9 +524,10 @@ export function ServicesCrudPage() {
 
     const payload = {
       name: groupForm.name.trim(),
-      capacity: groupCapacityEnabled ? capacity : 1,
-      sequentialRequired: groupSequentialEnabled,
-      preparationMinutes: groupBufferEnabled ? preparationMinutes : 0,
+      capacity,
+      sequentialRequired: groupForm.sequentialRequired,
+      preparationMinutes,
+      isActive: groupForm.isActive,
     };
 
     try {
@@ -557,6 +572,42 @@ export function ServicesCrudPage() {
     }
   };
 
+  const toggleCategoryActive = async (category: CategoryItem, next: boolean) => {
+    try {
+      await apiFetch(`/api/admin/service-categories/${category.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: next }),
+      });
+      setCategories((prev) => prev.map((item) => (item.id === category.id ? { ...item, isActive: next } : item)));
+    } catch (err: any) {
+      setError(err?.message || 'Kategori durumu güncellenemedi.');
+    }
+  };
+
+  const toggleServiceActive = async (item: ServiceItem, next: boolean) => {
+    try {
+      await apiFetch(`/api/admin/services/${item.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: next }),
+      });
+      setServices((prev) => prev.map((row) => (row.id === item.id ? { ...row, isActive: next } : row)));
+    } catch (err: any) {
+      setError(err?.message || 'Hizmet durumu güncellenemedi.');
+    }
+  };
+
+  const toggleGroupActive = async (group: ServiceGroupItem, next: boolean) => {
+    try {
+      await apiFetch(`/api/admin/service-groups/${group.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: next }),
+      });
+      setGroups((prev) => prev.map((item) => (item.id === group.id ? { ...item, isActive: next } : item)));
+    } catch (err: any) {
+      setError(err?.message || 'Grup durumu güncellenemedi.');
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       <div>
@@ -595,7 +646,7 @@ export function ServicesCrudPage() {
 
             return (
               <div key={category.id} className="rounded-2xl border border-border bg-card overflow-hidden">
-                <div className="grid grid-cols-[28px_1fr_auto_32px_auto] items-center gap-2 px-3 py-3">
+                <div className="flex items-center gap-2 px-3 py-3">
                   <button
                     type="button"
                     onClick={() => toggleCategory(category.id)}
@@ -604,22 +655,24 @@ export function ServicesCrudPage() {
                     {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(category.id)}
-                    className="text-left font-semibold leading-tight min-w-0"
-                  >
-                    <span className="block truncate">{category.name}</span>
+                  <button type="button" onClick={() => toggleCategory(category.id)} className="text-left font-semibold leading-tight">
+                    {category.name}
                   </button>
 
-                  <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground whitespace-nowrap leading-none">
+                  <span className="ml-1 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground whitespace-nowrap leading-none">
                     {categoryItems.length} hizmet
                   </span>
+
+                  <StatusChip
+                    active={category.isActive !== false}
+                    onToggle={(next) => void toggleCategoryActive(category, next)}
+                    className="ml-1"
+                  />
 
                   <button
                     type="button"
                     onClick={() => openCategorySettings(category)}
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                    className="h-8 w-8 ml-1 grid place-items-center rounded-md hover:bg-muted"
                     title="Kategori ayarları"
                   >
                     <Settings2 className="h-4 w-4" />
@@ -628,7 +681,7 @@ export function ServicesCrudPage() {
                   <button
                     type="button"
                     onClick={() => openCreateService(category)}
-                    className="inline-flex items-center gap-1 text-sm font-medium justify-self-end"
+                    className="ml-auto inline-flex items-center gap-1 text-sm font-medium"
                   >
                     <Plus className="h-4 w-4" />
                     Ekle
@@ -641,7 +694,12 @@ export function ServicesCrudPage() {
                       <div className="px-4 py-4 text-sm text-muted-foreground">Bu kategoride henüz hizmet yok.</div>
                     ) : (
                       categoryItems.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-b-0">
+                        <div
+                          key={item.id}
+                          className={`flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-b-0 ${
+                            item.isActive === false ? 'opacity-65' : ''
+                          }`}
+                        >
                           <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: colorById(item.id) }} />
 
                           <div className="min-w-0 flex-1">
@@ -652,6 +710,10 @@ export function ServicesCrudPage() {
                             </p>
                           </div>
 
+                          <StatusChip
+                            active={item.isActive !== false}
+                            onToggle={(next) => void toggleServiceActive(item, next)}
+                          />
                           <button type="button" onClick={() => openEditService(item)} className="h-8 w-8 grid place-items-center text-muted-foreground hover:text-foreground">
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -719,6 +781,17 @@ export function ServicesCrudPage() {
                 />
               </label>
 
+              <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+                <div>
+                  <p className="font-medium">Hizmet durumu</p>
+                  <p className="text-xs text-muted-foreground">Pasif hizmet randevu akışında görünmez.</p>
+                </div>
+                <StatusChip
+                  active={serviceForm.isActive}
+                  onToggle={(next) => setServiceForm((prev) => ({ ...prev, isActive: next }))}
+                />
+              </label>
+
               <div className="grid grid-cols-2 gap-2">
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Süre (dk)</span>
@@ -753,8 +826,8 @@ export function ServicesCrudPage() {
                     <p className="font-medium">Müşteri bu hizmette uzmanını seçsin</p>
                     <p className="text-xs text-muted-foreground">Açık olduğunda randevu akışında uzman seçme opsiyonu gösterilir.</p>
                   </div>
-                  <ToggleChips
-                    enabled={serviceForm.requiresSpecialist}
+                  <ToggleSwitch
+                    checked={serviceForm.requiresSpecialist}
                     onChange={(next) => setServiceForm((prev) => ({ ...prev, requiresSpecialist: next }))}
                   />
                 </label>
@@ -767,19 +840,18 @@ export function ServicesCrudPage() {
                         Kapalıysa kategori ayarı kullanılır, açarsan bu hizmet için özel sayı tanımlarsın.
                       </p>
                     </div>
-                    <ToggleChips
-                      enabled={serviceCapacityEnabled}
-                      onChange={(enabled) => {
-                        setServiceCapacityEnabled(enabled);
+                    <ToggleSwitch
+                      checked={serviceForm.capacityOverride.trim().length > 0}
+                      onChange={(enabled) =>
                         setServiceForm((prev) => ({
                           ...prev,
                           capacityOverride: enabled ? prev.capacityOverride || '1' : '',
-                        }));
-                      }}
+                        }))
+                      }
                     />
                   </div>
 
-                  {serviceCapacityEnabled ? (
+                  {serviceForm.capacityOverride.trim().length > 0 ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <button
@@ -830,19 +902,18 @@ export function ServicesCrudPage() {
                         Kapalıysa kategori ayarı kullanılır, açarsan bu hizmet için özel hazırlık süresi belirlenir.
                       </p>
                     </div>
-                    <ToggleChips
-                      enabled={serviceBufferEnabled}
-                      onChange={(enabled) => {
-                        setServiceBufferEnabled(enabled);
+                    <ToggleSwitch
+                      checked={serviceForm.preparationMinutes.trim().length > 0}
+                      onChange={(enabled) =>
                         setServiceForm((prev) => ({
                           ...prev,
                           preparationMinutes: enabled ? prev.preparationMinutes || '0' : '',
-                        }));
-                      }}
+                        }))
+                      }
                     />
                   </div>
 
-                  {serviceBufferEnabled ? (
+                  {serviceForm.preparationMinutes.trim().length > 0 ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <button
@@ -911,8 +982,8 @@ export function ServicesCrudPage() {
                     <p className="text-sm font-medium">Aynı anda alınabilecek randevu sayısı</p>
                     <p className="text-xs text-muted-foreground">Bu kategoriye ait tüm hizmetlerin eş zamanlı kapasitesini belirler.</p>
                   </div>
-                  <ToggleChips
-                    enabled={categoryCapacityEnabled}
+                  <ToggleSwitch
+                    checked={categoryCapacityEnabled}
                     onChange={(next) => setCategoryCapacityEnabled(next)}
                   />
                 </div>
@@ -963,8 +1034,8 @@ export function ServicesCrudPage() {
                   <p className="font-medium">Ardışık planlama</p>
                   <p className="text-xs text-muted-foreground">Kategori içinde çoklu hizmet seçiminde hizmetler peş peşe planlanır.</p>
                 </div>
-                <ToggleChips
-                  enabled={categoryForm.sequentialRequired}
+                <ToggleSwitch
+                  checked={categoryForm.sequentialRequired}
                   onChange={(next) => setCategoryForm((prev) => ({ ...prev, sequentialRequired: next }))}
                 />
               </label>
@@ -975,8 +1046,8 @@ export function ServicesCrudPage() {
                     <p className="text-sm font-medium">Hazırlık süresi (dakika)</p>
                     <p className="text-xs text-muted-foreground">Aynı personelde bu kategori hizmetleri arasına otomatik süre ekler.</p>
                   </div>
-                  <ToggleChips
-                    enabled={categoryBufferEnabled}
+                  <ToggleSwitch
+                    checked={categoryBufferEnabled}
                     onChange={(next) => setCategoryBufferEnabled(next)}
                   />
                 </div>
@@ -1094,7 +1165,7 @@ export function ServicesCrudPage() {
 
             <div className="space-y-2">
               {groups.map((group, index) => (
-                <div key={group.id} className="rounded-lg border border-border px-3 py-2">
+                <div key={group.id} className={`rounded-lg border border-border px-3 py-2 ${group.isActive === false ? 'opacity-65' : ''}`}>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{group.name}</p>
@@ -1116,6 +1187,10 @@ export function ServicesCrudPage() {
                     >
                       <ArrowDown className="h-4 w-4" />
                     </button>
+                    <StatusChip
+                      active={group.isActive !== false}
+                      onToggle={(next) => void toggleGroupActive(group, next)}
+                    />
                     <button
                       type="button"
                       onClick={() => openEditGroup(group)}
@@ -1151,131 +1226,55 @@ export function ServicesCrudPage() {
                 />
               </label>
 
-              <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Aynı anda alınabilecek randevu sayısı</p>
-                    <p className="text-xs text-muted-foreground">Grup içindeki hizmetlerin ortak kapasite sınırı.</p>
-                  </div>
-                  <ToggleChips
-                    enabled={groupCapacityEnabled}
-                    onChange={(next) => setGroupCapacityEnabled(next)}
-                  />
+              <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+                <div>
+                  <p className="font-medium">Grup durumu</p>
+                  <p className="text-xs text-muted-foreground">Pasif grup, hizmet seçimlerinde öneri olarak çıkmaz.</p>
                 </div>
-                {groupCapacityEnabled ? (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setGroupForm((prev) => {
-                          const current = Number(prev.capacity || '1');
-                          const next = clampInt(current - 1, 1, 20);
-                          return { ...prev, capacity: String(next) };
-                        })
-                      }
-                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={groupForm.capacity}
-                      onChange={(event) => setGroupForm((prev) => ({ ...prev, capacity: event.target.value }))}
-                      className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setGroupForm((prev) => {
-                          const current = Number(prev.capacity || '1');
-                          const next = clampInt(current + 1, 1, 20);
-                          return { ...prev, capacity: String(next) };
-                        })
-                      }
-                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                    >
-                      +
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Pasifken varsayılan kapasite (1) kullanılır.</p>
-                )}
-              </div>
+                <StatusChip
+                  active={groupForm.isActive}
+                  onToggle={(next) => setGroupForm((prev) => ({ ...prev, isActive: next }))}
+                />
+              </label>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Aynı anda kabul edilecek maksimum randevu</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={groupForm.capacity}
+                  onChange={(event) => setGroupForm((prev) => ({ ...prev, capacity: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
                 <div>
                   <p>Ardışık planlama</p>
                   <p className="text-xs text-muted-foreground">Grup içindeki hizmetler seçildiğinde peş peşe planlanır.</p>
                 </div>
-                <ToggleChips
-                  enabled={groupSequentialEnabled}
-                  onChange={(next) => {
-                    setGroupSequentialEnabled(next);
-                    setGroupForm((prev) => ({ ...prev, sequentialRequired: next }));
-                  }}
+                <input
+                  type="checkbox"
+                  checked={groupForm.sequentialRequired}
+                  onChange={(event) =>
+                    setGroupForm((prev) => ({ ...prev, sequentialRequired: event.target.checked }))
+                  }
                 />
               </label>
 
-              <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Hazırlık süresi (dakika)</p>
-                    <p className="text-xs text-muted-foreground">Grup içindeki hizmetler arasında eklenecek aralık.</p>
-                  </div>
-                  <ToggleChips
-                    enabled={groupBufferEnabled}
-                    onChange={(next) => setGroupBufferEnabled(next)}
-                  />
-                </div>
-                {groupBufferEnabled ? (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setGroupForm((prev) => {
-                            const current = Number(prev.preparationMinutes || '0');
-                            const next = clampInt(current - 5, 0, 180);
-                            return { ...prev, preparationMinutes: String(next) };
-                          })
-                        }
-                        className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min={0}
-                        max={180}
-                        step={5}
-                        value={groupForm.preparationMinutes}
-                        onChange={(event) =>
-                          setGroupForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))
-                        }
-                        className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setGroupForm((prev) => {
-                            const current = Number(prev.preparationMinutes || '0');
-                            const next = clampInt(current + 5, 0, 180);
-                            return { ...prev, preparationMinutes: String(next) };
-                          })
-                        }
-                        className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">5 dakikalık adımlarla ayarlanır.</p>
-                  </>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Pasifken hazırlık süresi 0 dakika olur.</p>
-                )}
-              </div>
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Randevular arası hazırlık süresi (dk)</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={5}
+                  value={groupForm.preparationMinutes}
+                  onChange={(event) =>
+                    setGroupForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))
+                  }
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
                 {saving ? 'Kaydediliyor...' : editingGroup ? 'Güncelle' : 'Oluştur'}
