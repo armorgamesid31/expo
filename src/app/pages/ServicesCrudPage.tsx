@@ -71,7 +71,7 @@ function ToggleSwitch({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors ${
         checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'
       }`}
     >
@@ -760,7 +760,7 @@ export function ServicesCrudPage() {
                               return { ...prev, capacityOverride: String(next) };
                             })
                           }
-                          className="h-10 w-10 rounded-lg border border-border bg-card text-lg"
+                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
                         >
                           -
                         </button>
@@ -770,7 +770,7 @@ export function ServicesCrudPage() {
                           max={20}
                           value={serviceForm.capacityOverride}
                           onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
-                          className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm text-center"
+                          className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
                           placeholder="1"
                         />
                         <button
@@ -782,7 +782,7 @@ export function ServicesCrudPage() {
                               return { ...prev, capacityOverride: String(next) };
                             })
                           }
-                          className="h-10 w-10 rounded-lg border border-border bg-card text-lg"
+                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
                         >
                           +
                         </button>
@@ -822,7 +822,7 @@ export function ServicesCrudPage() {
                               return { ...prev, preparationMinutes: String(next) };
                             })
                           }
-                          className="h-10 w-10 rounded-lg border border-border bg-card text-lg"
+                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
                         >
                           -
                         </button>
@@ -833,7 +833,7 @@ export function ServicesCrudPage() {
                           step={5}
                           value={serviceForm.preparationMinutes}
                           onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
-                          className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm text-center"
+                          className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
                           placeholder="0"
                         />
                         <button
@@ -845,7 +845,7 @@ export function ServicesCrudPage() {
                               return { ...prev, preparationMinutes: String(next) };
                             })
                           }
-                          className="h-10 w-10 rounded-lg border border-border bg-card text-lg"
+                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
                         >
                           +
                         </button>
@@ -873,42 +873,108 @@ export function ServicesCrudPage() {
             </div>
 
             <form className="space-y-3" onSubmit={saveCategorySettings}>
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Aynı anda kabul edilecek maksimum randevu</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={categoryForm.capacity}
-                  onChange={(event) => setCategoryForm((prev) => ({ ...prev, capacity: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
-                <p className="text-xs text-muted-foreground">Bu kategoriye ait hizmetlerin eş zamanlı kapasitesini belirler.</p>
-              </label>
+              <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">Aynı anda alınabilecek randevu sayısı</p>
+                    <p className="text-xs text-muted-foreground">Bu kategoriye ait tüm hizmetlerin eş zamanlı kapasitesini belirler.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCategoryForm((prev) => {
+                        const current = Number(prev.capacity || '1');
+                        const next = clampInt(current - 1, 1, 20);
+                        return { ...prev, capacity: String(next) };
+                      })
+                    }
+                    className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={categoryForm.capacity}
+                    onChange={(event) => setCategoryForm((prev) => ({ ...prev, capacity: event.target.value }))}
+                    className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCategoryForm((prev) => {
+                        const current = Number(prev.capacity || '1');
+                        const next = clampInt(current + 1, 1, 20);
+                        return { ...prev, capacity: String(next) };
+                      })
+                    }
+                    className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
 
-              <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
+              <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                 <div>
-                  <p>Ardışık planlama</p>
+                  <p className="font-medium">Ardışık planlama</p>
                   <p className="text-xs text-muted-foreground">Kategori içinde çoklu hizmet seçiminde hizmetler peş peşe planlanır.</p>
                 </div>
-                <input
-                  type="checkbox"
+                <ToggleSwitch
                   checked={categoryForm.sequentialRequired}
-                  onChange={(event) => setCategoryForm((prev) => ({ ...prev, sequentialRequired: event.target.checked }))}
+                  onChange={(next) => setCategoryForm((prev) => ({ ...prev, sequentialRequired: next }))}
                 />
               </label>
 
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Randevular arası hazırlık süresi (dk)</span>
-                <input
-                  type="number"
-                  min={0}
-                  step={5}
-                  value={categoryForm.bufferMinutes}
-                  onChange={(event) => setCategoryForm((prev) => ({ ...prev, bufferMinutes: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
-                <p className="text-xs text-muted-foreground">Aynı personel için kategori hizmetleri arasında otomatik süre ekler.</p>
-              </label>
+              <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">Hazırlık süresi (dakika)</p>
+                    <p className="text-xs text-muted-foreground">Aynı personelde bu kategori hizmetleri arasına otomatik süre ekler.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCategoryForm((prev) => {
+                        const current = Number(prev.bufferMinutes || '0');
+                        const next = clampInt(current - 5, 0, 180);
+                        return { ...prev, bufferMinutes: String(next) };
+                      })
+                    }
+                    className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min={0}
+                    max={180}
+                    step={5}
+                    value={categoryForm.bufferMinutes}
+                    onChange={(event) => setCategoryForm((prev) => ({ ...prev, bufferMinutes: event.target.value }))}
+                    className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCategoryForm((prev) => {
+                        const current = Number(prev.bufferMinutes || '0');
+                        const next = clampInt(current + 5, 0, 180);
+                        return { ...prev, bufferMinutes: String(next) };
+                      })
+                    }
+                    className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
+                  >
+                    +
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">5 dakikalık adımlarla ayarlanır.</p>
+              </div>
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Kategori açıklaması (opsiyonel)</span>
