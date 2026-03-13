@@ -87,7 +87,7 @@ function ToggleSwitch({
   );
 }
 
-function StatusChips({
+function StatusToggleChip({
   active,
   onToggle,
   className = '',
@@ -96,35 +96,21 @@ function StatusChips({
   onToggle: (next: boolean) => void;
   className?: string;
 }) {
-  const chipBase = 'h-7 w-7 rounded-md border text-xs font-semibold transition-colors grid place-items-center';
-  const onClass = active
-    ? 'bg-[var(--rose-gold)] border-[var(--rose-gold)] text-white'
-    : 'bg-background border-border text-muted-foreground';
-  const offClass = !active
-    ? 'bg-[var(--rose-gold)] border-[var(--rose-gold)] text-white'
-    : 'bg-background border-border text-muted-foreground';
-
   return (
-    <div className={`inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 ${className}`}>
-      <button
-        type="button"
-        aria-label="Durumu açık yap"
-        onClick={() => onToggle(true)}
-        className={`${chipBase} ${onClass}`}
-        title="Açık"
-      >
-        ✓
-      </button>
-      <button
-        type="button"
-        aria-label="Durumu kapalı yap"
-        onClick={() => onToggle(false)}
-        className={`${chipBase} ${offClass}`}
-        title="Kapalı"
-      >
-        −
-      </button>
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={active ? 'Durumu pasif yap' : 'Durumu aktif yap'}
+      onClick={() => onToggle(!active)}
+      className={`relative inline-flex h-7 w-12 items-center rounded-full border border-zinc-300 bg-zinc-200 p-0.5 transition-colors ${className}`}
+    >
+      <span
+        className={`inline-block h-6 w-6 rounded-full border border-zinc-300 bg-white shadow-sm transition-transform ${
+          active ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
   );
 }
 
@@ -663,7 +649,7 @@ export function ServicesCrudPage() {
 
             return (
               <div key={category.id} className="rounded-2xl border border-border bg-card overflow-hidden">
-                <div className="flex items-center gap-2 px-3 py-3">
+                <div className="grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2 px-3 py-3">
                   <button
                     type="button"
                     onClick={() => toggleCategory(category.id)}
@@ -672,37 +658,41 @@ export function ServicesCrudPage() {
                     {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
 
-                  <button type="button" onClick={() => toggleCategory(category.id)} className="text-left font-semibold leading-tight">
-                    {category.name}
-                  </button>
+                  <div className="min-w-0">
+                    <button type="button" onClick={() => toggleCategory(category.id)} className="text-left font-semibold leading-tight break-words">
+                      {category.name}
+                    </button>
+                    <div className="mt-1">
+                      <span className="inline-flex rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground whitespace-nowrap leading-none">
+                        {categoryItems.length} hizmet
+                      </span>
+                    </div>
+                  </div>
 
-                  <span className="ml-1 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground whitespace-nowrap leading-none">
-                    {categoryItems.length} hizmet
-                  </span>
+                  <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                    <StatusToggleChip
+                      active={category.isActive !== false}
+                      onToggle={(next) => void toggleCategoryActive(category, next)}
+                    />
 
-                  <StatusChips
-                    active={category.isActive !== false}
-                    onToggle={(next) => void toggleCategoryActive(category, next)}
-                    className="ml-1 shrink-0"
-                  />
+                    <button
+                      type="button"
+                      onClick={() => openCategorySettings(category)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                      title="Kategori ayarları"
+                    >
+                      <Settings2 className="h-4 w-4" />
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => openCategorySettings(category)}
-                    className="h-8 w-8 ml-1 grid place-items-center rounded-md hover:bg-muted"
-                    title="Kategori ayarları"
-                  >
-                    <Settings2 className="h-4 w-4" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => openCreateService(category)}
-                    className="ml-auto inline-flex items-center gap-1 text-sm font-medium"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Ekle
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => openCreateService(category)}
+                      className="inline-flex h-8 items-center gap-1 rounded-md px-1 text-sm font-medium hover:bg-muted"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="hidden sm:inline">Ekle</span>
+                    </button>
+                  </div>
                 </div>
 
                 {expanded ? (
@@ -713,7 +703,7 @@ export function ServicesCrudPage() {
                       categoryItems.map((item) => (
                         <div
                           key={item.id}
-                          className={`flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-b-0 ${
+                          className={`grid grid-cols-[32px_minmax(0,1fr)_auto_auto_auto] items-center gap-1.5 px-4 py-3 border-b border-border/40 last:border-b-0 ${
                             item.isActive === false ? 'opacity-65' : ''
                           }`}
                         >
@@ -727,10 +717,9 @@ export function ServicesCrudPage() {
                             </p>
                           </div>
 
-                          <StatusChips
+                          <StatusToggleChip
                             active={item.isActive !== false}
                             onToggle={(next) => void toggleServiceActive(item, next)}
-                            className="shrink-0"
                           />
                           <button type="button" onClick={() => openEditService(item)} className="h-8 w-8 grid place-items-center text-muted-foreground hover:text-foreground">
                             <Pencil className="h-4 w-4" />
@@ -804,10 +793,9 @@ export function ServicesCrudPage() {
                   <p className="font-medium">Hizmet durumu</p>
                   <p className="text-xs text-muted-foreground">Pasif hizmet randevu akışında görünmez.</p>
                 </div>
-                <StatusChips
+                <StatusToggleChip
                   active={serviceForm.isActive}
                   onToggle={(next) => setServiceForm((prev) => ({ ...prev, isActive: next }))}
-                  className="shrink-0"
                 />
               </label>
 
@@ -1206,10 +1194,9 @@ export function ServicesCrudPage() {
                     >
                       <ArrowDown className="h-4 w-4" />
                     </button>
-                    <StatusChips
+                    <StatusToggleChip
                       active={group.isActive !== false}
                       onToggle={(next) => void toggleGroupActive(group, next)}
-                      className="shrink-0"
                     />
                     <button
                       type="button"
@@ -1251,10 +1238,9 @@ export function ServicesCrudPage() {
                   <p className="font-medium">Grup durumu</p>
                   <p className="text-xs text-muted-foreground">Pasif grup, hizmet seçimlerinde öneri olarak çıkmaz.</p>
                 </div>
-                <StatusChips
+                <StatusToggleChip
                   active={groupForm.isActive}
                   onToggle={(next) => setGroupForm((prev) => ({ ...prev, isActive: next }))}
-                  className="shrink-0"
                 />
               </label>
 
