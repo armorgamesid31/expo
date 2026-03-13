@@ -87,7 +87,7 @@ function ToggleSwitch({
   );
 }
 
-function StatusChip({
+function StatusChips({
   active,
   onToggle,
   className = '',
@@ -96,18 +96,35 @@ function StatusChip({
   onToggle: (next: boolean) => void;
   className?: string;
 }) {
+  const chipBase = 'h-7 w-7 rounded-md border text-xs font-semibold transition-colors grid place-items-center';
+  const onClass = active
+    ? 'bg-[var(--rose-gold)] border-[var(--rose-gold)] text-white'
+    : 'bg-background border-border text-muted-foreground';
+  const offClass = !active
+    ? 'bg-[var(--rose-gold)] border-[var(--rose-gold)] text-white'
+    : 'bg-background border-border text-muted-foreground';
+
   return (
-    <button
-      type="button"
-      onClick={() => onToggle(!active)}
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-        active
-          ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-          : 'border-zinc-300 bg-zinc-100 text-zinc-600'
-      } ${className}`}
-    >
-      {active ? 'Aktif' : 'Pasif'}
-    </button>
+    <div className={`inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 ${className}`}>
+      <button
+        type="button"
+        aria-label="Durumu açık yap"
+        onClick={() => onToggle(true)}
+        className={`${chipBase} ${onClass}`}
+        title="Açık"
+      >
+        ✓
+      </button>
+      <button
+        type="button"
+        aria-label="Durumu kapalı yap"
+        onClick={() => onToggle(false)}
+        className={`${chipBase} ${offClass}`}
+        title="Kapalı"
+      >
+        −
+      </button>
+    </div>
   );
 }
 
@@ -663,10 +680,10 @@ export function ServicesCrudPage() {
                     {categoryItems.length} hizmet
                   </span>
 
-                  <StatusChip
+                  <StatusChips
                     active={category.isActive !== false}
                     onToggle={(next) => void toggleCategoryActive(category, next)}
-                    className="ml-1"
+                    className="ml-1 shrink-0"
                   />
 
                   <button
@@ -710,9 +727,10 @@ export function ServicesCrudPage() {
                             </p>
                           </div>
 
-                          <StatusChip
+                          <StatusChips
                             active={item.isActive !== false}
                             onToggle={(next) => void toggleServiceActive(item, next)}
+                            className="shrink-0"
                           />
                           <button type="button" onClick={() => openEditService(item)} className="h-8 w-8 grid place-items-center text-muted-foreground hover:text-foreground">
                             <Pencil className="h-4 w-4" />
@@ -786,9 +804,10 @@ export function ServicesCrudPage() {
                   <p className="font-medium">Hizmet durumu</p>
                   <p className="text-xs text-muted-foreground">Pasif hizmet randevu akışında görünmez.</p>
                 </div>
-                <StatusChip
+                <StatusChips
                   active={serviceForm.isActive}
                   onToggle={(next) => setServiceForm((prev) => ({ ...prev, isActive: next }))}
+                  className="shrink-0"
                 />
               </label>
 
@@ -1187,9 +1206,10 @@ export function ServicesCrudPage() {
                     >
                       <ArrowDown className="h-4 w-4" />
                     </button>
-                    <StatusChip
+                    <StatusChips
                       active={group.isActive !== false}
                       onToggle={(next) => void toggleGroupActive(group, next)}
+                      className="shrink-0"
                     />
                     <button
                       type="button"
@@ -1231,9 +1251,10 @@ export function ServicesCrudPage() {
                   <p className="font-medium">Grup durumu</p>
                   <p className="text-xs text-muted-foreground">Pasif grup, hizmet seçimlerinde öneri olarak çıkmaz.</p>
                 </div>
-                <StatusChip
+                <StatusChips
                   active={groupForm.isActive}
                   onToggle={(next) => setGroupForm((prev) => ({ ...prev, isActive: next }))}
+                  className="shrink-0"
                 />
               </label>
 
