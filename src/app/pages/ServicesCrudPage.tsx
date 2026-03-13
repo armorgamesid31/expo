@@ -84,6 +84,10 @@ function ToggleSwitch({
   );
 }
 
+function clampInt(value: number, min: number, max: number) {
+  return Math.min(Math.max(Math.round(value), min), max);
+}
+
 export function ServicesCrudPage() {
   const { apiFetch } = useAuth();
 
@@ -321,6 +325,36 @@ export function ServicesCrudPage() {
           body: JSON.stringify(payload),
         });
         setServices((prev) => [response.item, ...prev]);
+      }
+
+      // Keep category-level defaults in sync with service-level numeric settings when provided.
+      if (category) {
+        const nextCategoryCapacity =
+          payload.capacityOverride !== null ? payload.capacityOverride : category.capacity ?? 1;
+        const nextCategoryBuffer =
+          payload.bufferOverride !== null ? payload.bufferOverride : category.bufferMinutes ?? 0;
+
+        await apiFetch(`/api/admin/service-categories/${category.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            capacity: nextCategoryCapacity,
+            sequentialRequired: category.sequentialRequired ?? false,
+            bufferMinutes: nextCategoryBuffer,
+            marketingDescription: category.marketingDescription || null,
+          }),
+        });
+
+        setCategories((prev) =>
+          prev.map((item) =>
+            item.id === category.id
+              ? {
+                  ...item,
+                  capacity: nextCategoryCapacity,
+                  bufferMinutes: nextCategoryBuffer,
+                }
+              : item,
+          ),
+        );
       }
 
       setServiceDialogOpen(false);
@@ -716,25 +750,42 @@ export function ServicesCrudPage() {
 
                   {serviceForm.capacityOverride.trim().length > 0 ? (
                     <div className="space-y-2">
-                      <input
-                        type="number"
-                        min={1}
-                        value={serviceForm.capacityOverride}
-                        onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
-                        className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                        placeholder="Örn: 2"
-                      />
-                      <div className="flex gap-2">
-                        {['1', '2', '3'].map((value) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() => setServiceForm((prev) => ({ ...prev, capacityOverride: value }))}
-                            className="h-8 px-3 rounded-md border border-border text-xs"
-                          >
-                            {value}
-                          </button>
-                        ))}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setServiceForm((prev) => {
+                              const current = Number(prev.capacityOverride || '1');
+                              const next = clampInt(current - 1, 1, 20);
+                              return { ...prev, capacityOverride: String(next) };
+                            })
+                          }
+                          className="h-10 w-10 rounded-lg border border-border bg-card text-lg"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={serviceForm.capacityOverride}
+                          onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
+                          className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm text-center"
+                          placeholder="1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setServiceForm((prev) => {
+                              const current = Number(prev.capacityOverride || '1');
+                              const next = clampInt(current + 1, 1, 20);
+                              return { ...prev, capacityOverride: String(next) };
+                            })
+                          }
+                          className="h-10 w-10 rounded-lg border border-border bg-card text-lg"
+                        >
+                          +
+                        </button>
                       </div>
                     </div>
                   ) : null}
@@ -761,27 +812,45 @@ export function ServicesCrudPage() {
 
                   {serviceForm.preparationMinutes.trim().length > 0 ? (
                     <div className="space-y-2">
-                      <input
-                        type="number"
-                        min={0}
-                        step={5}
-                        value={serviceForm.preparationMinutes}
-                        onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
-                        className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                        placeholder="Örn: 10"
-                      />
-                      <div className="flex gap-2">
-                        {['0', '5', '10', '15'].map((value) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() => setServiceForm((prev) => ({ ...prev, preparationMinutes: value }))}
-                            className="h-8 px-3 rounded-md border border-border text-xs"
-                          >
-                            {value} dk
-                          </button>
-                        ))}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setServiceForm((prev) => {
+                              const current = Number(prev.preparationMinutes || '0');
+                              const next = clampInt(current - 5, 0, 180);
+                              return { ...prev, preparationMinutes: String(next) };
+                            })
+                          }
+                          className="h-10 w-10 rounded-lg border border-border bg-card text-lg"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min={0}
+                          max={180}
+                          step={5}
+                          value={serviceForm.preparationMinutes}
+                          onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
+                          className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm text-center"
+                          placeholder="0"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setServiceForm((prev) => {
+                              const current = Number(prev.preparationMinutes || '0');
+                              const next = clampInt(current + 5, 0, 180);
+                              return { ...prev, preparationMinutes: String(next) };
+                            })
+                          }
+                          className="h-10 w-10 rounded-lg border border-border bg-card text-lg"
+                        >
+                          +
+                        </button>
                       </div>
+                      <p className="text-xs text-muted-foreground">5 dakikalık adımlarla ayarlanır.</p>
                     </div>
                   ) : null}
                 </div>
