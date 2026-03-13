@@ -1,11 +1,10 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Pencil, Plus, Settings2, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, ListOrdered, Pencil, Plus, Settings2, Trash2, Layers } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface ServiceItem {
   id: number;
   name: string;
-  description?: string | null;
   category: string | null;
   categoryId?: number | null;
   categoryKey?: string | null;
@@ -13,6 +12,8 @@ interface ServiceItem {
   duration: number;
   price: number;
   requiresSpecialist?: boolean | null;
+  serviceGroupId?: number | null;
+  serviceGroupName?: string | null;
   capacityOverride?: number | null;
   sequentialOverride?: boolean | null;
   bufferOverride?: number | null;
@@ -32,6 +33,17 @@ interface CategoryItem {
   serviceCount: number;
 }
 
+interface ServiceGroupItem {
+  id: number;
+  name: string;
+  description?: string | null;
+  displayOrder: number | null;
+  capacity: number | null;
+  sequentialRequired: boolean | null;
+  preparationMinutes: number | null;
+  serviceCount: number;
+}
+
 function parseNullableInt(value: string): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -45,6 +57,7 @@ export function ServicesCrudPage() {
 
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [groups, setGroups] = useState<ServiceGroupItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,21 +65,24 @@ export function ServicesCrudPage() {
 
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [categoryOrderDialogOpen, setCategoryOrderDialogOpen] = useState(false);
+  const [groupManagerOpen, setGroupManagerOpen] = useState(false);
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+  const [editingGroup, setEditingGroup] = useState<ServiceGroupItem | null>(null);
 
   const [serviceForm, setServiceForm] = useState({
     name: '',
-    description: '',
     categoryId: '',
+    serviceGroupId: '',
     duration: '60',
     price: '0',
     requiresSpecialist: false,
     capacityOverride: '',
-    sequentialOverride: false,
-    bufferOverride: '',
+    preparationMinutes: '',
   });
 
   const [categoryForm, setCategoryForm] = useState({
@@ -76,21 +92,33 @@ export function ServicesCrudPage() {
     marketingDescription: '',
   });
 
+  const [groupForm, setGroupForm] = useState({
+    name: '',
+    capacity: '1',
+    sequentialRequired: false,
+    preparationMinutes: '0',
+  });
+
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [servicesRes, categoriesRes] = await Promise.all([
+      const [servicesRes, categoriesRes, groupsRes] = await Promise.all([
         apiFetch<{ items: ServiceItem[] }>('/api/admin/services'),
         apiFetch<{ items: CategoryItem[] }>('/api/admin/service-categories'),
+        apiFetch<{ items: ServiceGroupItem[] }>('/api/admin/service-groups'),
       ]);
 
       const sortedCategories = [...(categoriesRes.items || [])].sort(
         (a, b) => a.effectiveOrder - b.effectiveOrder || a.id - b.id,
       );
+      const sortedGroups = [...(groupsRes.items || [])].sort(
+        (a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999) || a.id - b.id,
+      );
 
       setServices(servicesRes.items || []);
       setCategories(sortedCategories);
+      setGroups(sortedGroups);
 
       setExpandedCategories((prev) => {
         if (Object.keys(prev).length > 0) return prev;
@@ -112,7 +140,7 @@ export function ServicesCrudPage() {
   const groupedServices = useMemo(() => {
     const map: Record<number, ServiceItem[]> = {};
     const categoryByKey = new Map(categories.map((c) => [c.key, c]));
-    const otherCategory = categories.find((c) => c.key === 'OTHER') || null;
+    const otherCategory = categories.find((c) => c.key === 'OTHER') || categories[0] || null;
 
     for (const category of categories) {
       map[category.id] = [];
@@ -124,27 +152,20 @@ export function ServicesCrudPage() {
       if (service.categoryId) {
         targetCategory = categories.find((c) => c.id === service.categoryId) || null;
       }
-
       if (!targetCategory && service.categoryKey) {
         targetCategory = categoryByKey.get(String(service.categoryKey).toUpperCase()) || null;
       }
-
       if (!targetCategory && service.category) {
         targetCategory = categoryByKey.get(String(service.category).toUpperCase()) || null;
       }
-
       if (!targetCategory) {
         targetCategory = otherCategory;
       }
-
-      if (!targetCategory) {
-        continue;
-      }
+      if (!targetCategory) continue;
 
       if (!map[targetCategory.id]) {
         map[targetCategory.id] = [];
       }
-
       map[targetCategory.id].push(service);
     }
 
@@ -159,40 +180,17 @@ export function ServicesCrudPage() {
     setExpandedCategories((prev) => ({ ...prev, [categoryId]: !prev[categoryId] }));
   };
 
-  const reorderCategories = async (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= categories.length) {
-      return;
-    }
-
-    const next = [...categories];
-    const [moved] = next.splice(fromIndex, 1);
-    next.splice(toIndex, 0, moved);
-
-    setCategories(next);
-
-    try {
-      await apiFetch('/api/admin/service-categories/reorder', {
-        method: 'POST',
-        body: JSON.stringify({ orderedIds: next.map((c) => c.id) }),
-      });
-    } catch (err: any) {
-      setError(err?.message || 'Kategori sırası güncellenemedi.');
-      await load();
-    }
-  };
-
   const openCreateService = (category: CategoryItem) => {
     setEditingService(null);
     setServiceForm({
       name: '',
-      description: '',
       categoryId: String(category.id),
+      serviceGroupId: '',
       duration: '60',
       price: '0',
       requiresSpecialist: false,
       capacityOverride: '',
-      sequentialOverride: false,
-      bufferOverride: '',
+      preparationMinutes: '',
     });
     setServiceDialogOpen(true);
   };
@@ -201,15 +199,15 @@ export function ServicesCrudPage() {
     setEditingService(item);
     setServiceForm({
       name: item.name,
-      description: item.description || '',
       categoryId: item.categoryId ? String(item.categoryId) : '',
+      serviceGroupId: item.serviceGroupId ? String(item.serviceGroupId) : '',
       duration: String(item.duration || 60),
       price: String(item.price || 0),
       requiresSpecialist: Boolean(item.requiresSpecialist),
       capacityOverride:
         item.capacityOverride === null || item.capacityOverride === undefined ? '' : String(item.capacityOverride),
-      sequentialOverride: Boolean(item.sequentialOverride),
-      bufferOverride: item.bufferOverride === null || item.bufferOverride === undefined ? '' : String(item.bufferOverride),
+      preparationMinutes:
+        item.bufferOverride === null || item.bufferOverride === undefined ? '' : String(item.bufferOverride),
     });
     setServiceDialogOpen(true);
   };
@@ -229,8 +227,11 @@ export function ServicesCrudPage() {
     if (saving) return;
     setServiceDialogOpen(false);
     setCategoryDialogOpen(false);
+    setCategoryOrderDialogOpen(false);
+    setGroupDialogOpen(false);
     setEditingService(null);
     setEditingCategory(null);
+    setEditingGroup(null);
   };
 
   const saveService = async (event: FormEvent) => {
@@ -264,15 +265,15 @@ export function ServicesCrudPage() {
 
     const payload = {
       name: serviceForm.name.trim(),
-      description: serviceForm.description.trim() || null,
       category: category?.key || 'OTHER',
       categoryId,
+      serviceGroupId: serviceForm.serviceGroupId ? Number(serviceForm.serviceGroupId) : null,
       duration,
       price,
       requiresSpecialist: serviceForm.requiresSpecialist,
       capacityOverride: parseNullableInt(serviceForm.capacityOverride),
-      sequentialOverride: serviceForm.sequentialOverride,
-      bufferOverride: parseNullableInt(serviceForm.bufferOverride),
+      sequentialOverride: null,
+      bufferOverride: parseNullableInt(serviceForm.preparationMinutes),
     };
 
     try {
@@ -292,6 +293,7 @@ export function ServicesCrudPage() {
 
       setServiceDialogOpen(false);
       setEditingService(null);
+      await load();
     } catch (err: any) {
       setError(err?.message || 'Hizmet kaydedilemedi.');
     } finally {
@@ -319,7 +321,7 @@ export function ServicesCrudPage() {
     setError(null);
 
     try {
-      const response = await apiFetch<{ item: CategoryItem }>(`/api/admin/service-categories/${editingCategory.id}`, {
+      await apiFetch(`/api/admin/service-categories/${editingCategory.id}`, {
         method: 'PUT',
         body: JSON.stringify({
           capacity,
@@ -329,23 +331,32 @@ export function ServicesCrudPage() {
         }),
       });
 
-      setCategories((prev) =>
-        prev.map((item) =>
-          item.id === editingCategory.id
-            ? {
-                ...item,
-                ...response.item,
-              }
-            : item,
-        ),
-      );
-
       setCategoryDialogOpen(false);
       setEditingCategory(null);
+      await load();
     } catch (err: any) {
       setError(err?.message || 'Kategori ayarları kaydedilemedi.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const moveCategory = async (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= categories.length) return;
+
+    const next = [...categories];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    setCategories(next);
+
+    try {
+      await apiFetch('/api/admin/service-categories/reorder', {
+        method: 'POST',
+        body: JSON.stringify({ orderedIds: next.map((item) => item.id) }),
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Kategori sırası kaydedilemedi.');
+      await load();
     }
   };
 
@@ -361,6 +372,99 @@ export function ServicesCrudPage() {
     }
   };
 
+  const openCreateGroup = () => {
+    setEditingGroup(null);
+    setGroupForm({
+      name: '',
+      capacity: '1',
+      sequentialRequired: false,
+      preparationMinutes: '0',
+    });
+    setGroupDialogOpen(true);
+  };
+
+  const openEditGroup = (group: ServiceGroupItem) => {
+    setEditingGroup(group);
+    setGroupForm({
+      name: group.name,
+      capacity: String(group.capacity ?? 1),
+      sequentialRequired: Boolean(group.sequentialRequired),
+      preparationMinutes: String(group.preparationMinutes ?? 0),
+    });
+    setGroupDialogOpen(true);
+  };
+
+  const saveGroup = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!groupForm.name.trim()) {
+      setError('Grup adı zorunlu.');
+      return;
+    }
+
+    const capacity = Number(groupForm.capacity);
+    const preparationMinutes = Number(groupForm.preparationMinutes);
+    if (!Number.isInteger(capacity) || capacity <= 0) {
+      setError('Grup kapasitesi pozitif bir tam sayı olmalı.');
+      return;
+    }
+    if (!Number.isInteger(preparationMinutes) || preparationMinutes < 0) {
+      setError('Hazırlık süresi sıfır veya pozitif tam sayı olmalı.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    const payload = {
+      name: groupForm.name.trim(),
+      capacity,
+      sequentialRequired: groupForm.sequentialRequired,
+      preparationMinutes,
+    };
+
+    try {
+      if (editingGroup) {
+        await apiFetch(`/api/admin/service-groups/${editingGroup.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await apiFetch('/api/admin/service-groups', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      }
+
+      setGroupDialogOpen(false);
+      setEditingGroup(null);
+      await load();
+    } catch (err: any) {
+      setError(err?.message || 'Grup kaydedilemedi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const moveGroup = async (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= groups.length) return;
+
+    const next = [...groups];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    setGroups(next);
+
+    try {
+      await apiFetch('/api/admin/service-groups/reorder', {
+        method: 'POST',
+        body: JSON.stringify({ orderedIds: next.map((item) => item.id) }),
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Grup sırası kaydedilemedi.');
+      await load();
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       <div>
@@ -368,12 +472,32 @@ export function ServicesCrudPage() {
         <p className="text-sm text-muted-foreground">Hizmetler ve kategoriler</p>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setCategoryOrderDialogOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+        >
+          <ListOrdered className="h-4 w-4" />
+          Kategori Sırası
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setGroupManagerOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+        >
+          <Layers className="h-4 w-4" />
+          Hizmet Grupları
+        </button>
+      </div>
+
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       {!loading ? (
         <div className="space-y-3 pb-20">
-          {categories.map((category, index) => {
+          {categories.map((category) => {
             const categoryItems = groupedServices[category.id] || [];
             const expanded = Boolean(expandedCategories[category.id]);
 
@@ -392,28 +516,9 @@ export function ServicesCrudPage() {
                     {category.name}
                   </button>
 
-                  <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  <span className="ml-1 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground whitespace-nowrap leading-none">
                     {categoryItems.length} hizmet
                   </span>
-
-                  <button
-                    type="button"
-                    onClick={() => void reorderCategories(index, index - 1)}
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                    disabled={index === 0}
-                    title="Kategoriyi yukarı taşı"
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void reorderCategories(index, index + 1)}
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                    disabled={index === categories.length - 1}
-                    title="Kategoriyi aşağı taşı"
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </button>
 
                   <button
                     type="button"
@@ -427,7 +532,7 @@ export function ServicesCrudPage() {
                   <button
                     type="button"
                     onClick={() => openCreateService(category)}
-                    className="inline-flex items-center gap-1 text-sm font-medium"
+                    className="ml-auto inline-flex items-center gap-1 text-sm font-medium"
                   >
                     <Plus className="h-4 w-4" />
                     Ekle
@@ -447,6 +552,7 @@ export function ServicesCrudPage() {
                             <p className="font-medium truncate">{item.name}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {item.duration} dk &nbsp;&nbsp; ₺{item.price}
+                              {item.serviceGroupName ? ` • ${item.serviceGroupName}` : ''}
                             </p>
                           </div>
 
@@ -490,7 +596,22 @@ export function ServicesCrudPage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-muted-foreground">Hizmet, seçtiğiniz kategori kartı altında listelenir.</p>
+              </label>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Hizmet Grubu (opsiyonel)</span>
+                <select
+                  value={serviceForm.serviceGroupId}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, serviceGroupId: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                >
+                  <option value="">Grup seçmeden devam et</option>
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className="block text-sm space-y-1">
@@ -528,15 +649,6 @@ export function ServicesCrudPage() {
                 </label>
               </div>
 
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Açıklama (opsiyonel)</span>
-                <textarea
-                  value={serviceForm.description}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, description: event.target.value }))}
-                  className="w-full min-h-[70px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                />
-              </label>
-
               <div className="rounded-lg border border-border p-3 space-y-3">
                 <p className="text-sm font-medium">Hizmet Ayarları</p>
 
@@ -560,19 +672,6 @@ export function ServicesCrudPage() {
                     value={serviceForm.capacityOverride}
                     onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
                     className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                    placeholder="Boş bırakılırsa kategori varsayılanı kullanılır"
-                  />
-                </label>
-
-                <label className="flex items-center justify-between text-sm gap-3">
-                  <div>
-                    <p>Ardışık planlama aktif</p>
-                    <p className="text-xs text-muted-foreground">Bu hizmet paketlerde peş peşe planlanır.</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={serviceForm.sequentialOverride}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, sequentialOverride: event.target.checked }))}
                   />
                 </label>
 
@@ -582,10 +681,9 @@ export function ServicesCrudPage() {
                     type="number"
                     min={0}
                     step={5}
-                    value={serviceForm.bufferOverride}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, bufferOverride: event.target.value }))}
+                    value={serviceForm.preparationMinutes}
+                    onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
                     className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                    placeholder="Boş bırakılırsa kategori varsayılanı kullanılır"
                   />
                 </label>
               </div>
@@ -616,13 +714,13 @@ export function ServicesCrudPage() {
                   onChange={(event) => setCategoryForm((prev) => ({ ...prev, capacity: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 />
-                <p className="text-xs text-muted-foreground">Bu kategoride aynı zaman diliminde kaç randevu açılabileceğini belirler.</p>
+                <p className="text-xs text-muted-foreground">Bu kategoriye ait hizmetlerin eş zamanlı kapasitesini belirler.</p>
               </label>
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
                 <div>
                   <p>Ardışık planlama</p>
-                  <p className="text-xs text-muted-foreground">Bu kategoriye ait hizmetler paket randevularda peş peşe planlanır.</p>
+                  <p className="text-xs text-muted-foreground">Kategori içinde çoklu hizmet seçiminde hizmetler peş peşe planlanır.</p>
                 </div>
                 <input
                   type="checkbox"
@@ -641,7 +739,7 @@ export function ServicesCrudPage() {
                   onChange={(event) => setCategoryForm((prev) => ({ ...prev, bufferMinutes: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 />
-                <p className="text-xs text-muted-foreground">Aynı personel için bu kategori hizmetleri arasında otomatik ara süre bırakır.</p>
+                <p className="text-xs text-muted-foreground">Aynı personel için kategori hizmetleri arasında otomatik süre ekler.</p>
               </label>
 
               <label className="block text-sm space-y-1">
@@ -651,11 +749,176 @@ export function ServicesCrudPage() {
                   onChange={(event) => setCategoryForm((prev) => ({ ...prev, marketingDescription: event.target.value }))}
                   className="w-full min-h-[90px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
                 />
-                <p className="text-xs text-muted-foreground">Web sayfası ve kampanya içeriklerinde kullanılabilir.</p>
               </label>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
                 {saving ? 'Kaydediliyor...' : 'Kategori Ayarlarını Kaydet'}
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {categoryOrderDialogOpen ? (
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Kategori Sıralama</h2>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
+            </div>
+
+            <p className="text-xs text-muted-foreground mb-3">
+              Bu sıra, randevu sayfası ve web sitesindeki kategori görünüm sırasını belirler.
+            </p>
+
+            <div className="space-y-2">
+              {categories.map((category, index) => (
+                <div key={category.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
+                  <span className="flex-1 text-sm font-medium">{category.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => void moveCategory(index, index - 1)}
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                    disabled={index === 0}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void moveCategory(index, index + 1)}
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                    disabled={index === categories.length - 1}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {groupManagerOpen ? (
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+          <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Hizmet Grupları</h2>
+              <button type="button" onClick={() => setGroupManagerOpen(false)} className="text-sm text-muted-foreground">Kapat</button>
+            </div>
+
+            <p className="text-xs text-muted-foreground mb-3">
+              Gruplar ile hizmet setleri oluşturup kapasite ve ardışık planlama kuralını grup bazında yönetebilirsiniz.
+            </p>
+
+            <button
+              type="button"
+              onClick={openCreateGroup}
+              className="mb-3 w-full h-10 rounded-lg border border-border text-sm inline-flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Yeni Grup Oluştur
+            </button>
+
+            <div className="space-y-2">
+              {groups.map((group, index) => (
+                <div key={group.id} className="rounded-lg border border-border px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{group.name}</p>
+                      <p className="text-xs text-muted-foreground">{group.serviceCount} hizmet</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void moveGroup(index, index - 1)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                      disabled={index === 0}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void moveGroup(index, index + 1)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                      disabled={index === groups.length - 1}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openEditGroup(group)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {!groups.length ? <p className="text-sm text-muted-foreground">Henüz grup yok.</p> : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {groupDialogOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/35 p-4">
+          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">{editingGroup ? 'Grubu Düzenle' : 'Yeni Grup Oluştur'}</h2>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
+            </div>
+
+            <form className="space-y-3" onSubmit={saveGroup}>
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Grup adı</span>
+                <input
+                  value={groupForm.name}
+                  onChange={(event) => setGroupForm((prev) => ({ ...prev, name: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Aynı anda kabul edilecek maksimum randevu</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={groupForm.capacity}
+                  onChange={(event) => setGroupForm((prev) => ({ ...prev, capacity: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+
+              <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
+                <div>
+                  <p>Ardışık planlama</p>
+                  <p className="text-xs text-muted-foreground">Grup içindeki hizmetler seçildiğinde peş peşe planlanır.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={groupForm.sequentialRequired}
+                  onChange={(event) =>
+                    setGroupForm((prev) => ({ ...prev, sequentialRequired: event.target.checked }))
+                  }
+                />
+              </label>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Randevular arası hazırlık süresi (dk)</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={5}
+                  value={groupForm.preparationMinutes}
+                  onChange={(event) =>
+                    setGroupForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))
+                  }
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+
+              <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
+                {saving ? 'Kaydediliyor...' : editingGroup ? 'Güncelle' : 'Oluştur'}
               </button>
             </form>
           </div>
