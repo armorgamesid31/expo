@@ -58,6 +58,32 @@ function colorById(id: number) {
   return COLOR_PALETTE[Math.abs(id) % COLOR_PALETTE.length];
 }
 
+function ToggleSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+          checked ? 'translate-x-5' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
+  );
+}
+
 export function ServicesCrudPage() {
   const { apiFetch } = useAuth();
 
@@ -658,40 +684,45 @@ export function ServicesCrudPage() {
               <div className="rounded-lg border border-border p-3 space-y-3">
                 <p className="text-sm font-medium">Hizmet Ayarları</p>
 
-                <label className="flex items-center justify-between text-sm gap-3">
+                <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div>
-                    <p>Uzman seçimi zorunlu</p>
-                    <p className="text-xs text-muted-foreground">Müşteri bu hizmette uzman seçmeden devam edemez.</p>
+                    <p className="font-medium">Müşteri bu hizmette uzmanını seçsin</p>
+                    <p className="text-xs text-muted-foreground">Açık olduğunda randevu oluştururken uzman seçimi adımı zorunlu olur.</p>
                   </div>
-                  <input
-                    type="checkbox"
+                  <ToggleSwitch
                     checked={serviceForm.requiresSpecialist}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, requiresSpecialist: event.target.checked }))}
+                    onChange={(next) => setServiceForm((prev) => ({ ...prev, requiresSpecialist: next }))}
                   />
                 </label>
 
-                <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Aynı anda kabul edilecek maksimum randevu (opsiyonel)</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={serviceForm.capacityOverride}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  />
-                </label>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <label className="block text-sm space-y-1 rounded-lg border border-border/70 bg-muted/20 p-3">
+                    <span className="text-muted-foreground font-medium">Aynı anda kaç randevu alınabilir?</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={serviceForm.capacityOverride}
+                      onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
+                      className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                      placeholder="Boş bırak: kategori ayarı"
+                    />
+                    <p className="text-xs text-muted-foreground">Boş bırakırsan kategori kapasitesi kullanılır.</p>
+                  </label>
 
-                <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Randevular arası hazırlık süresi (dk, opsiyonel)</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={5}
-                    value={serviceForm.preparationMinutes}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  />
-                </label>
+                  <label className="block text-sm space-y-1 rounded-lg border border-border/70 bg-muted/20 p-3">
+                    <span className="text-muted-foreground font-medium">Hazırlık süresi (dakika)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={5}
+                      value={serviceForm.preparationMinutes}
+                      onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
+                      className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                      placeholder="Boş bırak: kategori ayarı"
+                    />
+                    <p className="text-xs text-muted-foreground">Randevudan önce/sonra otomatik eklenecek hazırlık aralığı.</p>
+                  </label>
+                </div>
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
