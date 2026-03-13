@@ -687,7 +687,7 @@ export function ServicesCrudPage() {
                 <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div>
                     <p className="font-medium">Müşteri bu hizmette uzmanını seçsin</p>
-                    <p className="text-xs text-muted-foreground">Açık olduğunda randevu oluştururken uzman seçimi adımı zorunlu olur.</p>
+                    <p className="text-xs text-muted-foreground">Açık olduğunda randevu akışında uzman seçme opsiyonu gösterilir.</p>
                   </div>
                   <ToggleSwitch
                     checked={serviceForm.requiresSpecialist}
@@ -695,33 +695,95 @@ export function ServicesCrudPage() {
                   />
                 </label>
 
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <label className="block text-sm space-y-1 rounded-lg border border-border/70 bg-muted/20 p-3">
-                    <span className="text-muted-foreground font-medium">Aynı anda kaç randevu alınabilir?</span>
-                    <input
-                      type="number"
-                      min={1}
-                      value={serviceForm.capacityOverride}
-                      onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
-                      className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                      placeholder="Boş bırak: kategori ayarı"
+                <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">Aynı anda alınabilecek randevu sayısı</p>
+                      <p className="text-xs text-muted-foreground">
+                        Kapalıysa kategori ayarı kullanılır, açarsan bu hizmet için özel sayı tanımlarsın.
+                      </p>
+                    </div>
+                    <ToggleSwitch
+                      checked={serviceForm.capacityOverride.trim().length > 0}
+                      onChange={(enabled) =>
+                        setServiceForm((prev) => ({
+                          ...prev,
+                          capacityOverride: enabled ? prev.capacityOverride || '1' : '',
+                        }))
+                      }
                     />
-                    <p className="text-xs text-muted-foreground">Boş bırakırsan kategori kapasitesi kullanılır.</p>
-                  </label>
+                  </div>
 
-                  <label className="block text-sm space-y-1 rounded-lg border border-border/70 bg-muted/20 p-3">
-                    <span className="text-muted-foreground font-medium">Hazırlık süresi (dakika)</span>
-                    <input
-                      type="number"
-                      min={0}
-                      step={5}
-                      value={serviceForm.preparationMinutes}
-                      onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
-                      className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                      placeholder="Boş bırak: kategori ayarı"
+                  {serviceForm.capacityOverride.trim().length > 0 ? (
+                    <div className="space-y-2">
+                      <input
+                        type="number"
+                        min={1}
+                        value={serviceForm.capacityOverride}
+                        onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
+                        className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                        placeholder="Örn: 2"
+                      />
+                      <div className="flex gap-2">
+                        {['1', '2', '3'].map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setServiceForm((prev) => ({ ...prev, capacityOverride: value }))}
+                            className="h-8 px-3 rounded-md border border-border text-xs"
+                          >
+                            {value}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">Hazırlık süresi (dakika)</p>
+                      <p className="text-xs text-muted-foreground">
+                        Kapalıysa kategori ayarı kullanılır, açarsan bu hizmet için özel hazırlık süresi belirlenir.
+                      </p>
+                    </div>
+                    <ToggleSwitch
+                      checked={serviceForm.preparationMinutes.trim().length > 0}
+                      onChange={(enabled) =>
+                        setServiceForm((prev) => ({
+                          ...prev,
+                          preparationMinutes: enabled ? prev.preparationMinutes || '0' : '',
+                        }))
+                      }
                     />
-                    <p className="text-xs text-muted-foreground">Randevudan önce/sonra otomatik eklenecek hazırlık aralığı.</p>
-                  </label>
+                  </div>
+
+                  {serviceForm.preparationMinutes.trim().length > 0 ? (
+                    <div className="space-y-2">
+                      <input
+                        type="number"
+                        min={0}
+                        step={5}
+                        value={serviceForm.preparationMinutes}
+                        onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
+                        className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                        placeholder="Örn: 10"
+                      />
+                      <div className="flex gap-2">
+                        {['0', '5', '10', '15'].map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setServiceForm((prev) => ({ ...prev, preparationMinutes: value }))}
+                            className="h-8 px-3 rounded-md border border-border text-xs"
+                          >
+                            {value} dk
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
