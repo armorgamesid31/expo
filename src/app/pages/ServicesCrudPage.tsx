@@ -52,6 +52,12 @@ function parseNullableInt(value: string): number | null {
   return Math.round(numeric);
 }
 
+const COLOR_PALETTE = ['#B76E79', '#6C7BA1', '#8C6F56', '#5B8A72', '#7B6D8D', '#A86D5D', '#5E7F91', '#9A7A5C'];
+
+function colorById(id: number) {
+  return COLOR_PALETTE[Math.abs(id) % COLOR_PALETTE.length];
+}
+
 export function ServicesCrudPage() {
   const { apiFetch } = useAuth();
 
@@ -546,7 +552,7 @@ export function ServicesCrudPage() {
                     ) : (
                       categoryItems.map((item) => (
                         <div key={item.id} className="flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-b-0">
-                          <div className="h-8 w-8 rounded-lg bg-[var(--rose-gold)]/85" />
+                          <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: colorById(item.id) }} />
 
                           <div className="min-w-0 flex-1">
                             <p className="font-medium truncate">{item.name}</p>

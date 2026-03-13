@@ -52,18 +52,48 @@ type StaffDraftService = {
   customDuration: string;
 };
 
-const FALLBACK_COLOR = '#B76E79';
+const PALETTE = ['#B76E79', '#6C7BA1', '#8C6F56', '#5B8A72', '#7B6D8D', '#A86D5D', '#5E7F91', '#9A7A5C'];
 
-function toHexColor(value?: string | null): string {
+function colorBySeed(seed: number) {
+  return PALETTE[Math.abs(seed) % PALETTE.length];
+}
+
+function toHexColor(value: string | null | undefined, seed: number): string {
   if (!value) {
-    return FALLBACK_COLOR;
+    return colorBySeed(seed);
   }
   const normalized = value.trim();
-  return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toUpperCase() : FALLBACK_COLOR;
+  return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toUpperCase() : colorBySeed(seed);
 }
 
 function formatPrice(value: number) {
   return `₺${value}`;
+}
+
+function ToggleSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+          checked ? 'translate-x-5' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
+  );
 }
 
 export function StaffCrudPage() {
@@ -84,7 +114,6 @@ export function StaffCrudPage() {
     name: '',
     title: '',
     phone: '',
-    color: FALLBACK_COLOR,
   });
 
   const [serviceDrafts, setServiceDrafts] = useState<Record<number, StaffDraftService>>({});
@@ -167,7 +196,7 @@ export function StaffCrudPage() {
 
   const openCreate = () => {
     setEditingStaffId(null);
-    setForm({ name: '', title: '', phone: '', color: FALLBACK_COLOR });
+    setForm({ name: '', title: '', phone: '' });
     resetDrafts(services);
     setModalOpen(true);
     setError(null);
@@ -179,7 +208,6 @@ export function StaffCrudPage() {
       name: item.name,
       title: item.title || '',
       phone: item.phone || '',
-      color: toHexColor(item.themeColor),
     });
     resetDrafts(services, item);
     setModalOpen(true);
@@ -269,10 +297,6 @@ export function StaffCrudPage() {
       setError('Ad soyad zorunlu.');
       return;
     }
-    if (!form.title.trim()) {
-      setError('Unvan zorunlu.');
-      return;
-    }
 
     let assignments: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null }> = [];
     try {
@@ -287,9 +311,8 @@ export function StaffCrudPage() {
 
     const payload = {
       name: form.name.trim(),
-      title: form.title.trim(),
+      title: form.title.trim() || null,
       phone: form.phone.trim() || null,
-      themeColor: form.color,
       serviceAssignments: assignments,
     };
 
@@ -362,7 +385,7 @@ export function StaffCrudPage() {
               <div className="flex items-start gap-3">
                 <div
                   className="h-11 w-11 rounded-full flex items-center justify-center text-white"
-                  style={{ backgroundColor: toHexColor(item.themeColor) }}
+                  style={{ backgroundColor: toHexColor(item.themeColor, item.id) }}
                 >
                   <UserRound className="h-5 w-5" />
                 </div>
@@ -432,14 +455,14 @@ export function StaffCrudPage() {
       ) : null}
 
       {modalOpen ? (
-        <div className="fixed inset-0 z-50 bg-black/40 p-4">
-          <div className="mx-auto mt-2 max-w-md rounded-2xl border border-border bg-background shadow-xl max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[90] bg-black/40 p-4">
+          <div className="mx-auto mt-2 max-w-md rounded-2xl border border-border bg-background shadow-xl max-h-[calc(100dvh-16px)] flex flex-col overflow-hidden">
             <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
               <h2 className="text-lg font-semibold">{editingStaffId ? 'Çalışanı Düzenle' : 'Yeni Çalışan'}</h2>
               <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
-            <form onSubmit={save} className="p-4 space-y-4">
+            <form onSubmit={save} className="p-4 space-y-4 overflow-y-auto pb-20">
               <div className="grid grid-cols-2 gap-2">
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Ad Soyad *</span>
@@ -451,7 +474,7 @@ export function StaffCrudPage() {
                 </label>
 
                 <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Unvan *</span>
+                  <span className="text-muted-foreground">Unvan (opsiyonel)</span>
                   <input
                     value={form.title}
                     onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
@@ -468,26 +491,6 @@ export function StaffCrudPage() {
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 />
               </label>
-
-              <div className="grid grid-cols-[64px_1fr] gap-2 items-end">
-                <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Renk</span>
-                  <input
-                    type="color"
-                    value={form.color}
-                    onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value.toUpperCase() }))}
-                    className="h-10 w-full rounded-lg border border-border bg-card p-1"
-                  />
-                </label>
-                <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Hex Kod</span>
-                  <input
-                    value={form.color}
-                    onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm uppercase"
-                  />
-                </label>
-              </div>
 
               <div className="rounded-xl border border-border p-3 space-y-3">
                 <div className="flex items-center justify-between gap-2">
@@ -520,7 +523,13 @@ export function StaffCrudPage() {
                                   className="mt-1"
                                 />
                                 <div className="min-w-0">
-                                  <p className="text-sm font-medium leading-tight">{service.name}</p>
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className="inline-block h-3.5 w-3.5 rounded-sm"
+                                      style={{ backgroundColor: colorBySeed(service.id) }}
+                                    />
+                                    <p className="text-sm font-medium leading-tight">{service.name}</p>
+                                  </div>
                                   <p className="text-xs text-muted-foreground mt-0.5">
                                     {service.duration} dk • {formatPrice(service.price)}
                                   </p>
@@ -529,16 +538,13 @@ export function StaffCrudPage() {
 
                               {draft.selected ? (
                                 <div className="mt-2 space-y-2 rounded-md bg-muted/40 p-2">
-                                  <label className="flex items-center justify-between gap-2 text-xs">
+                                  <div className="flex items-center justify-between gap-2 text-xs">
                                     <span>Özel fiyat</span>
-                                    <input
-                                      type="checkbox"
+                                    <ToggleSwitch
                                       checked={draft.useCustomPrice}
-                                      onChange={(event) =>
-                                        updateDraftField(service.id, 'useCustomPrice', event.target.checked)
-                                      }
+                                      onChange={(next) => updateDraftField(service.id, 'useCustomPrice', next)}
                                     />
-                                  </label>
+                                  </div>
                                   {draft.useCustomPrice ? (
                                     <input
                                       type="number"
@@ -553,16 +559,13 @@ export function StaffCrudPage() {
                                     />
                                   ) : null}
 
-                                  <label className="flex items-center justify-between gap-2 text-xs">
+                                  <div className="flex items-center justify-between gap-2 text-xs">
                                     <span>Özel süre</span>
-                                    <input
-                                      type="checkbox"
+                                    <ToggleSwitch
                                       checked={draft.useCustomDuration}
-                                      onChange={(event) =>
-                                        updateDraftField(service.id, 'useCustomDuration', event.target.checked)
-                                      }
+                                      onChange={(next) => updateDraftField(service.id, 'useCustomDuration', next)}
                                     />
-                                  </label>
+                                  </div>
                                   {draft.useCustomDuration ? (
                                     <input
                                       type="number"
@@ -586,14 +589,15 @@ export function StaffCrudPage() {
                   ))}
                 </div>
               </div>
-
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
-              >
-                {saving ? 'Kaydediliyor...' : editingStaffId ? 'Güncelle' : 'Ekle'}
-              </button>
+              <div className="sticky bottom-0 bg-background pt-2 pb-[calc(env(safe-area-inset-bottom)+8px)]">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
+                >
+                  {saving ? 'Kaydediliyor...' : editingStaffId ? 'Güncelle' : 'Ekle'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
