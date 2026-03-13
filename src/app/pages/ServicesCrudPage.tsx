@@ -125,8 +125,9 @@ export function ServicesCrudPage() {
     capacity: '1',
     sequentialRequired: false,
     bufferMinutes: '0',
-    marketingDescription: '',
   });
+  const [categoryCapacityEnabled, setCategoryCapacityEnabled] = useState(true);
+  const [categoryBufferEnabled, setCategoryBufferEnabled] = useState(true);
 
   const [groupForm, setGroupForm] = useState({
     name: '',
@@ -254,8 +255,9 @@ export function ServicesCrudPage() {
       capacity: String(category.capacity ?? 1),
       sequentialRequired: Boolean(category.sequentialRequired),
       bufferMinutes: String(category.bufferMinutes ?? 0),
-      marketingDescription: category.marketingDescription || '',
     });
+    setCategoryCapacityEnabled(category.capacity !== null && category.capacity !== undefined);
+    setCategoryBufferEnabled(category.bufferMinutes !== null && category.bufferMinutes !== undefined);
     setCategoryDialogOpen(true);
   };
 
@@ -340,7 +342,6 @@ export function ServicesCrudPage() {
             capacity: nextCategoryCapacity,
             sequentialRequired: category.sequentialRequired ?? false,
             bufferMinutes: nextCategoryBuffer,
-            marketingDescription: category.marketingDescription || null,
           }),
         });
 
@@ -371,16 +372,26 @@ export function ServicesCrudPage() {
     event.preventDefault();
     if (!editingCategory) return;
 
-    const capacity = Number(categoryForm.capacity);
-    const bufferMinutes = Number(categoryForm.bufferMinutes);
+    const updates: Record<string, unknown> = {
+      sequentialRequired: categoryForm.sequentialRequired,
+    };
 
-    if (!Number.isInteger(capacity) || capacity <= 0) {
-      setError('Kategori kapasitesi pozitif bir tam sayı olmalı.');
-      return;
+    if (categoryCapacityEnabled) {
+      const capacity = Number(categoryForm.capacity);
+      if (!Number.isInteger(capacity) || capacity <= 0) {
+        setError('Kategori kapasitesi pozitif bir tam sayı olmalı.');
+        return;
+      }
+      updates.capacity = capacity;
     }
-    if (!Number.isInteger(bufferMinutes) || bufferMinutes < 0) {
-      setError('Hazırlık süresi sıfır veya pozitif bir tam sayı olmalı.');
-      return;
+
+    if (categoryBufferEnabled) {
+      const bufferMinutes = Number(categoryForm.bufferMinutes);
+      if (!Number.isInteger(bufferMinutes) || bufferMinutes < 0) {
+        setError('Hazırlık süresi sıfır veya pozitif bir tam sayı olmalı.');
+        return;
+      }
+      updates.bufferMinutes = bufferMinutes;
     }
 
     setSaving(true);
@@ -389,12 +400,7 @@ export function ServicesCrudPage() {
     try {
       await apiFetch(`/api/admin/service-categories/${editingCategory.id}`, {
         method: 'PUT',
-        body: JSON.stringify({
-          capacity,
-          sequentialRequired: categoryForm.sequentialRequired,
-          bufferMinutes,
-          marketingDescription: categoryForm.marketingDescription,
-        }),
+        body: JSON.stringify(updates),
       });
 
       setCategoryDialogOpen(false);
@@ -879,7 +885,12 @@ export function ServicesCrudPage() {
                     <p className="text-sm font-medium">Aynı anda alınabilecek randevu sayısı</p>
                     <p className="text-xs text-muted-foreground">Bu kategoriye ait tüm hizmetlerin eş zamanlı kapasitesini belirler.</p>
                   </div>
+                  <ToggleSwitch
+                    checked={categoryCapacityEnabled}
+                    onChange={(next) => setCategoryCapacityEnabled(next)}
+                  />
                 </div>
+                {categoryCapacityEnabled ? (
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -916,6 +927,9 @@ export function ServicesCrudPage() {
                     +
                   </button>
                 </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Kapalıyken mevcut kategori kapasitesi korunur.</p>
+                )}
               </div>
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
@@ -935,7 +949,12 @@ export function ServicesCrudPage() {
                     <p className="text-sm font-medium">Hazırlık süresi (dakika)</p>
                     <p className="text-xs text-muted-foreground">Aynı personelde bu kategori hizmetleri arasına otomatik süre ekler.</p>
                   </div>
+                  <ToggleSwitch
+                    checked={categoryBufferEnabled}
+                    onChange={(next) => setCategoryBufferEnabled(next)}
+                  />
                 </div>
+                {categoryBufferEnabled ? (
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -973,17 +992,11 @@ export function ServicesCrudPage() {
                     +
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">5 dakikalık adımlarla ayarlanır.</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Kapalıyken mevcut kategori hazırlık süresi korunur.</p>
+                )}
+                {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">5 dakikalık adımlarla ayarlanır.</p> : null}
               </div>
-
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Kategori açıklaması (opsiyonel)</span>
-                <textarea
-                  value={categoryForm.marketingDescription}
-                  onChange={(event) => setCategoryForm((prev) => ({ ...prev, marketingDescription: event.target.value }))}
-                  className="w-full min-h-[90px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                />
-              </label>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
                 {saving ? 'Kaydediliyor...' : 'Kategori Ayarlarını Kaydet'}
