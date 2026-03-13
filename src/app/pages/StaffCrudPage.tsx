@@ -1,29 +1,139 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { Pencil, Plus, Trash2, UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+interface ServiceItem {
+  id: number;
+  name: string;
+  categoryId?: number | null;
+  categoryKey?: string | null;
+  categoryName?: string | null;
+  duration: number;
+  price: number;
+}
+
+interface CategoryItem {
+  id: number;
+  key: string;
+  name: string;
+  effectiveOrder: number;
+}
+
+interface StaffServiceItem {
+  serviceId: number;
+  name: string;
+  categoryKey: string;
+  categoryName: string;
+  defaultPrice: number;
+  defaultDuration: number;
+  customPrice: number | null;
+  customDuration: number | null;
+  effectivePrice: number;
+  effectiveDuration: number;
+}
 
 interface StaffItem {
   id: number;
   name: string;
   title: string | null;
-  phone: string | null;
+  phone?: string | null;
+  bio?: string | null;
+  profileImageUrl?: string | null;
+  themeColor?: string | null;
+  serviceCount?: number;
+  services: StaffServiceItem[];
+}
+
+type StaffDraftService = {
+  selected: boolean;
+  useCustomPrice: boolean;
+  customPrice: string;
+  useCustomDuration: boolean;
+  customDuration: string;
+};
+
+const FALLBACK_COLOR = '#B76E79';
+
+function toHexColor(value?: string | null): string {
+  if (!value) {
+    return FALLBACK_COLOR;
+  }
+  const normalized = value.trim();
+  return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toUpperCase() : FALLBACK_COLOR;
+}
+
+function formatPrice(value: number) {
+  return `₺${value}`;
 }
 
 export function StaffCrudPage() {
   const { apiFetch } = useAuth();
-  const [items, setItems] = useState<StaffItem[]>([]);
+
+  const [staff, setStaff] = useState<StaffItem[]>([]);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', title: '', phone: '' });
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingStaffId, setEditingStaffId] = useState<number | null>(null);
+
+  const [form, setForm] = useState({
+    name: '',
+    title: '',
+    phone: '',
+    color: FALLBACK_COLOR,
+  });
+
+  const [serviceDrafts, setServiceDrafts] = useState<Record<number, StaffDraftService>>({});
+
+  const categoryOrderMap = useMemo(() => {
+    return new Map(categories.map((item) => [item.key, item.effectiveOrder]));
+  }, [categories]);
+
+  const groupedServices = useMemo(() => {
+    const groups = new Map<string, { title: string; order: number; items: ServiceItem[] }>();
+
+    for (const service of services) {
+      const key = String(service.categoryKey || 'OTHER').toUpperCase();
+      const title = service.categoryName || 'Diğer';
+      const order = categoryOrderMap.get(key) ?? 999;
+
+      if (!groups.has(key)) {
+        groups.set(key, { title, order, items: [] });
+      }
+
+      groups.get(key)!.items.push(service);
+    }
+
+    return Array.from(groups.entries())
+      .map(([key, group]) => ({ key, ...group, items: group.items.sort((a, b) => a.name.localeCompare(b.name, 'tr')) }))
+      .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, 'tr'));
+  }, [services, categoryOrderMap]);
+
+  const selectedServiceCount = useMemo(
+    () => Object.values(serviceDrafts).filter((item) => item.selected).length,
+    [serviceDrafts],
+  );
 
   const load = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const response = await apiFetch<{ items: StaffItem[] }>('/api/admin/staff');
-      setItems(response.items);
+      const [staffRes, servicesRes, categoriesRes] = await Promise.all([
+        apiFetch<{ items: StaffItem[] }>('/api/admin/staff'),
+        apiFetch<{ items: ServiceItem[] }>('/api/admin/services'),
+        apiFetch<{ items: CategoryItem[] }>('/api/admin/service-categories'),
+      ]);
+
+      setStaff((staffRes.items || []).sort((a, b) => a.name.localeCompare(b.name, 'tr')));
+      setServices(servicesRes.items || []);
+      setCategories((categoriesRes.items || []).sort((a, b) => a.effectiveOrder - b.effectiveOrder || a.id - b.id));
     } catch (err: any) {
-      setError(err?.message || 'Çalışanlar alınamadı.');
+      setError(err?.message || 'Çalışan verileri alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -33,60 +143,460 @@ export function StaffCrudPage() {
     void load();
   }, []);
 
-  const createItem = async (event: FormEvent) => {
+  const resetDrafts = (nextServices: ServiceItem[], preset?: StaffItem) => {
+    const draft: Record<number, StaffDraftService> = {};
+    const assignedMap = new Map<number, StaffServiceItem>((preset?.services || []).map((item) => [item.serviceId, item]));
+
+    for (const service of nextServices) {
+      const assigned = assignedMap.get(service.id);
+      draft[service.id] = {
+        selected: Boolean(assigned),
+        useCustomPrice: assigned?.customPrice !== null && assigned?.customPrice !== undefined,
+        customPrice:
+          assigned?.customPrice !== null && assigned?.customPrice !== undefined ? String(assigned.customPrice) : String(service.price),
+        useCustomDuration: assigned?.customDuration !== null && assigned?.customDuration !== undefined,
+        customDuration:
+          assigned?.customDuration !== null && assigned?.customDuration !== undefined
+            ? String(assigned.customDuration)
+            : String(service.duration),
+      };
+    }
+
+    setServiceDrafts(draft);
+  };
+
+  const openCreate = () => {
+    setEditingStaffId(null);
+    setForm({ name: '', title: '', phone: '', color: FALLBACK_COLOR });
+    resetDrafts(services);
+    setModalOpen(true);
+    setError(null);
+  };
+
+  const openEdit = (item: StaffItem) => {
+    setEditingStaffId(item.id);
+    setForm({
+      name: item.name,
+      title: item.title || '',
+      phone: item.phone || '',
+      color: toHexColor(item.themeColor),
+    });
+    resetDrafts(services, item);
+    setModalOpen(true);
+    setError(null);
+  };
+
+  const closeModal = () => {
+    if (saving) return;
+    setModalOpen(false);
+    setEditingStaffId(null);
+  };
+
+  const toggleServiceSelected = (serviceId: number, selected: boolean) => {
+    setServiceDrafts((prev) => {
+      const current = prev[serviceId] || {
+        selected: false,
+        useCustomPrice: false,
+        customPrice: '',
+        useCustomDuration: false,
+        customDuration: '',
+      };
+
+      return {
+        ...prev,
+        [serviceId]: {
+          ...current,
+          selected,
+        },
+      };
+    });
+  };
+
+  const updateDraftField = (serviceId: number, field: keyof StaffDraftService, value: string | boolean) => {
+    setServiceDrafts((prev) => {
+      const current = prev[serviceId];
+      if (!current) return prev;
+
+      return {
+        ...prev,
+        [serviceId]: {
+          ...current,
+          [field]: value,
+        },
+      };
+    });
+  };
+
+  const buildAssignmentsPayload = () => {
+    const serviceMap = new Map(services.map((item) => [item.id, item]));
+    const payload: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null }> = [];
+
+    for (const [serviceIdString, draft] of Object.entries(serviceDrafts)) {
+      const serviceId = Number(serviceIdString);
+      const service = serviceMap.get(serviceId);
+      if (!service || !draft.selected) {
+        continue;
+      }
+
+      let customPrice: number | null = null;
+      if (draft.useCustomPrice) {
+        const parsed = Number(draft.customPrice);
+        if (!Number.isFinite(parsed) || parsed < 0) {
+          throw new Error(`${service.name} için özel fiyat geçersiz.`);
+        }
+        customPrice = parsed;
+      }
+
+      let customDuration: number | null = null;
+      if (draft.useCustomDuration) {
+        const parsed = Number(draft.customDuration);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+          throw new Error(`${service.name} için özel süre geçersiz.`);
+        }
+        customDuration = Math.round(parsed);
+      }
+
+      payload.push({ serviceId, customPrice, customDuration });
+    }
+
+    return payload;
+  };
+
+  const save = async (event: FormEvent) => {
     event.preventDefault();
+
     if (!form.name.trim()) {
+      setError('Ad soyad zorunlu.');
+      return;
+    }
+    if (!form.title.trim()) {
+      setError('Unvan zorunlu.');
+      return;
+    }
+
+    let assignments: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null }> = [];
+    try {
+      assignments = buildAssignmentsPayload();
+    } catch (err: any) {
+      setError(err?.message || 'Hizmet ayarları geçersiz.');
       return;
     }
 
     setSaving(true);
     setError(null);
+
+    const payload = {
+      name: form.name.trim(),
+      title: form.title.trim(),
+      phone: form.phone.trim() || null,
+      themeColor: form.color,
+      serviceAssignments: assignments,
+    };
+
     try {
-      const response = await apiFetch<{ item: StaffItem }>('/api/admin/staff', {
-        method: 'POST',
-        body: JSON.stringify(form),
-      });
-      setItems((prev) => [response.item, ...prev]);
-      setForm({ name: '', title: '', phone: '' });
+      if (editingStaffId) {
+        const response = await apiFetch<{ item: StaffItem }>(`/api/admin/staff/${editingStaffId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+
+        setStaff((prev) =>
+          prev
+            .map((item) => (item.id === editingStaffId ? response.item : item))
+            .sort((a, b) => a.name.localeCompare(b.name, 'tr')),
+        );
+      } else {
+        const response = await apiFetch<{ item: StaffItem }>('/api/admin/staff', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+
+        setStaff((prev) => [response.item, ...prev].sort((a, b) => a.name.localeCompare(b.name, 'tr')));
+      }
+
+      setModalOpen(false);
+      setEditingStaffId(null);
     } catch (err: any) {
-      setError(err?.message || 'Çalışan eklenemedi.');
+      setError(err?.message || 'Çalışan kaydedilemedi.');
     } finally {
       setSaving(false);
     }
   };
 
+  const deleteStaff = async (item: StaffItem) => {
+    const ok = window.confirm(`${item.name} kaydını silmek istiyor musunuz?`);
+    if (!ok) return;
+
+    try {
+      await apiFetch(`/api/admin/staff/${item.id}`, { method: 'DELETE' });
+      setStaff((prev) => prev.filter((entry) => entry.id !== item.id));
+    } catch (err: any) {
+      setError(err?.message || 'Çalışan silinemedi.');
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold">Çalışan Yönetimi</h1>
-        <p className="text-xs text-muted-foreground">Temel create/read aktif.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Çalışan Yönetimi</h1>
+          <p className="text-sm text-muted-foreground">Personel ve hizmet yetkileri</p>
+        </div>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="h-10 px-4 rounded-lg bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+          Ekle
+        </button>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-
-      <form className="space-y-2 rounded-lg border border-border p-3" onSubmit={createItem}>
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Ad soyad" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Unvan" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Telefon" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
-        <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Çalışan Ekle'}</button>
-      </form>
-
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
-      <div className="space-y-2">
-        {items.map((item) => (
-          <div key={item.id} className="rounded-lg border border-border p-3">
-            <div className="flex items-center justify-between">
-              <p className="font-medium">{item.name}</p>
-              <p className="text-xs text-muted-foreground">#{item.id}</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">{item.title || 'Unvan yok'} • {item.phone || 'Telefon yok'}</p>
-          </div>
-        ))}
-      </div>
+      {!loading ? (
+        <div className="space-y-3 pb-20">
+          {staff.map((item) => (
+            <div key={item.id} className="rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-start gap-3">
+                <div
+                  className="h-11 w-11 rounded-full flex items-center justify-center text-white"
+                  style={{ backgroundColor: toHexColor(item.themeColor) }}
+                >
+                  <UserRound className="h-5 w-5" />
+                </div>
 
-      {!loading && !items.length ? (
-        <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Çalışan bulunmuyor.</div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold leading-tight truncate">{item.name}</p>
+                  <p className="text-sm text-muted-foreground truncate">{item.title || 'Unvan belirtilmemiş'}</p>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(item)}
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                    title="Düzenle"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void deleteStaff(item)}
+                    className="h-8 w-8 grid place-items-center rounded-md text-red-500 hover:bg-red-50"
+                    title="Sil"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {item.services.slice(0, 6).map((service) => {
+                  const hasCustom = service.customPrice !== null || service.customDuration !== null;
+                  return (
+                    <span
+                      key={`${item.id}-${service.serviceId}`}
+                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs ${
+                        hasCustom
+                          ? 'bg-[var(--rose-gold)]/10 text-[var(--rose-gold)] border border-[var(--rose-gold)]/35'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {service.name}
+                      {hasCustom ? ` • ${service.effectiveDuration} dk • ${formatPrice(service.effectivePrice)}` : ''}
+                    </span>
+                  );
+                })}
+                {item.services.length > 6 ? (
+                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs bg-muted text-muted-foreground">
+                    +{item.services.length - 6} hizmet
+                  </span>
+                ) : null}
+                {!item.services.length ? (
+                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs bg-muted text-muted-foreground">
+                    Hizmet ataması yok
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ))}
+
+          {!staff.length ? (
+            <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Çalışan kaydı bulunamadı.
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {modalOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/40 p-4">
+          <div className="mx-auto mt-2 max-w-md rounded-2xl border border-border bg-background shadow-xl max-h-[92vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">{editingStaffId ? 'Çalışanı Düzenle' : 'Yeni Çalışan'}</h2>
+              <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Kapat</button>
+            </div>
+
+            <form onSubmit={save} className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block text-sm space-y-1">
+                  <span className="text-muted-foreground">Ad Soyad *</span>
+                  <input
+                    value={form.name}
+                    onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                  />
+                </label>
+
+                <label className="block text-sm space-y-1">
+                  <span className="text-muted-foreground">Unvan *</span>
+                  <input
+                    value={form.title}
+                    onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                  />
+                </label>
+              </div>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Telefon (opsiyonel)</span>
+                <input
+                  value={form.phone}
+                  onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+
+              <div className="grid grid-cols-[64px_1fr] gap-2 items-end">
+                <label className="block text-sm space-y-1">
+                  <span className="text-muted-foreground">Renk</span>
+                  <input
+                    type="color"
+                    value={form.color}
+                    onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value.toUpperCase() }))}
+                    className="h-10 w-full rounded-lg border border-border bg-card p-1"
+                  />
+                </label>
+                <label className="block text-sm space-y-1">
+                  <span className="text-muted-foreground">Hex Kod</span>
+                  <input
+                    value={form.color}
+                    onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value }))}
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm uppercase"
+                  />
+                </label>
+              </div>
+
+              <div className="rounded-xl border border-border p-3 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium">Hizmetler *</p>
+                  <span className="text-xs text-muted-foreground">{selectedServiceCount} hizmet seçili</span>
+                </div>
+
+                <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1">
+                  {groupedServices.map((group) => (
+                    <div key={group.key}>
+                      <p className="text-xs font-semibold tracking-wide text-muted-foreground mb-2 uppercase">{group.title}</p>
+
+                      <div className="space-y-2">
+                        {group.items.map((service) => {
+                          const draft = serviceDrafts[service.id] || {
+                            selected: false,
+                            useCustomPrice: false,
+                            customPrice: String(service.price),
+                            useCustomDuration: false,
+                            customDuration: String(service.duration),
+                          };
+
+                          return (
+                            <div key={service.id} className="rounded-lg border border-border p-2.5">
+                              <label className="flex items-start gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={draft.selected}
+                                  onChange={(event) => toggleServiceSelected(service.id, event.target.checked)}
+                                  className="mt-1"
+                                />
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium leading-tight">{service.name}</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {service.duration} dk • {formatPrice(service.price)}
+                                  </p>
+                                </div>
+                              </label>
+
+                              {draft.selected ? (
+                                <div className="mt-2 space-y-2 rounded-md bg-muted/40 p-2">
+                                  <label className="flex items-center justify-between gap-2 text-xs">
+                                    <span>Özel fiyat</span>
+                                    <input
+                                      type="checkbox"
+                                      checked={draft.useCustomPrice}
+                                      onChange={(event) =>
+                                        updateDraftField(service.id, 'useCustomPrice', event.target.checked)
+                                      }
+                                    />
+                                  </label>
+                                  {draft.useCustomPrice ? (
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step={10}
+                                      value={draft.customPrice}
+                                      onChange={(event) =>
+                                        updateDraftField(service.id, 'customPrice', event.target.value)
+                                      }
+                                      className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
+                                      placeholder="Örn: 180"
+                                    />
+                                  ) : null}
+
+                                  <label className="flex items-center justify-between gap-2 text-xs">
+                                    <span>Özel süre</span>
+                                    <input
+                                      type="checkbox"
+                                      checked={draft.useCustomDuration}
+                                      onChange={(event) =>
+                                        updateDraftField(service.id, 'useCustomDuration', event.target.checked)
+                                      }
+                                    />
+                                  </label>
+                                  {draft.useCustomDuration ? (
+                                    <input
+                                      type="number"
+                                      min={5}
+                                      step={5}
+                                      value={draft.customDuration}
+                                      onChange={(event) =>
+                                        updateDraftField(service.id, 'customDuration', event.target.value)
+                                      }
+                                      className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
+                                      placeholder="Örn: 75"
+                                    />
+                                  ) : null}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
+              >
+                {saving ? 'Kaydediliyor...' : editingStaffId ? 'Güncelle' : 'Ekle'}
+              </button>
+            </form>
+          </div>
+        </div>
       ) : null}
     </div>
   );
