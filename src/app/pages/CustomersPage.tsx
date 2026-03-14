@@ -395,7 +395,7 @@ export function CustomersPage() {
           : prev,
       );
     } catch (err: any) {
-      setRiskError(err?.message || 'Risk skoru güncellenemedi.');
+      setRiskError(err?.message || 'Katılım oranı güncellenemedi.');
     } finally {
       setRiskSaving(false);
     }
@@ -425,10 +425,12 @@ export function CustomersPage() {
     return 'Düşük Risk';
   };
 
-  const riskDescriptionTr = (level: 'LOW' | 'MEDIUM' | 'HIGH') => {
-    if (level === 'HIGH') return 'Yakın takip önerilir, randevu teyidi güçlendirilmeli.';
-    if (level === 'MEDIUM') return 'Düzenli hatırlatma ile takip edilmesi önerilir.';
-    return 'Genel davranış stabil, standart süreç yeterlidir.';
+  const attendanceRatePercent = (noShowCount: number, totalBookings: number) => {
+    if (!totalBookings || totalBookings <= 0) {
+      return 0;
+    }
+    const attended = Math.max(totalBookings - noShowCount, 0);
+    return Math.max(0, Math.min(100, (attended / totalBookings) * 100));
   };
 
   const appointmentStatusLabel = (status: string) => {
@@ -738,14 +740,16 @@ export function CustomersPage() {
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">Randevuya Gelmeme Skoru</p>
+                    <p className="text-xs text-muted-foreground">Randevu Katılım Oranı</p>
                     <div className="flex items-center justify-between gap-2 mt-1">
-                      <span className="text-lg font-semibold">{selectedCustomer.summary.noShowRiskScore}</span>
+                      <span className="text-lg font-semibold">
+                        %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
+                      </span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           disabled={riskSaving}
-                          onClick={() => void handleAdjustNoShowRisk(-1)}
+                          onClick={() => void handleAdjustNoShowRisk(1)}
                           className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50"
                         >
                           -
@@ -753,7 +757,7 @@ export function CustomersPage() {
                         <button
                           type="button"
                           disabled={riskSaving}
-                          onClick={() => void handleAdjustNoShowRisk(1)}
+                          onClick={() => void handleAdjustNoShowRisk(-1)}
                           className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50"
                         >
                           +
@@ -770,10 +774,7 @@ export function CustomersPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1">
-                      No-show: {selectedCustomer.summary.noShowCount} / {selectedCustomer.summary.totalBookings}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      {riskDescriptionTr(selectedCustomer.summary.noShowRiskLevel)}
+                      Katılım: {Math.max(selectedCustomer.summary.totalBookings - selectedCustomer.summary.noShowCount, 0)} / {selectedCustomer.summary.totalBookings}
                     </p>
                     {riskError ? <p className="text-[11px] text-red-500 mt-1">{riskError}</p> : null}
                   </div>
