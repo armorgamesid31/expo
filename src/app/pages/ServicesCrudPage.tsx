@@ -104,7 +104,7 @@ function StatusToggleChip({
       aria-label={active ? 'Durumu pasif yap' : 'Durumu aktif yap'}
       onClick={() => onToggle(!active)}
       className={`relative inline-flex h-7 w-12 items-center rounded-full border p-0.5 transition-colors ${
-        active ? 'border-emerald-300 bg-emerald-100' : 'border-zinc-300 bg-zinc-200'
+        active ? 'border-emerald-500 bg-emerald-300' : 'border-zinc-300 bg-zinc-200'
       } ${className}`}
     >
       <span
