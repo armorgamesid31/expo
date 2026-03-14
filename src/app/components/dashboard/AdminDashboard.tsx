@@ -38,10 +38,9 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onNavigate, checklist, analytics }: AdminDashboardProps) {
-  const weekData = analytics?.trendRevenue?.length
-    ? analytics.trendRevenue
-    : analytics?.weeklyRevenue?.length
-    ? analytics.weeklyRevenue
+  const analyticsSeries = analytics?.trendRevenue ?? analytics?.weeklyRevenue;
+  const weekData = analyticsSeries
+    ? analyticsSeries
     : [
         { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
         { label: 'Sal', revenue: 0, appointments: 0, date: '' },

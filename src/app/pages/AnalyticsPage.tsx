@@ -187,8 +187,8 @@ export function AnalyticsPage() {
   }, [serviceRevenueData]);
 
   const weeklyPulse = useMemo(() => {
-    const source = overview?.trendRevenue?.length ? overview.trendRevenue : overview?.weeklyRevenue;
-    if (source?.length) {
+    const source = overview?.trendRevenue ?? overview?.weeklyRevenue;
+    if (source) {
       return source.map((item) => ({
         day: item.label,
         revenue: item.revenue,
