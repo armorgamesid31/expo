@@ -16,12 +16,19 @@ export function BlacklistPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ fullName: '', phone: '', reason: '' });
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const load = async () => {
+  const load = async (search = '') => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: BlacklistItem[] }>('/api/admin/blacklist');
+      const query = new URLSearchParams();
+      if (search.trim()) {
+        query.set('search', search.trim());
+      }
+      const response = await apiFetch<{ items: BlacklistItem[] }>(
+        `/api/admin/blacklist${query.toString() ? `?${query.toString()}` : ''}`,
+      );
       setItems(response.items);
     } catch (err: any) {
       setError(err?.message || 'Kara liste alınamadı.');
@@ -31,8 +38,8 @@ export function BlacklistPage() {
   };
 
   useEffect(() => {
-    void load();
-  }, []);
+    void load(searchQuery);
+  }, [searchQuery]);
 
   const createItem = async (event: FormEvent) => {
     event.preventDefault();
@@ -76,6 +83,15 @@ export function BlacklistPage() {
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
+
+      <div className="rounded-lg border border-border bg-card p-3">
+        <input
+          className="w-full rounded-md border border-border px-3 py-2 text-sm"
+          placeholder="İsim, telefon veya neden ile ara"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
+      </div>
 
       <form className="space-y-2 rounded-lg border border-border p-3" onSubmit={createItem}>
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Ad soyad" value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} />

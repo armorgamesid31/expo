@@ -21,6 +21,9 @@ interface CustomerAppointmentItem {
     id: number;
     name: string;
   };
+  customerRating?: number | null;
+  customerReview?: string | null;
+  customerReviewedAt?: string | null;
 }
 
 interface CustomerDetailResponse {
@@ -74,6 +77,7 @@ export function CustomersPage() {
   const [birthDate, setBirthDate] = useState('');
   const [acceptMarketing, setAcceptMarketing] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetailResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
@@ -86,10 +90,14 @@ export function CustomersPage() {
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [discountSuccess, setDiscountSuccess] = useState<string | null>(null);
 
-  const loadPage = async (nextCursor?: string | null) => {
+  const loadPage = async (nextCursor?: string | null, search?: string) => {
     const query = new URLSearchParams({ limit: String(PAGE_LIMIT) });
     if (nextCursor) {
       query.set('cursor', nextCursor);
+    }
+    const normalizedSearch = (search || '').trim();
+    if (normalizedSearch) {
+      query.set('search', normalizedSearch);
     }
 
     return apiFetch<AdminCustomersResponse>(`/api/admin/customers?${query.toString()}`);
@@ -102,7 +110,7 @@ export function CustomersPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await loadPage(null);
+        const response = await loadPage(null, searchQuery);
         if (!mounted) return;
         setItems(response.items);
         setCursor(response.nextCursor);
@@ -121,7 +129,7 @@ export function CustomersPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [searchQuery]);
 
   const handleLoadMore = async () => {
     if (!cursor || loadingMore) {
@@ -132,7 +140,7 @@ export function CustomersPage() {
     setError(null);
 
     try {
-      const response = await loadPage(cursor);
+      const response = await loadPage(cursor, searchQuery);
       setItems((prev) => [...prev, ...response.items]);
       setCursor(response.nextCursor);
       setHasMore(response.hasMore);
@@ -287,6 +295,15 @@ export function CustomersPage() {
           </button>
           <p className="text-xs text-muted-foreground">Cursor pagination</p>
         </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-3">
+        <input
+          className="w-full rounded-md border border-border px-3 py-2 text-sm"
+          placeholder="Ad, telefon veya Instagram ile ara"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-2">
@@ -557,6 +574,20 @@ export function CustomersPage() {
                           {new Date(appointment.startTime).toLocaleString('tr-TR')} -{' '}
                           {new Date(appointment.endTime).toLocaleTimeString('tr-TR')}
                         </p>
+                        {appointment.customerRating || appointment.customerReview ? (
+                          <div className="mt-2 rounded-md border border-border bg-muted/20 p-2">
+                            <p className="text-xs font-medium">
+                              Değerlendirme: {appointment.customerRating ? `${appointment.customerRating}/5` : 'Puan yok'}
+                            </p>
+                            {appointment.customerReview ? (
+                              <p className="text-xs text-muted-foreground mt-1">{appointment.customerReview}</p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground mt-1">Yorum bırakılmamış.</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground mt-2">Bu randevu için değerlendirme yok.</p>
+                        )}
                       </div>
                     ))
                   ) : (
