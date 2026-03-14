@@ -103,7 +103,9 @@ function StatusToggleChip({
       aria-checked={active}
       aria-label={active ? 'Durumu pasif yap' : 'Durumu aktif yap'}
       onClick={() => onToggle(!active)}
-      className={`relative inline-flex h-7 w-12 items-center rounded-full border border-zinc-300 bg-zinc-200 p-0.5 transition-colors ${className}`}
+      className={`relative inline-flex h-7 w-12 items-center rounded-full border p-0.5 transition-colors ${
+        active ? 'border-emerald-300 bg-emerald-100' : 'border-zinc-300 bg-zinc-200'
+      } ${className}`}
     >
       <span
         className={`inline-block h-6 w-6 rounded-full border border-zinc-300 bg-white shadow-sm transition-transform ${
@@ -788,17 +790,6 @@ export function ServicesCrudPage() {
                 />
               </label>
 
-              <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
-                <div>
-                  <p className="font-medium">Hizmet durumu</p>
-                  <p className="text-xs text-muted-foreground">Pasif hizmet randevu akışında görünmez.</p>
-                </div>
-                <StatusToggleChip
-                  active={serviceForm.isActive}
-                  onToggle={(next) => setServiceForm((prev) => ({ ...prev, isActive: next }))}
-                />
-              </label>
-
               <div className="grid grid-cols-2 gap-2">
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Süre (dk)</span>
@@ -1230,17 +1221,6 @@ export function ServicesCrudPage() {
                   value={groupForm.name}
                   onChange={(event) => setGroupForm((prev) => ({ ...prev, name: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
-              </label>
-
-              <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
-                <div>
-                  <p className="font-medium">Grup durumu</p>
-                  <p className="text-xs text-muted-foreground">Pasif grup, hizmet seçimlerinde öneri olarak çıkmaz.</p>
-                </div>
-                <StatusToggleChip
-                  active={groupForm.isActive}
-                  onToggle={(next) => setGroupForm((prev) => ({ ...prev, isActive: next }))}
                 />
               </label>
 
