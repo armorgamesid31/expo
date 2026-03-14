@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Preferences } from '@capacitor/preferences';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthGuard } from './components/app-shell/AuthGuard';
 import { AppLayout } from './components/app-shell/AppLayout';
@@ -17,6 +19,30 @@ import { CampaignsCrudPage } from './pages/CampaignsCrudPage';
 import { AutomationsCrudPage } from './pages/AutomationsCrudPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { BlacklistPage } from './pages/BlacklistPage';
+
+const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
+
+function ThemeBootstrap() {
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const pref = await Preferences.get({ key: THEME_PREF_KEY });
+        if (!mounted) return;
+        document.documentElement.classList.toggle('dark', pref.value === '1');
+      } catch (error) {
+        console.warn('Theme bootstrap failed:', error);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return null;
+}
 
 function RootRedirect() {
   const { isLoading, isAuthenticated } = useAuth();
@@ -66,6 +92,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
+      <ThemeBootstrap />
       <BrowserRouter>
         <AppRoutes />
       </BrowserRouter>
