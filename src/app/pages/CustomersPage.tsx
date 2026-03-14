@@ -281,6 +281,47 @@ export function CustomersPage() {
     return 'bg-green-500/10 text-green-700 border-green-500/30';
   };
 
+  const appointmentStatusLabel = (status: string) => {
+    switch (status) {
+      case 'BOOKED':
+        return 'Planlandı';
+      case 'COMPLETED':
+        return 'Tamamlandı';
+      case 'CANCELLED':
+        return 'İptal';
+      case 'NO_SHOW':
+        return 'Gelmedi';
+      default:
+        return status;
+    }
+  };
+
+  const appointmentStatusClass = (status: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30';
+      case 'CANCELLED':
+        return 'bg-zinc-500/10 text-zinc-700 border-zinc-500/30';
+      case 'NO_SHOW':
+        return 'bg-red-500/10 text-red-700 border-red-500/30';
+      default:
+        return 'bg-[var(--rose-gold)]/10 text-[var(--rose-gold)] border-[var(--rose-gold)]/30';
+    }
+  };
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+  const formatTime = (date: string) =>
+    new Date(date).toLocaleTimeString('tr-TR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -406,8 +447,8 @@ export function CustomersPage() {
       ) : null}
 
       {(detailLoading || detailError || selectedCustomer) ? (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px] flex items-end">
-          <div className="w-full max-h-[85vh] overflow-y-auto rounded-t-2xl bg-background border-t border-border p-4 space-y-4">
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[1px] flex items-end">
+          <div className="w-full max-h-[88vh] overflow-y-auto rounded-t-2xl bg-background border-t border-border p-4 pb-24 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Müşteri Profili</h2>
               <button
@@ -561,32 +602,49 @@ export function CustomersPage() {
                   </button>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <p className="text-sm font-medium">Randevu Geçmişi</p>
                   {selectedCustomer.appointments.length ? (
                     selectedCustomer.appointments.map((appointment) => (
-                      <div key={appointment.id} className="rounded-lg border border-border p-3">
-                        <p className="font-medium">{appointment.service.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {appointment.staff.name} • {appointment.status}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(appointment.startTime).toLocaleString('tr-TR')} -{' '}
-                          {new Date(appointment.endTime).toLocaleTimeString('tr-TR')}
-                        </p>
+                      <div key={appointment.id} className="rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-semibold leading-tight text-[15px]">{appointment.service.name}</p>
+                          <span className={`text-[11px] px-2 py-0.5 rounded border whitespace-nowrap ${appointmentStatusClass(appointment.status)}`}>
+                            {appointmentStatusLabel(appointment.status)}
+                          </span>
+                        </div>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span>{formatDate(appointment.startTime)}</span>
+                          <span>{formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}</span>
+                          <span>{appointment.staff.name}</span>
+                        </div>
+
                         {appointment.customerRating || appointment.customerReview ? (
-                          <div className="mt-2 rounded-md border border-border bg-muted/20 p-2">
-                            <p className="text-xs font-medium">
-                              Değerlendirme: {appointment.customerRating ? `${appointment.customerRating}/5` : 'Puan yok'}
-                            </p>
+                          <div className="mt-3 rounded-lg border border-border bg-muted/20 p-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs font-medium">Müşteri değerlendirmesi</p>
+                              <p className="text-xs font-semibold">
+                                {appointment.customerRating ? `${appointment.customerRating}/5` : 'Puan yok'}
+                              </p>
+                            </div>
+                            {appointment.customerRating ? (
+                              <p className="mt-1 text-xs tracking-wide text-amber-500">
+                                {'★'.repeat(appointment.customerRating)}
+                                <span className="text-zinc-300">{'★'.repeat(Math.max(0, 5 - appointment.customerRating))}</span>
+                              </p>
+                            ) : null}
                             {appointment.customerReview ? (
-                              <p className="text-xs text-muted-foreground mt-1">{appointment.customerReview}</p>
-                            ) : (
-                              <p className="text-xs text-muted-foreground mt-1">Yorum bırakılmamış.</p>
-                            )}
+                              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{appointment.customerReview}</p>
+                            ) : null}
+                            {appointment.customerReviewedAt ? (
+                              <p className="text-[11px] text-muted-foreground mt-1">
+                                {new Date(appointment.customerReviewedAt).toLocaleString('tr-TR')}
+                              </p>
+                            ) : null}
                           </div>
                         ) : (
-                          <p className="text-[11px] text-muted-foreground mt-2">Bu randevu için değerlendirme yok.</p>
+                          <p className="mt-3 text-[11px] text-muted-foreground">Bu randevu için değerlendirme yok.</p>
                         )}
                       </div>
                     ))
