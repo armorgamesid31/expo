@@ -17,11 +17,45 @@ function endOfLocalDay(date: Date): Date {
   return value;
 }
 
-function asDateInputValue(date: Date): string {
+export function asDateInputValue(date: Date): string {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+export function todayDateInputValue(): string {
+  return asDateInputValue(new Date());
+}
+
+export function shiftDateInputValue(value: string, diffDays: number): string {
+  const parsed = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return todayDateInputValue();
+  }
+  parsed.setDate(parsed.getDate() + diffDays);
+  return asDateInputValue(parsed);
+}
+
+export function resolveSingleDayRange(dateInput: string): { range: AnalyticsResolvedRange | null; error: string | null } {
+  if (!dateInput) {
+    return { range: null, error: 'Tarih seçin.' };
+  }
+  const base = new Date(`${dateInput}T00:00:00`);
+  if (Number.isNaN(base.getTime())) {
+    return { range: null, error: 'Geçerli bir tarih seçin.' };
+  }
+
+  const from = startOfLocalDay(base);
+  const to = endOfLocalDay(base);
+
+  return {
+    range: {
+      fromIso: from.toISOString(),
+      toIso: to.toISOString(),
+    },
+    error: null,
+  };
 }
 
 export function defaultCustomDates() {

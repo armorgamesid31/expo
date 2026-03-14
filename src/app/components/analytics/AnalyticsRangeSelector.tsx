@@ -2,6 +2,7 @@ import { CalendarClock } from 'lucide-react';
 import type { AnalyticsRangePreset } from '../../lib/analytics-range';
 
 interface AnalyticsRangeSelectorProps {
+  compact?: boolean;
   preset: AnalyticsRangePreset;
   customFromDate: string;
   customToDate: string;
@@ -19,11 +20,13 @@ const OPTIONS: Array<{ value: AnalyticsRangePreset; label: string }> = [
 ];
 
 export function AnalyticsRangeSelector(props: AnalyticsRangeSelectorProps) {
+  const compact = Boolean(props.compact);
+
   return (
-    <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+    <div className={compact ? 'space-y-2' : 'rounded-xl border border-border bg-card p-3 space-y-3'}>
       <div className="flex items-center gap-2">
         <CalendarClock className="w-4 h-4 text-[var(--rose-gold)]" />
-        <p className="text-sm font-semibold">Zaman Aralığı</p>
+        <p className="text-sm font-semibold">{compact ? 'Dönem' : 'Zaman Aralığı'}</p>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -70,7 +73,7 @@ export function AnalyticsRangeSelector(props: AnalyticsRangeSelectorProps) {
             Aralığı Uygula
           </button>
         </div>
-      ) : (
+      ) : compact ? null : (
         <p className="text-xs text-muted-foreground">
           Görünen metrik ve grafikler seçtiğin zaman aralığına göre hesaplanır.
         </p>

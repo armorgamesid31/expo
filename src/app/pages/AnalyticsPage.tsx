@@ -222,6 +222,7 @@ export function AnalyticsPage() {
       </div>
 
       <AnalyticsRangeSelector
+        compact
         preset={rangePreset}
         customFromDate={customFromDate}
         customToDate={customToDate}

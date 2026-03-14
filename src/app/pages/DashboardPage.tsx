@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminDashboard } from '../components/dashboard/AdminDashboard';
-import { AnalyticsRangeSelector } from '../components/analytics/AnalyticsRangeSelector';
+import { DayNavigator } from '../components/analytics/DayNavigator';
 import { useAuth } from '../context/AuthContext';
 import {
-  AnalyticsRangePreset,
-  defaultCustomDates,
-  resolveAnalyticsRange,
+  resolveSingleDayRange,
+  shiftDateInputValue,
+  todayDateInputValue,
 } from '../lib/analytics-range';
 
 interface DashboardAnalyticsOverview {
@@ -36,7 +36,6 @@ interface DashboardAnalyticsOverview {
 export function DashboardPage() {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
-  const defaults = defaultCustomDates();
   const [checklist, setChecklist] = useState<{
     workingHours?: boolean;
     address?: boolean;
@@ -45,9 +44,7 @@ export function DashboardPage() {
     staff?: boolean;
   } | null>(null);
   const [analytics, setAnalytics] = useState<DashboardAnalyticsOverview | null>(null);
-  const [rangePreset, setRangePreset] = useState<AnalyticsRangePreset>('week');
-  const [customFromDate, setCustomFromDate] = useState(defaults.fromDate);
-  const [customToDate, setCustomToDate] = useState(defaults.toDate);
+  const [selectedDate, setSelectedDate] = useState(todayDateInputValue());
   const [rangeError, setRangeError] = useState<string | null>(null);
 
   const handleNavigate = (target: string) => {
@@ -83,12 +80,8 @@ export function DashboardPage() {
     };
   }, [apiFetch]);
 
-  const loadAnalytics = async (params: { preset: AnalyticsRangePreset; fromDate?: string; toDate?: string }) => {
-    const resolved = resolveAnalyticsRange({
-      preset: params.preset,
-      customFromDate: params.fromDate,
-      customToDate: params.toDate,
-    });
+  const loadAnalytics = async (dateInput: string) => {
+    const resolved = resolveSingleDayRange(dateInput);
 
     if (!resolved.range) {
       setRangeError(resolved.error || 'Zaman aralığı geçersiz.');
@@ -109,47 +102,36 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
-    void loadAnalytics({
-      preset: rangePreset,
-      fromDate: customFromDate,
-      toDate: customToDate,
-    });
+    void loadAnalytics(selectedDate);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onPresetChange = (preset: AnalyticsRangePreset) => {
-    setRangePreset(preset);
-    if (preset !== 'custom') {
-      void loadAnalytics({
-        preset,
-        fromDate: customFromDate,
-        toDate: customToDate,
-      });
-    }
+  const onDateChange = (nextDate: string) => {
+    setSelectedDate(nextDate);
+    void loadAnalytics(nextDate);
   };
 
-  const onApplyCustomRange = () => {
-    void loadAnalytics({
-      preset: 'custom',
-      fromDate: customFromDate,
-      toDate: customToDate,
-    });
+  const onPrevDay = () => {
+    const next = shiftDateInputValue(selectedDate, -1);
+    setSelectedDate(next);
+    void loadAnalytics(next);
+  };
+
+  const onNextDay = () => {
+    const next = shiftDateInputValue(selectedDate, 1);
+    setSelectedDate(next);
+    void loadAnalytics(next);
   };
 
   return (
     <div className="space-y-3">
-      <div className="px-4 pt-4">
-        <AnalyticsRangeSelector
-          preset={rangePreset}
-          customFromDate={customFromDate}
-          customToDate={customToDate}
-          onPresetChange={onPresetChange}
-          onCustomFromDateChange={setCustomFromDate}
-          onCustomToDateChange={setCustomToDate}
-          onApplyCustomRange={onApplyCustomRange}
-        />
-        {rangeError ? <p className="mt-2 text-xs text-red-500">{rangeError}</p> : null}
-      </div>
+      <DayNavigator
+        dateValue={selectedDate}
+        onDateChange={onDateChange}
+        onPrevDay={onPrevDay}
+        onNextDay={onNextDay}
+      />
+      {rangeError ? <p className="px-4 text-xs text-red-500">{rangeError}</p> : null}
       <AdminDashboard onNavigate={handleNavigate} checklist={checklist} analytics={analytics} />
     </div>
   );
