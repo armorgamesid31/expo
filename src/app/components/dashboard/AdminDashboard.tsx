@@ -28,11 +28,19 @@ interface AdminDashboardProps {
       revenue: number;
       appointments: number;
     }>;
+    trendRevenue?: Array<{
+      date: string;
+      label: string;
+      revenue: number;
+      appointments: number;
+    }>;
   } | null;
 }
 
 export function AdminDashboard({ onNavigate, checklist, analytics }: AdminDashboardProps) {
-  const weekData = analytics?.weeklyRevenue?.length
+  const weekData = analytics?.trendRevenue?.length
+    ? analytics.trendRevenue
+    : analytics?.weeklyRevenue?.length
     ? analytics.weeklyRevenue
     : [
         { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
@@ -53,9 +61,9 @@ export function AdminDashboard({ onNavigate, checklist, analytics }: AdminDashbo
 
   const stats = [
     {
-      title: "Bugünün Cirosu",
+      title: 'Son Gün Cirosu',
       value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
-      subtitle: `${todayPoint?.appointments || 0} randevu`,
+      subtitle: `Seçili aralıkta son gün • ${todayPoint?.appointments || 0} randevu`,
       icon: DollarSign,
       color: 'var(--rose-gold)',
     },

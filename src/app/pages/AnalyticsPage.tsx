@@ -15,6 +15,12 @@ import {
   YAxis,
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
+import { AnalyticsRangeSelector } from '../components/analytics/AnalyticsRangeSelector';
+import {
+  AnalyticsRangePreset,
+  defaultCustomDates,
+  resolveAnalyticsRange,
+} from '../lib/analytics-range';
 
 interface AnalyticsResponse {
   metrics: {
@@ -29,6 +35,7 @@ interface AnalyticsResponse {
   topServices: Array<{ id: number; name: string; appointments: number; revenue: number }>;
   staffPerformance: Array<{ id: number; name: string; appointments: number; revenue: number; avgRating: number }>;
   weeklyRevenue?: Array<{ date: string; label: string; revenue: number; appointments: number }>;
+  trendRevenue?: Array<{ date: string; label: string; revenue: number; appointments: number }>;
 }
 
 interface ReportTemplateItem {
@@ -47,22 +54,40 @@ const PIE_COLORS = [
 
 export function AnalyticsPage() {
   const { apiFetch } = useAuth();
+  const defaults = defaultCustomDates();
   const [overview, setOverview] = useState<AnalyticsResponse | null>(null);
   const [templates, setTemplates] = useState<ReportTemplateItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState('');
+  const [rangePreset, setRangePreset] = useState<AnalyticsRangePreset>('week');
+  const [customFromDate, setCustomFromDate] = useState(defaults.fromDate);
+  const [customToDate, setCustomToDate] = useState(defaults.toDate);
+  const [rangeError, setRangeError] = useState<string | null>(null);
 
-  const load = async () => {
+  const loadOverview = async (params: { preset: AnalyticsRangePreset; fromDate?: string; toDate?: string }) => {
+    const resolved = resolveAnalyticsRange({
+      preset: params.preset,
+      customFromDate: params.fromDate,
+      customToDate: params.toDate,
+    });
+
+    if (!resolved.range) {
+      setRangeError(resolved.error || 'Zaman aralığı geçersiz.');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    setError(null);
     try {
-      const [analytics, presetResponse] = await Promise.all([
-        apiFetch<AnalyticsResponse>('/api/admin/analytics/overview'),
-        apiFetch<{ items: ReportTemplateItem[] }>('/api/admin/analytics/presets'),
-      ]);
+      setError(null);
+      setRangeError(null);
+      const analytics = await apiFetch<AnalyticsResponse>(
+        `/api/admin/analytics/overview?from=${encodeURIComponent(resolved.range.fromIso)}&to=${encodeURIComponent(
+          resolved.range.toIso,
+        )}`,
+      );
       setOverview(analytics);
-      setTemplates(presetResponse.items);
     } catch (err: any) {
       setError(err?.message || 'Analitik veriler alınamadı.');
     } finally {
@@ -71,7 +96,59 @@ export function AnalyticsPage() {
   };
 
   useEffect(() => {
-    void load();
+    let mounted = true;
+    (async () => {
+      try {
+        const presetResponse = await apiFetch<{ items: ReportTemplateItem[] }>('/api/admin/analytics/presets');
+        if (mounted) {
+          setTemplates(presetResponse.items);
+        }
+      } catch {
+        if (mounted) {
+          setTemplates([]);
+        }
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [apiFetch]);
+
+  useEffect(() => {
+    void loadOverview({
+      preset: rangePreset,
+      fromDate: customFromDate,
+      toDate: customToDate,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onPresetChange = (preset: AnalyticsRangePreset) => {
+    setRangePreset(preset);
+    if (preset !== 'custom') {
+      void loadOverview({
+        preset,
+        fromDate: customFromDate,
+        toDate: customToDate,
+      });
+    }
+  };
+
+  const onApplyCustomRange = () => {
+    void loadOverview({
+      preset: 'custom',
+      fromDate: customFromDate,
+      toDate: customToDate,
+    });
+  };
+
+  useEffect(() => {
+    // Keep custom range values valid when user toggles quickly between presets.
+    if (!customFromDate || !customToDate) {
+      setCustomFromDate(defaults.fromDate);
+      setCustomToDate(defaults.toDate);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addTemplate = async (event: FormEvent) => {
@@ -110,8 +187,9 @@ export function AnalyticsPage() {
   }, [serviceRevenueData]);
 
   const weeklyPulse = useMemo(() => {
-    if (overview?.weeklyRevenue?.length) {
-      return overview.weeklyRevenue.map((item) => ({
+    const source = overview?.trendRevenue?.length ? overview.trendRevenue : overview?.weeklyRevenue;
+    if (source?.length) {
+      return source.map((item) => ({
         day: item.label,
         revenue: item.revenue,
         appointments: item.appointments,
@@ -142,6 +220,17 @@ export function AnalyticsPage() {
         <h1 className="text-xl font-semibold">Analitikler</h1>
         <p className="text-xs text-muted-foreground">Salon performansını tek ekranda takip edin.</p>
       </div>
+
+      <AnalyticsRangeSelector
+        preset={rangePreset}
+        customFromDate={customFromDate}
+        customToDate={customToDate}
+        onPresetChange={onPresetChange}
+        onCustomFromDateChange={setCustomFromDate}
+        onCustomToDateChange={setCustomToDate}
+        onApplyCustomRange={onApplyCustomRange}
+      />
+      {rangeError ? <p className="text-xs text-red-500">{rangeError}</p> : null}
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
