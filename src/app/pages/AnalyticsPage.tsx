@@ -205,7 +205,7 @@ export function AnalyticsPage() {
       { day: 'Cmt', revenue: 0, appointments: 0 },
       { day: 'Paz', revenue: 0, appointments: 0 },
     ];
-  }, [overview?.weeklyRevenue]);
+  }, [overview?.trendRevenue, overview?.weeklyRevenue]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('tr-TR', {
