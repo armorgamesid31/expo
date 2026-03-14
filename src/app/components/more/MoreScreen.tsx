@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, BarChart3, Package, Sparkles, MessageCircle, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, ShieldBan, Zap, Target, CheckCircle2, Circle } from 'lucide-react';
+import { Bell, BarChart3, Package, Sparkles, MessageCircle, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Zap, Target, CheckCircle2, Circle } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 
@@ -60,16 +60,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--rose-gold)',
     },
     {
-      icon: ShieldBan,
-      label: 'Kara Liste',
-      description: 'Engellenen müşteriler',
-      action: () => onNavigate('blacklist'),
-      color: '#EF4444',
-    },
-    {
       icon: Users,
       label: 'Müşteri Yönetimi',
-      description: 'CRM Profilleri',
+      description: 'CRM profilleri + kara liste',
       action: () => onNavigate('crm'),
       color: 'var(--rose-gold)',
     },

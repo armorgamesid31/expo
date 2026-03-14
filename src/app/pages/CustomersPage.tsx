@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { AdminCustomerItem, AdminCustomersResponse } from '../types/mobile-api';
+import { useNavigate } from 'react-router-dom';
 
 const PAGE_LIMIT = 20;
 
@@ -59,6 +60,7 @@ interface DiscountUpdateResponse {
 
 export function CustomersPage() {
   const { apiFetch } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState<AdminCustomerItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -68,6 +70,10 @@ export function CustomersPage() {
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [acceptMarketing, setAcceptMarketing] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetailResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
@@ -138,6 +144,10 @@ export function CustomersPage() {
   };
 
   const handleCreate = async () => {
+    if (!name.trim()) {
+      setError('Ad soyad zorunlu.');
+      return;
+    }
     if (!phone.trim()) {
       setError('Telefon zorunlu.');
       return;
@@ -149,7 +159,13 @@ export function CustomersPage() {
     try {
       const response = await apiFetch<{ customer: AdminCustomerItem }>('/api/admin/customers', {
         method: 'POST',
-        body: JSON.stringify({ name: name.trim() || null, phone: phone.trim() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          instagram: instagram.trim() || null,
+          birthDate: birthDate || null,
+          acceptMarketing,
+        }),
       });
 
       const nextItem: AdminCustomerItem = {
@@ -159,6 +175,10 @@ export function CustomersPage() {
       setItems((prev) => [nextItem, ...prev]);
       setName('');
       setPhone('');
+      setInstagram('');
+      setBirthDate('');
+      setAcceptMarketing(false);
+      setShowCreateForm(false);
     } catch (err: any) {
       setError(err?.message || 'Müşteri oluşturulamadı.');
     } finally {
@@ -257,31 +277,74 @@ export function CustomersPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Müşteriler</h1>
-        <p className="text-xs text-muted-foreground">Cursor pagination</p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('/app/blacklist')}
+            className="rounded-md border border-border px-3 py-1.5 text-xs"
+          >
+            Kara Liste
+          </button>
+          <p className="text-xs text-muted-foreground">Cursor pagination</p>
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-        <p className="text-sm font-medium">Yeni Müşteri</p>
-        <input
-          className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Ad soyad"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
-        <input
-          className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Telefon"
-          value={phone}
-          onChange={(event) => setPhone(event.target.value)}
-        />
-        <button
-          type="button"
-          onClick={() => void handleCreate()}
-          disabled={creating}
-          className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60"
-        >
-          {creating ? 'Ekleniyor...' : 'Müşteri Ekle'}
-        </button>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium">Yeni Müşteri</p>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm((prev) => !prev)}
+            className="rounded-md border border-border px-3 py-1.5 text-xs"
+          >
+            {showCreateForm ? 'Kapat' : 'Müşteri Ekle'}
+          </button>
+        </div>
+
+        {showCreateForm ? (
+          <div className="space-y-2">
+            <input
+              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              placeholder="Ad + Soyad"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+            <input
+              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              placeholder="Telefon"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+            />
+            <input
+              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              placeholder="Instagram (opsiyonel)"
+              value={instagram}
+              onChange={(event) => setInstagram(event.target.value)}
+            />
+            <input
+              type="date"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              value={birthDate}
+              onChange={(event) => setBirthDate(event.target.value)}
+            />
+            <label className="flex items-center gap-2 text-sm rounded-md border border-border px-3 py-2">
+              <input
+                type="checkbox"
+                checked={acceptMarketing}
+                onChange={(event) => setAcceptMarketing(event.target.checked)}
+              />
+              Kampanya iletişimi izni
+            </label>
+            <button
+              type="button"
+              onClick={() => void handleCreate()}
+              disabled={creating}
+              className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60"
+            >
+              {creating ? 'Ekleniyor...' : 'Kaydet'}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
@@ -302,6 +365,7 @@ export function CustomersPage() {
               <p className="text-xs text-muted-foreground">#{item.id}</p>
             </div>
             <p className="text-sm mt-1">{item.phone}</p>
+            {item.instagram ? <p className="text-xs text-muted-foreground mt-1">@{item.instagram.replace(/^@/, '')}</p> : null}
             <p className="text-xs text-muted-foreground mt-1">Randevu sayısı: {item.appointmentCount}</p>
           </button>
         ))}
@@ -350,6 +414,9 @@ export function CustomersPage() {
                 <div className="rounded-lg border border-border p-3 space-y-1">
                   <p className="font-medium">{selectedCustomer.customer.name || 'İsimsiz Müşteri'}</p>
                   <p className="text-sm">{selectedCustomer.customer.phone}</p>
+                  {selectedCustomer.customer.instagram ? (
+                    <p className="text-sm text-muted-foreground">@{selectedCustomer.customer.instagram.replace(/^@/, '')}</p>
+                  ) : null}
                   <p className="text-xs text-muted-foreground">
                     Oluşturulma: {new Date(selectedCustomer.customer.createdAt).toLocaleString('tr-TR')}
                   </p>

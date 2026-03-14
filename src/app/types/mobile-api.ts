@@ -67,6 +67,7 @@ export interface AdminCustomerItem {
   id: number;
   name: string | null;
   phone: string;
+  instagram: string | null;
   gender: string | null;
   birthDate: string | null;
   acceptMarketing: boolean | null;
