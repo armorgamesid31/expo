@@ -1,6 +1,5 @@
 import { TrendingUp, Users, UserCheck, UserPlus, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { dashboardStats, revenueChartData } from '../../data/mockData';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { SetupChecklist } from './SetupChecklist';
 
@@ -13,34 +12,70 @@ interface AdminDashboardProps {
     service?: boolean;
     staff?: boolean;
   } | null;
+  analytics?: {
+    metrics: {
+      totalAppointments: number;
+      completedAppointments: number;
+      cancelledAppointments: number;
+      noShowAppointments: number;
+      totalCustomers: number;
+      newCustomers: number;
+      revenue: number;
+    };
+    weeklyRevenue?: Array<{
+      date: string;
+      label: string;
+      revenue: number;
+      appointments: number;
+    }>;
+  } | null;
 }
 
-export function AdminDashboard({ onNavigate, checklist }: AdminDashboardProps) {
+export function AdminDashboard({ onNavigate, checklist, analytics }: AdminDashboardProps) {
+  const weekData = analytics?.weeklyRevenue?.length
+    ? analytics.weeklyRevenue
+    : [
+        { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
+        { label: 'Sal', revenue: 0, appointments: 0, date: '' },
+        { label: 'Çar', revenue: 0, appointments: 0, date: '' },
+        { label: 'Per', revenue: 0, appointments: 0, date: '' },
+        { label: 'Cum', revenue: 0, appointments: 0, date: '' },
+        { label: 'Cmt', revenue: 0, appointments: 0, date: '' },
+        { label: 'Paz', revenue: 0, appointments: 0, date: '' },
+      ];
+  const todayPoint = weekData[weekData.length - 1];
+  const monthlyRevenue = analytics?.metrics?.revenue || 0;
+  const newCustomers = analytics?.metrics?.newCustomers || 0;
+  const totalCustomers = analytics?.metrics?.totalCustomers || 0;
+  const returningCustomers = Math.max(totalCustomers - newCustomers, 0);
+  const completedAppointments = analytics?.metrics?.completedAppointments || 0;
+  const totalAppointments = analytics?.metrics?.totalAppointments || 0;
+
   const stats = [
     {
       title: "Bugünün Cirosu",
-      value: `₺${dashboardStats.todayRevenue.toLocaleString()}`,
-      subtitle: `${dashboardStats.completedAppointments}/${dashboardStats.todayAppointments} randevu`,
+      value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
+      subtitle: `${todayPoint?.appointments || 0} randevu`,
       icon: DollarSign,
       color: 'var(--rose-gold)',
     },
     {
       title: 'Aylık Toplam',
-      value: `₺${dashboardStats.monthRevenue.toLocaleString()}`,
-      subtitle: 'Geçen aya göre +%18',
+      value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
+      subtitle: `${completedAppointments}/${totalAppointments} randevu tamamlandı`,
       icon: TrendingUp,
       color: 'var(--deep-indigo)',
     },
     {
       title: 'Yeni Müşteriler',
-      value: dashboardStats.newCustomers.toString(),
+      value: newCustomers.toString(),
       subtitle: 'Bu ay',
       icon: UserPlus,
       color: 'var(--rose-gold-light)',
     },
     {
       title: 'Sadık Müşteriler',
-      value: dashboardStats.returningCustomers.toString(),
+      value: returningCustomers.toString(),
       subtitle: 'Tekrar gelenler',
       icon: UserCheck,
       color: 'var(--deep-indigo-light)',
@@ -99,7 +134,7 @@ export function AdminDashboard({ onNavigate, checklist }: AdminDashboardProps) {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={revenueChartData}>
+              <AreaChart data={weekData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--rose-gold)" stopOpacity={0.3}/>
@@ -109,7 +144,7 @@ export function AdminDashboard({ onNavigate, checklist }: AdminDashboardProps) {
                 <CartesianGrid key="grid" strokeDasharray="3 3" opacity={0.1} />
                 <XAxis 
                   key="xaxis"
-                  dataKey="date" 
+                  dataKey="label" 
                   tick={{ fontSize: 12 }}
                   stroke="var(--muted-foreground)"
                 />
@@ -125,6 +160,7 @@ export function AdminDashboard({ onNavigate, checklist }: AdminDashboardProps) {
                     border: '1px solid var(--border)',
                     borderRadius: '8px',
                   }}
+                  formatter={(value: any) => [`₺${Number(value || 0).toLocaleString('tr-TR')}`, 'Ciro']}
                 />
                 <Area 
                   key="area-revenue"

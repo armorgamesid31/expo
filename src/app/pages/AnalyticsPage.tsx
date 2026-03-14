@@ -28,9 +28,10 @@ interface AnalyticsResponse {
   };
   topServices: Array<{ id: number; name: string; appointments: number; revenue: number }>;
   staffPerformance: Array<{ id: number; name: string; appointments: number; revenue: number; avgRating: number }>;
+  weeklyRevenue?: Array<{ date: string; label: string; revenue: number; appointments: number }>;
 }
 
-interface PresetItem {
+interface ReportTemplateItem {
   id: number;
   name: string;
 }
@@ -47,10 +48,10 @@ const PIE_COLORS = [
 export function AnalyticsPage() {
   const { apiFetch } = useAuth();
   const [overview, setOverview] = useState<AnalyticsResponse | null>(null);
-  const [presets, setPresets] = useState<PresetItem[]>([]);
+  const [templates, setTemplates] = useState<ReportTemplateItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [presetName, setPresetName] = useState('');
+  const [templateName, setTemplateName] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -58,10 +59,10 @@ export function AnalyticsPage() {
     try {
       const [analytics, presetResponse] = await Promise.all([
         apiFetch<AnalyticsResponse>('/api/admin/analytics/overview'),
-        apiFetch<{ items: PresetItem[] }>('/api/admin/analytics/presets'),
+        apiFetch<{ items: ReportTemplateItem[] }>('/api/admin/analytics/presets'),
       ]);
       setOverview(analytics);
-      setPresets(presetResponse.items);
+      setTemplates(presetResponse.items);
     } catch (err: any) {
       setError(err?.message || 'Analitik veriler alınamadı.');
     } finally {
@@ -73,21 +74,21 @@ export function AnalyticsPage() {
     void load();
   }, []);
 
-  const addPreset = async (event: FormEvent) => {
+  const addTemplate = async (event: FormEvent) => {
     event.preventDefault();
-    if (!presetName.trim()) {
+    if (!templateName.trim()) {
       return;
     }
 
     try {
-      const response = await apiFetch<{ item: PresetItem }>('/api/admin/analytics/presets', {
+      const response = await apiFetch<{ item: ReportTemplateItem }>('/api/admin/analytics/presets', {
         method: 'POST',
-        body: JSON.stringify({ name: presetName, filters: { source: 'mobile' } }),
+        body: JSON.stringify({ name: templateName, filters: { source: 'mobile' } }),
       });
-      setPresets((prev) => [response.item, ...prev]);
-      setPresetName('');
+      setTemplates((prev) => [response.item, ...prev]);
+      setTemplateName('');
     } catch (err: any) {
-      setError(err?.message || 'Preset kaydedilemedi.');
+      setError(err?.message || 'Rapor şablonu kaydedilemedi.');
     }
   };
 
@@ -109,16 +110,24 @@ export function AnalyticsPage() {
   }, [serviceRevenueData]);
 
   const weeklyPulse = useMemo(() => {
-    const baseRevenue = overview?.metrics?.revenue || 10000;
-    const avgDay = Math.max(Math.round(baseRevenue / 7), 1500);
-    const multipliers = [0.52, 0.48, 0.62, 0.57, 0.74, 0.92, 0.35];
-    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    if (overview?.weeklyRevenue?.length) {
+      return overview.weeklyRevenue.map((item) => ({
+        day: item.label,
+        revenue: item.revenue,
+        appointments: item.appointments,
+      }));
+    }
 
-    return labels.map((label, idx) => ({
-      day: label,
-      revenue: Math.round(avgDay * multipliers[idx]),
-    }));
-  }, [overview?.metrics?.revenue]);
+    return [
+      { day: 'Pzt', revenue: 0, appointments: 0 },
+      { day: 'Sal', revenue: 0, appointments: 0 },
+      { day: 'Çar', revenue: 0, appointments: 0 },
+      { day: 'Per', revenue: 0, appointments: 0 },
+      { day: 'Cum', revenue: 0, appointments: 0 },
+      { day: 'Cmt', revenue: 0, appointments: 0 },
+      { day: 'Paz', revenue: 0, appointments: 0 },
+    ];
+  }, [overview?.weeklyRevenue]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('tr-TR', {
@@ -161,6 +170,10 @@ export function AnalyticsPage() {
                     border: '1px solid var(--border)',
                     borderRadius: 10,
                   }}
+                  formatter={(value: number, _name: string, payload: any) => [
+                    `${formatCurrency(value || 0)} • ${payload?.payload?.appointments || 0} randevu`,
+                    'Günlük ciro',
+                  ]}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="var(--rose-gold)" strokeWidth={2.5} fill="url(#pulseFill)" />
               </AreaChart>
@@ -243,7 +256,25 @@ export function AnalyticsPage() {
                   outerRadius={95}
                   dataKey="revenue"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${Math.round((percent || 0) * 100)}%`}
+                  label={({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, name, percent }) => {
+                    const RADIAN = Math.PI / 180;
+                    const radius = Number(outerRadius) + 20;
+                    const x = Number(cx) + radius * Math.cos(-Number(midAngle) * RADIAN);
+                    const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
+
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="var(--muted-foreground)"
+                        textAnchor={x > Number(cx) ? 'start' : 'end'}
+                        dominantBaseline="central"
+                        style={{ fontSize: 12, fontWeight: 500 }}
+                      >
+                        {`${name}: ${Math.round((percent || 0) * 100)}%`}
+                      </text>
+                    );
+                  }}
                 >
                   {serviceDistributionData.map((entry, idx) => (
                     <Cell key={`${entry.id}-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
@@ -285,24 +316,24 @@ export function AnalyticsPage() {
         </>
       ) : null}
 
-      <form className="space-y-2 rounded-xl border border-border bg-card p-3" onSubmit={addPreset}>
-        <p className="text-sm font-medium">Rapor presetleri</p>
+      <form className="space-y-2 rounded-xl border border-border bg-card p-3" onSubmit={addTemplate}>
+        <p className="text-sm font-medium">Rapor Şablonları</p>
         <input
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Preset adı"
-          value={presetName}
-          onChange={(e) => setPresetName(e.target.value)}
+          placeholder="Şablon adı"
+          value={templateName}
+          onChange={(e) => setTemplateName(e.target.value)}
         />
         <button type="submit" className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white">
-          Preset Ekle
+          Şablon Ekle
         </button>
         <div className="space-y-1">
-          {presets.map((preset) => (
-            <div key={preset.id} className="text-xs text-muted-foreground">
-              #{preset.id} {preset.name}
+          {templates.map((template) => (
+            <div key={template.id} className="text-xs text-muted-foreground">
+              #{template.id} {template.name}
             </div>
           ))}
-          {!presets.length ? <p className="text-xs text-muted-foreground">Preset yok.</p> : null}
+          {!templates.length ? <p className="text-xs text-muted-foreground">Henüz şablon yok.</p> : null}
         </div>
       </form>
     </div>

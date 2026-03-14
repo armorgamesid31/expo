@@ -3,6 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { AdminDashboard } from '../components/dashboard/AdminDashboard';
 import { useAuth } from '../context/AuthContext';
 
+interface DashboardAnalyticsOverview {
+  metrics: {
+    totalAppointments: number;
+    completedAppointments: number;
+    cancelledAppointments: number;
+    noShowAppointments: number;
+    totalCustomers: number;
+    newCustomers: number;
+    revenue: number;
+  };
+  weeklyRevenue?: Array<{
+    date: string;
+    label: string;
+    revenue: number;
+    appointments: number;
+  }>;
+}
+
 export function DashboardPage() {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
@@ -13,6 +31,7 @@ export function DashboardPage() {
     service?: boolean;
     staff?: boolean;
   } | null>(null);
+  const [analytics, setAnalytics] = useState<DashboardAnalyticsOverview | null>(null);
 
   const handleNavigate = (target: string) => {
     const mapping: Record<string, string> = {
@@ -31,13 +50,18 @@ export function DashboardPage() {
 
     (async () => {
       try {
-        const response = await apiFetch<{ checklist?: typeof checklist }>('/api/admin/setup');
+        const [setupResponse, analyticsResponse] = await Promise.all([
+          apiFetch<{ checklist?: typeof checklist }>('/api/admin/setup'),
+          apiFetch<DashboardAnalyticsOverview>('/api/admin/analytics/overview'),
+        ]);
         if (mounted) {
-          setChecklist(response?.checklist || null);
+          setChecklist(setupResponse?.checklist || null);
+          setAnalytics(analyticsResponse || null);
         }
       } catch {
         if (mounted) {
           setChecklist(null);
+          setAnalytics(null);
         }
       }
     })();
@@ -47,5 +71,5 @@ export function DashboardPage() {
     };
   }, [apiFetch]);
 
-  return <AdminDashboard onNavigate={handleNavigate} checklist={checklist} />;
+  return <AdminDashboard onNavigate={handleNavigate} checklist={checklist} analytics={analytics} />;
 }
