@@ -6,6 +6,17 @@ import { useNavigate } from 'react-router-dom';
 
 const PAGE_LIMIT = 20;
 
+const toInputDateValue = (value?: string | null) => {
+  if (!value) {
+    return '';
+  }
+  const asDate = new Date(value);
+  if (Number.isNaN(asDate.getTime())) {
+    return value.includes('T') ? value.slice(0, 10) : value;
+  }
+  return asDate.toISOString().slice(0, 10);
+};
+
 interface CustomerAppointmentItem {
   id: number;
   startTime: string;
@@ -61,6 +72,19 @@ interface DiscountUpdateResponse {
   };
 }
 
+interface CustomerProfileUpdateResponse {
+  customer: AdminCustomerItem;
+}
+
+interface NoShowRiskUpdateResponse {
+  summary: {
+    noShowRiskScore: number;
+    noShowRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+    noShowCount: number;
+    totalBookings: number;
+  };
+}
+
 export function CustomersPage() {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
@@ -89,6 +113,17 @@ export function CustomersPage() {
   const [discountSaving, setDiscountSaving] = useState(false);
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [discountSuccess, setDiscountSuccess] = useState<string | null>(null);
+  const [profileEditMode, setProfileEditMode] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editInstagram, setEditInstagram] = useState('');
+  const [editBirthDate, setEditBirthDate] = useState('');
+  const [editAcceptMarketing, setEditAcceptMarketing] = useState(false);
+  const [riskSaving, setRiskSaving] = useState(false);
+  const [riskError, setRiskError] = useState<string | null>(null);
 
   const loadPage = async (nextCursor?: string | null, search?: string) => {
     const query = new URLSearchParams({ limit: String(PAGE_LIMIT) });
@@ -198,10 +233,19 @@ export function CustomersPage() {
     setDetailLoading(true);
     setDetailError(null);
     setSelectedCustomer(null);
+    setProfileEditMode(false);
+    setProfileError(null);
+    setProfileSuccess(null);
+    setRiskError(null);
 
     try {
       const response = await apiFetch<CustomerDetailResponse>(`/api/admin/customers/${customerId}`);
       setSelectedCustomer(response);
+      setEditName(response.customer.name || '');
+      setEditPhone(response.customer.phone || '');
+      setEditInstagram(response.customer.instagram || '');
+      setEditBirthDate(toInputDateValue(response.customer.birthDate));
+      setEditAcceptMarketing(Boolean(response.customer.acceptMarketing));
       setDiscountKind(response.discount?.kind || 'PERCENT');
       setDiscountValue(response.discount ? String(response.discount.value) : '');
       setDiscountNote(response.discount?.note || '');
@@ -263,6 +307,100 @@ export function CustomersPage() {
     }
   };
 
+  const handleSaveProfile = async () => {
+    if (!selectedCustomer) {
+      return;
+    }
+
+    const trimmedPhone = editPhone.trim();
+    if (!trimmedPhone) {
+      setProfileError('Telefon zorunlu.');
+      return;
+    }
+
+    setProfileSaving(true);
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    try {
+      const response = await apiFetch<CustomerProfileUpdateResponse>(`/api/admin/customers/${selectedCustomer.customer.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: editName.trim() || null,
+          phone: trimmedPhone,
+          instagram: editInstagram.trim() ? editInstagram.trim().replace(/^@/, '') : null,
+          birthDate: editBirthDate || null,
+          acceptMarketing: editAcceptMarketing,
+        }),
+      });
+
+      setSelectedCustomer((prev) =>
+        prev
+          ? {
+              ...prev,
+              customer: response.customer,
+            }
+          : prev,
+      );
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === response.customer.id
+            ? {
+                ...item,
+                name: response.customer.name,
+                phone: response.customer.phone,
+                instagram: response.customer.instagram,
+                birthDate: response.customer.birthDate,
+                acceptMarketing: response.customer.acceptMarketing,
+                updatedAt: response.customer.updatedAt,
+              }
+            : item,
+        ),
+      );
+      setProfileEditMode(false);
+      setProfileSuccess('Müşteri bilgileri güncellendi.');
+    } catch (err: any) {
+      setProfileError(err?.message || 'Müşteri bilgileri güncellenemedi.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleAdjustNoShowRisk = async (delta: 1 | -1) => {
+    if (!selectedCustomer || riskSaving) {
+      return;
+    }
+
+    setRiskSaving(true);
+    setRiskError(null);
+
+    try {
+      const response = await apiFetch<NoShowRiskUpdateResponse>(
+        `/api/admin/customers/${selectedCustomer.customer.id}/no-show-risk`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ delta }),
+        },
+      );
+
+      setSelectedCustomer((prev) =>
+        prev
+          ? {
+              ...prev,
+              summary: {
+                ...prev.summary,
+                ...response.summary,
+              },
+            }
+          : prev,
+      );
+    } catch (err: any) {
+      setRiskError(err?.message || 'Risk skoru güncellenemedi.');
+    } finally {
+      setRiskSaving(false);
+    }
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -279,6 +417,18 @@ export function CustomersPage() {
       return 'bg-amber-500/10 text-amber-700 border-amber-500/30';
     }
     return 'bg-green-500/10 text-green-700 border-green-500/30';
+  };
+
+  const riskLabelTr = (level: 'LOW' | 'MEDIUM' | 'HIGH') => {
+    if (level === 'HIGH') return 'Yüksek Risk';
+    if (level === 'MEDIUM') return 'Orta Risk';
+    return 'Düşük Risk';
+  };
+
+  const riskDescriptionTr = (level: 'LOW' | 'MEDIUM' | 'HIGH') => {
+    if (level === 'HIGH') return 'Yakın takip önerilir, randevu teyidi güçlendirilmeli.';
+    if (level === 'MEDIUM') return 'Düzenli hatırlatma ile takip edilmesi önerilir.';
+    return 'Genel davranış stabil, standart süreç yeterlidir.';
   };
 
   const appointmentStatusLabel = (status: string) => {
@@ -458,6 +608,10 @@ export function CustomersPage() {
                   setSelectedCustomer(null);
                   setDetailError(null);
                   setDetailLoading(false);
+                  setProfileEditMode(false);
+                  setProfileError(null);
+                  setProfileSuccess(null);
+                  setRiskError(null);
                 }}
               >
                 <X className="h-4 w-4" />
@@ -469,15 +623,101 @@ export function CustomersPage() {
 
             {selectedCustomer ? (
               <>
-                <div className="rounded-lg border border-border p-3 space-y-1">
-                  <p className="font-medium">{selectedCustomer.customer.name || 'İsimsiz Müşteri'}</p>
-                  <p className="text-sm">{selectedCustomer.customer.phone}</p>
-                  {selectedCustomer.customer.instagram ? (
-                    <p className="text-sm text-muted-foreground">@{selectedCustomer.customer.instagram.replace(/^@/, '')}</p>
-                  ) : null}
-                  <p className="text-xs text-muted-foreground">
-                    Oluşturulma: {new Date(selectedCustomer.customer.createdAt).toLocaleString('tr-TR')}
-                  </p>
+                <div className="rounded-lg border border-border p-3 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="font-medium">{selectedCustomer.customer.name || 'İsimsiz Müşteri'}</p>
+                      <p className="text-sm">{selectedCustomer.customer.phone}</p>
+                      {selectedCustomer.customer.instagram ? (
+                        <p className="text-sm text-muted-foreground">@{selectedCustomer.customer.instagram.replace(/^@/, '')}</p>
+                      ) : null}
+                      <p className="text-xs text-muted-foreground">
+                        Oluşturulma: {new Date(selectedCustomer.customer.createdAt).toLocaleString('tr-TR')}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (profileEditMode) {
+                          setEditName(selectedCustomer.customer.name || '');
+                          setEditPhone(selectedCustomer.customer.phone || '');
+                          setEditInstagram(selectedCustomer.customer.instagram || '');
+                          setEditBirthDate(toInputDateValue(selectedCustomer.customer.birthDate));
+                          setEditAcceptMarketing(Boolean(selectedCustomer.customer.acceptMarketing));
+                          setProfileError(null);
+                        }
+                        setProfileEditMode((prev) => !prev);
+                      }}
+                      className="shrink-0 rounded-md border border-border px-3 py-1.5 text-xs"
+                    >
+                      {profileEditMode ? 'Vazgeç' : 'Bilgileri Düzenle'}
+                    </button>
+                  </div>
+
+                  {profileEditMode ? (
+                    <div className="space-y-2 rounded-md border border-border p-2.5">
+                      <input
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                        placeholder="Ad + Soyad"
+                        value={editName}
+                        onChange={(event) => setEditName(event.target.value)}
+                      />
+                      <input
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                        placeholder="Telefon"
+                        value={editPhone}
+                        onChange={(event) => setEditPhone(event.target.value)}
+                      />
+                      <input
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                        placeholder="Instagram (opsiyonel)"
+                        value={editInstagram}
+                        onChange={(event) => setEditInstagram(event.target.value)}
+                      />
+                      <input
+                        type="date"
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                        value={editBirthDate}
+                        onChange={(event) => setEditBirthDate(event.target.value)}
+                      />
+                      <label className="flex items-center gap-2 text-sm rounded-md border border-border px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={editAcceptMarketing}
+                          onChange={(event) => setEditAcceptMarketing(event.target.checked)}
+                        />
+                        Kampanya iletişimi izni
+                      </label>
+                      {profileError ? <p className="text-sm text-red-500">{profileError}</p> : null}
+                      <button
+                        type="button"
+                        onClick={() => void handleSaveProfile()}
+                        disabled={profileSaving}
+                        className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
+                      >
+                        {profileSaving ? 'Kaydediliyor...' : 'Bilgileri Kaydet'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                      <p>
+                        Doğum Tarihi:{' '}
+                        <span className="text-foreground">
+                          {selectedCustomer.customer.birthDate
+                            ? new Date(selectedCustomer.customer.birthDate).toLocaleDateString('tr-TR')
+                            : 'Belirtilmedi'}
+                        </span>
+                      </p>
+                      <p>
+                        Kampanya İzni:{' '}
+                        <span className="text-foreground">
+                          {selectedCustomer.customer.acceptMarketing ? 'Açık' : 'Kapalı'}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  {profileSuccess ? <p className="text-sm text-green-600">{profileSuccess}</p> : null}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -498,20 +738,44 @@ export function CustomersPage() {
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">No-Show Risk Skoru</p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs text-muted-foreground">Randevuya Gelmeme Skoru</p>
+                    <div className="flex items-center justify-between gap-2 mt-1">
                       <span className="text-lg font-semibold">{selectedCustomer.summary.noShowRiskScore}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={riskSaving}
+                          onClick={() => void handleAdjustNoShowRisk(-1)}
+                          className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50"
+                        >
+                          -
+                        </button>
+                        <button
+                          type="button"
+                          disabled={riskSaving}
+                          onClick={() => void handleAdjustNoShowRisk(1)}
+                          className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-1">
                       <span
                         className={`text-[11px] px-2 py-0.5 rounded border ${riskBadgeClass(
                           selectedCustomer.summary.noShowRiskLevel,
                         )}`}
                       >
-                        {selectedCustomer.summary.noShowRiskLevel}
+                        {riskLabelTr(selectedCustomer.summary.noShowRiskLevel)}
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1">
                       No-show: {selectedCustomer.summary.noShowCount} / {selectedCustomer.summary.totalBookings}
                     </p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {riskDescriptionTr(selectedCustomer.summary.noShowRiskLevel)}
+                    </p>
+                    {riskError ? <p className="text-[11px] text-red-500 mt-1">{riskError}</p> : null}
                   </div>
                 </div>
 
