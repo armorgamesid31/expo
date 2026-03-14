@@ -740,16 +740,14 @@ export function CustomersPage() {
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">Randevu Katılım Oranı</p>
+                    <p className="text-xs text-muted-foreground">Randevuya Gelmeme Skoru</p>
                     <div className="flex items-center justify-between gap-2 mt-1">
-                      <span className="text-lg font-semibold">
-                        %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
-                      </span>
+                      <span className="text-lg font-semibold">{selectedCustomer.summary.noShowRiskScore}</span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           disabled={riskSaving}
-                          onClick={() => void handleAdjustNoShowRisk(1)}
+                          onClick={() => void handleAdjustNoShowRisk(-1)}
                           className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50"
                         >
                           -
@@ -757,7 +755,7 @@ export function CustomersPage() {
                         <button
                           type="button"
                           disabled={riskSaving}
-                          onClick={() => void handleAdjustNoShowRisk(-1)}
+                          onClick={() => void handleAdjustNoShowRisk(1)}
                           className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50"
                         >
                           +
@@ -774,7 +772,9 @@ export function CustomersPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1">
-                      Katılım: {Math.max(selectedCustomer.summary.totalBookings - selectedCustomer.summary.noShowCount, 0)} / {selectedCustomer.summary.totalBookings}
+                      No-show: {selectedCustomer.summary.noShowCount} / {selectedCustomer.summary.totalBookings}
+                      {' • '}
+                      Katılım: %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
                     </p>
                     {riskError ? <p className="text-[11px] text-red-500 mt-1">{riskError}</p> : null}
                   </div>
