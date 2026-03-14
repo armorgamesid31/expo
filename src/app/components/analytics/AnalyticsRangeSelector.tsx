@@ -24,12 +24,15 @@ export function AnalyticsRangeSelector(props: AnalyticsRangeSelectorProps) {
 
   return (
     <div className={compact ? 'space-y-2' : 'rounded-xl border border-border bg-card p-3 space-y-3'}>
-      <div className="flex items-center gap-2">
-        <CalendarClock className="w-4 h-4 text-[var(--rose-gold)]" />
-        <p className="text-sm font-semibold">{compact ? 'Dönem' : 'Zaman Aralığı'}</p>
-      </div>
+      {!compact ? (
+        <div className="flex items-center gap-2">
+          <CalendarClock className="w-4 h-4 text-[var(--rose-gold)]" />
+          <p className="text-sm font-semibold">Zaman Aralığı</p>
+        </div>
+      ) : null}
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {compact ? <CalendarClock className="w-4 h-4 shrink-0 text-[var(--rose-gold)]" /> : null}
         {OPTIONS.map((option) => {
           const selected = props.preset === option.value;
           return (

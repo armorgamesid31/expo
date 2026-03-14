@@ -42,6 +42,7 @@ export function DashboardPage() {
     phone?: boolean;
     service?: boolean;
     staff?: boolean;
+    completed?: boolean;
   } | null>(null);
   const [analytics, setAnalytics] = useState<DashboardAnalyticsOverview | null>(null);
   const [selectedDate, setSelectedDate] = useState(todayDateInputValue());
@@ -124,15 +125,19 @@ export function DashboardPage() {
   };
 
   return (
-    <div className="space-y-3">
-      <DayNavigator
-        dateValue={selectedDate}
-        onDateChange={onDateChange}
-        onPrevDay={onPrevDay}
-        onNextDay={onNextDay}
-      />
-      {rangeError ? <p className="px-4 text-xs text-red-500">{rangeError}</p> : null}
-      <AdminDashboard onNavigate={handleNavigate} checklist={checklist} analytics={analytics} />
-    </div>
+    <AdminDashboard
+      onNavigate={handleNavigate}
+      checklist={checklist}
+      analytics={analytics}
+      rangeError={rangeError}
+      dayNavigator={
+        <DayNavigator
+          dateValue={selectedDate}
+          onDateChange={onDateChange}
+          onPrevDay={onPrevDay}
+          onNextDay={onNextDay}
+        />
+      }
+    />
   );
 }

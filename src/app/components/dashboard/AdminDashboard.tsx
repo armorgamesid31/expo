@@ -1,16 +1,20 @@
 import { TrendingUp, Users, UserCheck, UserPlus, DollarSign } from 'lucide-react';
+import { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { SetupChecklist } from './SetupChecklist';
 
 interface AdminDashboardProps {
   onNavigate?: (screen: string) => void;
+  dayNavigator?: ReactNode;
+  rangeError?: string | null;
   checklist?: {
     workingHours?: boolean;
     address?: boolean;
     phone?: boolean;
     service?: boolean;
     staff?: boolean;
+    completed?: boolean;
   } | null;
   analytics?: {
     metrics: {
@@ -37,7 +41,7 @@ interface AdminDashboardProps {
   } | null;
 }
 
-export function AdminDashboard({ onNavigate, checklist, analytics }: AdminDashboardProps) {
+export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist, analytics }: AdminDashboardProps) {
   const analyticsSeries = analytics?.trendRevenue ?? analytics?.weeklyRevenue;
   const weekData = analyticsSeries
     ? analyticsSeries
@@ -57,6 +61,9 @@ export function AdminDashboard({ onNavigate, checklist, analytics }: AdminDashbo
   const returningCustomers = Math.max(totalCustomers - newCustomers, 0);
   const completedAppointments = analytics?.metrics?.completedAppointments || 0;
   const totalAppointments = analytics?.metrics?.totalAppointments || 0;
+  const setupCompleted =
+    Boolean(checklist?.completed) ||
+    Boolean(checklist?.workingHours && checklist?.address && checklist?.phone && checklist?.service && checklist?.staff);
 
   const stats = [
     {
@@ -97,8 +104,11 @@ export function AdminDashboard({ onNavigate, checklist, analytics }: AdminDashbo
         <p className="text-muted-foreground text-sm">Salonunuzun performans özeti</p>
       </div>
 
+      {dayNavigator ? <div className="px-4">{dayNavigator}</div> : null}
+      {rangeError ? <p className="px-4 text-xs text-red-500">{rangeError}</p> : null}
+
       {/* Setup Checklist - Displayed only if empty state is true */}
-      {onNavigate && (
+      {onNavigate && !setupCompleted && (
         <div className="px-4">
           <SetupChecklist onNavigate={onNavigate} checklist={checklist} />
         </div>

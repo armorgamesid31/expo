@@ -1,5 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRef } from 'react';
+import { useMemo, useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { asDateInputValue } from '../../lib/analytics-range';
 
 interface DayNavigatorProps {
   dateValue: string;
@@ -22,10 +25,15 @@ function formatTurkishDayLabel(value: string): string {
 }
 
 export function DayNavigator(props: DayNavigatorProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+
+  const selectedDate = useMemo(() => {
+    const parsed = new Date(`${props.dateValue}T12:00:00`);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }, [props.dateValue]);
 
   return (
-    <div className="flex items-center justify-center gap-3 px-4 pt-4">
+    <div className="flex items-center justify-center gap-3">
       <button
         type="button"
         onClick={props.onPrevDay}
@@ -35,20 +43,36 @@ export function DayNavigator(props: DayNavigatorProps) {
         <ChevronLeft className="mx-auto h-4 w-4" />
       </button>
 
-      <button
-        type="button"
-        onClick={() => {
-          if (!inputRef.current) return;
-          if (typeof inputRef.current.showPicker === 'function') {
-            inputRef.current.showPicker();
-          } else {
-            inputRef.current.click();
-          }
-        }}
-        className="min-w-[190px] rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground"
-      >
-        {formatTurkishDayLabel(props.dateValue)}
-      </button>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="min-w-[190px] rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground"
+          >
+            {formatTurkishDayLabel(props.dateValue)}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="center"
+          sideOffset={8}
+          collisionPadding={12}
+          className="w-auto max-w-[calc(100vw-1.5rem)] p-2"
+        >
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(day) => {
+              if (!day) {
+                return;
+              }
+              props.onDateChange(asDateInputValue(day));
+              setOpen(false);
+            }}
+            initialFocus
+            showOutsideDays
+          />
+        </PopoverContent>
+      </Popover>
 
       <button
         type="button"
@@ -59,14 +83,6 @@ export function DayNavigator(props: DayNavigatorProps) {
         <ChevronRight className="mx-auto h-4 w-4" />
       </button>
 
-      <input
-        ref={inputRef}
-        type="date"
-        value={props.dateValue}
-        onChange={(event) => props.onDateChange(event.target.value)}
-        className="sr-only"
-        aria-label="Tarih seçici"
-      />
     </div>
   );
 }
