@@ -133,7 +133,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         throw new Error('Bağlantı butonu alanı hazırlanamadı. Sayfayı yenileyip tekrar deneyin.');
       };
 
-      await waitForContainer();
+      const containerEl = await waitForContainer();
+      const buttonWidth = Math.max(240, Math.min(containerEl.clientWidth || 320, 360));
 
       const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
       await loadChakraSdk(token.sdkUrl);
@@ -156,21 +157,22 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       const scaledInstance = chakraGlobal.init({
         connectToken: token.connectToken,
         container: `#${CONTAINER_ID}`,
-        width: '260px',
-        height: '80px',
+        width: `${buttonWidth}px`,
+        height: '58px',
         style: {
-          width: '260px',
-          height: '80px',
-          transform: 'translateY(-28px) scale(2.17)',
+          width: `${buttonWidth}px`,
+          height: '58px',
+          transform: 'none',
           transformOrigin: 'top left',
           opacity: '1',
           border: '0',
           background: 'transparent',
           display: 'block',
           margin: '0',
-          position: 'relative',
-          inset: '',
-          zIndex: '',
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          zIndex: '2',
           pointerEvents: 'auto',
         },
         onMessage: (event: any, data: any) => {
@@ -379,26 +381,19 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Büyütülmüş Chakra + Maske</p>
+                <p className="text-xs text-muted-foreground">Facebook ile güvenli bağlantı</p>
                 <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
                   <div
                     id={CONTAINER_ID}
-                    aria-label="Büyütülmüş Chakra butonu"
+                    aria-label="Chakra Facebook bağlantı butonu"
                     className="absolute inset-0 h-[58px]"
                   />
-                  {nativeTriggerReady ? (
-                    <div
-                      className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
-                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-                    >
-                      Facebook ile Güvenli Bağlantı
-                    </div>
-                  ) : (
+                  {!nativeTriggerReady ? (
                     <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Buton hazırlanıyor...
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
