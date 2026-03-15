@@ -81,8 +81,14 @@ function isConnectedEvent(event: unknown, data: unknown): boolean {
   const dataObj = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, any>) : null;
   const status = typeof dataObj?.status === 'string' ? dataObj.status.toLowerCase() : '';
   const state = typeof dataObj?.state === 'string' ? dataObj.state.toLowerCase() : '';
+  const hasAuth = Boolean(dataObj?.auth && typeof dataObj.auth === 'object');
+  const hasEnabledNumbers =
+    Array.isArray(dataObj?.serverConfig?.enabledWhatsappPhoneNumbers) &&
+    dataObj.serverConfig.enabledWhatsappPhoneNumbers.some(
+      (value: unknown) => typeof value === 'string' && value.trim().length > 0,
+    );
   const pattern = /(connected|success|complete|completed|linked)/i;
-  return pattern.test(eventText) || pattern.test(status) || pattern.test(state);
+  return pattern.test(eventText) || pattern.test(status) || pattern.test(state) || hasAuth || hasEnabledNumbers;
 }
 
 export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
@@ -102,12 +108,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [error, setError] = useState<string | null>(null);
 
   const syncStatusFromBackend = useCallback(async () => {
-    const status = await apiFetch<ChakraStatusResponse>('/api/app/chakra/status');
+    const status = await apiFetch<ChakraStatusResponse>(`/api/app/chakra/status?t=${Date.now()}`);
 
     setPluginId(status.pluginId || null);
 
     const isConnected = Boolean(status.connected) || Boolean(status.isActive);
-    setConnected(isConnected);
+    setConnected((prev) => (prev ? true : isConnected));
 
     if (!status.pluginId) {
       setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
@@ -310,6 +316,18 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       window.clearTimeout(timer);
     };
   }, [connected, navigate]);
+
+  useEffect(() => {
+    if (!connected) {
+      return;
+    }
+    const verify = window.setTimeout(() => {
+      void syncStatusFromBackend();
+    }, 1200);
+    return () => {
+      window.clearTimeout(verify);
+    };
+  }, [connected, syncStatusFromBackend]);
 
   const handleStart = async () => {
     setCreatingPlugin(true);
