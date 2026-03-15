@@ -17,6 +17,9 @@ interface ChakraStatusResponse {
   slug: string | null;
   pluginId: string | null;
   hasPlugin: boolean;
+  connected?: boolean;
+  isActive?: boolean;
+  whatsappPhoneNumberId?: string | null;
   sdkUrl: string;
 }
 
@@ -186,8 +189,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     const bypass = window.localStorage.getItem(WHATSAPP_DEV_BYPASS_KEY) === '1';
     if (bypass) {
       setDevBypassed(true);
-      setConnected(true);
-      setStatusText('Test modu aktif: WhatsApp bağlantısı simüle edildi.');
     }
   }, []);
 
@@ -205,10 +206,15 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
         setPluginId(status.pluginId || null);
 
+        const isConnected = Boolean(status.connected) || Boolean(status.isActive);
+        setConnected(isConnected);
+
         if (status.pluginId) {
-          setStatusText('Facebook ile devam ederek bağlantıyı tamamlayın.');
+          setStatusText(isConnected ? 'WhatsApp bağlantısı aktif.' : 'Facebook ile devam ederek bağlantıyı tamamlayın.');
           setNativeTriggerReady(false);
-          await prepareConnect();
+          if (!isConnected) {
+            await prepareConnect();
+          }
         } else {
           setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
           setNativeTriggerReady(false);
@@ -259,8 +265,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setError(null);
     window.localStorage.setItem(WHATSAPP_DEV_BYPASS_KEY, '1');
     setDevBypassed(true);
-    setConnected(true);
-    setNativeTriggerReady(true);
     setStatusText('Test modu aktif: WhatsApp bağlantısı simüle edildi.');
     navigate('/app/features/whatsapp-agent');
   };

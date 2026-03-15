@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bell, BarChart3, Package, Sparkles, MessageCircle, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Zap, Target, CheckCircle2, Circle } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
+import { useAuth } from '../../context/AuthContext';
 
 interface MoreScreenProps {
   isDarkMode: boolean;
@@ -10,6 +11,9 @@ interface MoreScreenProps {
 }
 
 export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScreenProps) {
+  const { apiFetch } = useAuth();
+  const [whatsappConnected, setWhatsappConnected] = useState(false);
+  const [whatsappStatusLoaded, setWhatsappStatusLoaded] = useState(false);
   const [warningModal, setWarningModal] = useState<{ 
     title: string; 
     message: string; 
@@ -90,8 +94,10 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       description: 'Otomatik müşteri iletişimi',
       action: () => onNavigate('whatsapp-setup'),
       color: '#22C55E',
-      badge: 'Aktif',
-      badgeColor: 'bg-green-500/10 text-green-700',
+      badge: whatsappStatusLoaded ? (whatsappConnected ? 'Bağlı' : 'Kurulum') : 'Kontrol',
+      badgeColor: whatsappStatusLoaded
+        ? (whatsappConnected ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700')
+        : 'bg-muted text-muted-foreground',
     },
     {
       icon: Globe,
@@ -121,6 +127,33 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       badgeColor: 'bg-purple-500/10 text-purple-700',
     },
   ];
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const status = await apiFetch<{ connected?: boolean; isActive?: boolean; hasPlugin?: boolean }>('/api/app/chakra/status');
+        if (!mounted) {
+          return;
+        }
+        setWhatsappConnected(Boolean(status?.connected) || Boolean(status?.isActive));
+      } catch (error) {
+        console.warn('Chakra status fetch failed in MoreScreen:', error);
+        if (mounted) {
+          setWhatsappConnected(false);
+        }
+      } finally {
+        if (mounted) {
+          setWhatsappStatusLoaded(true);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [apiFetch]);
 
   return (
     <div className="h-full pb-20 relative overflow-y-auto">

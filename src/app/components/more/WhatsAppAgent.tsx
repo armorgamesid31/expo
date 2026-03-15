@@ -59,7 +59,8 @@ const salonFaqQuestions = [
 export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
-  const [agentActive, setAgentActive] = useState(true);
+  const [agentActive, setAgentActive] = useState(false);
+  const [chakraConnected, setChakraConnected] = useState(false);
   const [isFaqExpanded, setIsFaqExpanded] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -92,17 +93,27 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     let active = true;
     (async () => {
       try {
-        const response = await apiFetch<{
-          settings?: {
-            tone?: 'friendly' | 'professional' | 'balanced';
-            answerLength?: 'short' | 'medium' | 'detailed';
-            emojiUsage?: 'off' | 'low' | 'normal';
-            bookingGuidance?: 'low' | 'medium' | 'high';
-            handoverThreshold?: 'early' | 'balanced' | 'late';
-            aiDisclosure?: 'always' | 'onQuestion' | 'never';
-            faqAnswers?: Record<string, string>;
-          };
-        }>('/api/admin/whatsapp-agent/settings');
+        const [response, chakraStatus] = await Promise.all([
+          apiFetch<{
+            settings?: {
+              tone?: 'friendly' | 'professional' | 'balanced';
+              answerLength?: 'short' | 'medium' | 'detailed';
+              emojiUsage?: 'off' | 'low' | 'normal';
+              bookingGuidance?: 'low' | 'medium' | 'high';
+              handoverThreshold?: 'early' | 'balanced' | 'late';
+              aiDisclosure?: 'always' | 'onQuestion' | 'never';
+              faqAnswers?: Record<string, string>;
+            };
+          }>('/api/admin/whatsapp-agent/settings'),
+          apiFetch<{ connected?: boolean; isActive?: boolean }>('/api/app/chakra/status').catch(() => null),
+        ]);
+
+        const isConnected = Boolean(chakraStatus?.connected) || Boolean(chakraStatus?.isActive);
+
+        if (active) {
+          setChakraConnected(isConnected);
+          setAgentActive(isConnected);
+        }
 
         if (!active || !response?.settings) return;
         if (response.settings.tone) setTone(response.settings.tone);
@@ -188,24 +199,50 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
       <div className="p-4 space-y-5">
         {/* Agent Status */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <Card className={`border-2 transition-all ${agentActive ? 'border-green-500/30 bg-green-500/5' : 'border-border/50'}`}>
+          <Card
+            className={`border-2 transition-all ${
+              chakraConnected
+                ? agentActive
+                  ? 'border-green-500/30 bg-green-500/5'
+                  : 'border-border/50'
+                : 'border-amber-500/30 bg-amber-500/5'
+            }`}
+          >
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${agentActive ? 'bg-green-500' : 'bg-muted'}`}>
-                    <Bot className={`w-6 h-6 ${agentActive ? 'text-white' : 'text-muted-foreground'}`} />
+                  <div
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                      chakraConnected ? (agentActive ? 'bg-green-500' : 'bg-muted') : 'bg-amber-500'
+                    }`}
+                  >
+                    <Bot className={`w-6 h-6 ${chakraConnected && agentActive ? 'text-white' : 'text-white'}`} />
                   </div>
                   <div>
                     <p className="font-semibold">Ajan Durumu</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <div className={`w-2 h-2 rounded-full ${agentActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                      <span className={`text-sm ${agentActive ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        {agentActive ? 'Aktif — Mesajları yanıtlıyor' : 'Pasif'}
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          chakraConnected ? (agentActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400') : 'bg-amber-500'
+                        }`}
+                      />
+                      <span className={`text-sm ${chakraConnected ? (agentActive ? 'text-green-600' : 'text-muted-foreground') : 'text-amber-700'}`}>
+                        {chakraConnected ? (agentActive ? 'Aktif — Mesajları yanıtlıyor' : 'Pasif') : 'Bağlı değil — Kurulum gerekli'}
                       </span>
                     </div>
                   </div>
                 </div>
-                <Switch checked={agentActive} onCheckedChange={setAgentActive} />
+                <Switch
+                  checked={agentActive}
+                  onCheckedChange={(checked) => {
+                    if (!chakraConnected) {
+                      navigate('/app/features/whatsapp-setup');
+                      return;
+                    }
+                    setAgentActive(checked);
+                  }}
+                  disabled={!chakraConnected}
+                />
               </div>
             </CardContent>
           </Card>
