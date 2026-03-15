@@ -134,7 +134,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       };
 
       const containerEl = await waitForContainer();
-      const buttonWidth = Math.max(240, Math.min(containerEl.clientWidth || 320, 360));
+      const baseWidth = Math.max(240, Math.min(containerEl.clientWidth || 320, 360));
+      const sdkWidth = Math.round(baseWidth * 3);
+      const sdkHeight = 116; // visible mask height (58px) * 2
 
       const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
       await loadChakraSdk(token.sdkUrl);
@@ -157,11 +159,11 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       const scaledInstance = chakraGlobal.init({
         connectToken: token.connectToken,
         container: `#${CONTAINER_ID}`,
-        width: `${buttonWidth}px`,
-        height: '58px',
+        width: `${sdkWidth}px`,
+        height: `${sdkHeight}px`,
         style: {
-          width: `${buttonWidth}px`,
-          height: '58px',
+          width: `${sdkWidth}px`,
+          height: `${sdkHeight}px`,
           transform: 'none',
           transformOrigin: 'top left',
           opacity: '1',
@@ -393,7 +395,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Buton hazırlanıyor...
                     </div>
-                  ) : null}
+                  ) : (
+                    <div
+                      className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-sm font-semibold flex items-center justify-center"
+                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white', opacity: 0.55 }}
+                    >
+                      Facebook ile güvenli bağlantı
+                    </div>
+                  )}
                 </div>
               </div>
 
