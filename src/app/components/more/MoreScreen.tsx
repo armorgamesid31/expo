@@ -40,6 +40,19 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     }
   };
 
+  const openWhatsappFeature = async () => {
+    try {
+      const status = await apiFetch<{ connected?: boolean; isActive?: boolean }>(`/api/app/chakra/status?t=${Date.now()}`);
+      const isConnected = Boolean(status?.connected) || Boolean(status?.isActive);
+      setWhatsappConnected(isConnected);
+      setWhatsappStatusLoaded(true);
+      onNavigate(isConnected ? 'whatsapp-agent' : 'whatsapp-setup');
+    } catch (error) {
+      console.warn('Chakra status fetch failed on feature open:', error);
+      onNavigate(whatsappConnected ? 'whatsapp-agent' : 'whatsapp-setup');
+    }
+  };
+
   // Yönetim Araçları — her zaman üstte
   const managementTools = [
     {
@@ -92,7 +105,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       icon: MessageCircle,
       label: 'AI WhatsApp Ajanı',
       description: 'Otomatik müşteri iletişimi',
-      action: () => onNavigate('whatsapp-setup'),
+      action: () => {
+        void openWhatsappFeature();
+      },
       color: '#22C55E',
       badge: whatsappStatusLoaded ? (whatsappConnected ? 'Bağlı' : 'Kurulum') : 'Kontrol',
       badgeColor: whatsappStatusLoaded
