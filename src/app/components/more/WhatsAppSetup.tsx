@@ -89,6 +89,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
   const instanceRef = useRef<ChakraInstance[]>([]);
+  const hasAutoNavigatedRef = useRef(false);
 
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [creatingPlugin, setCreatingPlugin] = useState(false);
@@ -115,7 +116,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
 
     if (isConnected) {
-      setStatusText('WhatsApp bağlantısı aktif.');
+      setStatusText('WhatsApp bağlantısı tamamlandı.');
       setNativeTriggerReady(false);
       return { hasPlugin: true, connected: true };
     }
@@ -275,6 +276,40 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       document.removeEventListener('visibilitychange', refreshStatus);
     };
   }, [syncStatusFromBackend]);
+
+  useEffect(() => {
+    if (!pluginId || connected) {
+      return;
+    }
+
+    const poll = window.setInterval(() => {
+      void syncStatusFromBackend();
+    }, 2500);
+
+    return () => {
+      window.clearInterval(poll);
+    };
+  }, [pluginId, connected, syncStatusFromBackend]);
+
+  useEffect(() => {
+    if (!connected || hasAutoNavigatedRef.current) {
+      if (!connected) {
+        hasAutoNavigatedRef.current = false;
+      }
+      return;
+    }
+
+    hasAutoNavigatedRef.current = true;
+    setStatusText('Bağlantı tamamlandı, AI Agent ekranına yönlendiriliyorsunuz...');
+
+    const timer = window.setTimeout(() => {
+      navigate('/app/features/whatsapp-agent', { replace: true });
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [connected, navigate]);
 
   const handleStart = async () => {
     setCreatingPlugin(true);
