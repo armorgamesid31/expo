@@ -48,13 +48,8 @@ type ChakraInstance = {
 };
 
 const CONTAINER_ID = 'chakra-whatsapp-connect-container';
-const CONTAINER_INNER_ID = 'chakra-whatsapp-connect-inner';
 const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
 const WHATSAPP_DEV_BYPASS_KEY = 'kedy_whatsapp_dev_bypass_connected';
-const CHAKRA_SCALE_X = 3;
-const CHAKRA_SCALE_Y = 2;
-const CHAKRA_OFFSET_X = -12;
-const CHAKRA_OFFSET_Y = -12;
 
 function loadChakraSdk(sdkUrl: string): Promise<void> {
   if ((window as any).ChakraWhatsappConnect?.init) {
@@ -131,27 +126,27 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       const waitForContainer = async () => {
         for (let i = 0; i < 12; i += 1) {
           const found = document.getElementById(CONTAINER_ID);
-          const inner = document.getElementById(CONTAINER_INNER_ID);
-          if (found && inner) {
-            return { outer: found, inner };
+          if (found) {
+            return found;
           }
           await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
         }
         throw new Error('Bağlantı butonu alanı hazırlanamadı. Sayfayı yenileyip tekrar deneyin.');
       };
 
-      const { outer: containerEl, inner: innerEl } = await waitForContainer();
+      const containerEl = await waitForContainer();
+      const containerWidth = Math.max(220, containerEl.clientWidth || 280);
       const containerHeight = containerEl.clientHeight || 58;
 
-      const enforceScaledLayout = () => {
-        const inner = document.getElementById(CONTAINER_INNER_ID);
-        if (!inner) {
+      const enforceLayout = () => {
+        const container = document.getElementById(CONTAINER_ID);
+        if (!container) {
           return false;
         }
 
         const target =
-          (inner.querySelector('iframe') as HTMLElement | null) ||
-          (inner.firstElementChild as HTMLElement | null);
+          (container.querySelector('iframe') as HTMLElement | null) ||
+          (container.firstElementChild as HTMLElement | null);
 
         if (!target) {
           return false;
@@ -163,8 +158,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           left: '0',
           margin: '0',
           padding: '0',
-          width: '100%',
-          height: '100%',
+          width: `${containerWidth}px`,
+          height: `${containerHeight}px`,
           transform: 'none',
           transformOrigin: 'top left',
           zIndex: '2',
@@ -196,11 +191,11 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
       const scaledInstance = chakraGlobal.init({
         connectToken: token.connectToken,
-        container: `#${CONTAINER_INNER_ID}`,
-        width: `${innerEl.clientWidth || 120}px`,
+        container: `#${CONTAINER_ID}`,
+        width: `${containerWidth}px`,
         height: `${containerHeight}px`,
         style: {
-          width: `${innerEl.clientWidth || 120}px`,
+          width: `${containerWidth}px`,
           height: `${containerHeight}px`,
           transform: 'none',
           transformOrigin: 'top left',
@@ -242,7 +237,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       let rafTries = 0;
       const fitWithRetry = () => {
         rafTries += 1;
-        const done = enforceScaledLayout();
+        const done = enforceLayout();
         if (!done && rafTries < 160) {
           requestAnimationFrame(fitWithRetry);
         }
@@ -250,9 +245,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       fitWithRetry();
 
       const observer = new MutationObserver(() => {
-        enforceScaledLayout();
+        enforceLayout();
       });
-      observer.observe(innerEl, { childList: true, subtree: true, attributes: true });
+      observer.observe(containerEl, { childList: true, subtree: true, attributes: true });
       fitObserverRef.current = observer;
 
       setNeedsConnectInit(false);
@@ -449,20 +444,11 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Facebook ile güvenli bağlantı</p>
                 <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
-                  <div id={CONTAINER_ID} aria-label="Chakra Facebook bağlantı butonu" className="absolute inset-0 h-[58px] pointer-events-auto">
-                    <div
-                      id={CONTAINER_INNER_ID}
-                      className="absolute top-0 left-0 pointer-events-auto"
-                      style={{
-                        width: `${100 / CHAKRA_SCALE_X}%`,
-                        height: `${100 / CHAKRA_SCALE_Y}%`,
-                        transform: `scale(${CHAKRA_SCALE_X}, ${CHAKRA_SCALE_Y})`,
-                        transformOrigin: 'top left',
-                        left: `${CHAKRA_OFFSET_X}px`,
-                        top: `${CHAKRA_OFFSET_Y}px`,
-                      }}
-                    />
-                  </div>
+                  <div
+                    id={CONTAINER_ID}
+                    aria-label="Chakra Facebook bağlantı butonu"
+                    className="absolute inset-0 h-[58px] pointer-events-auto m-0 p-0"
+                  />
                 </div>
                 {!nativeTriggerReady ? (
                   <p className="text-xs text-muted-foreground flex items-center gap-2">
