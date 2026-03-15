@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -102,6 +102,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
   const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
+  const [isPopupConnecting, setIsPopupConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
   const [devBypassed, setDevBypassed] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
@@ -140,6 +141,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
       if (response.connected || Boolean(response.isActive)) {
         setConnected(true);
+        setIsPopupConnecting(false);
         setStatusText('WhatsApp bağlantısı tamamlandı.');
       }
     } catch (err) {
@@ -200,12 +202,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           void captureEvent(event, data, token.pluginId);
           if (isConnectedEvent(event, data)) {
             setConnected(true);
+            setIsPopupConnecting(false);
             setStatusText('WhatsApp bağlantısı tamamlandı.');
             void syncStatusFromBackend();
           }
         },
         onReady: () => {
           setNativeTriggerReady(true);
+          setIsPopupConnecting(false);
           setStatusText('Bağlantı butonu hazır.');
         },
         onError: (sdkError: any) => {
@@ -270,6 +274,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   useEffect(() => {
     const refreshStatus = () => {
       if (document.visibilityState === 'visible') {
+        if (!connected) {
+          setIsPopupConnecting(false);
+        }
         void syncStatusFromBackend();
       }
     };
@@ -281,10 +288,34 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       window.removeEventListener('focus', refreshStatus);
       document.removeEventListener('visibilitychange', refreshStatus);
     };
-  }, [syncStatusFromBackend]);
+  }, [connected, syncStatusFromBackend]);
+
+  useEffect(() => {
+    const onBlur = () => {
+      if (nativeTriggerReady && pluginId && !connected) {
+        setIsPopupConnecting(true);
+        setStatusText('Bağlantı işlemi devam ediyor...');
+      }
+    };
+
+    const onFocus = () => {
+      if (!connected) {
+        void syncStatusFromBackend();
+      }
+    };
+
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      window.removeEventListener('blur', onBlur);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [connected, nativeTriggerReady, pluginId, syncStatusFromBackend]);
 
   useEffect(() => {
     if (connected) {
+      setIsPopupConnecting(false);
       setStatusText('WhatsApp bağlantısı tamamlandı.');
     }
   }, [connected]);
@@ -424,7 +455,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         ) : connected ? (
           <Card className="border-[#22C55E]/30 bg-[#22C55E]/5">
             <CardContent className="p-4 space-y-3">
-              <p className="text-sm font-medium text-green-700">WhatsApp bağlantısı başarıyla tamamlandı.</p>
+              <div className="flex items-center gap-2 text-green-700">
+                <div className="relative w-5 h-5">
+                  <span className="absolute inset-0 rounded-full bg-green-500/30 animate-ping" />
+                  <CheckCircle2 className="relative w-5 h-5 text-green-600" />
+                </div>
+                <p className="text-sm font-medium">WhatsApp bağlantısı başarıyla tamamlandı.</p>
+              </div>
               <p className="text-xs text-muted-foreground">
                 Bu salon için bağlantı aktif. Buraya tekrar girdiğinizde buton görünmez.
               </p>
@@ -450,12 +487,19 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                     className="absolute inset-0 h-[58px]"
                   />
                   {nativeTriggerReady ? (
-                    <div
-                      className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
-                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-                    >
-                      Facebook ile Güvenli Bağlantı
-                    </div>
+                    isPopupConnecting ? (
+                      <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Bağlanılıyor...
+                      </div>
+                    ) : (
+                      <div
+                        className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
+                        style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+                      >
+                        Facebook ile Güvenli Bağlantı
+                      </div>
+                    )
                   ) : (
                     <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
