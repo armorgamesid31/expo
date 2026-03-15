@@ -93,6 +93,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [creatingPlugin, setCreatingPlugin] = useState(false);
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
+  const [needsConnectInit, setNeedsConnectInit] = useState(false);
   const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
   const [connected, setConnected] = useState(false);
   const [devBypassed, setDevBypassed] = useState(false);
@@ -121,6 +122,19 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setStatusText('Facebook bağlantısı hazırlanıyor...');
 
     try {
+      const waitForContainer = async () => {
+        for (let i = 0; i < 12; i += 1) {
+          const found = document.getElementById(CONTAINER_ID);
+          if (found) {
+            return found;
+          }
+          await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+        }
+        throw new Error('Bağlantı butonu alanı hazırlanamadı. Sayfayı yenileyip tekrar deneyin.');
+      };
+
+      await waitForContainer();
+
       const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
       await loadChakraSdk(token.sdkUrl);
 
@@ -177,6 +191,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       });
 
       instanceRef.current = [scaledInstance];
+      setNeedsConnectInit(false);
     } catch (err: any) {
       setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
       setStatusText('Facebook bağlantısı başlatılamadı.');
@@ -212,12 +227,11 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         if (status.pluginId) {
           setStatusText(isConnected ? 'WhatsApp bağlantısı aktif.' : 'Facebook ile devam ederek bağlantıyı tamamlayın.');
           setNativeTriggerReady(false);
-          if (!isConnected) {
-            await prepareConnect();
-          }
+          setNeedsConnectInit(!isConnected);
         } else {
           setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
           setNativeTriggerReady(false);
+          setNeedsConnectInit(false);
         }
       } catch (err: any) {
         if (mounted) {
@@ -240,7 +254,26 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       }
       instanceRef.current = [];
     };
-  }, [apiFetch, prepareConnect]);
+  }, [apiFetch]);
+
+  useEffect(() => {
+    if (!pluginId || connected || !needsConnectInit) {
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      if (cancelled) {
+        return;
+      }
+      await prepareConnect();
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pluginId, connected, needsConnectInit, prepareConnect]);
 
   const handleStart = async () => {
     setCreatingPlugin(true);
@@ -251,8 +284,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         method: 'POST',
       });
       setPluginId(response.pluginId);
+      setNeedsConnectInit(true);
       setNativeTriggerReady(false);
-      await prepareConnect();
     } catch (err: any) {
       setError(err?.message || 'Kurulum başlatılamadı.');
       setStatusText('Kurulum başlatılamadı.');
