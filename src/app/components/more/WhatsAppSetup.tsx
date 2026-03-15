@@ -40,6 +40,7 @@ interface ConnectEventResponse {
   ok: boolean;
   pluginId: string;
   connected: boolean;
+  isActive?: boolean | null;
   event: string | null;
 }
 
@@ -99,6 +100,30 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
 
+  const syncStatusFromBackend = useCallback(async () => {
+    const status = await apiFetch<ChakraStatusResponse>('/api/app/chakra/status');
+
+    setPluginId(status.pluginId || null);
+
+    const isConnected = Boolean(status.connected) || Boolean(status.isActive);
+    setConnected(isConnected);
+
+    if (!status.pluginId) {
+      setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
+      setNativeTriggerReady(false);
+      return { hasPlugin: false, connected: false };
+    }
+
+    if (isConnected) {
+      setStatusText('WhatsApp bağlantısı aktif.');
+      setNativeTriggerReady(false);
+      return { hasPlugin: true, connected: true };
+    }
+
+    setStatusText('Facebook ile devam ederek bağlantıyı tamamlayın.');
+    return { hasPlugin: true, connected: false };
+  }, [apiFetch]);
+
   const captureEvent = useCallback(async (event: unknown, data: unknown, pluginIdValue: string) => {
     try {
       const response = await apiFetch<ConnectEventResponse>('/api/app/chakra/connect-event', {
@@ -106,14 +131,20 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         body: JSON.stringify({ event, data, pluginId: pluginIdValue }),
       });
 
-      if (response.connected) {
+      if (response.connected || Boolean(response.isActive)) {
         setConnected(true);
         setStatusText('WhatsApp bağlantısı tamamlandı.');
       }
     } catch (err) {
       console.warn('Connect event capture failed:', err);
+    } finally {
+      try {
+        await syncStatusFromBackend();
+      } catch (statusError) {
+        console.warn('Status refresh after connect event failed:', statusError);
+      }
     }
-  }, [apiFetch]);
+  }, [apiFetch, syncStatusFromBackend]);
 
   const prepareConnect = useCallback(async () => {
     setPreparingConnect(true);
@@ -137,7 +168,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       }
 
       setNativeTriggerReady(false);
-      setConnected(false);
 
       const scaledInstance = chakraGlobal.init({
         connectToken: token.connectToken,
@@ -164,6 +194,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           if (isConnectedEvent(event, data)) {
             setConnected(true);
             setStatusText('WhatsApp bağlantısı tamamlandı.');
+            void syncStatusFromBackend();
           }
         },
         onReady: () => {
@@ -199,25 +230,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       setLoadingStatus(true);
       setError(null);
       try {
-        const status = await apiFetch<ChakraStatusResponse>('/api/app/chakra/status');
+        const status = await syncStatusFromBackend();
         if (!mounted) {
           return;
         }
-
-        setPluginId(status.pluginId || null);
-
-        const isConnected = Boolean(status.connected) || Boolean(status.isActive);
-        setConnected(isConnected);
-
-        if (status.pluginId) {
-          setStatusText(isConnected ? 'WhatsApp bağlantısı aktif.' : 'Facebook ile devam ederek bağlantıyı tamamlayın.');
-          setNativeTriggerReady(false);
-          if (!isConnected) {
-            await prepareConnect();
-          }
-        } else {
-          setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
-          setNativeTriggerReady(false);
+        if (status.hasPlugin && !status.connected) {
+          await prepareConnect();
         }
       } catch (err: any) {
         if (mounted) {
@@ -240,7 +258,23 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       }
       instanceRef.current = [];
     };
-  }, [apiFetch, prepareConnect]);
+  }, [prepareConnect, syncStatusFromBackend]);
+
+  useEffect(() => {
+    const refreshStatus = () => {
+      if (document.visibilityState === 'visible') {
+        void syncStatusFromBackend();
+      }
+    };
+
+    window.addEventListener('focus', refreshStatus);
+    document.addEventListener('visibilitychange', refreshStatus);
+
+    return () => {
+      window.removeEventListener('focus', refreshStatus);
+      document.removeEventListener('visibilitychange', refreshStatus);
+    };
+  }, [syncStatusFromBackend]);
 
   const handleStart = async () => {
     setCreatingPlugin(true);
@@ -332,6 +366,23 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   'Başla'
                 )}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDevBypass}
+                className="w-full"
+              >
+                {devBypassed ? 'Test Modu: AI Agent Ekranını Aç' : 'Test Modu: Bağlandı Olarak Devam Et'}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : connected ? (
+          <Card className="border-[#22C55E]/30 bg-[#22C55E]/5">
+            <CardContent className="p-4 space-y-3">
+              <p className="text-sm font-medium text-green-700">WhatsApp bağlantısı başarıyla tamamlandı.</p>
+              <p className="text-xs text-muted-foreground">
+                Bu salon için bağlantı aktif. Buraya tekrar girdiğinizde buton görünmez.
+              </p>
               <Button
                 type="button"
                 variant="outline"
