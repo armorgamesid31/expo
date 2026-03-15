@@ -96,6 +96,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const navigate = useNavigate();
   const instanceRef = useRef<ChakraInstance[]>([]);
   const hasAutoNavigatedRef = useRef(false);
+  const watchdogIntervalRef = useRef<number | null>(null);
+  const watchdogTimeoutRef = useRef<number | null>(null);
 
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [creatingPlugin, setCreatingPlugin] = useState(false);
@@ -106,6 +108,17 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [devBypassed, setDevBypassed] = useState(false);
   const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
   const [error, setError] = useState<string | null>(null);
+
+  const stopConnectionWatchdog = useCallback(() => {
+    if (watchdogIntervalRef.current !== null) {
+      window.clearInterval(watchdogIntervalRef.current);
+      watchdogIntervalRef.current = null;
+    }
+    if (watchdogTimeoutRef.current !== null) {
+      window.clearTimeout(watchdogTimeoutRef.current);
+      watchdogTimeoutRef.current = null;
+    }
+  }, []);
 
   const syncStatusFromBackend = useCallback(async () => {
     const status = await apiFetch<ChakraStatusResponse>(`/api/app/chakra/status?t=${Date.now()}`);
@@ -215,13 +228,23 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       });
 
       instanceRef.current = [scaledInstance];
+
+      stopConnectionWatchdog();
+      // Popup callback bazı cihaz/webview kombinasyonlarında gecikebiliyor.
+      // Bu nedenle backend status'unu düzenli kontrol edip bağlantıyı anında yakalıyoruz.
+      watchdogIntervalRef.current = window.setInterval(() => {
+        void syncStatusFromBackend();
+      }, 1500);
+      watchdogTimeoutRef.current = window.setTimeout(() => {
+        stopConnectionWatchdog();
+      }, 120000);
     } catch (err: any) {
       setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
       setStatusText('Facebook bağlantısı başlatılamadı.');
     } finally {
       setPreparingConnect(false);
     }
-  }, [apiFetch, captureEvent]);
+  }, [apiFetch, captureEvent, stopConnectionWatchdog, syncStatusFromBackend]);
 
   useEffect(() => {
     const bypass = window.localStorage.getItem(WHATSAPP_DEV_BYPASS_KEY) === '1';
@@ -258,6 +281,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
     return () => {
       mounted = false;
+      stopConnectionWatchdog();
       for (const instance of instanceRef.current) {
         if (instance?.destroy) {
           instance.destroy();
@@ -265,7 +289,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       }
       instanceRef.current = [];
     };
-  }, [prepareConnect, syncStatusFromBackend]);
+  }, [prepareConnect, stopConnectionWatchdog, syncStatusFromBackend]);
 
   useEffect(() => {
     const refreshStatus = () => {
@@ -296,6 +320,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       window.clearInterval(poll);
     };
   }, [pluginId, connected, syncStatusFromBackend]);
+
+  useEffect(() => {
+    if (connected) {
+      stopConnectionWatchdog();
+      setStatusText('WhatsApp bağlantısı tamamlandı.');
+    }
+  }, [connected, stopConnectionWatchdog]);
 
   useEffect(() => {
     if (!connected || hasAutoNavigatedRef.current) {
