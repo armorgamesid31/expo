@@ -88,13 +88,11 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
   const instanceRef = useRef<ChakraInstance[]>([]);
-  const fitObserverRef = useRef<MutationObserver | null>(null);
 
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [creatingPlugin, setCreatingPlugin] = useState(false);
   const [preparingConnect, setPreparingConnect] = useState(false);
   const [pluginId, setPluginId] = useState<string | null>(null);
-  const [needsConnectInit, setNeedsConnectInit] = useState(false);
   const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
   const [connected, setConnected] = useState(false);
   const [devBypassed, setDevBypassed] = useState(false);
@@ -123,54 +121,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setStatusText('Facebook bağlantısı hazırlanıyor...');
 
     try {
-      const waitForContainer = async () => {
-        for (let i = 0; i < 12; i += 1) {
-          const found = document.getElementById(CONTAINER_ID);
-          if (found) {
-            return found;
-          }
-          await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-        }
-        throw new Error('Bağlantı butonu alanı hazırlanamadı. Sayfayı yenileyip tekrar deneyin.');
-      };
-
-      const containerEl = await waitForContainer();
-      const containerWidth = Math.max(220, containerEl.clientWidth || 280);
-      const containerHeight = containerEl.clientHeight || 58;
-
-      const enforceLayout = () => {
-        const container = document.getElementById(CONTAINER_ID);
-        if (!container) {
-          return false;
-        }
-
-        const target =
-          (container.querySelector('iframe') as HTMLElement | null) ||
-          (container.firstElementChild as HTMLElement | null);
-
-        if (!target) {
-          return false;
-        }
-
-        Object.assign(target.style, {
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          margin: '0',
-          padding: '0',
-          width: `${containerWidth}px`,
-          height: `${containerHeight}px`,
-          transform: 'none',
-          transformOrigin: 'top left',
-          zIndex: '2',
-          pointerEvents: 'auto',
-          display: 'block',
-          border: '0',
-        } as Partial<CSSStyleDeclaration>);
-
-        return true;
-      };
-
       const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
       await loadChakraSdk(token.sdkUrl);
 
@@ -192,22 +142,21 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       const scaledInstance = chakraGlobal.init({
         connectToken: token.connectToken,
         container: `#${CONTAINER_ID}`,
-        width: `${containerWidth}px`,
-        height: `${containerHeight}px`,
+        width: '260px',
+        height: '80px',
         style: {
-          width: `${containerWidth}px`,
-          height: `${containerHeight}px`,
-          transform: 'none',
+          width: '260px',
+          height: '80px',
+          transform: 'translateY(-28px) scale(2.17)',
           transformOrigin: 'top left',
           opacity: '1',
           border: '0',
           background: 'transparent',
           display: 'block',
           margin: '0',
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          zIndex: '2',
+          position: 'relative',
+          inset: '',
+          zIndex: '',
           pointerEvents: 'auto',
         },
         onMessage: (event: any, data: any) => {
@@ -228,29 +177,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       });
 
       instanceRef.current = [scaledInstance];
-
-      if (fitObserverRef.current) {
-        fitObserverRef.current.disconnect();
-        fitObserverRef.current = null;
-      }
-
-      let rafTries = 0;
-      const fitWithRetry = () => {
-        rafTries += 1;
-        const done = enforceLayout();
-        if (!done && rafTries < 160) {
-          requestAnimationFrame(fitWithRetry);
-        }
-      };
-      fitWithRetry();
-
-      const observer = new MutationObserver(() => {
-        enforceLayout();
-      });
-      observer.observe(containerEl, { childList: true, subtree: true, attributes: true });
-      fitObserverRef.current = observer;
-
-      setNeedsConnectInit(false);
     } catch (err: any) {
       setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
       setStatusText('Facebook bağlantısı başlatılamadı.');
@@ -286,11 +212,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         if (status.pluginId) {
           setStatusText(isConnected ? 'WhatsApp bağlantısı aktif.' : 'Facebook ile devam ederek bağlantıyı tamamlayın.');
           setNativeTriggerReady(false);
-          setNeedsConnectInit(!isConnected);
+          if (!isConnected) {
+            await prepareConnect();
+          }
         } else {
           setStatusText('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
           setNativeTriggerReady(false);
-          setNeedsConnectInit(false);
         }
       } catch (err: any) {
         if (mounted) {
@@ -306,10 +233,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
     return () => {
       mounted = false;
-      if (fitObserverRef.current) {
-        fitObserverRef.current.disconnect();
-        fitObserverRef.current = null;
-      }
       for (const instance of instanceRef.current) {
         if (instance?.destroy) {
           instance.destroy();
@@ -317,26 +240,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       }
       instanceRef.current = [];
     };
-  }, [apiFetch]);
-
-  useEffect(() => {
-    if (!pluginId || connected || !needsConnectInit) {
-      return;
-    }
-
-    let cancelled = false;
-    (async () => {
-      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-      if (cancelled) {
-        return;
-      }
-      await prepareConnect();
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pluginId, connected, needsConnectInit, prepareConnect]);
+  }, [apiFetch, prepareConnect]);
 
   const handleStart = async () => {
     setCreatingPlugin(true);
@@ -347,8 +251,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         method: 'POST',
       });
       setPluginId(response.pluginId);
-      setNeedsConnectInit(true);
       setNativeTriggerReady(false);
+      await prepareConnect();
     } catch (err: any) {
       setError(err?.message || 'Kurulum başlatılamadı.');
       setStatusText('Kurulum başlatılamadı.');
@@ -442,20 +346,27 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Facebook ile güvenli bağlantı</p>
+                <p className="text-xs text-muted-foreground">Büyütülmüş Chakra + Maske</p>
                 <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
                   <div
                     id={CONTAINER_ID}
-                    aria-label="Chakra Facebook bağlantı butonu"
-                    className="absolute inset-0 h-[58px] pointer-events-auto m-0 p-0"
+                    aria-label="Büyütülmüş Chakra butonu"
+                    className="absolute inset-0 h-[58px]"
                   />
+                  {nativeTriggerReady ? (
+                    <div
+                      className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
+                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+                    >
+                      Facebook ile Güvenli Bağlantı
+                    </div>
+                  ) : (
+                    <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Buton hazırlanıyor...
+                    </div>
+                  )}
                 </div>
-                {!nativeTriggerReady ? (
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Bağlantı butonu hazırlanıyor...
-                  </p>
-                ) : null}
               </div>
 
               <Button
