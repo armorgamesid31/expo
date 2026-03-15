@@ -88,6 +88,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
   const instanceRef = useRef<ChakraInstance[]>([]);
+  const fitObserverRef = useRef<MutationObserver | null>(null);
 
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [creatingPlugin, setCreatingPlugin] = useState(false);
@@ -134,9 +135,36 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       };
 
       const containerEl = await waitForContainer();
-      const baseWidth = Math.max(240, Math.min(containerEl.clientWidth || 320, 360));
-      const sdkWidth = Math.round(baseWidth * 3);
-      const sdkHeight = 116; // visible mask height (58px) * 2
+      const containerHeight = containerEl.clientHeight || 58;
+
+      const fitNativeButtonToContainer = () => {
+        const container = document.getElementById(CONTAINER_ID);
+        if (!container) return false;
+
+        const target = (container.firstElementChild || container.querySelector('iframe,button,a,div')) as HTMLElement | null;
+        if (!target) return false;
+
+        const targetRect = target.getBoundingClientRect();
+        const targetWidth = targetRect.width || target.offsetWidth || parseFloat(getComputedStyle(target).width) || 1;
+        const targetHeight = targetRect.height || target.offsetHeight || parseFloat(getComputedStyle(target).height) || 1;
+        const containerWidth = container.clientWidth || 1;
+        const containerHeightNow = container.clientHeight || 58;
+
+        const scaleX = containerWidth / Math.max(targetWidth, 1);
+        const scaleY = containerHeightNow / Math.max(targetHeight, 1);
+
+        Object.assign(target.style, {
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          transform: `scale(${scaleX}, ${scaleY})`,
+          transformOrigin: 'top left',
+          zIndex: '2',
+          pointerEvents: 'auto',
+        } as Partial<CSSStyleDeclaration>);
+
+        return true;
+      };
 
       const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
       await loadChakraSdk(token.sdkUrl);
@@ -159,11 +187,11 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       const scaledInstance = chakraGlobal.init({
         connectToken: token.connectToken,
         container: `#${CONTAINER_ID}`,
-        width: `${sdkWidth}px`,
-        height: `${sdkHeight}px`,
+        width: '320px',
+        height: `${containerHeight}px`,
         style: {
-          width: `${sdkWidth}px`,
-          height: `${sdkHeight}px`,
+          width: '320px',
+          height: `${containerHeight}px`,
           transform: 'none',
           transformOrigin: 'top left',
           opacity: '1',
@@ -195,6 +223,28 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       });
 
       instanceRef.current = [scaledInstance];
+
+      if (fitObserverRef.current) {
+        fitObserverRef.current.disconnect();
+        fitObserverRef.current = null;
+      }
+
+      let rafTries = 0;
+      const fitWithRetry = () => {
+        rafTries += 1;
+        const done = fitNativeButtonToContainer();
+        if (!done && rafTries < 80) {
+          requestAnimationFrame(fitWithRetry);
+        }
+      };
+      fitWithRetry();
+
+      const observer = new MutationObserver(() => {
+        fitNativeButtonToContainer();
+      });
+      observer.observe(containerEl, { childList: true, subtree: true, attributes: true });
+      fitObserverRef.current = observer;
+
       setNeedsConnectInit(false);
     } catch (err: any) {
       setError(err?.message || 'Facebook bağlantısı başlatılamadı.');
@@ -251,6 +301,10 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
     return () => {
       mounted = false;
+      if (fitObserverRef.current) {
+        fitObserverRef.current.disconnect();
+        fitObserverRef.current = null;
+      }
       for (const instance of instanceRef.current) {
         if (instance?.destroy) {
           instance.destroy();
@@ -388,7 +442,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   <div
                     id={CONTAINER_ID}
                     aria-label="Chakra Facebook bağlantı butonu"
-                    className="absolute inset-0 h-[58px]"
+                    className="absolute inset-0 h-[58px] pointer-events-auto"
                   />
                   {!nativeTriggerReady ? (
                     <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
@@ -398,7 +452,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   ) : (
                     <div
                       className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-sm font-semibold flex items-center justify-center"
-                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white', opacity: 0.55 }}
+                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white', opacity: 0.4 }}
                     >
                       Facebook ile güvenli bağlantı
                     </div>
