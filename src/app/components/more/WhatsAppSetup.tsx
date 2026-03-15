@@ -53,6 +53,8 @@ const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
 const WHATSAPP_DEV_BYPASS_KEY = 'kedy_whatsapp_dev_bypass_connected';
 const CHAKRA_SCALE_X = 3;
 const CHAKRA_SCALE_Y = 2;
+const CHAKRA_OFFSET_X = -12;
+const CHAKRA_OFFSET_Y = -12;
 
 function loadChakraSdk(sdkUrl: string): Promise<void> {
   if ((window as any).ChakraWhatsappConnect?.init) {
@@ -456,23 +458,18 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                         height: `${100 / CHAKRA_SCALE_Y}%`,
                         transform: `scale(${CHAKRA_SCALE_X}, ${CHAKRA_SCALE_Y})`,
                         transformOrigin: 'top left',
+                        left: `${CHAKRA_OFFSET_X}px`,
+                        top: `${CHAKRA_OFFSET_Y}px`,
                       }}
                     />
                   </div>
-                  {!nativeTriggerReady ? (
-                    <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Buton hazırlanıyor...
-                    </div>
-                  ) : (
-                    <div
-                      className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-sm font-semibold flex items-center justify-center"
-                      style={{ backgroundColor: 'var(--rose-gold)', color: 'white', opacity: 0.4 }}
-                    >
-                      Facebook ile güvenli bağlantı
-                    </div>
-                  )}
                 </div>
+                {!nativeTriggerReady ? (
+                  <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Bağlantı butonu hazırlanıyor...
+                  </p>
+                ) : null}
               </div>
 
               <Button
