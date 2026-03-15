@@ -50,6 +50,8 @@ type ChakraInstance = {
 const CONTAINER_ID = 'chakra-whatsapp-connect-container';
 const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
 const WHATSAPP_DEV_BYPASS_KEY = 'kedy_whatsapp_dev_bypass_connected';
+const CHAKRA_SCALE_X = 3;
+const CHAKRA_SCALE_Y = 2;
 
 function loadChakraSdk(sdkUrl: string): Promise<void> {
   if ((window as any).ChakraWhatsappConnect?.init) {
@@ -137,30 +139,33 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       const containerEl = await waitForContainer();
       const containerHeight = containerEl.clientHeight || 58;
 
-      const fitNativeButtonToContainer = () => {
+      const enforceScaledLayout = () => {
         const container = document.getElementById(CONTAINER_ID);
-        if (!container) return false;
+        if (!container) {
+          return false;
+        }
 
-        const target = (container.firstElementChild || container.querySelector('iframe,button,a,div')) as HTMLElement | null;
-        if (!target) return false;
+        const target =
+          (container.querySelector('iframe') as HTMLElement | null) ||
+          (container.firstElementChild as HTMLElement | null);
 
-        const targetRect = target.getBoundingClientRect();
-        const targetWidth = targetRect.width || target.offsetWidth || parseFloat(getComputedStyle(target).width) || 1;
-        const targetHeight = targetRect.height || target.offsetHeight || parseFloat(getComputedStyle(target).height) || 1;
-        const containerWidth = container.clientWidth || 1;
-        const containerHeightNow = container.clientHeight || 58;
-
-        const scaleX = containerWidth / Math.max(targetWidth, 1);
-        const scaleY = containerHeightNow / Math.max(targetHeight, 1);
+        if (!target) {
+          return false;
+        }
 
         Object.assign(target.style, {
           position: 'absolute',
           top: '0',
           left: '0',
-          transform: `scale(${scaleX}, ${scaleY})`,
+          margin: '0',
+          width: `${100 / CHAKRA_SCALE_X}%`,
+          height: `${100 / CHAKRA_SCALE_Y}%`,
+          transform: `scale(${CHAKRA_SCALE_X}, ${CHAKRA_SCALE_Y})`,
           transformOrigin: 'top left',
           zIndex: '2',
           pointerEvents: 'auto',
+          display: 'block',
+          border: '0',
         } as Partial<CSSStyleDeclaration>);
 
         return true;
@@ -232,15 +237,15 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       let rafTries = 0;
       const fitWithRetry = () => {
         rafTries += 1;
-        const done = fitNativeButtonToContainer();
-        if (!done && rafTries < 80) {
+        const done = enforceScaledLayout();
+        if (!done && rafTries < 160) {
           requestAnimationFrame(fitWithRetry);
         }
       };
       fitWithRetry();
 
       const observer = new MutationObserver(() => {
-        fitNativeButtonToContainer();
+        enforceScaledLayout();
       });
       observer.observe(containerEl, { childList: true, subtree: true, attributes: true });
       fitObserverRef.current = observer;
