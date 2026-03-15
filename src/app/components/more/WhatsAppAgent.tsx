@@ -61,6 +61,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const { apiFetch } = useAuth();
   const [agentActive, setAgentActive] = useState(false);
   const [chakraConnected, setChakraConnected] = useState(false);
+  const [togglingAgent, setTogglingAgent] = useState(false);
   const [isFaqExpanded, setIsFaqExpanded] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -105,14 +106,15 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
               faqAnswers?: Record<string, string>;
             };
           }>('/api/admin/whatsapp-agent/settings'),
-          apiFetch<{ connected?: boolean; isActive?: boolean }>('/api/app/chakra/status').catch(() => null),
+          apiFetch<{ connected?: boolean; isActive?: boolean }>(`/api/app/chakra/status?t=${Date.now()}`).catch(() => null),
         ]);
 
         const isConnected = Boolean(chakraStatus?.connected) || Boolean(chakraStatus?.isActive);
+        const isActive = Boolean(chakraStatus?.isActive);
 
         if (active) {
           setChakraConnected(isConnected);
-          setAgentActive(isConnected);
+          setAgentActive(isActive);
         }
 
         if (!active || !response?.settings) return;
@@ -133,6 +135,35 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
       active = false;
     };
   }, [apiFetch]);
+
+  async function toggleAgentActive(nextValue: boolean) {
+    if (!chakraConnected) {
+      navigate('/app/features/whatsapp-setup');
+      return;
+    }
+
+    const previous = agentActive;
+    setAgentActive(nextValue);
+    setTogglingAgent(true);
+
+    try {
+      const response = await apiFetch<{ isActive?: boolean; pluginId?: string }>('/api/app/chakra/plugin-active', {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: nextValue }),
+      });
+
+      setAgentActive(Boolean(response?.isActive));
+
+      const status = await apiFetch<{ connected?: boolean; isActive?: boolean }>(`/api/app/chakra/status?t=${Date.now()}`);
+      setChakraConnected(Boolean(status?.connected) || Boolean(status?.isActive));
+      setAgentActive(Boolean(status?.isActive));
+    } catch (error) {
+      console.error('WhatsApp agent toggle failed:', error);
+      setAgentActive(previous);
+    } finally {
+      setTogglingAgent(false);
+    }
+  }
 
   async function saveSettings(fieldKey: string, overrides?: Partial<{
     tone: 'friendly' | 'professional' | 'balanced';
@@ -235,13 +266,9 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                 <Switch
                   checked={agentActive}
                   onCheckedChange={(checked) => {
-                    if (!chakraConnected) {
-                      navigate('/app/features/whatsapp-setup');
-                      return;
-                    }
-                    setAgentActive(checked);
+                    void toggleAgentActive(checked);
                   }}
-                  disabled={!chakraConnected}
+                  disabled={!chakraConnected || togglingAgent}
                 />
               </div>
             </CardContent>
