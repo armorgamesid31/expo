@@ -329,10 +329,10 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
 
     hasAutoNavigatedRef.current = true;
-    setStatusText('Bağlantı tamamlandı, AI Agent ekranına yönlendiriliyorsunuz...');
+    setStatusText('Bağlantı tamamlandı, WhatsApp ayarlarına yönlendiriliyorsunuz...');
 
     const timer = window.setTimeout(() => {
-      navigate('/app/features/whatsapp-agent', { replace: true });
+      navigate('/app/features/whatsapp-settings', { replace: true });
     }, 900);
 
     return () => {
@@ -376,7 +376,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     window.localStorage.setItem(WHATSAPP_DEV_BYPASS_KEY, '1');
     setDevBypassed(true);
     setStatusText('Test modu aktif: WhatsApp bağlantısı simüle edildi.');
-    navigate('/app/features/whatsapp-agent');
+    navigate('/app/features/whatsapp-settings');
   };
 
   return (

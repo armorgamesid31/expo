@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, MessageCircle, Bot, Zap, TrendingUp, CheckCircle2, XCircle, ChevronRight, CircleHelp, Plus, Pencil, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../ui/card';
@@ -59,9 +59,9 @@ const salonFaqQuestions = [
 export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
-  const [agentActive, setAgentActive] = useState(false);
+  const [agentEnabled, setAgentEnabled] = useState(false);
   const [chakraConnected, setChakraConnected] = useState(false);
-  const [chakraPluginId, setChakraPluginId] = useState<string | null>(null);
+  const [chakraPluginActive, setChakraPluginActive] = useState(false);
   const [togglingAgent, setTogglingAgent] = useState(false);
   const [toggleFeedback, setToggleFeedback] = useState<string | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
@@ -93,16 +93,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     balanced: '"Müsait saatleri kontrol edip size en uygun randevu seçeneğini hemen iletebilirim."',
   };
 
-  const refreshChakraStatus = useCallback(async () => {
-    const status = await apiFetch<{ connected?: boolean; isActive?: boolean; pluginId?: string | null }>(`/api/app/chakra/status?t=${Date.now()}`);
-    const isConnected = Boolean(status?.connected) || Boolean(status?.isActive);
-    const isActive = Boolean(status?.isActive);
-    setChakraConnected(isConnected);
-    setAgentActive(isActive);
-    setChakraPluginId(status?.pluginId || null);
-    return { isConnected, isActive, pluginId: status?.pluginId || null };
-  }, [apiFetch]);
-
   useEffect(() => {
     let active = true;
     (async () => {
@@ -117,6 +107,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
               handoverThreshold?: 'early' | 'balanced' | 'late';
               aiDisclosure?: 'always' | 'onQuestion' | 'never';
               faqAnswers?: Record<string, string>;
+              isEnabled?: boolean;
             };
           }>('/api/admin/whatsapp-agent/settings'),
           apiFetch<{ connected?: boolean; isActive?: boolean; pluginId?: string | null }>(`/api/app/chakra/status?t=${Date.now()}`).catch(() => null),
@@ -127,11 +118,11 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
 
         if (active) {
           setChakraConnected(isConnected);
-          setAgentActive(isActive);
-          setChakraPluginId(chakraStatus?.pluginId || null);
+          setChakraPluginActive(isActive);
         }
 
         if (!active || !response?.settings) return;
+        setAgentEnabled(Boolean(response.settings.isEnabled));
         if (response.settings.tone) setTone(response.settings.tone);
         if (response.settings.answerLength) setAnswerLength(response.settings.answerLength);
         if (response.settings.emojiUsage) setEmojiUsage(response.settings.emojiUsage);
@@ -155,41 +146,36 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     setToggleFeedback(null);
 
     if (!chakraConnected) {
-      navigate('/app/features/whatsapp-setup');
+      setToggleError('Önce WhatsApp bağlantısını tamamlayın.');
       return;
     }
 
-    let pluginId = chakraPluginId;
-    if (!pluginId) {
-      try {
-        const refreshed = await refreshChakraStatus();
-        pluginId = refreshed.pluginId;
-      } catch (error) {
-        console.error('Chakra status refresh before toggle failed:', error);
-      }
-    }
-
-    if (!pluginId) {
-      setToggleError('Bağlantı bilgisi bulunamadı. Lütfen WhatsApp kurulumunu tekrar açın.');
+    if (!chakraPluginActive) {
+      setToggleError('WhatsApp bağlantısı pasif. Önce bağlantıyı aktif etmelisiniz.');
       return;
     }
 
-    const previous = agentActive;
-    setAgentActive(nextValue);
+    const previous = agentEnabled;
+    setAgentEnabled(nextValue);
     setTogglingAgent(true);
 
     try {
-      const response = await apiFetch<{ isActive?: boolean; pluginId?: string; requestedIsActive?: boolean }>(
-        '/api/app/chakra/plugin-active',
-        {
+      await apiFetch('/api/admin/whatsapp-agent/settings', {
         method: 'PUT',
-        body: JSON.stringify({ pluginId, isActive: nextValue }),
+        body: JSON.stringify({
+          isEnabled: nextValue,
+          tone,
+          answerLength,
+          emojiUsage,
+          bookingGuidance,
+          handoverThreshold,
+          aiDisclosure,
+          faqAnswers: salonFaqAnswers,
+        }),
       });
 
-      const toggledIsActive = Boolean(response?.isActive);
-      setAgentActive(toggledIsActive);
       setToggleFeedback(
-        toggledIsActive
+        nextValue
           ? 'AI ajanı aktif edildi.'
           : 'AI ajanı pasif duruma alındı.',
       );
@@ -197,10 +183,9 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         setToggleFeedback(null);
       }, 2000);
 
-      await refreshChakraStatus();
     } catch (error) {
       console.error('WhatsApp agent toggle failed:', error);
-      setAgentActive(previous);
+      setAgentEnabled(previous);
       setToggleError('Aktiflik durumu güncellenemedi. Lütfen tekrar deneyin.');
     } finally {
       setTogglingAgent(false);
@@ -208,6 +193,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   }
 
   async function saveSettings(fieldKey: string, overrides?: Partial<{
+    isEnabled: boolean;
     tone: 'friendly' | 'professional' | 'balanced';
     answerLength: 'short' | 'medium' | 'detailed';
     emojiUsage: 'off' | 'low' | 'normal';
@@ -221,6 +207,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
       await apiFetch('/api/admin/whatsapp-agent/settings', {
         method: 'PUT',
         body: JSON.stringify({
+          isEnabled: overrides?.isEnabled ?? agentEnabled,
           tone: overrides?.tone ?? tone,
           answerLength: overrides?.answerLength ?? answerLength,
           emojiUsage: overrides?.emojiUsage ?? emojiUsage,
@@ -274,11 +261,13 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card
             className={`border-2 transition-all ${
-              chakraConnected
-                ? agentActive
+              !chakraConnected
+                ? 'border-amber-500/30 bg-amber-500/5'
+                : !chakraPluginActive
+                  ? 'border-amber-500/30 bg-amber-500/5'
+                  : agentEnabled
                   ? 'border-green-500/30 bg-green-500/5'
                   : 'border-border/50'
-                : 'border-amber-500/30 bg-amber-500/5'
             }`}
           >
             <CardContent className="p-5">
@@ -286,21 +275,43 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                      chakraConnected ? (agentActive ? 'bg-green-500' : 'bg-muted') : 'bg-amber-500'
+                      !chakraConnected ? 'bg-amber-500' : !chakraPluginActive ? 'bg-amber-500' : agentEnabled ? 'bg-green-500' : 'bg-muted'
                     }`}
                   >
-                    <Bot className={`w-6 h-6 ${chakraConnected && agentActive ? 'text-white' : 'text-white'}`} />
+                    <Bot className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <p className="font-semibold">Ajan Durumu</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div
                         className={`w-2 h-2 rounded-full ${
-                          chakraConnected ? (agentActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400') : 'bg-amber-500'
+                          !chakraConnected
+                            ? 'bg-amber-500'
+                            : !chakraPluginActive
+                              ? 'bg-amber-500'
+                              : agentEnabled
+                                ? 'bg-green-500 animate-pulse'
+                                : 'bg-gray-400'
                         }`}
                       />
-                      <span className={`text-sm ${chakraConnected ? (agentActive ? 'text-green-600' : 'text-muted-foreground') : 'text-amber-700'}`}>
-                        {chakraConnected ? (agentActive ? 'Aktif — Mesajları yanıtlıyor' : 'Pasif') : 'Bağlı değil — Kurulum gerekli'}
+                      <span
+                        className={`text-sm ${
+                          !chakraConnected
+                            ? 'text-amber-700'
+                            : !chakraPluginActive
+                              ? 'text-amber-700'
+                              : agentEnabled
+                                ? 'text-green-600'
+                                : 'text-muted-foreground'
+                        }`}
+                      >
+                        {!chakraConnected
+                          ? 'Bağlı değil — Kurulum gerekli'
+                          : !chakraPluginActive
+                            ? 'WhatsApp pasif — Bağlantıyı yönetden aç'
+                            : agentEnabled
+                              ? 'Aktif — Mesajları yanıtlıyor'
+                              : 'Pasif'}
                       </span>
                     </div>
                     {toggleFeedback ? (
@@ -312,16 +323,38 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                   </div>
                 </div>
                 <Switch
-                  checked={agentActive}
+                  checked={agentEnabled}
                   onCheckedChange={(checked) => {
                     void toggleAgentActive(checked);
                   }}
-                  disabled={!chakraConnected || togglingAgent}
+                  disabled={!chakraConnected || !chakraPluginActive || togglingAgent}
                 />
               </div>
             </CardContent>
           </Card>
         </motion.div>
+
+        {chakraConnected && !chakraPluginActive ? (
+          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+            <CardContent className="p-3 flex items-start gap-2">
+              <XCircle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm text-amber-800 dark:text-amber-300">
+                  WhatsApp bağlantısı pasif. Önce bağlantıyı aktif etmeden AI ajan çalışmaz.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => navigate('/app/features/whatsapp-settings', { state: { navDirection: 'back' } })}
+                >
+                  WhatsApp Ayarlarına Git
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* Conversation Insights */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}>
