@@ -12,6 +12,7 @@ import { Campaigns } from '../components/more/Campaigns';
 import { Automations } from '../components/more/Automations';
 import { HelpCenter } from '../components/more/HelpCenter';
 import { WhatsAppAgentFaq } from '../components/more/WhatsAppAgentFaq';
+import { WhatsAppSettings } from '../components/more/WhatsAppSettings';
 import { useAuth } from '../context/AuthContext';
 
 function WhatsAppSetupGate({ onBack }: { onBack: () => void }) {
@@ -64,6 +65,7 @@ export function FeatureDetailPage() {
 
   const onBack = () => navigate('/app/features');
 
+  if (featureKey === 'whatsapp-settings') return <WhatsAppSettings onBack={onBack} />;
   if (featureKey === 'whatsapp-agent') return <WhatsAppAgent onBack={onBack} />;
   if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={() => navigate('/app/features/whatsapp-agent')} />;
   if (featureKey === 'whatsapp-setup') return <WhatsAppSetupGate onBack={onBack} />;

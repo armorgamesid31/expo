@@ -40,19 +40,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     }
   };
 
-  const openWhatsappFeature = async () => {
-    try {
-      const status = await apiFetch<{ connected?: boolean; isActive?: boolean }>(`/api/app/chakra/status?t=${Date.now()}`);
-      const isConnected = Boolean(status?.connected) || Boolean(status?.isActive);
-      setWhatsappConnected(isConnected);
-      setWhatsappStatusLoaded(true);
-      onNavigate(isConnected ? 'whatsapp-agent' : 'whatsapp-setup');
-    } catch (error) {
-      console.warn('Chakra status fetch failed on feature open:', error);
-      onNavigate(whatsappConnected ? 'whatsapp-agent' : 'whatsapp-setup');
-    }
-  };
-
   // Yönetim Araçları — her zaman üstte
   const managementTools = [
     {
@@ -79,7 +66,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     {
       icon: Users,
       label: 'Müşteri Yönetimi',
-      description: 'CRM profilleri + kara liste',
+      description: 'CRM profilleri + katılım takibi',
       action: () => onNavigate('crm'),
       color: 'var(--rose-gold)',
     },
@@ -103,11 +90,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
   const advancedModules = [
     {
       icon: MessageCircle,
-      label: 'AI WhatsApp Ajanı',
-      description: 'Otomatik müşteri iletişimi',
-      action: () => {
-        void openWhatsappFeature();
-      },
+      label: 'WhatsApp Ayarları',
+      description: 'Bağlantı, AI ajan ve hatırlatma ayarları',
+      action: () => onNavigate('whatsapp-settings'),
       color: '#22C55E',
       badge: whatsappStatusLoaded ? (whatsappConnected ? 'Bağlı' : 'Kurulum') : 'Kontrol',
       badgeColor: whatsappStatusLoaded
@@ -131,15 +116,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--rose-gold)',
       badge: '2 aktif',
       badgeColor: 'bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]',
-    },
-    {
-      icon: Zap,
-      label: 'Otomasyonlar',
-      description: 'Hatırlatmalar ve bildirimler',
-      action: () => onNavigate('automations'),
-      color: '#8B5CF6',
-      badge: '5 aktif',
-      badgeColor: 'bg-purple-500/10 text-purple-700',
     },
   ];
 

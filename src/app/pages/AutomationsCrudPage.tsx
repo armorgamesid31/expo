@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Input } from '../components/ui/input';
 import { cn } from '../components/ui/utils';
+import { useSearchParams } from 'react-router-dom';
 
 interface AutomationItem {
   id: number;
@@ -310,6 +311,13 @@ function OptionRow({
 
 export function AutomationsCrudPage() {
   const { apiFetch } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  const sectionParam = searchParams.get('section');
+  const viewMode: 'all' | 'reminder' | 'attendance' =
+    sectionParam === 'reminder' ? 'reminder' : sectionParam === 'attendance' ? 'attendance' : 'all';
+  const showReminderSection = viewMode !== 'attendance';
+  const showAttendanceSection = viewMode !== 'reminder';
 
   const [items, setItems] = useState<AutomationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -510,8 +518,20 @@ export function AutomationsCrudPage() {
   return (
     <div className="h-full overflow-y-auto bg-[var(--luxury-bg)] pb-20">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Otomasyonlar</h1>
-        <p className="text-sm text-muted-foreground">Randevu iletişimlerini otomatik yönet</p>
+        <h1 className="text-2xl font-semibold mb-1">
+          {viewMode === 'reminder'
+            ? 'WhatsApp Hatırlatma Ayarları'
+            : viewMode === 'attendance'
+              ? 'Randevuya Gelmeme Takibi'
+              : 'Otomasyonlar'}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {viewMode === 'reminder'
+            ? 'Randevu hatırlatma adımlarını tek yerden yönet'
+            : viewMode === 'attendance'
+              ? 'İhlal kuralları ve yaptırım seviyelerini yönet'
+              : 'Randevu iletişimlerini otomatik yönet'}
+        </p>
       </div>
 
       <div className="p-4 space-y-4">
@@ -523,103 +543,111 @@ export function AutomationsCrudPage() {
           </Card>
         ) : null}
 
-        <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Hatırlatmalar</p>
+        {showReminderSection ? (
+          <>
+            {viewMode === 'all' ? (
+              <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Hatırlatmalar</p>
+            ) : null}
 
-        <Card className="border border-border bg-card shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[var(--rose-gold)] bg-[var(--rose-gold)]/12">
-                  <Bell className="w-5 h-5" />
+            <Card className="border border-border bg-card shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[var(--rose-gold)] bg-[var(--rose-gold)]/12">
+                      <Bell className="w-5 h-5" />
+                    </div>
+
+                    <div className="min-w-0">
+                      <h3 className="text-base font-semibold leading-tight text-foreground">Randevu Hatırlatma</h3>
+                      <p className="mt-1 text-sm leading-tight text-muted-foreground">
+                        Tek ayardan 2 saat, 24 saat ve 72 saat önce hatırlatma kurgusunu yönet.
+                      </p>
+
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {reminderBadges.length ? (
+                          reminderBadges.map((badge) => (
+                            <span
+                              key={badge}
+                              className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground"
+                            >
+                              {badge}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+                            Aktif hatırlatma yok
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={openReminderSettings}
+                        className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
+                      >
+                        Ayarları Düzenle
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <ToggleButton
+                    checked={reminderEnabled}
+                    onClick={() => void handleReminderToggle()}
+                    disabled={savingKey === 'reminder' || loading}
+                    ariaLabel={`Randevu hatırlatma ${reminderEnabled ? 'kapat' : 'aç'}`}
+                  />
                 </div>
+              </CardContent>
+            </Card>
+          </>
+        ) : null}
 
-                <div className="min-w-0">
-                  <h3 className="text-base font-semibold leading-tight text-foreground">Randevu Hatırlatma</h3>
-                  <p className="mt-1 text-sm leading-tight text-muted-foreground">
-                    Tek ayardan 2 saat, 24 saat ve 72 saat önce hatırlatma kurgusunu yönet.
-                  </p>
+        {showAttendanceSection ? (
+          <Card className="border border-border bg-card shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[var(--rose-gold)] bg-[var(--rose-gold)]/12">
+                    <UserRoundX className="w-5 h-5" />
+                  </div>
 
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {reminderBadges.length ? (
-                      reminderBadges.map((badge) => (
-                        <span
-                          key={badge}
-                          className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground"
-                        >
-                          {badge}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
-                        Aktif hatırlatma yok
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold leading-tight text-foreground">Randevuya Gelmeme Takibi</h3>
+                    <p className="mt-1 text-sm leading-tight text-muted-foreground">
+                      Geç iptal, geç değişiklik ve randevu kaçırma kurallarını tek yerden yönet.
+                    </p>
+
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                        Geçerlilik: {validityLabel(attendanceConfig.validityWindow)}
                       </span>
-                    )}
+                      <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                        Bildirim: {enabledNotificationEventCount} durum
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={openAttendanceSettings}
+                      className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
+                    >
+                      Ayarları Düzenle
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={openReminderSettings}
-                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
-                  >
-                    Ayarları Düzenle
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
+
+                <ToggleButton
+                  checked={attendanceEnabled}
+                  onClick={() => void handleAttendanceToggle()}
+                  disabled={savingKey === 'attendance' || loading}
+                  ariaLabel={`Randevuya gelmeme takibi ${attendanceEnabled ? 'kapat' : 'aç'}`}
+                />
               </div>
-
-              <ToggleButton
-                checked={reminderEnabled}
-                onClick={() => void handleReminderToggle()}
-                disabled={savingKey === 'reminder' || loading}
-                ariaLabel={`Randevu hatırlatma ${reminderEnabled ? 'kapat' : 'aç'}`}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-border bg-card shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[var(--rose-gold)] bg-[var(--rose-gold)]/12">
-                  <UserRoundX className="w-5 h-5" />
-                </div>
-
-                <div className="min-w-0">
-                  <h3 className="text-base font-semibold leading-tight text-foreground">Randevuya Gelmeme Takibi</h3>
-                  <p className="mt-1 text-sm leading-tight text-muted-foreground">
-                    Geç iptal, geç değişiklik ve randevu kaçırma kurallarını tek yerden yönet.
-                  </p>
-
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                      Geçerlilik: {validityLabel(attendanceConfig.validityWindow)}
-                    </span>
-                    <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                      Bildirim: {enabledNotificationEventCount} durum
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={openAttendanceSettings}
-                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
-                  >
-                    Ayarları Düzenle
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <ToggleButton
-                checked={attendanceEnabled}
-                onClick={() => void handleAttendanceToggle()}
-                disabled={savingKey === 'attendance' || loading}
-                ariaLabel={`Randevuya gelmeme takibi ${attendanceEnabled ? 'kapat' : 'aç'}`}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
 
       <Dialog open={editingType === 'reminder'} onOpenChange={(open) => (!open ? closeDialog() : null)}>

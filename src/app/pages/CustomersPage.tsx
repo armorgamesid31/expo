@@ -481,12 +481,18 @@ export function CustomersPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => navigate('/app/automations?section=attendance')}
+            className="rounded-md border border-border px-3 py-1.5 text-xs"
+          >
+            Randevuya Gelmeme Takibi
+          </button>
+          <button
+            type="button"
             onClick={() => navigate('/app/blacklist')}
             className="rounded-md border border-border px-3 py-1.5 text-xs"
           >
             Kara Liste
           </button>
-          <p className="text-xs text-muted-foreground">Cursor pagination</p>
         </div>
       </div>
 

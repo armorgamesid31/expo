@@ -37,7 +37,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: 'Hangi otomasyonları kurabilirim?',
-    answer: 'Otomasyonlar bölümünden randevu hatırlatıcıları, ziyaret sonrası teşekkür mesajları, no-show uyarıları ve yol tarifi gönderimi gibi otomatik mesajlar kurabilirsiniz. Tüm mesajlar WhatsApp üzerinden gönderilir.',
+    answer: 'WhatsApp Ayarları bölümünden randevu hatırlatıcılarını, Müşteri Yönetimi > Randevuya Gelmeme Takibi bölümünden ihlal bildirimlerini yönetebilirsiniz. Tüm mesajlar WhatsApp üzerinden gönderilir.',
     category: 'AI ve Otomasyon',
   },
   {

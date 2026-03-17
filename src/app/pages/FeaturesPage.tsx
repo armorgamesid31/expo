@@ -11,6 +11,7 @@ export function FeaturesPage() {
       inventory: '/app/inventory',
       campaigns: '/app/campaigns',
       automations: '/app/automations',
+      'whatsapp-settings': '/app/features/whatsapp-settings',
       'service-management': '/app/services',
       'staff-management': '/app/staff',
       'salon-info': '/app/salon-info',
