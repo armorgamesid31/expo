@@ -200,7 +200,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
         >
           <Card className="border-border/50 bg-gradient-to-br from-[var(--rose-gold)]/10 to-transparent">
             <CardContent className="p-4">
@@ -233,9 +233,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
               return (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, delay: 0.03 * idx, ease: [0.22, 1, 0.36, 1] }}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.05 * idx, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <Card
                     className="border-border/50 cursor-pointer hover:border-[var(--rose-gold)]/50 transition-all active:scale-98 shadow-sm"
@@ -269,9 +269,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
               return (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: 0.2 + 0.04 * idx, ease: [0.22, 1, 0.36, 1] }}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.34, delay: 0.24 + 0.06 * idx, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <Card
                     className="border-border/50 cursor-pointer hover:border-[var(--rose-gold)]/40 transition-all active:scale-[0.98] overflow-hidden group shadow-sm"

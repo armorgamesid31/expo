@@ -5,6 +5,70 @@ import { AnimatePresence, motion } from 'motion/react';
 import { BottomNav } from '../layout/BottomNav';
 import { useAuth } from '../../context/AuthContext';
 
+type TransitionKind = 'slide-x' | 'slide-y' | 'fade-lift' | 'soft-scale' | 'fade';
+
+function transitionKindFromPathname(pathname: string): TransitionKind {
+  if (pathname.startsWith('/app/features')) return 'slide-x';
+  if (pathname.startsWith('/app/schedule')) return 'slide-y';
+  if (pathname.startsWith('/app/dashboard')) return 'fade-lift';
+  if (pathname.startsWith('/app/settings')) return 'fade';
+  if (
+    pathname.startsWith('/app/customers') ||
+    pathname.startsWith('/app/analytics') ||
+    pathname.startsWith('/app/inventory') ||
+    pathname.startsWith('/app/campaigns') ||
+    pathname.startsWith('/app/automations') ||
+    pathname.startsWith('/app/blacklist') ||
+    pathname.startsWith('/app/salon-info') ||
+    pathname.startsWith('/app/services') ||
+    pathname.startsWith('/app/staff')
+  ) {
+    return 'soft-scale';
+  }
+  return 'slide-x';
+}
+
+function transitionMotionByKind(kind: TransitionKind, direction: 1 | -1) {
+  switch (kind) {
+    case 'slide-x':
+      return {
+        initial: { x: direction === 1 ? 36 : -36, opacity: 0 },
+        animate: { x: 0, opacity: 1 },
+        exit: { x: direction === 1 ? -28 : 28, opacity: 0 },
+        transition: { duration: 0.36, ease: [0.22, 1, 0.36, 1] },
+      };
+    case 'slide-y':
+      return {
+        initial: { y: direction === 1 ? 28 : -20, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        exit: { y: direction === 1 ? -18 : 20, opacity: 0 },
+        transition: { duration: 0.34, ease: [0.22, 1, 0.36, 1] },
+      };
+    case 'fade-lift':
+      return {
+        initial: { y: 14, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        exit: { y: -10, opacity: 0 },
+        transition: { duration: 0.32, ease: [0.25, 1, 0.5, 1] },
+      };
+    case 'soft-scale':
+      return {
+        initial: { scale: 0.985, y: 8, opacity: 0 },
+        animate: { scale: 1, y: 0, opacity: 1 },
+        exit: { scale: 0.992, y: -8, opacity: 0 },
+        transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+      };
+    case 'fade':
+    default:
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.3, ease: 'easeInOut' },
+      };
+  }
+}
+
 function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/schedule')) return 'schedule';
   if (pathname.startsWith('/app/customers')) return 'features';
@@ -52,6 +116,8 @@ export function AppLayout() {
 
   const activeTab = tabFromPathname(location.pathname);
   const backTarget = backTargetFromPathname(location.pathname);
+  const transitionKind = transitionKindFromPathname(location.pathname);
+  const transitionMotion = transitionMotionByKind(transitionKind, transitionDirection);
 
   useEffect(() => {
     const previousPath = previousPathRef.current;
@@ -124,10 +190,10 @@ export function AppLayout() {
         <AnimatePresence initial={false} mode="wait">
           <motion.div
             key={location.pathname}
-            initial={{ x: transitionDirection === 1 ? 24 : -24, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: transitionDirection === 1 ? -18 : 18, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            initial={transitionMotion.initial}
+            animate={transitionMotion.animate}
+            exit={transitionMotion.exit}
+            transition={transitionMotion.transition}
           >
             <Outlet />
           </motion.div>
