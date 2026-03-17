@@ -63,11 +63,11 @@ export function FeatureDetailPage() {
   const { featureKey } = useParams();
   const navigate = useNavigate();
 
-  const onBack = () => navigate('/app/features');
+  const onBack = () => navigate('/app/features', { state: { navDirection: 'back' } });
 
   if (featureKey === 'whatsapp-settings') return <WhatsAppSettings onBack={onBack} />;
   if (featureKey === 'whatsapp-agent') return <WhatsAppAgent onBack={onBack} />;
-  if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={() => navigate('/app/features/whatsapp-agent')} />;
+  if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={() => navigate('/app/features/whatsapp-agent', { state: { navDirection: 'back' } })} />;
   if (featureKey === 'whatsapp-setup') return <WhatsAppSetupGate onBack={onBack} />;
   if (featureKey === 'website-builder') return <WebsiteBuilder onBack={onBack} />;
   if (featureKey === 'marketing') return <MarketingAutomation onBack={onBack} />;

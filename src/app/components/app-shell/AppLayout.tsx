@@ -1,5 +1,7 @@
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { BottomNav } from '../layout/BottomNav';
 import { useAuth } from '../../context/AuthContext';
 
@@ -45,24 +47,47 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { bootstrap, logout } = useAuth();
+  const previousPathRef = useRef(location.pathname);
+  const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
 
   const activeTab = tabFromPathname(location.pathname);
   const backTarget = backTargetFromPathname(location.pathname);
 
+  useEffect(() => {
+    const previousPath = previousPathRef.current;
+    const currentPath = location.pathname;
+    const explicitDirection =
+      typeof (location.state as { navDirection?: unknown } | null)?.navDirection === 'string'
+        ? ((location.state as { navDirection?: string }).navDirection as string)
+        : null;
+
+    if (explicitDirection === 'back') {
+      setTransitionDirection(-1);
+    } else if (explicitDirection === 'forward') {
+      setTransitionDirection(1);
+    } else {
+      const previousDepth = previousPath.split('/').filter(Boolean).length;
+      const currentDepth = currentPath.split('/').filter(Boolean).length;
+      setTransitionDirection(currentDepth < previousDepth ? -1 : 1);
+    }
+
+    previousPathRef.current = currentPath;
+  }, [location.pathname, location.state]);
+
   const handleTabChange = (tab: string) => {
     if (tab === 'schedule') {
-      navigate('/app/schedule');
+      navigate('/app/schedule', { state: { navDirection: 'forward' } });
       return;
     }
     if (tab === 'features') {
-      navigate('/app/features');
+      navigate('/app/features', { state: { navDirection: 'forward' } });
       return;
     }
     if (tab === 'settings') {
-      navigate('/app/settings');
+      navigate('/app/settings', { state: { navDirection: 'forward' } });
       return;
     }
-    navigate('/app/dashboard');
+    navigate('/app/dashboard', { state: { navDirection: 'forward' } });
   };
 
   return (
@@ -73,7 +98,7 @@ export function AppLayout() {
             {backTarget ? (
               <button
                 type="button"
-                onClick={() => navigate(backTarget)}
+                onClick={() => navigate(backTarget, { state: { navDirection: 'back' } })}
                 className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground"
                 aria-label="Geri"
               >
@@ -95,8 +120,18 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="pb-20">
-        <Outlet />
+      <main className="pb-20 overflow-x-hidden">
+        <AnimatePresence initial={false} mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ x: transitionDirection === 1 ? 24 : -24, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: transitionDirection === 1 ? -18 : 18, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />

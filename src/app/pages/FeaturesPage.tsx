@@ -23,7 +23,7 @@ export function FeaturesPage() {
       'help-center': '/app/features/help-center',
     };
 
-    navigate(map[target] || `/app/features/${target}`);
+    navigate(map[target] || `/app/features/${target}`, { state: { navDirection: 'forward' } });
   };
 
   return (
