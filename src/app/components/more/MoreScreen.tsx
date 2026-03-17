@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { useAuth } from '../../context/AuthContext';
+import { readSnapshot, writeSnapshot } from '../../lib/ui-cache';
 
 interface MoreScreenProps {
   isDarkMode: boolean;
@@ -13,8 +14,11 @@ interface MoreScreenProps {
 
 export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScreenProps) {
   const { apiFetch } = useAuth();
-  const [whatsappConnected, setWhatsappConnected] = useState(false);
-  const [whatsappStatusLoaded, setWhatsappStatusLoaded] = useState(false);
+  const cachedChakraStatus = readSnapshot<{ connected?: boolean; isActive?: boolean }>('chakra:status', 1000 * 60 * 10);
+  const [whatsappConnected, setWhatsappConnected] = useState(
+    Boolean(cachedChakraStatus?.connected) || Boolean(cachedChakraStatus?.isActive),
+  );
+  const [whatsappStatusLoaded, setWhatsappStatusLoaded] = useState(Boolean(cachedChakraStatus));
   const [warningModal, setWarningModal] = useState<{ 
     title: string; 
     message: string; 
@@ -112,11 +116,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
           return;
         }
         setWhatsappConnected(Boolean(status?.connected) || Boolean(status?.isActive));
+        writeSnapshot('chakra:status', status || {});
       } catch (error) {
         console.warn('Chakra status fetch failed in MoreScreen:', error);
-        if (mounted) {
-          setWhatsappConnected(false);
-        }
       } finally {
         if (mounted) {
           setWhatsappStatusLoaded(true);

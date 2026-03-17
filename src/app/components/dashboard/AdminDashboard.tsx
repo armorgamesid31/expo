@@ -61,9 +61,11 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
   const returningCustomers = Math.max(totalCustomers - newCustomers, 0);
   const completedAppointments = analytics?.metrics?.completedAppointments || 0;
   const totalAppointments = analytics?.metrics?.totalAppointments || 0;
+  const checklistReady = checklist !== undefined;
   const setupCompleted =
-    Boolean(checklist?.completed) ||
-    Boolean(checklist?.workingHours && checklist?.address && checklist?.phone && checklist?.service && checklist?.staff);
+    checklistReady &&
+    (Boolean(checklist?.completed) ||
+      Boolean(checklist?.workingHours && checklist?.address && checklist?.phone && checklist?.service && checklist?.staff));
 
   const stats = [
     {
@@ -108,7 +110,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
       {rangeError ? <p className="px-4 text-xs text-red-500">{rangeError}</p> : null}
 
       {/* Setup Checklist - Displayed only if empty state is true */}
-      {onNavigate && !setupCompleted && (
+      {onNavigate && checklistReady && !setupCompleted && (
         <div className="px-4">
           <SetupChecklist onNavigate={onNavigate} checklist={checklist} />
         </div>

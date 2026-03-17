@@ -16,6 +16,7 @@ import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { useAuth } from '../../context/AuthContext';
+import { readSnapshot, writeSnapshot } from '../../lib/ui-cache';
 
 interface WhatsAppSettingsProps {
   onBack: () => void;
@@ -50,16 +51,27 @@ interface AgentSettings {
 }
 
 const REMINDER_KEY = 'appointment_reminder';
+const CHAKRA_STATUS_CACHE_KEY = 'chakra:status';
+const WHATSAPP_AUTOMATIONS_CACHE_KEY = 'whatsapp:automations';
+const WHATSAPP_AGENT_SETTINGS_CACHE_KEY = 'whatsapp:agent-settings';
 
 export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
 
-  const [status, setStatus] = useState<ChakraStatusResponse | null>(null);
-  const [automations, setAutomations] = useState<AutomationItem[]>([]);
-  const [agentSettings, setAgentSettings] = useState<AgentSettings | null>(null);
+  const [status, setStatus] = useState<ChakraStatusResponse | null>(
+    () => readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10),
+  );
+  const [automations, setAutomations] = useState<AutomationItem[]>(
+    () => readSnapshot<AutomationItem[]>(WHATSAPP_AUTOMATIONS_CACHE_KEY, 1000 * 60 * 10) || [],
+  );
+  const [agentSettings, setAgentSettings] = useState<AgentSettings | null>(
+    () => readSnapshot<AgentSettings>(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, 1000 * 60 * 10),
+  );
 
-  const [statusLoading, setStatusLoading] = useState(true);
+  const [statusLoading, setStatusLoading] = useState<boolean>(
+    () => !(readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10) || null),
+  );
   const [statusRefreshing, setStatusRefreshing] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
 
@@ -102,6 +114,9 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
       setStatus(statusResponse);
       setAutomations(automationsResponse.items || []);
       setAgentSettings(agentResponse.settings || {});
+      writeSnapshot(CHAKRA_STATUS_CACHE_KEY, statusResponse);
+      writeSnapshot(WHATSAPP_AUTOMATIONS_CACHE_KEY, automationsResponse.items || []);
+      writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, agentResponse.settings || {});
     } catch (error: any) {
       setStatusError(error?.message || 'WhatsApp ayarları alınamadı.');
     } finally {

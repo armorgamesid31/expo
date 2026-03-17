@@ -3,8 +3,10 @@ import { X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { AdminCustomerItem, AdminCustomersResponse } from '../types/mobile-api';
 import { useNavigate } from 'react-router-dom';
+import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
 const PAGE_LIMIT = 20;
+const CUSTOMERS_LIST_CACHE_KEY = 'customers:list:default';
 
 const toInputDateValue = (value?: string | null) => {
   if (!value) {
@@ -85,13 +87,22 @@ interface NoShowRiskUpdateResponse {
   };
 }
 
+interface CustomersListSnapshot {
+  items: AdminCustomerItem[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 export function CustomersPage() {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
-  const [items, setItems] = useState<AdminCustomerItem[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [initialListSnapshot] = useState<CustomersListSnapshot | null>(
+    () => readSnapshot<CustomersListSnapshot>(CUSTOMERS_LIST_CACHE_KEY, 1000 * 60 * 10),
+  );
+  const [items, setItems] = useState<AdminCustomerItem[]>(() => initialListSnapshot?.items || []);
+  const [cursor, setCursor] = useState<string | null>(() => initialListSnapshot?.nextCursor || null);
+  const [hasMore, setHasMore] = useState<boolean>(() => initialListSnapshot?.hasMore || false);
+  const [loading, setLoading] = useState<boolean>(() => !initialListSnapshot);
   const [loadingMore, setLoadingMore] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -142,7 +153,12 @@ export function CustomersPage() {
     let mounted = true;
 
     (async () => {
-      setLoading(true);
+      const normalizedSearch = searchQuery.trim();
+      if (!normalizedSearch && initialListSnapshot) {
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       setError(null);
       try {
         const response = await loadPage(null, searchQuery);
@@ -150,6 +166,13 @@ export function CustomersPage() {
         setItems(response.items);
         setCursor(response.nextCursor);
         setHasMore(response.hasMore);
+        if (!normalizedSearch) {
+          writeSnapshot(CUSTOMERS_LIST_CACHE_KEY, {
+            items: response.items,
+            nextCursor: response.nextCursor,
+            hasMore: response.hasMore,
+          });
+        }
       } catch (err: any) {
         if (mounted) {
           setError(err?.message || 'Müşteriler alınamadı.');
@@ -176,7 +199,17 @@ export function CustomersPage() {
 
     try {
       const response = await loadPage(cursor, searchQuery);
-      setItems((prev) => [...prev, ...response.items]);
+      setItems((prev) => {
+        const nextItems = [...prev, ...response.items];
+        if (!searchQuery.trim()) {
+          writeSnapshot(CUSTOMERS_LIST_CACHE_KEY, {
+            items: nextItems,
+            nextCursor: response.nextCursor,
+            hasMore: response.hasMore,
+          });
+        }
+        return nextItems;
+      });
       setCursor(response.nextCursor);
       setHasMore(response.hasMore);
     } catch (err: any) {
@@ -215,7 +248,17 @@ export function CustomersPage() {
         ...response.customer,
         appointmentCount: 0,
       };
-      setItems((prev) => [nextItem, ...prev]);
+      setItems((prev) => {
+        const nextItems = [nextItem, ...prev];
+        if (!searchQuery.trim()) {
+          writeSnapshot(CUSTOMERS_LIST_CACHE_KEY, {
+            items: nextItems,
+            nextCursor: cursor,
+            hasMore,
+          });
+        }
+        return nextItems;
+      });
       setName('');
       setPhone('');
       setInstagram('');

@@ -9,7 +9,12 @@ const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
 export function SettingsPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof document === 'undefined') {
+      return false;
+    }
+    return document.documentElement.classList.contains('dark');
+  });
 
   useEffect(() => {
     let mounted = true;

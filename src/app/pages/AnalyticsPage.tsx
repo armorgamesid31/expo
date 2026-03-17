@@ -15,6 +15,7 @@ import {
   YAxis,
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
+import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 import { AnalyticsRangeSelector } from '../components/analytics/AnalyticsRangeSelector';
 import {
   AnalyticsRangePreset,
@@ -52,6 +53,12 @@ const PIE_COLORS = [
   '#7A7E9D',
 ];
 
+const ANALYTICS_OVERVIEW_CACHE_PREFIX = 'analytics:overview';
+
+function analyticsOverviewCacheKey(fromIso: string, toIso: string): string {
+  return `${ANALYTICS_OVERVIEW_CACHE_PREFIX}:${fromIso}:${toIso}`;
+}
+
 export function AnalyticsPage() {
   const { apiFetch } = useAuth();
   const defaults = defaultCustomDates();
@@ -78,7 +85,15 @@ export function AnalyticsPage() {
       return;
     }
 
-    setLoading(true);
+    const cacheKey = analyticsOverviewCacheKey(resolved.range.fromIso, resolved.range.toIso);
+    const cachedOverview = readSnapshot<AnalyticsResponse>(cacheKey, 1000 * 60 * 60 * 24);
+    if (cachedOverview) {
+      setOverview(cachedOverview);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     try {
       setError(null);
       setRangeError(null);
@@ -88,6 +103,7 @@ export function AnalyticsPage() {
         )}`,
       );
       setOverview(analytics);
+      writeSnapshot(cacheKey, analytics);
     } catch (err: any) {
       setError(err?.message || 'Analitik veriler alınamadı.');
     } finally {

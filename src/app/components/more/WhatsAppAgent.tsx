@@ -7,6 +7,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { motion } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
+import { readSnapshot, writeSnapshot } from '../../lib/ui-cache';
 
 interface WhatsAppAgentProps {
   onBack: () => void;
@@ -56,12 +57,27 @@ const salonFaqQuestions = [
   { id: 'faq-whatsapp-response', question: 'Müşteriler mesajlara ortalama ne kadar sürede yanıt alır?' },
 ];
 
+const CHAKRA_STATUS_CACHE_KEY = 'chakra:status';
+const WHATSAPP_AGENT_SETTINGS_CACHE_KEY = 'whatsapp:agent-settings';
+
 export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
-  const [agentEnabled, setAgentEnabled] = useState(false);
-  const [chakraConnected, setChakraConnected] = useState(false);
-  const [chakraPluginActive, setChakraPluginActive] = useState(false);
+  const cachedStatus = readSnapshot<{ connected?: boolean; isActive?: boolean }>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10);
+  const cachedSettings = readSnapshot<{
+    isEnabled?: boolean;
+    tone?: 'friendly' | 'professional' | 'balanced';
+    answerLength?: 'short' | 'medium' | 'detailed';
+    emojiUsage?: 'off' | 'low' | 'normal';
+    bookingGuidance?: 'low' | 'medium' | 'high';
+    handoverThreshold?: 'early' | 'balanced' | 'late';
+    aiDisclosure?: 'always' | 'onQuestion' | 'never';
+    faqAnswers?: Record<string, string>;
+  }>(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, 1000 * 60 * 10);
+
+  const [agentEnabled, setAgentEnabled] = useState(Boolean(cachedSettings?.isEnabled));
+  const [chakraConnected, setChakraConnected] = useState(Boolean(cachedStatus?.connected) || Boolean(cachedStatus?.isActive));
+  const [chakraPluginActive, setChakraPluginActive] = useState(Boolean(cachedStatus?.isActive));
   const [togglingAgent, setTogglingAgent] = useState(false);
   const [toggleFeedback, setToggleFeedback] = useState<string | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
@@ -69,12 +85,12 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedField, setSavedField] = useState<string | null>(null);
-  const [tone, setTone] = useState<'friendly' | 'professional' | 'balanced'>('balanced');
-  const [answerLength, setAnswerLength] = useState<'short' | 'medium' | 'detailed'>('medium');
-  const [emojiUsage, setEmojiUsage] = useState<'off' | 'low' | 'normal'>('low');
-  const [bookingGuidance, setBookingGuidance] = useState<'low' | 'medium' | 'high'>('medium');
-  const [handoverThreshold, setHandoverThreshold] = useState<'early' | 'balanced' | 'late'>('balanced');
-  const [aiDisclosure, setAiDisclosure] = useState<'always' | 'onQuestion' | 'never'>('onQuestion');
+  const [tone, setTone] = useState<'friendly' | 'professional' | 'balanced'>(cachedSettings?.tone || 'balanced');
+  const [answerLength, setAnswerLength] = useState<'short' | 'medium' | 'detailed'>(cachedSettings?.answerLength || 'medium');
+  const [emojiUsage, setEmojiUsage] = useState<'off' | 'low' | 'normal'>(cachedSettings?.emojiUsage || 'low');
+  const [bookingGuidance, setBookingGuidance] = useState<'low' | 'medium' | 'high'>(cachedSettings?.bookingGuidance || 'medium');
+  const [handoverThreshold, setHandoverThreshold] = useState<'early' | 'balanced' | 'late'>(cachedSettings?.handoverThreshold || 'balanced');
+  const [aiDisclosure, setAiDisclosure] = useState<'always' | 'onQuestion' | 'never'>(cachedSettings?.aiDisclosure || 'onQuestion');
   const [salonFaqAnswers, setSalonFaqAnswers] = useState<Record<string, string>>({
     'faq-working-hours': 'Hafta içi 09:00-20:00, Cumartesi 10:00-18:00, Pazar kapalıyız.',
     'faq-cancellation': 'Randevu saatinden en az 4 saat önce ücretsiz iptal/değişiklik yapabilirsiniz.',
@@ -82,6 +98,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     'faq-late-policy': '15 dakikadan fazla gecikmede slot uygunluğuna göre yeni saat önerilir.',
     'faq-first-visit': 'İlk ziyarette kısa bir ihtiyaç analizi yapıyoruz ve önerilen paketleri sunuyoruz.',
     'faq-whatsapp-response': 'Çalışma saatlerinde ortalama 5-10 dakika içinde geri dönüş sağlıyoruz.',
+    ...(cachedSettings?.faqAnswers || {}),
   });
 
   const conversionRate = 68;
@@ -119,6 +136,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         if (active) {
           setChakraConnected(isConnected);
           setChakraPluginActive(isActive);
+          writeSnapshot(CHAKRA_STATUS_CACHE_KEY, chakraStatus || {});
         }
 
         if (!active || !response?.settings) return;
@@ -132,6 +150,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         if (response.settings.faqAnswers) {
           setSalonFaqAnswers((prev) => ({ ...prev, ...response.settings.faqAnswers }));
         }
+        writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, response.settings);
       } catch (error) {
         console.error('WhatsApp agent settings load failed:', error);
       }
@@ -179,6 +198,16 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
           ? 'AI ajanı aktif edildi.'
           : 'AI ajanı pasif duruma alındı.',
       );
+      writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, {
+        isEnabled: nextValue,
+        tone,
+        answerLength,
+        emojiUsage,
+        bookingGuidance,
+        handoverThreshold,
+        aiDisclosure,
+        faqAnswers: salonFaqAnswers,
+      });
       setTimeout(() => {
         setToggleFeedback(null);
       }, 2000);
@@ -218,6 +247,16 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         }),
       });
       setSavedField(fieldKey);
+      writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, {
+        isEnabled: overrides?.isEnabled ?? agentEnabled,
+        tone: overrides?.tone ?? tone,
+        answerLength: overrides?.answerLength ?? answerLength,
+        emojiUsage: overrides?.emojiUsage ?? emojiUsage,
+        bookingGuidance: overrides?.bookingGuidance ?? bookingGuidance,
+        handoverThreshold: overrides?.handoverThreshold ?? handoverThreshold,
+        aiDisclosure: overrides?.aiDisclosure ?? aiDisclosure,
+        faqAnswers: overrides?.faqAnswers ?? salonFaqAnswers,
+      });
       setTimeout(() => setSavedField((prev) => (prev === fieldKey ? null : prev)), 1800);
       setEditingQuestionId(null);
     } catch (error) {

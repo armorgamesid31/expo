@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { WhatsAppAgent } from '../components/more/WhatsAppAgent';
 import { WhatsAppSetup } from '../components/more/WhatsAppSetup';
@@ -13,51 +12,6 @@ import { Automations } from '../components/more/Automations';
 import { HelpCenter } from '../components/more/HelpCenter';
 import { WhatsAppAgentFaq } from '../components/more/WhatsAppAgentFaq';
 import { WhatsAppSettings } from '../components/more/WhatsAppSettings';
-import { useAuth } from '../context/AuthContext';
-
-function WhatsAppSetupGate({ onBack }: { onBack: () => void }) {
-  const { apiFetch } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [connected, setConnected] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-
-    (async () => {
-      try {
-        const status = await apiFetch<{ connected?: boolean; isActive?: boolean }>(`/api/app/chakra/status?t=${Date.now()}`);
-        if (!active) {
-          return;
-        }
-        setConnected(Boolean(status?.connected) || Boolean(status?.isActive));
-      } catch (error) {
-        console.warn('WhatsApp setup gate status fetch failed:', error);
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [apiFetch]);
-
-  if (loading) {
-    return (
-      <div className="p-4 text-sm text-muted-foreground">
-        WhatsApp bağlantı durumu kontrol ediliyor...
-      </div>
-    );
-  }
-
-  if (connected) {
-    return <Navigate to="/app/features/whatsapp-agent" replace />;
-  }
-
-  return <WhatsAppSetup onBack={onBack} />;
-}
 
 export function FeatureDetailPage() {
   const { featureKey } = useParams();
@@ -68,7 +22,7 @@ export function FeatureDetailPage() {
   if (featureKey === 'whatsapp-settings') return <WhatsAppSettings onBack={onBack} />;
   if (featureKey === 'whatsapp-agent') return <WhatsAppAgent onBack={onBack} />;
   if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={() => navigate('/app/features/whatsapp-agent', { state: { navDirection: 'back' } })} />;
-  if (featureKey === 'whatsapp-setup') return <WhatsAppSetupGate onBack={onBack} />;
+  if (featureKey === 'whatsapp-setup') return <WhatsAppSetup onBack={onBack} />;
   if (featureKey === 'website-builder') return <WebsiteBuilder onBack={onBack} />;
   if (featureKey === 'marketing') return <MarketingAutomation onBack={onBack} />;
   if (featureKey === 'service-management') return <ServiceManagement onBack={onBack} />;

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { useAuth } from '../../context/AuthContext';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { readSnapshot, writeSnapshot } from '../../lib/ui-cache';
 
 interface WhatsAppSetupProps {
   onBack: () => void;
@@ -51,6 +52,7 @@ type ChakraInstance = {
 const CONTAINER_ID = 'chakra-whatsapp-connect-container';
 const SCRIPT_ID = 'chakra-whatsapp-connect-sdk-script';
 const WHATSAPP_DEV_BYPASS_KEY = 'kedy_whatsapp_dev_bypass_connected';
+const CHAKRA_STATUS_CACHE_KEY = 'chakra:status';
 
 function loadChakraSdk(sdkUrl: string): Promise<void> {
   if ((window as any).ChakraWhatsappConnect?.init) {
@@ -96,20 +98,32 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const navigate = useNavigate();
   const instanceRef = useRef<ChakraInstance[]>([]);
   const hasAutoNavigatedRef = useRef(false);
+  const cachedStatus = readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10);
 
-  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [loadingStatus, setLoadingStatus] = useState(!cachedStatus);
   const [creatingPlugin, setCreatingPlugin] = useState(false);
   const [preparingConnect, setPreparingConnect] = useState(false);
-  const [pluginId, setPluginId] = useState<string | null>(null);
+  const [pluginId, setPluginId] = useState<string | null>(cachedStatus?.pluginId || null);
   const [nativeTriggerReady, setNativeTriggerReady] = useState(false);
   const [isPopupConnecting, setIsPopupConnecting] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(Boolean(cachedStatus?.connected) || Boolean(cachedStatus?.isActive));
+  const [autoNavigatePending, setAutoNavigatePending] = useState(false);
   const [devBypassed, setDevBypassed] = useState(false);
-  const [statusText, setStatusText] = useState('WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.');
+  const [statusText, setStatusText] = useState(() => {
+    if (!cachedStatus) {
+      return 'WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.';
+    }
+    const cachedConnected = Boolean(cachedStatus.connected) || Boolean(cachedStatus.isActive);
+    if (!cachedStatus.pluginId) {
+      return 'WhatsApp hesabınızı bağlamak için Başla butonuna dokunun.';
+    }
+    return cachedConnected ? 'WhatsApp bağlantısı tamamlandı.' : 'Facebook ile devam ederek bağlantıyı tamamlayın.';
+  });
   const [error, setError] = useState<string | null>(null);
 
   const syncStatusFromBackend = useCallback(async () => {
     const status = await apiFetch<ChakraStatusResponse>(`/api/app/chakra/status?t=${Date.now()}`);
+    writeSnapshot(CHAKRA_STATUS_CACHE_KEY, status);
 
     setPluginId(status.pluginId || null);
 
@@ -141,6 +155,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
       if (response.connected || Boolean(response.isActive)) {
         setConnected(true);
+        setAutoNavigatePending(true);
         setIsPopupConnecting(false);
         setStatusText('WhatsApp bağlantısı tamamlandı.');
       }
@@ -202,6 +217,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           void captureEvent(event, data, token.pluginId);
           if (isConnectedEvent(event, data)) {
             setConnected(true);
+            setAutoNavigatePending(true);
             setIsPopupConnecting(false);
             setStatusText('WhatsApp bağlantısı tamamlandı.');
             void syncStatusFromBackend();
@@ -321,8 +337,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   }, [connected]);
 
   useEffect(() => {
-    if (!connected || hasAutoNavigatedRef.current) {
-      if (!connected) {
+    if (!connected || !autoNavigatePending || hasAutoNavigatedRef.current) {
+      if (!connected || !autoNavigatePending) {
         hasAutoNavigatedRef.current = false;
       }
       return;
@@ -338,7 +354,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [connected, navigate]);
+  }, [connected, autoNavigatePending, navigate]);
 
   useEffect(() => {
     if (!connected) {

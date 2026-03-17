@@ -4,6 +4,7 @@ import { tr } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { AdminAppointmentsResponse } from '../types/mobile-api';
+import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
 interface StaffItem {
   id: number;
@@ -33,16 +34,36 @@ interface ServiceStaffItem {
   overridePrice?: number;
 }
 
+interface ScheduleSnapshot {
+  dayKey: string;
+  staff: StaffItem[];
+  services: ServiceItem[];
+  appointments: AdminAppointmentsResponse['items'];
+}
+
 const DAY_START_HOUR = 9;
 const DAY_END_HOUR = 21;
 const SLOT_HEIGHT = 72;
 const COLUMN_WIDTH = 180;
+const SCHEDULE_CACHE_PREFIX = 'schedule:day';
 
 function toWindowQuery(date: Date) {
   return {
     from: formatISO(startOfDay(date)),
     to: formatISO(endOfDay(date)),
   };
+}
+
+function dayKeyFromDate(date: Date): string {
+  return format(date, 'yyyy-MM-dd');
+}
+
+function scheduleCacheKey(dayKey: string): string {
+  return `${SCHEDULE_CACHE_PREFIX}:${dayKey}`;
+}
+
+function readScheduleSnapshot(date: Date): ScheduleSnapshot | null {
+  return readSnapshot<ScheduleSnapshot>(scheduleCacheKey(dayKeyFromDate(date)), 1000 * 60 * 60 * 6);
 }
 
 function statusLabel(status: string) {
@@ -72,13 +93,16 @@ function hourLabel(hour: number) {
 
 export function SchedulePage() {
   const { apiFetch } = useAuth();
+  const [initialScheduleSnapshot] = useState<ScheduleSnapshot | null>(() => readScheduleSnapshot(new Date()));
   const [activeDate, setActiveDate] = useState(new Date());
 
-  const [staff, setStaff] = useState<StaffItem[]>([]);
-  const [services, setServices] = useState<ServiceItem[]>([]);
-  const [appointments, setAppointments] = useState<AdminAppointmentsResponse['items']>([]);
+  const [staff, setStaff] = useState<StaffItem[]>(() => initialScheduleSnapshot?.staff || []);
+  const [services, setServices] = useState<ServiceItem[]>(() => initialScheduleSnapshot?.services || []);
+  const [appointments, setAppointments] = useState<AdminAppointmentsResponse['items']>(
+    () => initialScheduleSnapshot?.appointments || [],
+  );
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(() => !initialScheduleSnapshot);
   const [error, setError] = useState<string | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -120,7 +144,16 @@ export function SchedulePage() {
 
   const loadSchedule = useCallback(async () => {
     const window = toWindowQuery(activeDate);
-    setLoading(true);
+    const dayKey = dayKeyFromDate(activeDate);
+    const cached = readScheduleSnapshot(activeDate);
+    if (cached) {
+      setStaff(cached.staff);
+      setServices(cached.services);
+      setAppointments(cached.appointments);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -135,6 +168,12 @@ export function SchedulePage() {
       setAppointments(appointmentsResponse.items);
       setStaff(staffResponse.items);
       setServices(servicesResponse.items);
+      writeSnapshot(scheduleCacheKey(dayKey), {
+        dayKey,
+        appointments: appointmentsResponse.items,
+        staff: staffResponse.items,
+        services: servicesResponse.items,
+      });
     } catch (err: any) {
       setError(err?.message || 'Takvim verisi alınamadı.');
     } finally {

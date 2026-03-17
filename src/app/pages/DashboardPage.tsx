@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminDashboard } from '../components/dashboard/AdminDashboard';
 import { DayNavigator } from '../components/analytics/DayNavigator';
 import { useAuth } from '../context/AuthContext';
+import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 import {
   resolveSingleDayRange,
   shiftDateInputValue,
@@ -33,18 +34,41 @@ interface DashboardAnalyticsOverview {
   }>;
 }
 
+type DashboardChecklist = {
+  workingHours?: boolean;
+  address?: boolean;
+  phone?: boolean;
+  service?: boolean;
+  staff?: boolean;
+  completed?: boolean;
+};
+
+const DASHBOARD_CHECKLIST_CACHE_KEY = 'dashboard:checklist';
+const DASHBOARD_ANALYTICS_CACHE_PREFIX = 'dashboard:analytics:single-day';
+
+function analyticsCacheKey(fromIso: string, toIso: string): string {
+  return `${DASHBOARD_ANALYTICS_CACHE_PREFIX}:${fromIso}:${toIso}`;
+}
+
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { apiFetch } = useAuth();
-  const [checklist, setChecklist] = useState<{
-    workingHours?: boolean;
-    address?: boolean;
-    phone?: boolean;
-    service?: boolean;
-    staff?: boolean;
-    completed?: boolean;
-  } | null>(null);
-  const [analytics, setAnalytics] = useState<DashboardAnalyticsOverview | null>(null);
+  const { apiFetch, bootstrap } = useAuth();
+  const [checklist, setChecklist] = useState<DashboardChecklist | null | undefined>(() => {
+    if (bootstrap?.setupChecklist) {
+      return bootstrap.setupChecklist;
+    }
+    return readSnapshot<DashboardChecklist>(DASHBOARD_CHECKLIST_CACHE_KEY, 1000 * 60 * 60 * 24 * 30) || undefined;
+  });
+  const [analytics, setAnalytics] = useState<DashboardAnalyticsOverview | null>(() => {
+    const todayRange = resolveSingleDayRange(todayDateInputValue()).range;
+    if (!todayRange) {
+      return null;
+    }
+    return readSnapshot<DashboardAnalyticsOverview>(
+      analyticsCacheKey(todayRange.fromIso, todayRange.toIso),
+      1000 * 60 * 60 * 24,
+    );
+  });
   const [selectedDate, setSelectedDate] = useState(todayDateInputValue());
   const [rangeError, setRangeError] = useState<string | null>(null);
 
@@ -61,18 +85,30 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
+    if (!bootstrap?.setupChecklist) {
+      return;
+    }
+    setChecklist(bootstrap.setupChecklist);
+    writeSnapshot(DASHBOARD_CHECKLIST_CACHE_KEY, bootstrap.setupChecklist);
+  }, [bootstrap?.setupChecklist]);
+
+  useEffect(() => {
     let mounted = true;
 
     (async () => {
       try {
-        const setupResponse = await apiFetch<{ checklist?: typeof checklist }>('/api/admin/setup');
+        const setupResponse = await apiFetch<{ checklist?: DashboardChecklist | null }>('/api/admin/setup');
         if (mounted) {
-          setChecklist(setupResponse?.checklist || null);
+          const nextChecklist = setupResponse?.checklist ?? null;
+          if (nextChecklist !== null) {
+            setChecklist(nextChecklist);
+            writeSnapshot(DASHBOARD_CHECKLIST_CACHE_KEY, nextChecklist);
+          } else {
+            setChecklist(null);
+          }
         }
       } catch {
-        if (mounted) {
-          setChecklist(null);
-        }
+        // Keep bootstrap/cached snapshot on request failure to avoid UI flicker.
       }
     })();
 
@@ -89,6 +125,12 @@ export function DashboardPage() {
       return;
     }
 
+    const cacheKey = analyticsCacheKey(resolved.range.fromIso, resolved.range.toIso);
+    const cached = readSnapshot<DashboardAnalyticsOverview>(cacheKey, 1000 * 60 * 60 * 24);
+    if (cached) {
+      setAnalytics(cached);
+    }
+
     try {
       setRangeError(null);
       const analyticsResponse = await apiFetch<DashboardAnalyticsOverview>(
@@ -97,8 +139,11 @@ export function DashboardPage() {
         )}`,
       );
       setAnalytics(analyticsResponse || null);
+      if (analyticsResponse) {
+        writeSnapshot(cacheKey, analyticsResponse);
+      }
     } catch {
-      setAnalytics(null);
+      // Keep last known data if request fails.
     }
   };
 
