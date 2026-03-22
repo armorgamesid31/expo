@@ -21,6 +21,7 @@ export function FeaturesPage() {
       'whatsapp-agent': '/app/features/whatsapp-agent',
       marketing: '/app/features/marketing',
       'help-center': '/app/features/help-center',
+      'meta-direct': '/app/features/meta-direct',
     };
 
     navigate(map[target] || `/app/features/${target}`, { state: { navDirection: 'forward' } });

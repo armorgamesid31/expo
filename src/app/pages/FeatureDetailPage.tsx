@@ -12,6 +12,7 @@ import { Automations } from '../components/more/Automations';
 import { HelpCenter } from '../components/more/HelpCenter';
 import { WhatsAppAgentFaq } from '../components/more/WhatsAppAgentFaq';
 import { WhatsAppSettings } from '../components/more/WhatsAppSettings';
+import { MetaDirectSetup } from '../components/more/MetaDirectSetup';
 
 export function FeatureDetailPage() {
   const { featureKey } = useParams();
@@ -32,6 +33,7 @@ export function FeatureDetailPage() {
   if (featureKey === 'campaigns') return <Campaigns onBack={onBack} />;
   if (featureKey === 'automations') return <Automations onBack={onBack} />;
   if (featureKey === 'help-center') return <HelpCenter onBack={onBack} />;
+  if (featureKey === 'meta-direct') return <MetaDirectSetup onBack={onBack} />;
   if (featureKey === 'crm') return <Navigate to="/app/customers" replace />;
   if (featureKey === 'analytics') return <Navigate to="/app/analytics" replace />;
   if (featureKey === 'inventory') return <Navigate to="/app/inventory" replace />;

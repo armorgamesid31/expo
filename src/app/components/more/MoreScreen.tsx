@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Package, Sparkles, MessageCircle, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle } from 'lucide-react';
+import { BarChart3, Package, Sparkles, MessageCircle, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -85,6 +85,15 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       badgeColor: whatsappStatusLoaded
         ? (whatsappConnected ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700')
         : 'bg-muted text-muted-foreground',
+    },
+    {
+      icon: ShieldCheck,
+      label: 'Meta Direct (Beta)',
+      description: 'Instagram DM + WhatsApp Cloud API review hazırlığı',
+      action: () => onNavigate('meta-direct'),
+      color: 'var(--deep-indigo)',
+      badge: 'Beta',
+      badgeColor: 'bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)]',
     },
     {
       icon: Globe,
