@@ -31,9 +31,9 @@
   /* App palette aliases used by existing components */
   --rose-gold: #f47a20;
   --rose-gold-light: #00b8ff;
-  --rose-gold-dark: #cf6212;
+  --rose-gold-dark: #f47a20;
   --deep-indigo: #00b8ff;
-  --deep-indigo-light: #56d0ff;
+  --deep-indigo-light: #00b8ff;
   --luxury-bg: #f7f6f6;
   --luxury-card: #FFFFFF;
 
@@ -41,7 +41,7 @@
   --chart-2: #00b8ff;
   --chart-3: #a1c742;
   --chart-4: #242426;
-  --chart-5: #56d0ff;
+  --chart-5: #00b8ff;
   --radius: 0.625rem;
   --sidebar: #f7f6f6;
   --sidebar-foreground: #242426;
@@ -77,10 +77,10 @@
   --font-weight-normal: 400;
 
   --rose-gold: #f47a20;
-  --rose-gold-light: #ff9e57;
-  --rose-gold-dark: #cf6212;
+  --rose-gold-light: #f47a20;
+  --rose-gold-dark: #f47a20;
   --deep-indigo: #00b8ff;
-  --deep-indigo-light: #56d0ff;
+  --deep-indigo-light: #00b8ff;
   --luxury-bg: #242426;
   --luxury-card: #2f2f31;
 
@@ -88,7 +88,7 @@
   --chart-2: #00b8ff;
   --chart-3: #a1c742;
   --chart-4: #f7f6f6;
-  --chart-5: #56d0ff;
+  --chart-5: #00b8ff;
   --sidebar: #242426;
   --sidebar-foreground: #f7f6f6;
   --sidebar-primary: #f47a20;
@@ -170,10 +170,7 @@
 
   body {
     font-family: var(--font-body);
-    background:
-      radial-gradient(circle at top right, rgba(0, 184, 255, 0.08), transparent 35%),
-      radial-gradient(circle at bottom left, rgba(161, 199, 66, 0.12), transparent 32%),
-      var(--background);
+    background: var(--background);
   }
 
   h1 {

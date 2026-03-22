@@ -159,8 +159,8 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-[var(--luxury-bg)]">
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="relative flex items-center justify-between px-4 py-3">
+          <div className="w-8">
             {backTarget ? (
               <button
                 type="button"
@@ -171,25 +171,26 @@ export function AppLayout() {
                 <ChevronLeft className="h-4 w-4" />
               </button>
             ) : null}
-            <div className="rounded-lg bg-background px-2 py-1 border border-border/70">
-              <img
-                src="https://cdn.kedyapp.com/kedylogo_koyu.png"
-                alt="Kedy Logo"
-                className="h-7 w-auto dark:hidden"
-                loading="eager"
-              />
-              <img
-                src="https://cdn.kedyapp.com/kedylogo_acik.png"
-                alt="Kedy Logo"
-                className="hidden h-7 w-auto dark:block"
-                loading="eager"
-              />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">{bootstrap?.salon?.city || 'Salon'}</p>
-              <p className="text-sm font-semibold leading-tight">{bootstrap?.salon?.name || 'Kedy App'}</p>
-            </div>
           </div>
+
+          <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center">
+            <img
+              src="https://cdn.kedyapp.com/kedylogo_koyu.png"
+              alt="Kedy Logo"
+              className="h-[36px] w-auto dark:hidden"
+              loading="eager"
+            />
+            <img
+              src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
+              alt="Kedy Logo"
+              className="hidden h-[36px] w-auto dark:block"
+              loading="eager"
+            />
+            <p className="text-[10px] leading-tight text-muted-foreground">
+              {bootstrap?.salon?.name || 'Kedy App'}
+            </p>
+          </div>
+
           <button
             type="button"
             onClick={() => void logout()}

@@ -54,13 +54,13 @@ function RootRedirect() {
           <img
             src="https://cdn.kedyapp.com/kedylogo_koyu.png"
             alt="Kedy Logo"
-            className="h-10 w-auto dark:hidden"
+            className="h-[52px] w-auto dark:hidden"
             loading="eager"
           />
           <img
-            src="https://cdn.kedyapp.com/kedylogo_acik.png"
+            src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
             alt="Kedy Logo"
-            className="hidden h-10 w-auto dark:block"
+            className="hidden h-[52px] w-auto dark:block"
             loading="eager"
           />
           <p className="text-sm text-muted-foreground">Yükleniyor...</p>
