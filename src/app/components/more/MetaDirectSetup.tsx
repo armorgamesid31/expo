@@ -14,18 +14,14 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
+import { useAuth } from '../../context/AuthContext';
 
 interface MetaDirectSetupProps {
   onBack: () => void;
 }
 
 type ChannelKey = 'instagram' | 'whatsapp';
-type ChannelStatus =
-  | 'not_connected'
-  | 'preparing'
-  | 'oauth_opened'
-  | 'callback_received'
-  | 'connected';
+type ChannelStatus = 'not_connected' | 'preparing' | 'oauth_opened' | 'callback_received' | 'connected' | 'failed';
 
 interface ChannelState {
   status: ChannelStatus;
@@ -33,14 +29,29 @@ interface ChannelState {
   updatedAt: number;
 }
 
-interface SimState {
+interface MetaDirectState {
   instagram: ChannelState;
   whatsapp: ChannelState;
 }
 
-const STORAGE_KEY = 'kedy.meta.direct.sim.state.v1';
+interface MetaDirectStatusResponse {
+  instagram?: {
+    status?: string;
+    message?: string;
+    connected?: boolean;
+  };
+  whatsapp?: {
+    status?: string;
+    message?: string;
+    connected?: boolean;
+  };
+}
 
-const initialState: SimState = {
+interface ConnectUrlResponse {
+  authorizeUrl?: string;
+}
+
+const initialState: MetaDirectState = {
   instagram: {
     status: 'not_connected',
     message: 'Waiting for connection start.',
@@ -78,78 +89,174 @@ const reviewChecklist = [
 
 export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   const navigate = useNavigate();
-  const [state, setState] = useState<SimState>(initialState);
+  const { apiFetch } = useAuth();
+  const [state, setState] = useState<MetaDirectState>(initialState);
+  const [isLoading, setIsLoading] = useState(false);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+
+  const mapStatus = (status?: string, connected?: boolean): ChannelStatus => {
+    const normalized = String(status || '').toUpperCase();
+    if (normalized === 'CONNECTED' || connected) return 'connected';
+    if (normalized === 'FAILED') return 'failed';
+    if (normalized === 'CONNECTING') return 'preparing';
+    return 'not_connected';
+  };
+
+  const refreshStatus = async () => {
+    setIsLoading(true);
+    setGlobalError(null);
+    try {
+      const data = await apiFetch<MetaDirectStatusResponse>('/api/app/meta-direct/status');
+      setState({
+        instagram: {
+          status: mapStatus(data?.instagram?.status, data?.instagram?.connected),
+          message: data?.instagram?.message || 'Status received from backend.',
+          updatedAt: Date.now(),
+        },
+        whatsapp: {
+          status: mapStatus(data?.whatsapp?.status, data?.whatsapp?.connected),
+          message: data?.whatsapp?.message || 'Status received from backend.',
+          updatedAt: Date.now(),
+        },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Meta Direct status request failed.';
+      setGlobalError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<SimState>;
-      if (parsed.instagram && parsed.whatsapp) {
-        setState({
-          instagram: parsed.instagram,
-          whatsapp: parsed.whatsapp,
-        });
-      }
-    } catch (error) {
-      console.warn('Meta Direct sim state load failed:', error);
-    }
+    refreshStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    const handler = async (event: MessageEvent) => {
+      const payload = event?.data;
+      if (!payload || payload.type !== 'meta-direct-callback') {
+        return;
+      }
 
-  const connectedCount = useMemo(() => {
-    return Number(state.instagram.status === 'connected') + Number(state.whatsapp.status === 'connected');
-  }, [state.instagram.status, state.whatsapp.status]);
+      const key: ChannelKey | null =
+        payload.channel === 'INSTAGRAM' ? 'instagram' : payload.channel === 'WHATSAPP' ? 'whatsapp' : null;
+      if (!key) {
+        return;
+      }
+
+      const success = Boolean(payload.success);
+      setState((prev) => ({
+        ...prev,
+        [key]: {
+          status: success ? 'callback_received' : 'failed',
+          message:
+            typeof payload.message === 'string' && payload.message.trim()
+              ? payload.message
+              : success
+                ? 'Callback received.'
+                : 'Callback failed.',
+          updatedAt: Date.now(),
+        },
+      }));
+
+      await refreshStatus();
+    };
+
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const connectedCount = useMemo(
+    () => Number(state.instagram.status === 'connected') + Number(state.whatsapp.status === 'connected'),
+    [state.instagram.status, state.whatsapp.status],
+  );
 
   const setChannel = (key: ChannelKey, next: ChannelState) => {
     setState((prev) => ({ ...prev, [key]: next }));
   };
 
-  const startConnect = (key: ChannelKey) => {
+  const startConnect = async (key: ChannelKey) => {
     setChannel(key, {
       status: 'preparing',
       message: 'Preparing OAuth URL and state token...',
       updatedAt: Date.now(),
     });
+
+    setGlobalError(null);
+    try {
+      const data = await apiFetch<ConnectUrlResponse>('/api/app/meta-direct/connect-url', {
+        method: 'POST',
+        body: JSON.stringify({
+          channel: key === 'instagram' ? 'INSTAGRAM' : 'WHATSAPP',
+        }),
+      });
+
+      const url = data?.authorizeUrl || '';
+      if (!url) {
+        throw new Error('OAuth URL is empty.');
+      }
+
+      window.open(url, '_blank', 'noopener,noreferrer,width=620,height=780');
+      setChannel(key, {
+        status: 'oauth_opened',
+        message: 'OAuth window opened. Waiting for callback...',
+        updatedAt: Date.now(),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Connection start failed.';
+      setChannel(key, {
+        status: 'failed',
+        message,
+        updatedAt: Date.now(),
+      });
+      setGlobalError(message);
+    }
   };
 
-  const openOAuth = (key: ChannelKey) => {
+  const runProbe = async (key: ChannelKey) => {
     setChannel(key, {
-      status: 'oauth_opened',
-      message: 'OAuth window opened. Waiting for callback...',
+      status: 'preparing',
+      message: 'Running probe call to validate permission usage...',
       updatedAt: Date.now(),
     });
+
+    setGlobalError(null);
+    try {
+      await apiFetch('/api/app/meta-direct/probe', {
+        method: 'POST',
+        body: JSON.stringify({
+          channel: key === 'instagram' ? 'INSTAGRAM' : 'WHATSAPP',
+        }),
+      });
+
+      await refreshStatus();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Probe failed.';
+      setChannel(key, {
+        status: 'failed',
+        message,
+        updatedAt: Date.now(),
+      });
+      setGlobalError(message);
+    }
   };
 
-  const simulateCallback = (key: ChannelKey) => {
-    setChannel(key, {
-      status: 'callback_received',
-      message: 'Callback received with valid code.',
-      updatedAt: Date.now(),
-    });
-  };
-
-  const finalizeConnect = (key: ChannelKey) => {
-    setChannel(key, {
-      status: 'connected',
-      message: 'Connection finalized. Token stored.',
-      updatedAt: Date.now(),
-    });
-  };
-
-  const disconnect = (key: ChannelKey) => {
-    setChannel(key, {
-      status: 'not_connected',
-      message: 'Disconnected by user.',
-      updatedAt: Date.now(),
-    });
-  };
-
-  const resetAll = () => {
-    setState(initialState);
+  const disconnect = async (key: ChannelKey) => {
+    setGlobalError(null);
+    try {
+      await apiFetch('/api/app/meta-direct/disconnect', {
+        method: 'POST',
+        body: JSON.stringify({
+          channel: key === 'instagram' ? 'INSTAGRAM' : 'WHATSAPP',
+        }),
+      });
+      await refreshStatus();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Disconnect failed.';
+      setGlobalError(message);
+    }
   };
 
   const renderConnectionCard = (
@@ -203,36 +310,18 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {channel.status === 'not_connected' ? (
-              <Button type="button" size="sm" onClick={() => startConnect(key)}>
-                Start Connection
-              </Button>
-            ) : null}
+            <Button type="button" size="sm" onClick={() => startConnect(key)} disabled={isLoading}>
+              Start Connection
+            </Button>
 
-            {channel.status === 'preparing' ? (
-              <Button type="button" size="sm" onClick={() => openOAuth(key)}>
-                Simulate OAuth Opened
-              </Button>
-            ) : null}
+            <Button type="button" size="sm" variant="outline" onClick={() => runProbe(key)} disabled={isLoading}>
+              Run Probe
+            </Button>
 
-            {channel.status === 'oauth_opened' ? (
-              <Button type="button" size="sm" onClick={() => simulateCallback(key)}>
-                Simulate Callback Success
-              </Button>
-            ) : null}
-
-            {channel.status === 'callback_received' ? (
-              <Button type="button" size="sm" onClick={() => finalizeConnect(key)}>
-                Finalize Connection
-              </Button>
-            ) : null}
-
-            {channel.status !== 'not_connected' ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => disconnect(key)}>
-                <Unlink2 className="w-3.5 h-3.5 mr-1.5" />
-                Disconnect
-              </Button>
-            ) : null}
+            <Button type="button" size="sm" variant="outline" onClick={() => disconnect(key)} disabled={isLoading}>
+              <Unlink2 className="w-3.5 h-3.5 mr-1.5" />
+              Disconnect
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -268,16 +357,17 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
           <CardContent className="p-4 space-y-2">
             <p className="text-sm font-semibold">Connection Status</p>
             <p className="text-xs text-muted-foreground">
-              Simulation mode is active. You can run the full connection flow below without backend OAuth.
+              Live mode is active. All buttons send real requests to `/api/app/meta-direct/*`.
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-green-500/10 text-green-700 border-green-500/20">
                 {connectedCount}/2 Connected
               </Badge>
-              <Button type="button" size="sm" variant="outline" onClick={resetAll}>
-                Reset Simulation
+              <Button type="button" size="sm" variant="outline" onClick={refreshStatus} disabled={isLoading}>
+                Refresh Status
               </Button>
             </div>
+            {globalError ? <p className="text-xs text-red-600">{globalError}</p> : null}
           </CardContent>
         </Card>
 
@@ -318,7 +408,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
             </p>
             <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
               <Link2 className="w-3.5 h-3.5" />
-              This screen is for App Review prep and simulated onboarding only.
+              This screen now uses live Meta Direct backend endpoints.
             </div>
           </CardContent>
         </Card>
