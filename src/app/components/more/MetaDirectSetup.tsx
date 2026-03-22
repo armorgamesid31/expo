@@ -233,9 +233,11 @@ async function startWhatsAppEmbeddedSignup(args: {
       },
       {
         config_id: args.configId,
+        display: 'popup',
         response_type: 'code',
         override_default_response_type: true,
         extras: {
+          featureType: 'whatsapp_business_app_onboarding',
           feature: 'whatsapp_embedded_signup',
           sessionInfoVersion: '3',
         },
