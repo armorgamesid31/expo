@@ -50,7 +50,21 @@ function RootRedirect() {
   if (isLoading) {
     return (
       <div className="min-h-screen grid place-items-center bg-[var(--luxury-bg)] text-foreground">
-        <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+        <div className="flex flex-col items-center gap-3">
+          <img
+            src="https://cdn.kedyapp.com/kedylogo_koyu.png"
+            alt="Kedy Logo"
+            className="h-10 w-auto dark:hidden"
+            loading="eager"
+          />
+          <img
+            src="https://cdn.kedyapp.com/kedylogo_acik.png"
+            alt="Kedy Logo"
+            className="hidden h-10 w-auto dark:block"
+            loading="eager"
+          />
+          <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+        </div>
       </div>
     );
   }

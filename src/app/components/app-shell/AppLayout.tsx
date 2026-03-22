@@ -160,7 +160,7 @@ export function AppLayout() {
     <div className="min-h-screen bg-[var(--luxury-bg)]">
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {backTarget ? (
               <button
                 type="button"
@@ -171,6 +171,20 @@ export function AppLayout() {
                 <ChevronLeft className="h-4 w-4" />
               </button>
             ) : null}
+            <div className="rounded-lg bg-background px-2 py-1 border border-border/70">
+              <img
+                src="https://cdn.kedyapp.com/kedylogo_koyu.png"
+                alt="Kedy Logo"
+                className="h-7 w-auto dark:hidden"
+                loading="eager"
+              />
+              <img
+                src="https://cdn.kedyapp.com/kedylogo_acik.png"
+                alt="Kedy Logo"
+                className="hidden h-7 w-auto dark:block"
+                loading="eager"
+              />
+            </div>
             <div>
               <p className="text-xs text-muted-foreground">{bootstrap?.salon?.city || 'Salon'}</p>
               <p className="text-sm font-semibold leading-tight">{bootstrap?.salon?.name || 'Kedy App'}</p>
