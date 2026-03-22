@@ -48,7 +48,33 @@ interface MetaDirectStatusResponse {
 }
 
 interface ConnectUrlResponse {
+  channel?: 'INSTAGRAM' | 'WHATSAPP';
+  connectMode?: 'OAUTH' | 'EMBEDDED_SIGNUP';
   authorizeUrl?: string;
+  appId?: string;
+  configId?: string | null;
+  scopes?: string[];
+}
+
+interface EmbeddedSignupResult {
+  code: string;
+  phoneNumberId?: string | null;
+  wabaId?: string | null;
+  businessId?: string | null;
+  displayPhoneNumber?: string | null;
+}
+
+declare global {
+  interface Window {
+    FB?: {
+      init: (args: Record<string, unknown>) => void;
+      login: (
+        cb: (response: { authResponse?: { code?: string } }) => void,
+        options?: Record<string, unknown>,
+      ) => void;
+    };
+    fbAsyncInit?: () => void;
+  }
 }
 
 const initialState: MetaDirectState = {
@@ -63,6 +89,162 @@ const initialState: MetaDirectState = {
     updatedAt: Date.now(),
   },
 };
+
+let fbSdkReady: Promise<void> | null = null;
+
+function ensureFacebookSdk(appId: string) {
+  if (!appId?.trim()) {
+    return Promise.reject(new Error('Meta App ID is missing for Embedded Signup.'));
+  }
+
+  if (window.FB) {
+    window.FB.init({
+      appId,
+      cookie: true,
+      xfbml: false,
+      version: 'v23.0',
+    });
+    return Promise.resolve();
+  }
+
+  if (fbSdkReady) {
+    return fbSdkReady;
+  }
+
+  fbSdkReady = new Promise<void>((resolve, reject) => {
+    window.fbAsyncInit = () => {
+      if (!window.FB) {
+        reject(new Error('Facebook SDK failed to initialize.'));
+        return;
+      }
+      window.FB.init({
+        appId,
+        cookie: true,
+        xfbml: false,
+        version: 'v23.0',
+      });
+      resolve();
+    };
+
+    const scriptId = 'facebook-jssdk';
+    if (document.getElementById(scriptId)) {
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.async = true;
+    script.defer = true;
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+    script.onerror = () => reject(new Error('Failed to load Facebook SDK.'));
+    document.body.appendChild(script);
+  });
+
+  return fbSdkReady;
+}
+
+async function startWhatsAppEmbeddedSignup(args: {
+  appId: string;
+  configId: string;
+  scopes: string[];
+}): Promise<EmbeddedSignupResult> {
+  await ensureFacebookSdk(args.appId);
+
+  return new Promise<EmbeddedSignupResult>((resolve, reject) => {
+    if (!window.FB) {
+      reject(new Error('Facebook SDK is not available.'));
+      return;
+    }
+
+    let settled = false;
+    let signupData: Omit<EmbeddedSignupResult, 'code'> = {};
+
+    const done = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener('message', onMessage);
+      fn();
+    };
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.facebook.com' && event.origin !== 'https://web.facebook.com') {
+        return;
+      }
+
+      let data: any = event.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch {
+          return;
+        }
+      }
+
+      if (!data || data.type !== 'WA_EMBEDDED_SIGNUP') {
+        return;
+      }
+
+      if (data.event === 'FINISH') {
+        signupData = {
+          phoneNumberId: typeof data?.data?.phone_number_id === 'string' ? data.data.phone_number_id : null,
+          wabaId: typeof data?.data?.waba_id === 'string' ? data.data.waba_id : null,
+          businessId: typeof data?.data?.business_id === 'string' ? data.data.business_id : null,
+          displayPhoneNumber:
+            typeof data?.data?.display_phone_number === 'string' ? data.data.display_phone_number : null,
+        };
+        return;
+      }
+
+      if (data.event === 'CANCEL') {
+        done(() => reject(new Error('WhatsApp Embedded Signup canceled by user.')));
+        return;
+      }
+
+      if (data.event === 'ERROR') {
+        const message =
+          typeof data?.data?.error_message === 'string' && data.data.error_message.trim()
+            ? data.data.error_message.trim()
+            : 'WhatsApp Embedded Signup failed.';
+        done(() => reject(new Error(message)));
+      }
+    };
+
+    window.addEventListener('message', onMessage);
+
+    const timeout = window.setTimeout(() => {
+      done(() => reject(new Error('WhatsApp Embedded Signup timed out.')));
+    }, 3 * 60 * 1000);
+
+    window.FB.login(
+      (response) => {
+        if (response?.authResponse?.code) {
+          const code = response.authResponse.code;
+          window.clearTimeout(timeout);
+          done(() =>
+            resolve({
+              code,
+              ...signupData,
+            }),
+          );
+          return;
+        }
+
+        window.clearTimeout(timeout);
+        done(() => reject(new Error('Meta did not return authorization code.')));
+      },
+      {
+        config_id: args.configId,
+        response_type: 'code',
+        override_default_response_type: true,
+        scope: args.scopes.join(','),
+        extras: {
+          feature: 'whatsapp_embedded_signup',
+          sessionInfoVersion: '3',
+        },
+      },
+    );
+  });
+}
 
 const reviewChecklist = [
   {
@@ -192,6 +374,49 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
           channel: key === 'instagram' ? 'INSTAGRAM' : 'WHATSAPP',
         }),
       });
+
+      const isWhatsAppEmbedded =
+        key === 'whatsapp' &&
+        data?.connectMode === 'EMBEDDED_SIGNUP' &&
+        typeof data?.appId === 'string' &&
+        data.appId.trim() &&
+        typeof data?.configId === 'string' &&
+        data.configId.trim();
+
+      if (isWhatsAppEmbedded) {
+        setChannel(key, {
+          status: 'oauth_opened',
+          message: 'Opening WhatsApp Embedded Signup...',
+          updatedAt: Date.now(),
+        });
+
+        const signup = await startWhatsAppEmbeddedSignup({
+          appId: data.appId as string,
+          configId: data.configId as string,
+          scopes: Array.isArray(data.scopes) ? data.scopes : [],
+        });
+
+        setChannel(key, {
+          status: 'callback_received',
+          message: 'Embedded Signup finished. Finalizing token exchange...',
+          updatedAt: Date.now(),
+        });
+
+        await apiFetch('/api/app/meta-direct/exchange-code', {
+          method: 'POST',
+          body: JSON.stringify({
+            channel: 'WHATSAPP',
+            code: signup.code,
+            phoneNumberId: signup.phoneNumberId || null,
+            wabaId: signup.wabaId || null,
+            businessId: signup.businessId || null,
+            displayPhoneNumber: signup.displayPhoneNumber || null,
+          }),
+        });
+
+        await refreshStatus();
+        return;
+      }
 
       const url = data?.authorizeUrl || '';
       if (!url) {
