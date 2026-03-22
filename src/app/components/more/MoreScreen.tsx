@@ -89,7 +89,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     {
       icon: ShieldCheck,
       label: 'Meta Direct (Beta)',
-      description: 'Instagram DM + WhatsApp Cloud API review hazırlığı',
+      description: 'Instagram DM review hazırlığı',
       action: () => onNavigate('meta-direct'),
       color: 'var(--deep-indigo)',
       badge: 'Beta',
