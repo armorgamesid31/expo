@@ -146,7 +146,6 @@ function ensureFacebookSdk(appId: string) {
 async function startWhatsAppEmbeddedSignup(args: {
   appId: string;
   configId: string;
-  scopes: string[];
 }): Promise<EmbeddedSignupResult> {
   await ensureFacebookSdk(args.appId);
 
@@ -236,7 +235,6 @@ async function startWhatsAppEmbeddedSignup(args: {
         config_id: args.configId,
         response_type: 'code',
         override_default_response_type: true,
-        scope: args.scopes.join(','),
         extras: {
           feature: 'whatsapp_embedded_signup',
           sessionInfoVersion: '3',
@@ -393,7 +391,6 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
         const signup = await startWhatsAppEmbeddedSignup({
           appId: data.appId as string,
           configId: data.configId as string,
-          scopes: Array.isArray(data.scopes) ? data.scopes : [],
         });
 
         setChannel(key, {
