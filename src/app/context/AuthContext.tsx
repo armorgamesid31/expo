@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { httpRequest, ApiError } from '../lib/http';
+import { prefetchContentRuntimeBundle } from '../lib/content-runtime';
 import { secureGet, secureRemove, secureSet } from '../lib/secure-storage';
 import { STORAGE_KEYS } from '../lib/config';
 import type { BootstrapResponse } from '../types/mobile-api';
@@ -41,14 +42,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [bootstrap, setBootstrap] = useState<BootstrapResponse | null>(null);
 
+  const prefetchRuntimeBundle = useCallback(async (token: string, bootstrapData: BootstrapResponse | null) => {
+    await prefetchContentRuntimeBundle({
+      token,
+      tenant: {
+        tenantId: bootstrapData?.salon?.id ?? null,
+        tenantSlug: bootstrapData?.salon?.slug ?? null,
+        salonId: bootstrapData?.salon?.id ?? null,
+      },
+    });
+  }, []);
+
   const loadBootstrap = useCallback(async (token: string) => {
     const data = await httpRequest<BootstrapResponse>('/api/mobile/bootstrap', {
       method: 'GET',
       token,
     } as any);
     setBootstrap(data);
+    void prefetchRuntimeBundle(token, data);
     return data;
-  }, []);
+  }, [prefetchRuntimeBundle]);
 
   const rotateAccess = useCallback(
     async (currentRefreshToken?: string | null) => {
