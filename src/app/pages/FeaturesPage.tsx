@@ -19,6 +19,7 @@ export function FeaturesPage() {
       marketing: '/app/features/marketing',
       'help-center': '/app/features/help-center',
       'meta-direct': '/app/features/meta-direct',
+      'instagram-inbox': '/app/instagram-inbox',
     };
 
     navigate(map[target] || `/app/features/${target}`, { state: { navDirection: 'forward' } });

@@ -18,6 +18,7 @@ function transitionKindFromPathname(pathname: string): TransitionKind {
     pathname.startsWith('/app/inventory') ||
     pathname.startsWith('/app/campaigns') ||
     pathname.startsWith('/app/automations') ||
+    pathname.startsWith('/app/instagram-inbox') ||
     pathname.startsWith('/app/blacklist') ||
     pathname.startsWith('/app/salon-info') ||
     pathname.startsWith('/app/services') ||
@@ -76,6 +77,7 @@ function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/inventory')) return 'features';
   if (pathname.startsWith('/app/campaigns')) return 'features';
   if (pathname.startsWith('/app/automations')) return 'features';
+  if (pathname.startsWith('/app/instagram-inbox')) return 'features';
   if (pathname.startsWith('/app/blacklist')) return 'features';
   if (pathname.startsWith('/app/salon-info')) return 'features';
   if (pathname.startsWith('/app/services')) return 'features';
@@ -94,6 +96,7 @@ function backTargetFromPathname(pathname: string): string | null {
     '/app/inventory',
     '/app/campaigns',
     '/app/automations',
+    '/app/instagram-inbox',
     '/app/blacklist',
     '/app/salon-info',
     '/app/services',

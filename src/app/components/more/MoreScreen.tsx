@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck } from 'lucide-react';
+import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -67,6 +67,15 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
 
   // Advanced Modules — Altta
   const advancedModules = [
+    {
+      icon: MessageCircle,
+      label: 'Instagram Inbox (Beta)',
+      description: 'Conversation center + manual handover',
+      action: () => onNavigate('instagram-inbox'),
+      color: '#C13584',
+      badge: 'Beta',
+      badgeColor: 'bg-[#C13584]/10 text-[#C13584]',
+    },
     {
       icon: ShieldCheck,
       label: 'Meta Direct (Beta)',

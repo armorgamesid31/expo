@@ -19,6 +19,7 @@ import { CampaignsCrudPage } from './pages/CampaignsCrudPage';
 import { AutomationsCrudPage } from './pages/AutomationsCrudPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { BlacklistPage } from './pages/BlacklistPage';
+import { InstagramInboxPage } from './pages/InstagramInboxPage';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
 
@@ -89,6 +90,7 @@ function AppRoutes() {
           <Route path="campaigns" element={<CampaignsCrudPage />} />
           <Route path="automations" element={<AutomationsCrudPage />} />
           <Route path="blacklist" element={<BlacklistPage />} />
+          <Route path="instagram-inbox" element={<InstagramInboxPage />} />
           <Route path="salon-info" element={<SalonSetupPage />} />
           <Route path="services" element={<ServicesCrudPage />} />
           <Route path="staff" element={<StaffCrudPage />} />
