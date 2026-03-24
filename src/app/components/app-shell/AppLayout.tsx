@@ -10,6 +10,7 @@ type TransitionKind = 'slide-x' | 'slide-y' | 'fade-lift' | 'soft-scale' | 'fade
 function transitionKindFromPathname(pathname: string): TransitionKind {
   if (pathname.startsWith('/app/features')) return 'slide-x';
   if (pathname.startsWith('/app/schedule')) return 'slide-y';
+  if (pathname.startsWith('/app/conversations')) return 'soft-scale';
   if (pathname.startsWith('/app/dashboard')) return 'fade-lift';
   if (pathname.startsWith('/app/settings')) return 'fade';
   if (
@@ -72,6 +73,7 @@ function transitionMotionByKind(kind: TransitionKind, direction: 1 | -1) {
 
 function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/schedule')) return 'schedule';
+  if (pathname.startsWith('/app/conversations')) return 'conversations';
   if (pathname.startsWith('/app/customers')) return 'features';
   if (pathname.startsWith('/app/analytics')) return 'features';
   if (pathname.startsWith('/app/inventory')) return 'features';
@@ -150,6 +152,10 @@ export function AppLayout() {
     }
     if (tab === 'features') {
       navigate('/app/features', { state: { navDirection: 'forward' } });
+      return;
+    }
+    if (tab === 'conversations') {
+      navigate('/app/conversations', { state: { navDirection: 'forward' } });
       return;
     }
     if (tab === 'settings') {

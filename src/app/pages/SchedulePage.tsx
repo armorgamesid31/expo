@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDays, endOfDay, format, formatISO, startOfDay } from 'date-fns';
-import { tr } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { AdminAppointmentsResponse } from '../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
@@ -95,6 +94,7 @@ export function SchedulePage() {
   const { apiFetch } = useAuth();
   const [initialScheduleSnapshot] = useState<ScheduleSnapshot | null>(() => readScheduleSnapshot(new Date()));
   const [activeDate, setActiveDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
   const [staff, setStaff] = useState<StaffItem[]>(() => initialScheduleSnapshot?.staff || []);
   const [services, setServices] = useState<ServiceItem[]>(() => initialScheduleSnapshot?.services || []);
@@ -131,7 +131,7 @@ export function SchedulePage() {
 
   const timelineHeight = timeSlots.length * SLOT_HEIGHT;
 
-  const dateText = useMemo(() => format(activeDate, 'EEEE, d MMMM', { locale: tr }), [activeDate]);
+  const dateText = useMemo(() => format(activeDate, 'EEEE, d MMMM'), [activeDate]);
   const isToday = useMemo(() => format(activeDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'), [activeDate]);
 
   const servicesById = useMemo(() => {
@@ -141,6 +141,12 @@ export function SchedulePage() {
     }
     return map;
   }, [services]);
+
+  const sortedAppointments = useMemo(() => {
+    return [...appointments].sort(
+      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+    );
+  }, [appointments]);
 
   const loadSchedule = useCallback(async () => {
     const window = toWindowQuery(activeDate);
@@ -354,7 +360,7 @@ export function SchedulePage() {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Appointment Calendar</h1>
+        <h1 className="text-2xl font-semibold">Appointments</h1>
         <button
           type="button"
           onClick={() => void openCreateModal()}
@@ -362,6 +368,29 @@ export function SchedulePage() {
         >
           <Plus className="h-4 w-4" />
           New Appointment
+        </button>
+      </div>
+
+      <div className="inline-flex rounded-lg border border-border bg-card p-1">
+        <button
+          type="button"
+          onClick={() => setViewMode('calendar')}
+          className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium ${
+            viewMode === 'calendar' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'
+          }`}
+        >
+          <CalendarDays className="h-3.5 w-3.5" />
+          Calendar
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode('list')}
+          className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium ${
+            viewMode === 'list' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'
+          }`}
+        >
+          <List className="h-3.5 w-3.5" />
+          List
         </button>
       </div>
 
@@ -391,78 +420,109 @@ export function SchedulePage() {
       {loading ? <p className="text-sm text-muted-foreground">Loading calendar...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-          <div className="min-w-[760px]">
-            <div className="flex border-b border-border sticky top-0 bg-card z-10">
-              <div className="w-16 shrink-0 border-r border-border" />
-              <div className="flex flex-1">
-                {staff.map((member) => (
-                  <div key={member.id} className="border-r border-border px-2 py-2" style={{ width: COLUMN_WIDTH }}>
-                    <p className="text-xs font-semibold truncate">{member.name}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{member.title || 'Uzman'}</p>
-                  </div>
-                ))}
-                {!staff.length ? (
-                  <div className="px-3 py-3 text-xs text-muted-foreground">No staff found for the calendar.</div>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="flex">
-              <div className="w-16 shrink-0 border-r border-border bg-card/95 sticky left-0 z-10">
-                {timeSlots.map((hour) => (
-                  <div
-                    key={hour}
-                    className="border-b border-border/70 px-1 text-[11px] text-muted-foreground"
-                    style={{ height: SLOT_HEIGHT }}
-                  >
-                    <span className="-translate-y-2 inline-block">{hourLabel(hour)}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-1">
-                {staff.map((member) => {
-                  const rows = appointments.filter((item) => item.staff.id === member.id);
-                  return (
-                    <div key={member.id} className="relative border-r border-border" style={{ width: COLUMN_WIDTH, height: timelineHeight }}>
-                      {timeSlots.map((hour) => (
-                        <div key={`${member.id}-${hour}`} className="border-b border-border/70" style={{ height: SLOT_HEIGHT }} />
-                      ))}
-
-                      {rows.map((appointment) => {
-                        const block = getAppointmentStyle(appointment.startTime, appointment.endTime);
-                        const timeRange = `${format(new Date(appointment.startTime), 'HH:mm')} - ${format(
-                          new Date(appointment.endTime),
-                          'HH:mm',
-                        )}`;
-
-                        return (
-                          <div
-                            key={appointment.id}
-                            className={`absolute left-1 right-1 rounded-lg px-2 py-2 text-[11px] shadow-sm ${statusClass(
-                              appointment.status,
-                            )}`}
-                            style={{ top: block.top, height: block.height }}
-                            title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointment.status)}`}
-                          >
-                            <p className="font-semibold truncate">{appointment.customerName}</p>
-                            <p className="truncate text-muted-foreground">{appointment.service.name}</p>
-                            <p className="text-[10px] text-muted-foreground mt-1">{timeRange}</p>
-                          </div>
-                        );
-                      })}
+      {viewMode === 'calendar' ? (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+            <div className="min-w-[760px]">
+              <div className="flex border-b border-border sticky top-0 bg-card z-10">
+                <div className="w-16 shrink-0 border-r border-border" />
+                <div className="flex flex-1">
+                  {staff.map((member) => (
+                    <div key={member.id} className="border-r border-border px-2 py-2" style={{ width: COLUMN_WIDTH }}>
+                      <p className="text-xs font-semibold truncate">{member.name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{member.title || 'Specialist'}</p>
                     </div>
-                  );
-                })}
+                  ))}
+                  {!staff.length ? (
+                    <div className="px-3 py-3 text-xs text-muted-foreground">No staff found for the calendar.</div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="flex">
+                <div className="w-16 shrink-0 border-r border-border bg-card/95 sticky left-0 z-10">
+                  {timeSlots.map((hour) => (
+                    <div
+                      key={hour}
+                      className="border-b border-border/70 px-1 text-[11px] text-muted-foreground"
+                      style={{ height: SLOT_HEIGHT }}
+                    >
+                      <span className="-translate-y-2 inline-block">{hourLabel(hour)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-1">
+                  {staff.map((member) => {
+                    const rows = appointments.filter((item) => item.staff.id === member.id);
+                    return (
+                      <div key={member.id} className="relative border-r border-border" style={{ width: COLUMN_WIDTH, height: timelineHeight }}>
+                        {timeSlots.map((hour) => (
+                          <div key={`${member.id}-${hour}`} className="border-b border-border/70" style={{ height: SLOT_HEIGHT }} />
+                        ))}
+
+                        {rows.map((appointment) => {
+                          const block = getAppointmentStyle(appointment.startTime, appointment.endTime);
+                          const timeRange = `${format(new Date(appointment.startTime), 'HH:mm')} - ${format(
+                            new Date(appointment.endTime),
+                            'HH:mm',
+                          )}`;
+
+                          return (
+                            <div
+                              key={appointment.id}
+                              className={`absolute left-1 right-1 rounded-lg px-2 py-2 text-[11px] shadow-sm ${statusClass(
+                                appointment.status,
+                              )}`}
+                              style={{ top: block.top, height: block.height }}
+                              title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointment.status)}`}
+                            >
+                              <p className="font-semibold truncate">{appointment.customerName}</p>
+                              <p className="truncate text-muted-foreground">{appointment.service.name}</p>
+                              <p className="text-[10px] text-muted-foreground mt-1">{timeRange}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-2xl border border-border bg-card p-3 space-y-2">
+          {sortedAppointments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No appointments for this day.</p>
+          ) : (
+            sortedAppointments.map((appointment) => {
+              const start = format(new Date(appointment.startTime), 'HH:mm');
+              const end = format(new Date(appointment.endTime), 'HH:mm');
+              return (
+                <div key={appointment.id} className={`rounded-lg border p-3 ${statusClass(appointment.status)}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold">{appointment.customerName}</p>
+                      <p className="text-xs text-muted-foreground">{appointment.customerPhone}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-semibold">{start} - {end}</p>
+                      <p className="text-[11px] text-muted-foreground">{statusLabel(appointment.status)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    <p>{appointment.service.name}</p>
+                    <p>{appointment.staff.name}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
 
-      {!loading && !appointments.length ? (
+      {!loading && !appointments.length && viewMode === 'calendar' ? (
         <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
           No appointments for this day.
         </div>

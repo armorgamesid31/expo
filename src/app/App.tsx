@@ -20,6 +20,7 @@ import { AutomationsCrudPage } from './pages/AutomationsCrudPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { BlacklistPage } from './pages/BlacklistPage';
 import { InstagramInboxPage } from './pages/InstagramInboxPage';
+import { ConversationsPage } from './pages/ConversationsPage';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
 
@@ -84,6 +85,7 @@ function AppRoutes() {
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="schedule" element={<SchedulePage />} />
+          <Route path="conversations" element={<ConversationsPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="inventory" element={<InventoryPage />} />
