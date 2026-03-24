@@ -183,7 +183,7 @@ export function SalonSetupPage() {
           disabled={saving}
           className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60"
         >
-          {saving ? 'Kaydediliyor...' : 'Kaydet'}
+          {saving ? 'Kaydediliyor...' : 'Save'}
         </button>
       </form>
     </div>

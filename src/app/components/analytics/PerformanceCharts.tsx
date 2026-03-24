@@ -61,7 +61,7 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Award className="w-5 h-5 text-[var(--rose-gold)]" />
-              Personel Performansı
+              Staff Performance
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -107,7 +107,7 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-[var(--rose-gold)]" />
-              En Çok Kazandıran Hizmetler
+              Top Revenue-Generating Services
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -144,7 +144,7 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-[var(--rose-gold)]" />
-              Hizmet Gelir Dağılımı
+              Service Revenue Distribution
             </CardTitle>
           </CardHeader>
           <CardContent>

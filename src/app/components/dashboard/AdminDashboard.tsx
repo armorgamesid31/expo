@@ -69,30 +69,30 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
 
   const stats = [
     {
-      title: 'Son Gün Cirosu',
+      title: 'Last Day Revenue',
       value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
       subtitle: `Seçili aralıkta son gün • ${todayPoint?.appointments || 0} randevu`,
       icon: DollarSign,
       color: 'var(--rose-gold)',
     },
     {
-      title: 'Aylık Toplam',
+      title: 'Monthly Total',
       value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
       subtitle: `${completedAppointments}/${totalAppointments} randevu tamamlandı`,
       icon: TrendingUp,
       color: 'var(--deep-indigo)',
     },
     {
-      title: 'Yeni Müşteriler',
+      title: 'New Customers',
       value: newCustomers.toString(),
-      subtitle: 'Bu ay',
+      subtitle: 'This month',
       icon: UserPlus,
       color: 'var(--rose-gold-light)',
     },
     {
-      title: 'Sadık Müşteriler',
+      title: 'Loyal Customers',
       value: returningCustomers.toString(),
-      subtitle: 'Tekrar gelenler',
+      subtitle: 'Returning Customers',
       icon: UserCheck,
       color: 'var(--deep-indigo-light)',
     },
@@ -148,7 +148,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
           <CardHeader className="pb-4">
             <CardTitle className="text-base flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[var(--rose-gold)] animate-pulse" />
-              Salon Nabzı - Bu Hafta
+              Salon Nabzı - This Week
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -198,15 +198,15 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
 
       {/* Quick Actions */}
       <div className="px-4">
-        <h2 className="text-lg font-semibold mb-3">Hızlı Erişim</h2>
+        <h2 className="text-lg font-semibold mb-3">Quick Access</h2>
         <div className="grid grid-cols-2 gap-3">
           <button onClick={() => onNavigate?.('/app/customers')} className="p-4 bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
             <Users className="w-6 h-6 mb-2" />
-            <p className="font-medium text-sm">Tüm Müşteriler</p>
+            <p className="font-medium text-sm">All Customers</p>
           </button>
           <button onClick={() => onNavigate?.('/app/analytics')} className="p-4 bg-gradient-to-br from-[var(--deep-indigo)] to-[var(--deep-indigo-light)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
             <TrendingUp className="w-6 h-6 mb-2" />
-            <p className="font-medium text-sm">Analiz Raporu</p>
+            <p className="font-medium text-sm">Analytics Report</p>
           </button>
         </div>
       </div>

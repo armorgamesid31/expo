@@ -11,12 +11,12 @@ interface SalonInfoProps {
   onBack: () => void;
 }
 
-const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Fridayrtesi', 'Sunday'];
 
 const COUNTRIES = [
-  { code: 'TR', name: 'Türkiye', flag: '🇹🇷', format: '(XXX) XXX XX XX', example: '(5XX) XXX XX XX' },
+  { code: 'TR', name: 'Turkey', flag: '🇹🇷', format: '(XXX) XXX XX XX', example: '(5XX) XXX XX XX' },
   { code: 'US', name: 'Amerika', flag: '🇺🇸', format: '(XXX) XXX-XXXX', example: '(XXX) XXX-XXXX' },
-  { code: 'GB', name: 'İngiltere', flag: '🇬🇧', format: 'XXXX XXX XXXX', example: '07XX XXX XXXX' },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', format: 'XXXX XXX XXXX', example: '07XX XXX XXXX' },
   { code: 'DE', name: 'Almanya', flag: '🇩🇪', format: 'XXX XXXXXXXX', example: '1XX XXXXXXXX' },
 ];
 
@@ -45,7 +45,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
       day,
       open: '09:00',
       close: i === 5 ? '20:00' : '19:00',
-      isOpen: i !== 6, // Pazar kapalı
+      isOpen: i !== 6, // Sunday kapalı
     }))
   );
 
@@ -104,8 +104,8 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Salon Bilgileri</h1>
-            <p className="text-sm text-muted-foreground">İşletme detayları ve çalışma saatleri</p>
+            <h1 className="text-2xl font-semibold">Salon Information</h1>
+            <p className="text-sm text-muted-foreground">Business details and working hours</p>
           </div>
         </div>
       </div>
@@ -114,7 +114,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
         {/* Salon Logo */}
         <Card className="border-border/50 overflow-hidden">
           <CardContent className="p-4">
-            <Label className="mb-3 block">Salon Logosu</Label>
+            <Label className="mb-3 block">Salon Logo</Label>
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[var(--rose-gold)]/20 to-[var(--deep-indigo)]/10 flex items-center justify-center border-2 border-dashed border-border">
                 {salonData.logoUrl ? (
@@ -126,10 +126,10 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
               <div className="flex-1">
                 <Button variant="outline" size="sm" className="w-full">
                   <Upload className="w-4 h-4 mr-2" />
-                  Logo Yükle
+                  Upload Logo
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Önerilen boyut: 512x512px
+                  Recommended size: 512x512px
                 </p>
               </div>
             </div>
@@ -142,7 +142,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="salon-name">Salon Adı</Label>
+                <Label htmlFor="salon-name">Salon Name</Label>
                 <Input
                   id="salon-name"
                   value={salonData.name}
@@ -213,7 +213,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="map-url">Google Haritalar İşletme Linki</Label>
+                <Label htmlFor="map-url">Google Maps Business Link</Label>
                 <Input
                   id="map-url"
                   value={salonData.mapUrl}
@@ -226,7 +226,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="salon-desc">Açıklama</Label>
+                <Label htmlFor="salon-desc">Description</Label>
                 <textarea
                   id="salon-desc"
                   value={salonData.description}
@@ -241,7 +241,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                   className="w-full"
                 >
                   <Sparkles className="w-3 h-3 mr-2" />
-                  AI ile Geliştir
+                  Improve with AI
                 </Button>
               </div>
             </CardContent>
@@ -250,7 +250,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
 
         {/* Working Hours */}
         <div>
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-1">Çalışma Saatleri</h3>
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-1">Working Hours</h3>
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-2">
               {workingHours.map((wh, index) => (
@@ -283,7 +283,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                     </div>
                   ) : (
                     <div className="flex-1">
-                      <Badge variant="secondary" className="text-xs text-muted-foreground">Kapalı</Badge>
+                      <Badge variant="secondary" className="text-xs text-muted-foreground">Closed</Badge>
                     </div>
                   )}
                 </div>
@@ -299,7 +299,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
           style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
         >
           <Save className="w-4 h-4 mr-2" />
-          {saved ? 'Kaydedildi!' : 'Değişiklikleri Kaydet'}
+          {saved ? 'Saved!' : 'Save Changes'}
         </Button>
       </div>
     </div>

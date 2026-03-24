@@ -27,12 +27,12 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     requirements?: { label: string; done: boolean }[];
   } | null>(null);
 
-  // Yönetim Araçları — her zaman üstte
+  // Management Tools — her zaman üstte
   const managementTools = [
     {
       icon: Briefcase,
-      label: 'Hizmet Yönetimi',
-      description: 'Hizmetler ve kategoriler',
+      label: 'Service Management',
+      description: 'Services and categories',
       action: () => onNavigate('service-management'),
       color: 'var(--rose-gold)',
     },
@@ -45,7 +45,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     },
     {
       icon: Building2,
-      label: 'Salon Bilgileri',
+      label: 'Salon Information',
       description: 'İşletme detayları ve saatler',
       action: () => onNavigate('salon-info'),
       color: 'var(--rose-gold)',
@@ -59,21 +59,21 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     },
     {
       icon: BarChart3,
-      label: 'Analitikler',
+      label: 'Analytics',
       description: 'Raporlar',
       action: () => onNavigate('analytics'),
       color: 'var(--deep-indigo)',
     },
     {
       icon: Package,
-      label: 'Envanter',
+      label: 'Inventory',
       description: 'Stok takibi',
       action: () => onNavigate('inventory'),
       color: 'var(--rose-gold)',
     },
   ];
 
-  // Gelişmiş Modüller — Altta
+  // Advanced Modules — Altta
   const advancedModules = [
     {
       icon: MessageCircle,
@@ -81,7 +81,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       description: 'Bağlantı, AI ajan ve hatırlatma ayarları',
       action: () => onNavigate('whatsapp-settings'),
       color: '#22C55E',
-      badge: whatsappStatusLoaded ? (whatsappConnected ? 'Bağlı' : 'Kurulum') : 'Kontrol',
+      badge: whatsappStatusLoaded ? (whatsappConnected ? 'Connected' : 'Kurulum') : 'Kontrol',
       badgeColor: whatsappStatusLoaded
         ? (whatsappConnected ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700')
         : 'bg-muted text-muted-foreground',
@@ -97,16 +97,16 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     },
     {
       icon: Globe,
-      label: 'Web Sitesi Ayarları',
-      description: 'Online randevu sitesi yönetimi',
+      label: 'Website Settings',
+      description: 'Online booking site management',
       action: () => onNavigate('website-builder'),
       color: 'var(--deep-indigo)',
-      badge: 'Yayında',
+      badge: 'Live',
       badgeColor: 'bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)]',
     },
     {
       icon: Target,
-      label: 'Kampanyalar',
+      label: 'Campaigns',
       description: 'Sadakat ve tavsiye programları',
       action: () => onNavigate('campaigns'),
       color: 'var(--rose-gold)',
@@ -202,7 +202,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       )}
 
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Özellikler</h1>
+        <h1 className="text-2xl font-semibold mb-1">Customlikler</h1>
         <p className="text-sm text-muted-foreground">Yönetim araçları ve gelişmiş modüller</p>
       </div>
 
@@ -235,9 +235,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
           </Card>
         </motion.div>
 
-        {/* Yönetim Araçları — Üstte */}
+        {/* Management Tools — Üstte */}
         <div>
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Yönetim Araçları</h3>
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Management Tools</h3>
           <div className="grid grid-cols-2 gap-3">
             {managementTools.map((item, idx) => {
               const Icon = item.icon;
@@ -271,9 +271,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
           </div>
         </div>
 
-        {/* Gelişmiş Modüller — Altta */}
+        {/* Advanced Modules — Altta */}
         <div>
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Gelişmiş Modüller</h3>
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Advanced Modules</h3>
           <div className="grid grid-cols-2 gap-3">
             {advancedModules.map((mod, idx) => {
               const Icon = mod.icon;

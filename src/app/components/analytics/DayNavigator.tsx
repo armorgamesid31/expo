@@ -14,7 +14,7 @@ interface DayNavigatorProps {
 function formatTurkishDayLabel(value: string): string {
   const parsed = new Date(`${value}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) {
-    return 'Tarih seçin';
+    return 'Select a date';
   }
 
   return new Intl.DateTimeFormat('tr-TR', {
@@ -38,7 +38,7 @@ export function DayNavigator(props: DayNavigatorProps) {
         type="button"
         onClick={props.onPrevDay}
         className="h-8 w-8 rounded-full border border-border bg-card text-muted-foreground"
-        aria-label="Önceki gün"
+        aria-label="Previous day"
       >
         <ChevronLeft className="mx-auto h-4 w-4" />
       </button>
@@ -78,7 +78,7 @@ export function DayNavigator(props: DayNavigatorProps) {
         type="button"
         onClick={props.onNextDay}
         className="h-8 w-8 rounded-full border border-border bg-card text-muted-foreground"
-        aria-label="Sonraki gün"
+        aria-label="Next day"
       >
         <ChevronRight className="mx-auto h-4 w-4" />
       </button>

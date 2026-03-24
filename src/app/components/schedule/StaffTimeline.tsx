@@ -49,14 +49,14 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
       <div className="sticky top-0 bg-background z-10 border-b border-border">
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-semibold">Randevu Takvimi</h1>
+            <h1 className="text-2xl font-semibold">Appointment Calendar</h1>
             <Button 
               size="sm" 
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)]"
               onClick={() => setShowModal(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Yeni Randevu
+              New Appointment
             </Button>
           </div>
           
@@ -66,8 +66,8 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <div className="text-center">
-              <p className="font-semibold">Perşembe, 26 Şubat</p>
-              <p className="text-xs text-muted-foreground">Bugün</p>
+              <p className="font-semibold">Thursday, 26 Şubat</p>
+              <p className="text-xs text-muted-foreground">Today</p>
             </div>
             <Button variant="ghost" size="sm">
               <ChevronRight className="w-4 h-4" />
@@ -163,15 +163,15 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
         <div className="flex items-center gap-4 justify-center flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-sm bg-green-500/20 border-l-2 border-green-500" />
-            <span className="text-xs text-muted-foreground">Tamamlandı</span>
+            <span className="text-xs text-muted-foreground">Completed</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-sm bg-[var(--rose-gold)]/20 border-l-2 border-[var(--rose-gold)]" />
-            <span className="text-xs text-muted-foreground">Planlandı</span>
+            <span className="text-xs text-muted-foreground">Scheduled</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-sm bg-amber-500/20 border-l-2 border-amber-500" />
-            <span className="text-xs text-muted-foreground">Ardışık Hizmet</span>
+            <span className="text-xs text-muted-foreground">Sequential Service</span>
           </div>
         </div>
       </div>

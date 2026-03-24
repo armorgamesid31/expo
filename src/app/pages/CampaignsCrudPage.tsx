@@ -86,7 +86,7 @@ interface CampaignDraft {
 const WEEKDAY_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'MON', label: 'Pzt' },
   { value: 'TUE', label: 'Sal' },
-  { value: 'WED', label: 'Çar' },
+  { value: 'WED', label: 'Wed' },
   { value: 'THU', label: 'Per' },
   { value: 'FRI', label: 'Cum' },
   { value: 'SAT', label: 'Cts' },
@@ -112,9 +112,9 @@ const TIME_OPTIONS: Array<{ value: string; label: string }> = [
 const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   {
     key: 'loyalty',
-    name: 'Sadakat Kampanyası',
+    name: 'Snameakat Campaign',
     type: 'LOYALTY',
-    bullets: ['Puan sistemi', 'Tekrar randevu teşviki'],
+    bullets: ['Puan sistemi', 'Reappointment incentive'],
     icon: Award,
     config: {
       pointsPerVisit: 1,
@@ -124,25 +124,25 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     },
     fields: [
       { key: 'pointsPerVisit', label: 'Her ziyarette puan', type: 'number', valueKind: 'number', min: 1, step: 1 },
-      { key: 'rewardThreshold', label: 'Ödül için ziyaret sayısı', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'rewardThreshold', label: 'Number of visits for rewards', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'rewardType',
-        label: 'Ödül tipi',
+        label: 'Reward tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'Yüzde indirim' },
+          { value: 'discount_percent', label: 'percent discount' },
           { value: 'fixed_amount', label: 'Sabit tutar' },
         ],
       },
-      { key: 'rewardValue', label: 'Ödül değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'rewardValue', label: 'Reward value', type: 'number', valueKind: 'number', min: 1, step: 1 },
     ],
   },
   {
     key: 'multi-service',
-    name: 'Çoklu Hizmet İndirimi',
+    name: 'Multi-Service Discount',
     type: 'MULTI_SERVICE_DISCOUNT',
-    bullets: ['2+ hizmette kampanya', 'Sepeti büyütme'],
+    bullets: ['2+ servicete campaign', 'Enlarge cart'],
     icon: Users,
     config: {
       minServiceCount: 2,
@@ -151,35 +151,35 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       appliesTo: 'same_appointment',
     },
     fields: [
-      { key: 'minServiceCount', label: 'Minimum hizmet adedi', type: 'number', valueKind: 'number', min: 2, step: 1 },
+      { key: 'minServiceCount', label: 'Minimum service nameedi', type: 'number', valueKind: 'number', min: 2, step: 1 },
       {
         key: 'discountType',
-        label: 'İndirim tipi',
+        label: 'Discount type',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'Yüzde indirim' },
+          { value: 'discount_percent', label: 'percent discount' },
           { value: 'fixed_amount', label: 'Sabit tutar' },
         ],
       },
-      { key: 'discountValue', label: 'İndirim değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'appliesTo',
         label: 'Uygulama tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'same_appointment', label: 'Aynı randevu' },
-          { value: 'same_day', label: 'Aynı gün' },
+          { value: 'same_appointment', label: 'same appointment' },
+          { value: 'same_day', label: 'same days' },
         ],
       },
     ],
   },
   {
     key: 'referral',
-    name: 'Arkadaşını Getir Kampanyası',
+    name: 'Bring a Friend Campaign',
     type: 'REFERRAL',
-    bullets: ['Sabit/Yüzde ödül', 'İlk randevu tetikleme kuralı'],
+    bullets: ['Fixed/Percent reward', 'First appointment trigger rule'],
     icon: UserPlus,
     config: {
       rewardType: 'discount_percent',
@@ -191,17 +191,17 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'rewardType',
-        label: 'İndirim tipi',
+        label: 'Discount type',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'Yüzde indirim' },
+          { value: 'discount_percent', label: 'percent discount' },
           { value: 'fixed_amount', label: 'Sabit tutar' },
         ],
       },
       {
         key: 'referrerRewardValue',
-        label: 'Davet eden ödülü',
+        label: 'Inviter reward',
         type: 'number',
         valueKind: 'number',
         min: 1,
@@ -209,7 +209,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       },
       {
         key: 'referredCustomerRewardValue',
-        label: 'Yeni gelen ödülü',
+        label: 'newcomer award',
         type: 'number',
         valueKind: 'number',
         min: 1,
@@ -217,21 +217,21 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       },
       {
         key: 'activationTiming',
-        label: 'Ne zaman aktifleşsin?',
+        label: 'When should it be activated?',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'first_appointment', label: 'İlk randevuda geçerli' },
-          { value: 'after_first_completed', label: 'İlk randevu tamamlanınca' },
+          { value: 'first_appointment', label: 'Valid at first appointment' },
+          { value: 'after_first_completed', label: 'Once the first appointment is completed' },
         ],
       },
       {
         key: 'combineWithWelcomeCampaign',
-        label: 'İlk kez gelen müşteri kampanyasıyla birleştirilsin mi?',
+        label: 'Combine with first time customer campaign?',
         type: 'select',
         valueKind: 'boolean',
         options: [
-          { value: 'false', label: 'Hayır' },
+          { value: 'false', label: 'No' },
           { value: 'true', label: 'Evet' },
         ],
       },
@@ -239,9 +239,9 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   {
     key: 'birthday',
-    name: 'Doğum Günü Kampanyası',
+    name: 'Birthday Campaign',
     type: 'BIRTHDAY',
-    bullets: ['Sabit/Yüzde indirim', 'Kısa kullanım süresi'],
+    bullets: ['Fixed/Percentage discount', 'Short usage duration'],
     icon: Gift,
     config: {
       discountType: 'discount_percent',
@@ -251,18 +251,18 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'discountType',
-        label: 'İndirim tipi',
+        label: 'Discount type',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'Yüzde indirim' },
+          { value: 'discount_percent', label: 'percent discount' },
           { value: 'fixed_amount', label: 'Sabit tutar' },
         ],
       },
-      { key: 'discountValue', label: 'İndirim değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'validDaysAfterBirthday',
-        label: 'Doğum gününden sonra geçerlilik (gün)',
+        label: 'Validity after birthday (days)',
         type: 'number',
         valueKind: 'number',
         min: 1,
@@ -272,9 +272,9 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   {
     key: 'winback',
-    name: 'Geri Getirme Kampanyası',
+    name: 'Back Bringing Campaign',
     type: 'WINBACK',
-    bullets: ['30-60 gün pasif müşteri hedefi', 'Tek seferlik teklif'],
+    bullets: ['30-60 days pasif customer hedefi', 'Tek seferlik teklif'],
     icon: Bell,
     config: {
       inactiveDaysThreshold: 30,
@@ -284,13 +284,13 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'inactiveDaysThreshold',
-        label: 'Pasiflik eşiği',
+        label: 'passivity threshold',
         type: 'select',
         valueKind: 'number',
         options: [
-          { value: '30', label: '30 gün' },
-          { value: '45', label: '45 gün' },
-          { value: '60', label: '60 gün' },
+          { value: '30', label: '30 days' },
+          { value: '45', label: '45 days' },
+          { value: '60', label: '60 days' },
         ],
       },
       {
@@ -299,18 +299,18 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'Yüzde indirim' },
+          { value: 'discount_percent', label: 'percent discount' },
           { value: 'fixed_amount', label: 'Sabit tutar' },
         ],
       },
-      { key: 'offerValue', label: 'Teklif değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'offerValue', label: 'bid value', type: 'number', valueKind: 'number', min: 1, step: 1 },
     ],
   },
   {
     key: 'welcome',
-    name: 'İlk Randevu Hoş Geldin',
+    name: 'Welcome to First Appointment',
     type: 'WELCOME_FIRST_VISIT',
-    bullets: ['Sabit/Yüzde indirim', 'Arkadaşını getir ile birlikte kullanım'],
+    bullets: ['Fixed/Percentage discount', 'Use with arknamebring'],
     icon: Calendar,
     config: {
       discountType: 'discount_percent',
@@ -320,22 +320,22 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'discountType',
-        label: 'İndirim tipi',
+        label: 'Discount type',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'Yüzde indirim' },
+          { value: 'discount_percent', label: 'percent discount' },
           { value: 'fixed_amount', label: 'Sabit tutar' },
         ],
       },
-      { key: 'discountValue', label: 'İndirim değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'combineWithReferralCampaign',
-        label: 'Arkadaşını getir kampanyasıyla birleştirilsin mi?',
+        label: 'Should it be combined with the Bring Your Arkname campaign?',
         type: 'select',
         valueKind: 'boolean',
         options: [
-          { value: 'false', label: 'Hayır' },
+          { value: 'false', label: 'No' },
           { value: 'true', label: 'Evet' },
         ],
       },
@@ -343,9 +343,9 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   {
     key: 'off-peak',
-    name: 'Boş Saat Doldurma',
+    name: 'Filling Empty Hours',
     type: 'OFF_PEAK_FILL',
-    bullets: ['Gün seçimi', 'Saat seçimi', 'Sabit/Yüzde indirim'],
+    bullets: ['Day selection', 'Time selection', 'Fixed/Percentage discount'],
     icon: Clock3,
     config: {
       weekdays: ['MON', 'TUE', 'WED', 'THU'],
@@ -357,36 +357,36 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'weekdays',
-        label: 'Geçerli günler',
+        label: 'Valid days',
         type: 'multi-select',
         valueKind: 'stringArray',
         options: WEEKDAY_OPTIONS,
       },
       {
         key: 'startHour',
-        label: 'Başlangıç saati',
+        label: 'start time',
         type: 'select',
         valueKind: 'string',
         options: TIME_OPTIONS,
       },
       {
         key: 'endHour',
-        label: 'Bitiş saati',
+        label: 'end time',
         type: 'select',
         valueKind: 'string',
         options: TIME_OPTIONS,
       },
       {
         key: 'discountType',
-        label: 'İndirim tipi',
+        label: 'Discount type',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'Yüzde indirim' },
+          { value: 'discount_percent', label: 'percent discount' },
           { value: 'fixed_amount', label: 'Sabit tutar' },
         ],
       },
-      { key: 'discountValue', label: 'İndirim değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
     ],
   },
 ];
@@ -536,21 +536,21 @@ export function CampaignsCrudPage() {
   const [savingDetail, setSavingDetail] = useState(false);
   const [deletingDetail, setDeletingDetail] = useState(false);
 
-  const load = async () => {
+  const loname = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: CampaignItem[] }>('/api/admin/campaigns');
+      const response = await apiFetch<{ items: CampaignItem[] }>('/api/namemin/campaigns');
       setItems(response.items || []);
     } catch (err: any) {
-      setError(err?.message || 'Kampanyalar alınamadı.');
+      setError(err?.message || 'Campaigns cannot be received.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    void load();
+    void loname();
   }, []);
 
   const now = new Date();
@@ -605,7 +605,7 @@ export function CampaignsCrudPage() {
     setSavingCreate(true);
     setError(null);
     try {
-      const response = await apiFetch<{ item: CampaignItem }>('/api/admin/campaigns', {
+      const response = await apiFetch<{ item: CampaignItem }>('/api/namemin/campaigns', {
         method: 'POST',
         body: JSON.stringify({
           name: template.name,
@@ -622,7 +622,7 @@ export function CampaignsCrudPage() {
       setCreateDraft(null);
       setShowTemplatePicker(false);
     } catch (err: any) {
-      setError(err?.message || 'Kampanya oluşturulamadı.');
+      setError(err?.message || 'Campaign cannot be created.');
     } finally {
       setSavingCreate(false);
     }
@@ -636,7 +636,7 @@ export function CampaignsCrudPage() {
     setDetailDraft(null);
 
     try {
-      const response = await apiFetch<CampaignDetailResponse>(`/api/admin/campaigns/${item.id}`);
+      const response = await apiFetch<CampaignDetailResponse>(`/api/namemin/campaigns/${item.id}`);
       const detailItem = response.item;
       const matchedTemplate = templateByType(detailItem.type);
 
@@ -651,7 +651,7 @@ export function CampaignsCrudPage() {
         configInputs: matchedTemplate ? buildConfigInputs(matchedTemplate, detailItem.config) : {},
       });
     } catch (err: any) {
-      setDetailError(err?.message || 'Kampanya detayı alınamadı.');
+      setDetailError(err?.message || 'Campaign details cannot be obtained.');
     } finally {
       setDetailLoading(false);
     }
@@ -663,14 +663,14 @@ export function CampaignsCrudPage() {
     }
     const template = templateByType(detailDraft.type);
     if (!template) {
-      setDetailError('Bu kampanya tipi için düzenleme alanı tanımlı değil.');
+      setDetailError('The editing field is not defined for this campaign type.');
       return;
     }
 
     setSavingDetail(true);
     setDetailError(null);
     try {
-      const response = await apiFetch<{ item: CampaignItem }>(`/api/admin/campaigns/${detailDraft.id}`, {
+      const response = await apiFetch<{ item: CampaignItem }>(`/api/namemin/campaigns/${detailDraft.id}`, {
         method: 'PATCH',
         body: JSON.stringify({
           type: detailDraft.type,
@@ -685,7 +685,7 @@ export function CampaignsCrudPage() {
       setItems((prev) => prev.map((item) => (item.id === response.item.id ? response.item : item)));
       await openDetail(response.item);
     } catch (err: any) {
-      setDetailError(err?.message || 'Kampanya güncellenemedi.');
+      setDetailError(err?.message || 'Campaign dayscellenemedi.');
     } finally {
       setSavingDetail(false);
     }
@@ -696,20 +696,20 @@ export function CampaignsCrudPage() {
       return;
     }
 
-    if (!window.confirm('Bu kampanyayı silmek istediğinize emin misiniz?')) {
+    if (!window.confirm('Are you sure you want to delete this campaign?')) {
       return;
     }
 
     setDeletingDetail(true);
     setDetailError(null);
     try {
-      await apiFetch(`/api/admin/campaigns/${detailDraft.id}`, { method: 'DELETE' });
+      await apiFetch(`/api/namemin/campaigns/${detailDraft.id}`, { method: 'DELETE' });
       setItems((prev) => prev.filter((item) => item.id !== detailDraft.id));
       setDetailOpen(false);
       setDetailDraft(null);
       setDetailMetrics(null);
     } catch (err: any) {
-      setDetailError(err?.message || 'Kampanya silinemedi.');
+      setDetailError(err?.message || 'Campaign deleteinemedi.');
     } finally {
       setDeletingDetail(false);
     }
@@ -766,7 +766,7 @@ export function CampaignsCrudPage() {
               <Label>{field.label}</Label>
               <Select value={configInputs[field.key] || ''} onValueChange={(value) => onChange(field.key, value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seçin" />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   {(field.options || []).map((option) => (
@@ -799,8 +799,8 @@ export function CampaignsCrudPage() {
   return (
     <div className="h-full overflow-y-auto bg-[var(--luxury-bg)] pb-20">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Kampanyalar</h1>
-        <p className="text-sm text-muted-foreground">Yeni kampanya oluşturup performansı detayda takip edin.</p>
+        <h1 className="text-2xl font-semibold mb-1">Campaigns</h1>
+        <p className="text-sm text-muted-foreground">Yeni campaign oluşturup performansı detayda takip edin.</p>
       </div>
 
       <div className="p-4 space-y-4">
@@ -816,7 +816,7 @@ export function CampaignsCrudPage() {
           className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
           onClick={() => setShowTemplatePicker((prev) => !prev)}
         >
-          {showTemplatePicker ? 'Şablonları Gizle' : 'Yeni Kampanya Oluştur'}
+          {showTemplatePicker ? 'Hide Templates' : 'Create New Campaign'}
         </Button>
 
         {showTemplatePicker ? (
@@ -824,14 +824,14 @@ export function CampaignsCrudPage() {
             {CAMPAIGN_TEMPLATES.map((template) => {
               const Icon = template.icon;
               return (
-                <Card key={template.key} className="border border-border bg-card shadow-sm">
+                <Card key={template.key} className="border border-border bg-card shnameow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[var(--rose-gold)] bg-[var(--rose-gold)]/12">
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-base font-semibold leading-tight text-foreground">{template.name}</h3>
+                        <h3 className="text-base font-semibold lenameing-tight text-foreground">{template.name}</h3>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {template.bullets.map((bullet) => (
                             <span
@@ -846,7 +846,7 @@ export function CampaignsCrudPage() {
                     </div>
 
                     <Button className="mt-3 w-full" variant="outline" onClick={() => openCreateFromTemplate(template)}>
-                      Şablonu Ayarla
+                      Şablonu Settingla
                     </Button>
                   </CardContent>
                 </Card>
@@ -855,17 +855,17 @@ export function CampaignsCrudPage() {
           </div>
         ) : null}
 
-        <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Aktif Kampanyalar</p>
+        <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Aktif Campaigns</p>
 
         {loading ? (
           <Card className="border border-border bg-card">
-            <CardContent className="p-4 text-sm text-muted-foreground">Yükleniyor...</CardContent>
+            <CardContent className="p-4 text-sm text-muted-foreground">Loading...</CardContent>
           </Card>
         ) : null}
 
         {!loading && activeItems.length === 0 ? (
           <Card className="border border-dashed border-border bg-card">
-            <CardContent className="p-4 text-center text-sm text-muted-foreground">Aktif kampanya yok.</CardContent>
+            <CardContent className="p-4 text-center text-sm text-muted-foreground">Aktif campaign yok.</CardContent>
           </Card>
         ) : null}
 
@@ -885,7 +885,7 @@ export function CampaignsCrudPage() {
                   </p>
                   <Button variant="outline" className="mt-2 w-full" onClick={() => void openDetail(item)}>
                     <Pencil className="w-4 h-4" />
-                    Detay ve Düzenle
+                    Detay ve Edit
                   </Button>
                 </CardContent>
               </Card>
@@ -893,11 +893,11 @@ export function CampaignsCrudPage() {
           </div>
         ) : null}
 
-        <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Önceki Kampanyalar</p>
+        <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Firstki Campaigns</p>
 
         {!loading && previousItems.length === 0 ? (
           <Card className="border border-dashed border-border bg-card">
-            <CardContent className="p-4 text-center text-sm text-muted-foreground">Önceki kampanya yok.</CardContent>
+            <CardContent className="p-4 text-center text-sm text-muted-foreground">Firstki campaign yok.</CardContent>
           </Card>
         ) : null}
 
@@ -917,7 +917,7 @@ export function CampaignsCrudPage() {
                   </p>
                   <Button variant="outline" className="mt-2 w-full" onClick={() => void openDetail(item)}>
                     <Pencil className="w-4 h-4" />
-                    Detay ve Düzenle
+                    Detay ve Edit
                   </Button>
                 </CardContent>
               </Card>
@@ -932,14 +932,14 @@ export function CampaignsCrudPage() {
           aria-describedby={undefined}
         >
           <DialogHeader>
-            <DialogTitle>Şablon Ayarları</DialogTitle>
+            <DialogTitle>Template Settings</DialogTitle>
           </DialogHeader>
 
           {createDraft ? (
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label>Başlangıç tarihi</Label>
+                  <Label>Startngıç tarihi</Label>
                   <Input
                     type="date"
                     value={createDraft.startsAt}
@@ -980,14 +980,14 @@ export function CampaignsCrudPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDraft(null)}>
-              İptal
+              Cancel
             </Button>
             <Button
               onClick={() => void handleCreateCampaign()}
               disabled={savingCreate}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
             >
-              {savingCreate ? 'Kaydediliyor...' : 'Kampanyayı Oluştur'}
+              {savingCreate ? 'Saving...' : 'Create Campaign'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -999,10 +999,10 @@ export function CampaignsCrudPage() {
           aria-describedby={undefined}
         >
           <DialogHeader>
-            <DialogTitle>Kampanya Detayı</DialogTitle>
+            <DialogTitle>Campaign Detayı</DialogTitle>
           </DialogHeader>
 
-          {detailLoading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+          {detailLoading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
           {detailError ? <p className="text-sm text-red-600">{detailError}</p> : null}
 
           {detailDraft && !detailLoading ? (
@@ -1013,14 +1013,14 @@ export function CampaignsCrudPage() {
                     <p className="text-sm font-semibold">Performans Özeti</p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div className="rounded-md border border-border p-2">
-                        <p className="text-xs text-muted-foreground">Randevu</p>
+                        <p className="text-xs text-muted-foreground">Appointment</p>
                         <p className="text-lg font-semibold">{detailMetrics.current.appointmentCount}</p>
                         <p className={cn('text-xs', getDeltaClassName(detailMetrics.deltas.appointmentPercent))}>
                           %{detailMetrics.deltas.appointmentPercent}
                         </p>
                       </div>
                       <div className="rounded-md border border-border p-2">
-                        <p className="text-xs text-muted-foreground">Yeni müşteri</p>
+                        <p className="text-xs text-muted-foreground">New customer</p>
                         <p className="text-lg font-semibold">{detailMetrics.current.newCustomerCount}</p>
                         <p className={cn('text-xs', getDeltaClassName(detailMetrics.deltas.newCustomerPercent))}>
                           %{detailMetrics.deltas.newCustomerPercent}
@@ -1047,7 +1047,7 @@ export function CampaignsCrudPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label>Başlangıç tarihi</Label>
+                  <Label>Startngıç tarihi</Label>
                   <Input
                     type="date"
                     value={detailDraft.startsAt}
@@ -1082,7 +1082,7 @@ export function CampaignsCrudPage() {
                 if (!template) {
                   return (
                     <p className="text-xs text-muted-foreground">
-                      Bu kampanya tipi için düzenleme alanı bulunmuyor.
+                      Bu campaign tipi için editme alanı bulunmuyor.
                     </p>
                   );
                 }
@@ -1111,14 +1111,14 @@ export function CampaignsCrudPage() {
               disabled={deletingDetail || savingDetail || !detailDraft?.id}
             >
               <Trash2 className="w-4 h-4" />
-              {deletingDetail ? 'Siliniyor...' : 'Sil'}
+              {deletingDetail ? 'Deleteiniyor...' : 'Delete'}
             </Button>
             <Button
               onClick={() => void saveDetail()}
               disabled={savingDetail || deletingDetail || !detailDraft?.id}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
             >
-              {savingDetail ? 'Kaydediliyor...' : 'Düzenlemeyi Kaydet'}
+              {savingDetail ? 'Saving...' : 'Editmeyi Save'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -27,7 +27,7 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
   const tasks: SetupTask[] = [
     {
       id: 'hours',
-      label: 'Çalışma Saatleri',
+      label: 'Working Hours',
       description: 'Salon çalışma saatlerini belirleyin',
       done: false,
       rawDone: Boolean(checklist?.workingHours),

@@ -74,7 +74,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
     }
 
     if (editingService) {
-      // Güncelleme
+      // Updateme
       setServices(services.map(s => s.id === editingService.id ? { ...formData as Service } : s));
     } else {
       // Yeni ekleme
@@ -128,8 +128,8 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Hizmet Yönetimi</h1>
-            <p className="text-sm text-muted-foreground">Hizmetler ve kategoriler</p>
+            <h1 className="text-2xl font-semibold">Service Management</h1>
+            <p className="text-sm text-muted-foreground">Services and categories</p>
           </div>
         </div>
       </div>
@@ -244,7 +244,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
               {isExpanded && categoryServices.length === 0 && (
                 <CardContent className="p-8 text-center">
                   <p className="text-sm text-muted-foreground">
-                    Bu kategoride henüz hizmet yok
+                    No services in this category yet
                   </p>
                   <Button
                     variant="outline"
@@ -253,7 +253,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                     onClick={() => openAddDialog(category)}
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    İlk Hizmeti Ekle
+                    Add First Service
                   </Button>
                 </CardContent>
               )}
@@ -267,13 +267,13 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
         <DialogContent className="max-w-md" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>
-              {editingService ? 'Hizmeti Düzenle' : 'Yeni Hizmet Ekle'}
+              {editingService ? 'Edit Service' : 'Add New Service'}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Hizmet Adı</Label>
+              <Label htmlFor="name">Service Name</Label>
               <Input
                 id="name"
                 value={formData.name || ''}
@@ -284,7 +284,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="duration">Süre (dakika)</Label>
+                <Label htmlFor="duration">Duration (minutes)</Label>
                 <Input
                   id="duration"
                   type="number"
@@ -333,7 +333,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                   onValueChange={(value: ServiceCategory) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Kategori seçin" />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
                     {sortedCategories.map(cat => (
@@ -348,7 +348,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="specialist-selection">Uzman Seçimine İzin Ver</Label>
+                <Label htmlFor="specialist-selection">Allow Specialist Selection</Label>
                 <Switch
                   id="specialist-selection"
                   checked={formData.allowSpecialistSelection || false}
@@ -363,14 +363,14 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              İptal
+              Cancel
             </Button>
             <Button 
               onClick={handleSave}
               disabled={!formData.name || !formData.duration || !formData.price || !formData.category}
               style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
             >
-              {editingService ? 'Güncelle' : 'Ekle'}
+              {editingService ? 'Update' : 'Ekle'}
             </Button>
           </DialogFooter>
         </DialogContent>

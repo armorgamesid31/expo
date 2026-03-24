@@ -25,7 +25,7 @@ export function LoginPage() {
       await login(email, password);
       navigate('/app/dashboard', { replace: true });
     } catch (err: any) {
-      setError(err?.message || 'Giriş başarısız oldu.');
+      setError(err?.message || 'Login failed.');
     } finally {
       setSubmitting(false);
     }
@@ -48,7 +48,7 @@ export function LoginPage() {
             loading="eager"
           />
         </div>
-        <h1 className="text-xl font-semibold">Salon Mobile Giriş</h1>
+        <h1 className="text-xl font-semibold">Salon Mobile Login</h1>
         <p className="text-sm text-muted-foreground mt-1">Hesabınız ile giriş yapın.</p>
 
         <form className="mt-5 space-y-4" onSubmit={onSubmit}>
@@ -81,7 +81,7 @@ export function LoginPage() {
             disabled={submitting}
             className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
-            {submitting ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+            {submitting ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>

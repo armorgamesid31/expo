@@ -198,7 +198,7 @@ export function ServicesCrudPage() {
         return { [first.id]: true };
       });
     } catch (err: any) {
-      setError(err?.message || 'Veriler alınamadı.');
+      setError(err?.message || 'Data could not be retrieved.');
     } finally {
       setLoading(false);
     }
@@ -311,7 +311,7 @@ export function ServicesCrudPage() {
   const saveService = async (event: FormEvent) => {
     event.preventDefault();
     if (!serviceForm.name.trim()) {
-      setError('Hizmet adı zorunlu.');
+      setError('Service name is required.');
       return;
     }
 
@@ -320,15 +320,15 @@ export function ServicesCrudPage() {
     const categoryId = Number(serviceForm.categoryId);
 
     if (!Number.isFinite(duration) || duration <= 0) {
-      setError('Süre pozitif bir sayı olmalı.');
+      setError('Duration must be a positive number.');
       return;
     }
     if (!Number.isFinite(price) || price < 0) {
-      setError('Fiyat sıfır veya pozitif olmalı.');
+      setError('The price must be zero or positive.');
       return;
     }
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
-      setError('Kategori seçimi zorunlu.');
+      setError('Category selection is mandatory.');
       return;
     }
 
@@ -416,7 +416,7 @@ export function ServicesCrudPage() {
     if (categoryCapacityEnabled) {
       const capacity = Number(categoryForm.capacity);
       if (!Number.isInteger(capacity) || capacity <= 0) {
-        setError('Kategori kapasitesi pozitif bir tam sayı olmalı.');
+        setError('Category capacity must be a positive integer.');
         return;
       }
       updates.capacity = capacity;
@@ -425,7 +425,7 @@ export function ServicesCrudPage() {
     if (categoryBufferEnabled) {
       const bufferMinutes = Number(categoryForm.bufferMinutes);
       if (!Number.isInteger(bufferMinutes) || bufferMinutes < 0) {
-        setError('Hazırlık süresi sıfır veya pozitif bir tam sayı olmalı.');
+        setError('Preparation time must be zero or a positive integer.');
         return;
       }
       updates.bufferMinutes = bufferMinutes;
@@ -444,7 +444,7 @@ export function ServicesCrudPage() {
       setEditingCategory(null);
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Kategori ayarları kaydedilemedi.');
+      setError(err?.message || 'Category settings could not be saved.');
     } finally {
       setSaving(false);
     }
@@ -464,7 +464,7 @@ export function ServicesCrudPage() {
         body: JSON.stringify({ orderedIds: next.map((item) => item.id) }),
       });
     } catch (err: any) {
-      setError(err?.message || 'Kategori sırası kaydedilemedi.');
+      setError(err?.message || 'Category order could not be saved.');
       await load();
     }
   };
@@ -509,18 +509,18 @@ export function ServicesCrudPage() {
     event.preventDefault();
 
     if (!groupForm.name.trim()) {
-      setError('Grup adı zorunlu.');
+      setError('Group name is required.');
       return;
     }
 
     const capacity = Number(groupForm.capacity);
     const preparationMinutes = Number(groupForm.preparationMinutes);
     if (!Number.isInteger(capacity) || capacity <= 0) {
-      setError('Grup kapasitesi pozitif bir tam sayı olmalı.');
+      setError('Group capacity must be a positive integer.');
       return;
     }
     if (!Number.isInteger(preparationMinutes) || preparationMinutes < 0) {
-      setError('Hazırlık süresi sıfır veya pozitif tam sayı olmalı.');
+      setError('Preparation time must be zero or a positive integer.');
       return;
     }
 
@@ -572,7 +572,7 @@ export function ServicesCrudPage() {
         body: JSON.stringify({ orderedIds: next.map((item) => item.id) }),
       });
     } catch (err: any) {
-      setError(err?.message || 'Grup sırası kaydedilemedi.');
+      setError(err?.message || 'Failed to save group order.');
       await load();
     }
   };
@@ -585,7 +585,7 @@ export function ServicesCrudPage() {
       });
       setCategories((prev) => prev.map((item) => (item.id === category.id ? { ...item, isActive: next } : item)));
     } catch (err: any) {
-      setError(err?.message || 'Kategori durumu güncellenemedi.');
+      setError(err?.message || 'Category status could not be updated.');
     }
   };
 
@@ -597,7 +597,7 @@ export function ServicesCrudPage() {
       });
       setServices((prev) => prev.map((row) => (row.id === item.id ? { ...row, isActive: next } : row)));
     } catch (err: any) {
-      setError(err?.message || 'Hizmet durumu güncellenemedi.');
+      setError(err?.message || 'The service status could not be updated.');
     }
   };
 
@@ -609,7 +609,7 @@ export function ServicesCrudPage() {
       });
       setGroups((prev) => prev.map((item) => (item.id === group.id ? { ...item, isActive: next } : item)));
     } catch (err: any) {
-      setError(err?.message || 'Grup durumu güncellenemedi.');
+      setError(err?.message || 'Group status could not be updated.');
     }
   };
 
@@ -681,7 +681,7 @@ export function ServicesCrudPage() {
                       type="button"
                       onClick={() => openCategorySettings(category)}
                       className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
-                      title="Kategori ayarları"
+                      title="Category settings"
                     >
                       <Settings2 className="h-4 w-4" />
                     </button>
@@ -744,7 +744,7 @@ export function ServicesCrudPage() {
         <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">{editingService ? 'Hizmeti Düzenle' : 'Yeni Hizmet Ekle'}</h2>
+              <h2 className="text-lg font-semibold">{editingService ? 'Edit Service' : 'Yeni Hizmet Ekle'}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
@@ -958,7 +958,7 @@ export function ServicesCrudPage() {
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Kaydediliyor...' : editingService ? 'Güncelle' : 'Ekle'}
+                {saving ? 'Kaydediliyor...' : editingService ? 'Update' : 'Ekle'}
               </button>
             </form>
           </div>
@@ -1094,7 +1094,7 @@ export function ServicesCrudPage() {
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Kaydediliyor...' : 'Kategori Ayarlarını Kaydet'}
+                {saving ? 'Kaydediliyor...' : 'Save Category Settings'}
               </button>
             </form>
           </div>
@@ -1210,7 +1210,7 @@ export function ServicesCrudPage() {
         <div className="fixed inset-0 z-50 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">{editingGroup ? 'Grubu Düzenle' : 'Yeni Grup Oluştur'}</h2>
+              <h2 className="text-lg font-semibold">{editingGroup ? 'Edit Group' : 'Create New Group'}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
@@ -1264,7 +1264,7 @@ export function ServicesCrudPage() {
               </label>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Kaydediliyor...' : editingGroup ? 'Güncelle' : 'Oluştur'}
+                {saving ? 'Kaydediliyor...' : editingGroup ? 'Update' : 'Create'}
               </button>
             </form>
           </div>

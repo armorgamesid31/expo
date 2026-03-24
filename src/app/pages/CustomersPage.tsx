@@ -175,7 +175,7 @@ export function CustomersPage() {
         }
       } catch (err: any) {
         if (mounted) {
-          setError(err?.message || 'Müşteriler alınamadı.');
+          setError(err?.message || 'Customers could not be received.');
         }
       } finally {
         if (mounted) {
@@ -213,7 +213,7 @@ export function CustomersPage() {
       setCursor(response.nextCursor);
       setHasMore(response.hasMore);
     } catch (err: any) {
-      setError(err?.message || 'Daha fazla müşteri yüklenemedi.');
+      setError(err?.message || 'Could not load any more clients.');
     } finally {
       setLoadingMore(false);
     }
@@ -266,7 +266,7 @@ export function CustomersPage() {
       setAcceptMarketing(false);
       setShowCreateForm(false);
     } catch (err: any) {
-      setError(err?.message || 'Müşteri oluşturulamadı.');
+      setError(err?.message || 'Failed to create customer.');
     } finally {
       setCreating(false);
     }
@@ -297,7 +297,7 @@ export function CustomersPage() {
       setDiscountError(null);
       setDiscountSuccess(null);
     } catch (err: any) {
-      setDetailError(err?.message || 'Müşteri profili açılamadı.');
+      setDetailError(err?.message || 'The customer profile could not be opened.');
     } finally {
       setDetailLoading(false);
     }
@@ -310,11 +310,11 @@ export function CustomersPage() {
 
     const parsedValue = Number(discountValue);
     if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
-      setDiscountError('Geçerli bir indirim değeri girin.');
+      setDiscountError('Enter a valid discount value.');
       return;
     }
     if (discountKind === 'PERCENT' && parsedValue > 100) {
-      setDiscountError('Yüzde indirim 100\'ü geçemez.');
+      setDiscountError('Percentage discount cannot exceed 100.');
       return;
     }
 
@@ -342,9 +342,9 @@ export function CustomersPage() {
             }
           : prev,
       );
-      setDiscountSuccess('İndirim kaydedildi.');
+      setDiscountSuccess('Discount saved.');
     } catch (err: any) {
-      setDiscountError(err?.message || 'İndirim kaydedilemedi.');
+      setDiscountError(err?.message || 'Discount could not be saved.');
     } finally {
       setDiscountSaving(false);
     }
@@ -401,9 +401,9 @@ export function CustomersPage() {
         ),
       );
       setProfileEditMode(false);
-      setProfileSuccess('Müşteri bilgileri güncellendi.');
+      setProfileSuccess('Customer information has been updated.');
     } catch (err: any) {
-      setProfileError(err?.message || 'Müşteri bilgileri güncellenemedi.');
+      setProfileError(err?.message || 'Customer information could not be updated.');
     } finally {
       setProfileSaving(false);
     }
@@ -438,7 +438,7 @@ export function CustomersPage() {
           : prev,
       );
     } catch (err: any) {
-      setRiskError(err?.message || 'Katılım oranı güncellenemedi.');
+      setRiskError(err?.message || 'Participation rate could not be updated.');
     } finally {
       setRiskSaving(false);
     }
@@ -463,9 +463,9 @@ export function CustomersPage() {
   };
 
   const riskLabelTr = (level: 'LOW' | 'MEDIUM' | 'HIGH') => {
-    if (level === 'HIGH') return 'Yüksek Risk';
+    if (level === 'HIGH') return 'High Risk';
     if (level === 'MEDIUM') return 'Orta Risk';
-    return 'Düşük Risk';
+    return 'Low Risk';
   };
 
   const attendanceRatePercent = (noShowCount: number, totalBookings: number) => {
@@ -479,11 +479,11 @@ export function CustomersPage() {
   const appointmentStatusLabel = (status: string) => {
     switch (status) {
       case 'BOOKED':
-        return 'Planlandı';
+        return 'planned';
       case 'COMPLETED':
-        return 'Tamamlandı';
+        return 'completed';
       case 'CANCELLED':
-        return 'İptal';
+        return 'Cancel';
       case 'NO_SHOW':
         return 'Gelmedi';
       default:
@@ -556,7 +556,7 @@ export function CustomersPage() {
             onClick={() => setShowCreateForm((prev) => !prev)}
             className="rounded-md border border-border px-3 py-1.5 text-xs"
           >
-            {showCreateForm ? 'Kapat' : 'Müşteri Ekle'}
+            {showCreateForm ? 'Kapat' : 'Add Customer'}
           </button>
         </div>
 
@@ -600,13 +600,13 @@ export function CustomersPage() {
               disabled={creating}
               className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60"
             >
-              {creating ? 'Ekleniyor...' : 'Kaydet'}
+              {creating ? 'Ekleniyor...' : 'Save'}
             </button>
           </div>
         ) : null}
       </div>
 
-      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
       <div className="space-y-3">
@@ -620,7 +620,7 @@ export function CustomersPage() {
             }}
           >
             <div className="flex items-center justify-between">
-              <p className="font-medium">{item.name || 'İsimsiz Müşteri'}</p>
+              <p className="font-medium">{item.name || 'Anonymous Customer'}</p>
               <p className="text-xs text-muted-foreground">#{item.id}</p>
             </div>
             <p className="text-sm mt-1">{item.phone}</p>
@@ -632,7 +632,7 @@ export function CustomersPage() {
 
       {!loading && !items.length ? (
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Kayıtlı müşteri bulunmuyor.
+          Registerlı müşteri bulunmuyor.
         </div>
       ) : null}
 
@@ -643,7 +643,7 @@ export function CustomersPage() {
           disabled={loadingMore}
           className="w-full rounded-md border border-border bg-background px-4 py-2 text-sm disabled:opacity-60"
         >
-          {loadingMore ? 'Yükleniyor...' : 'Daha Fazla Yükle'}
+          {loadingMore ? 'Loading...' : 'Load More'}
         </button>
       ) : null}
 
@@ -677,7 +677,7 @@ export function CustomersPage() {
                 <div className="rounded-lg border border-border p-3 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
-                      <p className="font-medium">{selectedCustomer.customer.name || 'İsimsiz Müşteri'}</p>
+                      <p className="font-medium">{selectedCustomer.customer.name || 'Anonymous Customer'}</p>
                       <p className="text-sm">{selectedCustomer.customer.phone}</p>
                       {selectedCustomer.customer.instagram ? (
                         <p className="text-sm text-muted-foreground">@{selectedCustomer.customer.instagram.replace(/^@/, '')}</p>
@@ -701,7 +701,7 @@ export function CustomersPage() {
                       }}
                       className="shrink-0 rounded-md border border-border px-3 py-1.5 text-xs"
                     >
-                      {profileEditMode ? 'Vazgeç' : 'Bilgileri Düzenle'}
+                      {profileEditMode ? 'Cancel' : 'Edit Information'}
                     </button>
                   </div>
 
@@ -746,7 +746,7 @@ export function CustomersPage() {
                         disabled={profileSaving}
                         className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
                       >
-                        {profileSaving ? 'Kaydediliyor...' : 'Bilgileri Kaydet'}
+                        {profileSaving ? 'Kaydediliyor...' : 'Bilgileri Save'}
                       </button>
                     </div>
                   ) : (
@@ -762,7 +762,7 @@ export function CustomersPage() {
                       <p>
                         Kampanya İzni:{' '}
                         <span className="text-foreground">
-                          {selectedCustomer.customer.acceptMarketing ? 'Açık' : 'Kapalı'}
+                          {selectedCustomer.customer.acceptMarketing ? 'Open' : 'Closed'}
                         </span>
                       </p>
                     </div>
@@ -785,7 +785,7 @@ export function CustomersPage() {
                     <p className="text-sm font-medium">
                       {selectedCustomer.summary.favoriteStaff
                         ? `${selectedCustomer.summary.favoriteStaff.name} (${selectedCustomer.summary.favoriteStaff.count})`
-                        : 'Henüz yok'}
+                        : 'not yet'}
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
@@ -862,7 +862,7 @@ export function CustomersPage() {
                     min="0"
                     step="0.01"
                     className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                    placeholder={discountKind === 'PERCENT' ? 'Örn: 15' : 'Örn: 250'}
+                    placeholder={discountKind === 'PERCENT' ? 'Ex: 15' : 'Ex: 250'}
                     value={discountValue}
                     onChange={(event) => setDiscountValue(event.target.value)}
                   />
@@ -870,7 +870,7 @@ export function CustomersPage() {
                   <textarea
                     className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
                     rows={2}
-                    placeholder="İndirim notu (opsiyonel)"
+                    placeholder="Discount note (optional)"
                     value={discountNote}
                     onChange={(event) => setDiscountNote(event.target.value)}
                   />
@@ -888,7 +888,7 @@ export function CustomersPage() {
                       <textarea
                         className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
                         rows={2}
-                        placeholder="Müşteriye gidecek mesaj (opsiyonel)"
+                        placeholder="Message to the customer (optional)"
                         value={discountMessage}
                         onChange={(event) => setDiscountMessage(event.target.value)}
                       />
@@ -912,7 +912,7 @@ export function CustomersPage() {
                     disabled={discountSaving}
                     className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
                   >
-                    {discountSaving ? 'Kaydediliyor...' : 'İndirimi Kaydet'}
+                    {discountSaving ? 'Kaydediliyor...' : 'Save Discount'}
                   </button>
                 </div>
 

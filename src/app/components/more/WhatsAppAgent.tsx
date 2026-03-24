@@ -17,7 +17,7 @@ const conversations = [
   {
     id: 1,
     name: 'Ayşe Yılmaz',
-    message: 'Cumartesi için randevu alabilirim mi?',
+    message: 'Fridayrtesi için randevu alabilirim mi?',
     time: '14:23',
     resolved: true,
     converted: true,
@@ -33,7 +33,7 @@ const conversations = [
   {
     id: 3,
     name: 'Zeynep Kaya',
-    message: 'Perşembe randevumu iptal etmek istiyorum',
+    message: 'Thursday randevumu iptal etmek istiyorum',
     time: '12:10',
     resolved: true,
     converted: false,
@@ -50,7 +50,7 @@ const conversations = [
 
 const salonFaqQuestions = [
   { id: 'faq-working-hours', question: 'Çalışma saatleriniz ve uygun günleriniz nedir?' },
-  { id: 'faq-cancellation', question: 'İptal ve değişiklik politikanız nedir?' },
+  { id: 'faq-cancellation', question: 'Cancel ve değişiklik politikanız nedir?' },
   { id: 'faq-payment', question: 'Hangi ödeme yöntemlerini kabul ediyorsunuz?' },
   { id: 'faq-late-policy', question: 'Geç kalınan randevularda politikanız nedir?' },
   { id: 'faq-first-visit', question: 'İlk ziyaret müşterileri için özel bilgilendirme var mı?' },
@@ -92,7 +92,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const [handoverThreshold, setHandoverThreshold] = useState<'early' | 'balanced' | 'late'>(cachedSettings?.handoverThreshold || 'balanced');
   const [aiDisclosure, setAiDisclosure] = useState<'always' | 'onQuestion' | 'never'>(cachedSettings?.aiDisclosure || 'onQuestion');
   const [salonFaqAnswers, setSalonFaqAnswers] = useState<Record<string, string>>({
-    'faq-working-hours': 'Hafta içi 09:00-20:00, Cumartesi 10:00-18:00, Pazar kapalıyız.',
+    'faq-working-hours': 'Hafta içi 09:00-20:00, Fridayrtesi 10:00-18:00, Sunday kapalıyız.',
     'faq-cancellation': 'Randevu saatinden en az 4 saat önce ücretsiz iptal/değişiklik yapabilirsiniz.',
     'faq-payment': 'Nakit, kredi kartı ve havale ile ödeme kabul ediyoruz.',
     'faq-late-policy': '15 dakikadan fazla gecikmede slot uygunluğuna göre yeni saat önerilir.',
@@ -165,12 +165,12 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     setToggleFeedback(null);
 
     if (!chakraConnected) {
-      setToggleError('Önce WhatsApp bağlantısını tamamlayın.');
+      setToggleError('Complete WhatsApp connection firstyın.');
       return;
     }
 
     if (!chakraPluginActive) {
-      setToggleError('WhatsApp bağlantısı pasif. Önce bağlantıyı aktif etmelisiniz.');
+      setToggleError('WhatsApp bağlantısı pasif. Activate the connection firstmelisiniz.');
       return;
     }
 
@@ -345,7 +345,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                         }`}
                       >
                         {!chakraConnected
-                          ? 'Bağlı değil — Kurulum gerekli'
+                          ? 'Connected değil — Kurulum gerekli'
                           : !chakraPluginActive
                             ? 'WhatsApp pasif — Bağlantıyı yönetden aç'
                             : agentEnabled
@@ -379,7 +379,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
               <XCircle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm text-amber-800 dark:text-amber-300">
-                  WhatsApp bağlantısı pasif. Önce bağlantıyı aktif etmeden AI ajan çalışmaz.
+                  WhatsApp bağlantısı pasif. Activate the connection firstmeden AI ajan çalışmaz.
                 </p>
                 <Button
                   type="button"
@@ -402,7 +402,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
             <Card className="border-border/50">
               <CardContent className="p-3 text-center">
                 <p className="text-2xl font-bold text-[var(--rose-gold)]">{totalConversations}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Bu Hafta</p>
+                <p className="text-[10px] text-muted-foreground mt-1">This Week</p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
@@ -530,7 +530,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                                   />
                                   <div className="flex gap-2">
                                     <Button type="button" size="sm" onClick={() => saveSettings('faq', { faqAnswers: salonFaqAnswers })} disabled={isSaving}>
-                                      {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+                                      {isSaving ? 'Kaydediliyor...' : 'Save'}
                                     </Button>
                                     <Button type="button" size="sm" variant="outline" onClick={() => setEditingQuestionId(null)}>
                                       Vazgeç
@@ -591,7 +591,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                     <p className="text-sm font-medium">Emoji kullanımı</p>
                     <p className="text-xs text-muted-foreground">Yanıtlarda emoji yoğunluğunu kontrol eder.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('off'); void saveSettings('emojiUsage', { emojiUsage: 'off' }); }}>Kapalı</Button>
+                      <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('off'); void saveSettings('emojiUsage', { emojiUsage: 'off' }); }}>Closed</Button>
                       <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('low'); void saveSettings('emojiUsage', { emojiUsage: 'low' }); }}>Az</Button>
                       <Button type="button" variant={emojiUsage === 'normal' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('normal'); void saveSettings('emojiUsage', { emojiUsage: 'normal' }); }}>Normal</Button>
                     </div>

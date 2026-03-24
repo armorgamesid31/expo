@@ -175,7 +175,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Kampanyalar</h1>
+            <h1 className="text-2xl font-semibold">Campaigns</h1>
             <p className="text-sm text-muted-foreground">Sadakat ve tavsiye programları</p>
           </div>
           <Button
@@ -392,7 +392,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                   <p className="text-2xl font-bold text-green-600">
                     {referralCampaigns.reduce((sum, c) => sum + c.successfulReferrals, 0)}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Başarılı</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Successful</p>
                 </CardContent>
               </Card>
               <Card className="border-border/50">
@@ -444,7 +444,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
 
             {/* Active Campaigns */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
-              <h2 className="font-semibold mb-3 px-1">Aktif Kampanyalar</h2>
+              <h2 className="font-semibold mb-3 px-1">Aktif Campaigns</h2>
               <div className="space-y-2">
                 {referralCampaigns.map((campaign) => (
                   <Card key={campaign.id} className={`border-border/50 ${campaign.active ? 'border-l-4 border-l-green-500' : 'opacity-60'}`}>

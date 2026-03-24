@@ -27,13 +27,13 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-300">Tamamlandı</Badge>;
+        return <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-300">Completed</Badge>;
       case 'no-show':
         return <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-300">Gelmedi</Badge>;
       case 'cancelled':
-        return <Badge variant="secondary" className="bg-gray-500/10 text-gray-700 dark:text-gray-300">İptal</Badge>;
+        return <Badge variant="secondary" className="bg-gray-500/10 text-gray-700 dark:text-gray-300">Cancel</Badge>;
       default:
-        return <Badge>Planlandı</Badge>;
+        return <Badge>Scheduled</Badge>;
     }
   };
 

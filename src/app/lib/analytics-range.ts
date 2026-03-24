@@ -39,7 +39,7 @@ export function shiftDateInputValue(value: string, diffDays: number): string {
 
 export function resolveSingleDayRange(dateInput: string): { range: AnalyticsResolvedRange | null; error: string | null } {
   if (!dateInput) {
-    return { range: null, error: 'Tarih seçin.' };
+    return { range: null, error: 'Select a date.' };
   }
   const base = new Date(`${dateInput}T00:00:00`);
   if (Number.isNaN(base.getTime())) {
@@ -78,7 +78,7 @@ export function resolveAnalyticsRange(params: {
   let to: Date;
 
   if (params.preset === 'week') {
-    // JS getDay(): 0=Pazar, 1=Pazartesi ... 6=Cumartesi
+    // JS getDay(): 0=Sunday, 1=Monday ... 6=Fridayrtesi
     const mondayOffset = (now.getDay() + 6) % 7;
     from = startOfLocalDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset));
     to = now;
@@ -92,7 +92,7 @@ export function resolveAnalyticsRange(params: {
     to = now;
   } else {
     if (!params.customFromDate || !params.customToDate) {
-      return { range: null, error: 'Özel aralık için başlangıç ve bitiş tarihi seçin.' };
+      return { range: null, error: 'Custom aralık için başlangıç ve bitiş tarihi seçin.' };
     }
     from = startOfLocalDay(new Date(`${params.customFromDate}T00:00:00`));
     to = endOfLocalDay(new Date(`${params.customToDate}T00:00:00`));

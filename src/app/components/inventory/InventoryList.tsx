@@ -100,7 +100,7 @@ export function InventoryList() {
     <div className="h-full pb-20">
       {/* Header */}
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <h1 className="text-2xl font-semibold mb-4">Envanter</h1>
+        <h1 className="text-2xl font-semibold mb-4">Inventory</h1>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">

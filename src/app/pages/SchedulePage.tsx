@@ -67,10 +67,10 @@ function readScheduleSnapshot(date: Date): ScheduleSnapshot | null {
 }
 
 function statusLabel(status: string) {
-  if (status === 'COMPLETED') return 'Tamamlandı';
-  if (status === 'CANCELLED') return 'İptal';
+  if (status === 'COMPLETED') return 'completed';
+  if (status === 'CANCELLED') return 'Cancel';
   if (status === 'NO_SHOW') return 'Gelmedi';
-  return 'Planlandı';
+  return 'planned';
 }
 
 function statusClass(status: string) {
@@ -175,7 +175,7 @@ export function SchedulePage() {
         services: servicesResponse.items,
       });
     } catch (err: any) {
-      setError(err?.message || 'Takvim verisi alınamadı.');
+      setError(err?.message || 'Failed to retrieve calendar data.');
     } finally {
       setLoading(false);
     }
@@ -269,17 +269,17 @@ export function SchedulePage() {
 
   const submitCreate = async () => {
     if (!form.time) {
-      setCreateError('Saat seçimi zorunlu.');
+      setCreateError('Time selection is mandatory.');
       return;
     }
 
     if (selectedServiceIds.length === 0) {
-      setCreateError('En az bir hizmet seçmelisiniz.');
+      setCreateError('You must select at least one service.');
       return;
     }
 
     if (!form.customerId && !form.customerPhone.trim()) {
-      setCreateError('Müşteri telefonu zorunlu.');
+      setCreateError('Customer phone number is mandatory.');
       return;
     }
 
@@ -326,7 +326,7 @@ export function SchedulePage() {
       setForm((prev) => ({ ...prev, customerId: '', customerName: '', customerPhone: '', notes: '' }));
       await loadSchedule();
     } catch (err: any) {
-      setCreateError(err?.message || 'Randevu oluşturulamadı.');
+      setCreateError(err?.message || 'The appointment could not be created.');
     } finally {
       setSaving(false);
     }
@@ -354,14 +354,14 @@ export function SchedulePage() {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Randevu Takvimi</h1>
+        <h1 className="text-2xl font-semibold">Appointment Calendar</h1>
         <button
           type="button"
           onClick={() => void openCreateModal()}
           className="inline-flex items-center gap-2 rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-sm font-semibold text-white"
         >
           <Plus className="h-4 w-4" />
-          Yeni Randevu
+          New Appointment
         </button>
       </div>
 
@@ -376,7 +376,7 @@ export function SchedulePage() {
 
         <div className="text-center">
           <p className="font-semibold capitalize">{dateText}</p>
-          <p className="text-xs text-muted-foreground">{isToday ? 'Bugün' : format(activeDate, 'dd.MM.yyyy')}</p>
+          <p className="text-xs text-muted-foreground">{isToday ? 'Today' : format(activeDate, 'dd.MM.yyyy')}</p>
         </div>
 
         <button
@@ -472,7 +472,7 @@ export function SchedulePage() {
         <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Yeni Randevu</h2>
+              <h2 className="text-lg font-semibold">New Appointment</h2>
               <button type="button" onClick={closeCreateModal} className="text-sm text-muted-foreground">
                 Kapat
               </button>
@@ -480,7 +480,7 @@ export function SchedulePage() {
 
             <div className="space-y-3">
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Kayıtlı Müşteri (opsiyonel)</span>
+                <span className="text-muted-foreground">Registerlı Müşteri (opsiyonel)</span>
                 <select
                   value={form.customerId}
                   onChange={(event) => handleCustomerSelect(event.target.value)}
@@ -489,7 +489,7 @@ export function SchedulePage() {
                   <option value="">Yeni / elle gir</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
-                      {(customer.name || 'İsimsiz')} • {customer.phone}
+                      {(customer.name || 'Anonymous')} • {customer.phone}
                     </option>
                   ))}
                 </select>
@@ -503,7 +503,7 @@ export function SchedulePage() {
                   value={form.customerName}
                   onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  placeholder="Örn: Ayşe Yılmaz"
+                  placeholder="For example: Ayşe Yılmaz"
                 />
               </label>
 
@@ -569,7 +569,7 @@ export function SchedulePage() {
                         }
                         className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                       >
-                        <option value="">{required ? 'Uzman seçin' : 'Otomatik ata'}</option>
+                        <option value="">{required ? 'Choose an expert' : 'Otomatik ata'}</option>
                         {options.map((item) => (
                           <option key={item.id} value={item.id}>
                             {item.name}
@@ -597,7 +597,7 @@ export function SchedulePage() {
                   value={form.notes}
                   onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
                   className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                  placeholder="İsteğe bağlı not..."
+                  placeholder="Optional note..."
                 />
               </label>
 
@@ -609,7 +609,7 @@ export function SchedulePage() {
                 disabled={saving}
                 className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
               >
-                {saving ? 'Kaydediliyor...' : 'Randevu Oluştur'}
+                {saving ? 'Kaydediliyor...' : 'Create an Appointment'}
               </button>
 
               <p className="text-[11px] text-muted-foreground">

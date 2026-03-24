@@ -156,7 +156,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
     }
 
     if (!isConnected) {
-      setPluginToggleError('Önce WhatsApp bağlantısını tamamlayın.');
+      setPluginToggleError('Complete WhatsApp connection firstyın.');
       return;
     }
 
@@ -196,7 +196,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
       ? 'Bağlantı pasif'
       : reminderEnabled
         ? 'Aktif'
-        : 'Kapalı';
+        : 'Closed';
 
   const agentBadge = !isConnected
     ? 'Kilitli'
@@ -204,7 +204,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
       ? 'Bağlantı pasif'
       : agentEnabled
         ? 'Aktif'
-        : 'Kapalı';
+        : 'Closed';
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -276,7 +276,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                   Bağlantı aktifliği
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Kapalıyken WhatsApp üzerinden AI ve hatırlatma akışları çalışmaz.
+                  Closedyken WhatsApp üzerinden AI ve hatırlatma akışları çalışmaz.
                 </p>
               </div>
               <Switch
@@ -326,7 +326,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                 className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${
                   reminderBadge === 'Aktif'
                     ? 'bg-green-500/10 text-green-700'
-                    : reminderBadge === 'Kapalı'
+                    : reminderBadge === 'Closed'
                       ? 'bg-muted text-muted-foreground'
                       : 'bg-amber-500/10 text-amber-700'
                 }`}
@@ -346,7 +346,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
             <Button type="button" variant="outline" onClick={openReminderSettings} disabled={integrationLocked}>
               {integrationLocked ? <Lock className="w-4 h-4 mr-2" /> : <Settings2 className="w-4 h-4 mr-2" />}
-              {!isConnected ? 'Önce WhatsApp bağlantısını tamamla' : !pluginActive ? 'Önce bağlantıyı aktif et' : 'Hatırlatma Ayarlarını Aç'}
+              {!isConnected ? 'Complete WhatsApp connection first' : !pluginActive ? 'Activate the connection first' : 'Open Reminder Settings'}
             </Button>
           </CardContent>
         </Card>
@@ -367,7 +367,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                 className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${
                   agentBadge === 'Aktif'
                     ? 'bg-green-500/10 text-green-700'
-                    : agentBadge === 'Kapalı'
+                    : agentBadge === 'Closed'
                       ? 'bg-muted text-muted-foreground'
                       : 'bg-amber-500/10 text-amber-700'
                 }`}
@@ -384,7 +384,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
               className={integrationLocked ? '' : 'bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white'}
             >
               {integrationLocked ? <Lock className="w-4 h-4 mr-2" /> : <ChevronRight className="w-4 h-4 mr-2" />}
-              {!isConnected ? 'Önce WhatsApp bağlantısını tamamla' : !pluginActive ? 'Önce bağlantıyı aktif et' : 'AI Ajan Ayarlarını Aç'}
+              {!isConnected ? 'Complete WhatsApp connection first' : !pluginActive ? 'Activate the connection first' : 'Open AI Agent Settings'}
             </Button>
           </CardContent>
         </Card>

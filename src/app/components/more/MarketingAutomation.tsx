@@ -45,7 +45,7 @@ const campaignPerformance = [
 const pastCampaigns = [
   {
     id: 1,
-    name: 'Şubat Özel Teklifi',
+    name: 'Şubat Custom Teklifi',
     channel: 'WhatsApp',
     segment: 'VIP Müşteriler',
     sent: 7,
@@ -108,7 +108,7 @@ export function MarketingAutomation({ onBack }: MarketingAutomationProps) {
             <Megaphone className="w-5 h-5 text-[var(--rose-gold)]" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold">Pazarlama Otomasyonu</h1>
+            <h1 className="text-xl font-semibold">Sundaylama Otomasyonu</h1>
             <p className="text-xs text-muted-foreground">Müşteri kampanyaları ve segmentler</p>
           </div>
         </div>
@@ -210,7 +210,7 @@ export function MarketingAutomation({ onBack }: MarketingAutomationProps) {
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       rows={4}
-                      placeholder="Merhaba {{isim}}, sizi özledik! Bu ay WhatsApp üzerinden özel teklifimizi..."
+                      placeholder="Merhaba {{isim}}, sizi özledik! This month WhatsApp üzerinden özel teklifimizi..."
                       className="w-full bg-muted/40 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all resize-none"
                     />
                     <p className="text-[10px] text-muted-foreground mt-1">{"{{isim}}"} değişkeni otomatik doldurulur</p>
@@ -304,7 +304,7 @@ export function MarketingAutomation({ onBack }: MarketingAutomationProps) {
 
         {/* Past Campaigns */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
-          <h2 className="font-semibold mb-3 px-1">Geçmiş Kampanyalar</h2>
+          <h2 className="font-semibold mb-3 px-1">Geçmiş Campaigns</h2>
           <div className="space-y-2">
             {pastCampaigns.map(camp => (
               <Card key={camp.id} className="border-border/50">

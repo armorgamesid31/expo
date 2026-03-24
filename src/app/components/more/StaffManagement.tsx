@@ -390,7 +390,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                                     }}
                                   />
                                   <Label htmlFor={`custom-price-${service.id}`} className="text-xs flex-1">
-                                    Özel Fiyat
+                                    Custom Fiyat
                                   </Label>
                                   {customPricingEnabled[service.id] && (
                                     <Input
@@ -420,7 +420,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                                     }}
                                   />
                                   <Label htmlFor={`custom-duration-${service.id}`} className="text-xs flex-1">
-                                    Özel Süre
+                                    Custom Süre
                                   </Label>
                                   {customDurationEnabled[service.id] && (
                                     <Input
@@ -449,14 +449,14 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              İptal
+              Cancel
             </Button>
             <Button 
               onClick={handleSave}
               disabled={!formData.name || !formData.role || selectedServices.size === 0}
               style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
             >
-              {editingStaff ? 'Güncelle' : 'Ekle'}
+              {editingStaff ? 'Update' : 'Ekle'}
             </Button>
           </DialogFooter>
         </DialogContent>

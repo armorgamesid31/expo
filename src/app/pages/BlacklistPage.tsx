@@ -57,7 +57,7 @@ export function BlacklistPage() {
       setItems((prev) => [response.item, ...prev]);
       setForm({ fullName: '', phone: '', reason: '' });
     } catch (err: any) {
-      setError(err?.message || 'Kayıt eklenemedi.');
+      setError(err?.message || 'Register eklenemedi.');
     } finally {
       setSaving(false);
     }
@@ -71,7 +71,7 @@ export function BlacklistPage() {
       });
       setItems((prev) => prev.map((current) => (current.id === item.id ? response.item : current)));
     } catch (err: any) {
-      setError(err?.message || 'Kayıt güncellenemedi.');
+      setError(err?.message || 'Register güncellenemedi.');
     }
   };
 
@@ -100,7 +100,7 @@ export function BlacklistPage() {
         <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Kara Listeye Ekle'}</button>
       </form>
 
-      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
 
       <div className="space-y-2">
         {items.map((item) => (

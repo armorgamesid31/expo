@@ -37,7 +37,7 @@ interface AutomationSetting {
 const initialAutomations: Automation[] = [
   {
     id: 'reminder-24h',
-    name: 'Randevu Hatırlatması (24 Saat)',
+    name: 'Appointment Reminder (24 Hours)',
     description: 'Randevudan 24 saat önce otomatik hatırlatma',
     icon: Bell,
     color: '#3B82F6',
@@ -58,7 +58,7 @@ const initialAutomations: Automation[] = [
   },
   {
     id: 'reminder-2h',
-    name: 'Randevu Hatırlatması (2 Saat)',
+    name: 'Appointment Reminder (2 Hours)',
     description: 'Randevudan 2 saat önce kısa hatırlatma',
     icon: Clock,
     color: '#8B5CF6',
@@ -76,14 +76,14 @@ const initialAutomations: Automation[] = [
   },
   {
     id: 'directions',
-    name: 'Yol Tarifi Gönderimi',
+    name: 'Directions Message',
     description: 'Randevudan önce salon konumu ve yol tarifi',
     icon: MapPin,
     color: '#22C55E',
     enabled: true,
     category: 'info',
     timing: 'Hatırlatma ile birlikte',
-    details: 'Google Maps bağlantısı ile müşteriye yol tarifi gönderilir. Salon Bilgileri\'ndeki harita URL\'si kullanılır.',
+    details: 'Google Maps bağlantısı ile müşteriye yol tarifi gönderilir. Salon Information\'ndeki harita URL\'si kullanılır.',
     settings: [
       { key: 'standalone', label: 'Ayrı Mesaj Olarak Gönder', type: 'toggle', value: false },
       { key: 'includeParking', label: 'Park Bilgisi Ekle', type: 'toggle', value: true },
@@ -91,7 +91,7 @@ const initialAutomations: Automation[] = [
   },
   {
     id: 'post-visit',
-    name: 'Ziyaret Sonrası Teşekkür',
+    name: 'Post-Visit Thank You',
     description: 'Randevu tamamlandıktan sonra teşekkür mesajı',
     icon: Star,
     color: '#F59E0B',
@@ -111,7 +111,7 @@ const initialAutomations: Automation[] = [
   },
   {
     id: 'no-show-warning',
-    name: 'No-Show Uyarısı',
+    name: 'No-Show Alert',
     description: 'Randevuya gelmeyenlere otomatik bilgilendirme',
     icon: CalendarCheck,
     color: '#EF4444',
@@ -210,7 +210,7 @@ export function Automations({ onBack }: AutomationsProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold text-[var(--rose-gold)]">847</p>
-                <p className="text-[10px] text-muted-foreground">Bu Ay Gönderilen</p>
+                <p className="text-[10px] text-muted-foreground">This Month Gönderilen</p>
               </div>
             </CardContent>
           </Card>
@@ -263,7 +263,7 @@ export function Automations({ onBack }: AutomationsProps) {
                               className="mt-2 flex items-center gap-1 text-xs text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
                             >
                               <Settings2 className="w-3 h-3" />
-                              Ayarları Düzenle
+                              Edit Settings
                               <ChevronRight className="w-3 h-3" />
                             </button>
                           )}
@@ -283,7 +283,7 @@ export function Automations({ onBack }: AutomationsProps) {
             <div className="flex items-start gap-3">
               <MessageCircle className="w-5 h-5 text-[var(--deep-indigo)] shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-sm mb-1">Mesaj Kullanımı</h4>
+                <h4 className="font-semibold text-sm mb-1">Message Usage</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   WhatsApp mesajları Business API üzerinden gönderilir.
                   Aylık kotanız: <span className="font-semibold text-foreground">1.000 WhatsApp</span>
@@ -368,13 +368,13 @@ export function Automations({ onBack }: AutomationsProps) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>
-              İptal
+              Cancel
             </Button>
             <Button
               onClick={saveSettings}
               style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
             >
-              Kaydet
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>

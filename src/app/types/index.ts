@@ -16,15 +16,15 @@ export type ServiceCategory =
   | 'CONSULTATION';
 
 export const SERVICE_CATEGORY_LABELS: Record<ServiceCategory, string> = {
-  HAIR: 'Saç',
+  HAIR: 'Hair',
   LASER: 'Lazer Epilasyon',
-  SKINCARE: 'Cilt Bakımı',
-  NAILS: 'Tırnak',
-  BROWS_LASHES: 'Kaş & Kirpik',
-  WAXING: 'Ağda',
-  BODY_CARE: 'Vücut Bakımı',
+  SKINCARE: 'Skin Care',
+  NAILS: 'Nail',
+  BROWS_LASHES: 'Eyebrow & Eyelash',
+  WAXING: 'waxing',
+  BODY_CARE: 'Body Care',
   MAKEUP: 'Makyaj',
-  CONSULTATION: 'Danışmanlık',
+  CONSULTATION: 'Consulting',
 };
 
 export interface Staff {

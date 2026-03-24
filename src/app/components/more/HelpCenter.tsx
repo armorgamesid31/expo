@@ -27,7 +27,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: 'Kara listeye nasıl müşteri eklerim?',
-    answer: 'Özellikler > Kara Liste bölümüne gidin. Yeni müşteri ekle butonuna tıklayıp müşteri bilgilerini girin veya mevcut müşteri listesinden seçim yapın. Kara listedeki müşteriler randevu alamaz.',
+    answer: 'Customlikler > Kara Liste bölümüne gidin. Yeni müşteri ekle butonuna tıklayıp müşteri bilgilerini girin veya mevcut müşteri listesinden seçim yapın. Kara listedeki müşteriler randevu alamaz.',
     category: 'Müşteri Yönetimi',
   },
   {
@@ -42,23 +42,23 @@ const faqData: FAQItem[] = [
   },
   {
     question: 'Kampanya nasıl oluşturabilirim?',
-    answer: 'Pazarlama Otomasyonu bölümünden yeni kampanya oluştur butonuna tıklayın. Müşteri segmenti seçin (VIP, pasif müşteriler, sık gelenler), mesajınızı yazın ve WhatsApp ile gönderin.',
-    category: 'Pazarlama',
+    answer: 'Sundaylama Otomasyonu bölümünden yeni kampanya oluştur butonuna tıklayın. Müşteri segmenti seçin (VIP, pasif müşteriler, sık gelenler), mesajınızı yazın ve WhatsApp ile gönderin.',
+    category: 'Sundaylama',
   },
   {
     question: 'Müşteri segmentleri nedir?',
     answer: 'Sistem, müşterilerinizi otomatik olarak davranışlarına göre gruplar: VIP müşteriler (₺3000+ harcama), pasif müşteriler (3+ ay gelmeyenler), sık gelenler (ayda 2+ ziyaret). Bu segmentlere özel kampanyalar gönderebilirsiniz.',
-    category: 'Pazarlama',
+    category: 'Sundaylama',
   },
   {
     question: 'Sadakat programı nasıl çalışır?',
-    answer: 'Her harcamadan puan kazanan müşteriler, biriken puanları indirim olarak kullanabilir. Kampanyalar bölümünden sadakat programı ayarlarını düzenleyebilir, puan oranını ve minimum kullanım limitini belirleyebilirsiniz.',
-    category: 'Kampanyalar',
+    answer: 'Her harcamadan puan kazanan müşteriler, biriken puanları indirim olarak kullanabilir. Campaigns bölümünden sadakat programı ayarlarını düzenleyebilir, puan oranını ve minimum kullanım limitini belirleyebilirsiniz.',
+    category: 'Campaigns',
   },
   {
     question: 'Arkadaş davet programı nasıl kullanılır?',
-    answer: 'Müşterileriniz, Kampanyalar bölümünden aldıkları davet linklerini arkadaşlarıyla paylaşabilir. Her başarılı davet için hem davet eden hem de gelen kişi ödül kazanır.',
-    category: 'Kampanyalar',
+    answer: 'Müşterileriniz, Campaigns bölümünden aldıkları davet linklerini arkadaşlarıyla paylaşabilir. Her başarılı davet için hem davet eden hem de gelen kişi ödül kazanır.',
+    category: 'Campaigns',
   },
   {
     question: 'Web sitemi nasıl yönetebilirim?',
@@ -72,13 +72,13 @@ const faqData: FAQItem[] = [
   },
   {
     question: 'Yeni çalışan nasıl eklerim?',
-    answer: 'Özellikler > Çalışan Yönetimi bölümüne gidin. Yeni çalışan ekle butonuna tıklayıp ad, rol, uzmanlık alanları ve çalışma saatlerini girin. Çalışanlar randevu oluştururken seçilebilir hale gelir.',
+    answer: 'Customlikler > Çalışan Yönetimi bölümüne gidin. Yeni çalışan ekle butonuna tıklayıp ad, rol, uzmanlık alanları ve çalışma saatlerini girin. Çalışanlar randevu oluştururken seçilebilir hale gelir.',
     category: 'Çalışan Yönetimi',
   },
   {
     question: 'Hizmet fiyatlarını nasıl güncellerim?',
-    answer: 'Özellikler > Hizmet Yönetimi bölümünden güncellemek istediğiniz hizmete tıklayın. Fiyat, süre ve açıklama bilgilerini düzenleyip kaydedin. Yeni fiyatlar anında geçerli olur.',
-    category: 'Hizmet Yönetimi',
+    answer: 'Customlikler > Service Management bölümünden güncellemek istediğiniz hizmete tıklayın. Fiyat, süre ve açıklama bilgilerini düzenleyip kaydedin. Yeni fiyatlar anında geçerli olur.',
+    category: 'Service Management',
   },
   {
     question: 'Birden fazla salon şubesi yönetebilir miyim?',
@@ -115,8 +115,8 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
             <HelpCircle className="w-5 h-5 text-[var(--deep-indigo)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold">Yardım Merkezi</h1>
-            <p className="text-sm text-muted-foreground">Sık sorulan sorular ve destek</p>
+            <h1 className="text-2xl font-semibold">Help Center</h1>
+            <p className="text-sm text-muted-foreground">FAQ and support</p>
           </div>
         </div>
       </div>
@@ -219,11 +219,11 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" className="w-full text-xs h-9">
                   <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
-                  Canlı Destek
+                  Live Support
                 </Button>
                 <Button variant="outline" className="w-full text-xs h-9">
                   <Mail className="w-3.5 h-3.5 mr-1.5" />
-                  E-posta Gönder
+                  Send Email
                 </Button>
               </div>
             </CardContent>

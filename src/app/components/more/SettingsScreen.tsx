@@ -31,7 +31,7 @@ export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter,
     {
       title: "Destek",
       items: [
-        { icon: HelpCircle, label: "Yardım Merkezi", description: "Sıkça sorulan sorular", color: "var(--deep-indigo)", onClick: onShowHelpCenter },
+        { icon: HelpCircle, label: "Help Center", description: "Sıkça sorulan sorular", color: "var(--deep-indigo)", onClick: onShowHelpCenter },
       ]
     }
   ];
@@ -92,7 +92,7 @@ export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter,
             onClick={onLogout}
           >
             <LogOut className="w-4 h-4 mr-2" />
-            Çıkış Yap
+            Logout Yap
           </Button>
           <div className="mt-4 text-center">
             <p className="text-[10px] text-muted-foreground">Salon OS Enterprise v3.2.0</p>

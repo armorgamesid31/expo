@@ -127,7 +127,7 @@ export function StaffCrudPage() {
 
     for (const service of services) {
       const key = String(service.categoryKey || 'OTHER').toUpperCase();
-      const title = service.categoryName || 'Diğer';
+      const title = service.categoryName || 'Other';
       const order = categoryOrderMap.get(key) ?? 999;
 
       if (!groups.has(key)) {
@@ -162,7 +162,7 @@ export function StaffCrudPage() {
       setServices(servicesRes.items || []);
       setCategories((categoriesRes.items || []).sort((a, b) => a.effectiveOrder - b.effectiveOrder || a.id - b.id));
     } catch (err: any) {
-      setError(err?.message || 'Çalışan verileri alınamadı.');
+      setError(err?.message || 'Could not retrieve employee data.');
     } finally {
       setLoading(false);
     }
@@ -302,7 +302,7 @@ export function StaffCrudPage() {
     try {
       assignments = buildAssignmentsPayload();
     } catch (err: any) {
-      setError(err?.message || 'Hizmet ayarları geçersiz.');
+      setError(err?.message || 'Service settings are invalid.');
       return;
     }
 
@@ -340,7 +340,7 @@ export function StaffCrudPage() {
       setModalOpen(false);
       setEditingStaffId(null);
     } catch (err: any) {
-      setError(err?.message || 'Çalışan kaydedilemedi.');
+      setError(err?.message || 'The employee could not be registered.');
     } finally {
       setSaving(false);
     }
@@ -354,7 +354,7 @@ export function StaffCrudPage() {
       await apiFetch(`/api/admin/staff/${item.id}`, { method: 'DELETE' });
       setStaff((prev) => prev.filter((entry) => entry.id !== item.id));
     } catch (err: any) {
-      setError(err?.message || 'Çalışan silinemedi.');
+      setError(err?.message || 'The employee could not be deleted.');
     }
   };
 
@@ -376,7 +376,7 @@ export function StaffCrudPage() {
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
 
       {!loading ? (
         <div className="space-y-3 pb-20">
@@ -392,7 +392,7 @@ export function StaffCrudPage() {
 
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold leading-tight truncate">{item.name}</p>
-                  <p className="text-sm text-muted-foreground truncate">{item.title || 'Unvan belirtilmemiş'}</p>
+                  <p className="text-sm text-muted-foreground truncate">{item.title || 'Title not specified'}</p>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -400,7 +400,7 @@ export function StaffCrudPage() {
                     type="button"
                     onClick={() => openEdit(item)}
                     className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
-                    title="Düzenle"
+                    title="Edit"
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -458,7 +458,7 @@ export function StaffCrudPage() {
         <div className="fixed inset-0 z-[90] bg-black/40 p-4">
           <div className="mx-auto mt-2 max-w-md rounded-2xl border border-border bg-background shadow-xl max-h-[calc(100dvh-16px)] flex flex-col overflow-hidden">
             <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{editingStaffId ? 'Çalışanı Düzenle' : 'Yeni Çalışan'}</h2>
+              <h2 className="text-lg font-semibold">{editingStaffId ? 'Edit Employee' : 'New Employee'}</h2>
               <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
@@ -539,7 +539,7 @@ export function StaffCrudPage() {
                               {draft.selected ? (
                                 <div className="mt-2 space-y-2 rounded-md bg-muted/40 p-2">
                                   <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span>Özel fiyat</span>
+                                    <span>Custom fiyat</span>
                                     <ToggleSwitch
                                       checked={draft.useCustomPrice}
                                       onChange={(next) => updateDraftField(service.id, 'useCustomPrice', next)}
@@ -555,12 +555,12 @@ export function StaffCrudPage() {
                                         updateDraftField(service.id, 'customPrice', event.target.value)
                                       }
                                       className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
-                                      placeholder="Örn: 180"
+                                      placeholder="Ex: 180"
                                     />
                                   ) : null}
 
                                   <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span>Özel süre</span>
+                                    <span>Custom süre</span>
                                     <ToggleSwitch
                                       checked={draft.useCustomDuration}
                                       onChange={(next) => updateDraftField(service.id, 'useCustomDuration', next)}
@@ -576,7 +576,7 @@ export function StaffCrudPage() {
                                         updateDraftField(service.id, 'customDuration', event.target.value)
                                       }
                                       className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
-                                      placeholder="Örn: 75"
+                                      placeholder="Ex: 75"
                                     />
                                   ) : null}
                                 </div>
@@ -595,7 +595,7 @@ export function StaffCrudPage() {
                   disabled={saving}
                   className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
                 >
-                  {saving ? 'Kaydediliyor...' : editingStaffId ? 'Güncelle' : 'Ekle'}
+                  {saving ? 'Kaydediliyor...' : editingStaffId ? 'Update' : 'Ekle'}
                 </button>
               </div>
             </form>

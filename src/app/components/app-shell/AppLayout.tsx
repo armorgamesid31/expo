@@ -196,7 +196,7 @@ export function AppLayout() {
             onClick={() => void logout()}
             className="text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground"
           >
-            Çıkış
+            Logout
           </button>
         </div>
       </header>

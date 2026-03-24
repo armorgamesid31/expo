@@ -9,7 +9,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
     { id: 'dashboard', label: 'Ana Sayfa', icon: LayoutDashboard },
     { id: 'schedule', label: 'Takvim', icon: Calendar },
-    { id: 'features', label: 'Özellikler', icon: Sparkles },
+    { id: 'features', label: 'Customlikler', icon: Sparkles },
     { id: 'settings', label: 'Ayarlar', icon: Settings },
   ];
 

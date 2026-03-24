@@ -63,7 +63,7 @@ function RootRedirect() {
             className="hidden h-[52px] w-auto dark:block"
             loading="eager"
           />
-          <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+          <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
     );

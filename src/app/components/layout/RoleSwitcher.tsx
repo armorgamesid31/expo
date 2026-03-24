@@ -21,7 +21,7 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
         onClick={() => onRoleChange('admin')}
       >
         <Shield className="w-4 h-4" />
-        <span className="hidden sm:inline">Yönetici</span>
+        <span className="hidden sm:inline">Admin</span>
       </Button>
       <Button
         size="sm"

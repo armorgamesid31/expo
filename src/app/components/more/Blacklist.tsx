@@ -187,7 +187,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="İsim veya telefon ile ara..."
+              placeholder="Search by name or phone..."
               className="pl-10"
             />
           </div>
@@ -233,7 +233,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
                   }).length}
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Bu Ay</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">This Month</p>
               </CardContent>
             </Card>
           </div>
@@ -507,7 +507,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
               setNameInput('');
               setShowSuggestions(false);
             }}>
-              İptal
+              Cancel
             </Button>
             <Button
               onClick={handleAdd}

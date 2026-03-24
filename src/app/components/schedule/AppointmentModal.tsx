@@ -64,7 +64,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
           {/* Header */}
           <SheetHeader className="p-4 border-b border-border">
             <div className="flex items-center justify-between">
-              <SheetTitle>Yeni Randevu</SheetTitle>
+              <SheetTitle>New Appointment</SheetTitle>
               <Button variant="ghost" size="sm" onClick={onClose}>
                 <X className="w-5 h-5" />
               </Button>
@@ -78,11 +78,11 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {/* Customer Selection */}
             <div className="space-y-3">
-              <Label>Müşteri Seçin</Label>
+              <Label>Select Customer</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="İsim veya telefon ile ara..."
+                  placeholder="Search by name or phone..."
                   className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -122,7 +122,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
 
             {/* Multi-Service Selection */}
             <div className="space-y-3">
-              <Label>Hizmet Seçin</Label>
+              <Label>Select Service</Label>
               <div className="grid grid-cols-2 gap-2">
                 {services.map(service => (
                   <button
@@ -157,7 +157,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
               )}
               {selectedServices.length > 0 && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Toplam Süre:</span>
+                  <span className="text-muted-foreground">Total Duration:</span>
                   <span className="font-semibold">{totalDuration} dakika</span>
                 </div>
               )}
@@ -235,7 +235,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-red-700 dark:text-red-300">
-                    Zaman Çakışması Tespit Edildi
+                    Time Conflict Detected
                   </p>
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                     {selectedStaff ? staff.find(s => s.id === selectedStaff)?.name : 'Seçili personel'} bu saatte başka bir randevuya sahip. Lütfen farklı bir saat seçin.
@@ -257,7 +257,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
               className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] h-12"
               disabled={!selectedCustomer || selectedServices.length === 0 || !selectedTime}
             >
-              Randevu Oluştur
+              Create Appointment
             </Button>
           </div>
         </div>

@@ -195,7 +195,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
       setStatus({ type: 'success', message: 'Web sitesi içeriği kaydedildi ve yayınlandı.' });
     } catch (error) {
       console.error('Website content save failed:', error);
-      setStatus({ type: 'error', message: 'Kaydetme sırasında hata oluştu. Lütfen tekrar deneyin.' });
+      setStatus({ type: 'error', message: 'Saveme sırasında hata oluştu. Lütfen tekrar deneyin.' });
     } finally {
       setIsSaving(false);
     }
@@ -240,7 +240,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
         return [...next, newImage];
       });
 
-      setStatus({ type: 'success', message: 'Fotoğraf eklendi. Kaydet ile yayınlayabilirsiniz.' });
+      setStatus({ type: 'success', message: 'Fotoğraf eklendi. Save ile yayınlayabilirsiniz.' });
     };
     reader.onerror = () => {
       setStatus({ type: 'error', message: 'Fotoğraf okunamadı.' });
@@ -268,7 +268,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             </div>
           </div>
           <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">
-            Yayında
+            Live
           </Badge>
         </div>
       </div>
@@ -301,11 +301,11 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
 
           <Card className="border-border/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Salon Bilgileri</CardTitle>
+              <CardTitle className="text-sm">Salon Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Salon Adı</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Salon Name</label>
                 <input
                   value={salonName}
                   onChange={(e) => setSalonName(e.target.value)}
@@ -332,7 +332,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                 />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Açıklama</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -451,7 +451,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             disabled={isSaving}
             className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all active:scale-98 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet & Yayınla'}
+            {isSaving ? 'Kaydediliyor...' : 'Save Changes & Yayınla'}
           </button>
         </motion.div>
       </div>

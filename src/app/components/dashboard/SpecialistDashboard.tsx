@@ -19,7 +19,7 @@ export function SpecialistDashboard() {
       {/* Header */}
       <div className="pt-6 px-4">
         <h1 className="text-2xl font-semibold mb-1">Merhaba, {currentStaff.name}</h1>
-        <p className="text-muted-foreground text-sm">Bugünü harika yapmaya hazır mısın!</p>
+        <p className="text-muted-foreground text-sm">Todayü harika yapmaya hazır mısın!</p>
       </div>
 
       {/* Next Client Card - Large Focus */}
@@ -76,7 +76,7 @@ export function SpecialistDashboard() {
               </div>
             </div>
             <p className="text-2xl font-bold text-[var(--deep-indigo)]">+{todayPoints}</p>
-            <p className="text-xs text-muted-foreground">Bugün Kazanılan Puan</p>
+            <p className="text-xs text-muted-foreground">Today Kazanılan Puan</p>
           </CardContent>
         </Card>
 
@@ -88,7 +88,7 @@ export function SpecialistDashboard() {
               </div>
             </div>
             <p className="text-2xl font-bold text-[var(--rose-gold)]">{myAppointments.length}</p>
-            <p className="text-xs text-muted-foreground">Bugünkü Randevular</p>
+            <p className="text-xs text-muted-foreground">Todaykü Randevular</p>
           </CardContent>
         </Card>
       </div>
@@ -121,7 +121,7 @@ export function SpecialistDashboard() {
 
       {/* Daily Schedule Preview */}
       <div className="px-4">
-        <h2 className="text-lg font-semibold mb-3">Bugünün Programı</h2>
+        <h2 className="text-lg font-semibold mb-3">Todayün Programı</h2>
         <div className="space-y-2">
           {myAppointments.map((apt) => (
             <Card key={apt.id} className="border-border/50">

@@ -233,7 +233,7 @@ export function AnalyticsPage() {
   return (
     <div className="p-4 space-y-4 pb-24">
       <div>
-        <h1 className="text-xl font-semibold">Analitikler</h1>
+        <h1 className="text-xl font-semibold">Analytics</h1>
         <p className="text-xs text-muted-foreground">Salon performansını tek ekranda takip edin.</p>
       </div>
 
@@ -250,14 +250,14 @@ export function AnalyticsPage() {
       {rangeError ? <p className="text-xs text-red-500">{rangeError}</p> : null}
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
 
       {overview ? (
         <>
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-base font-semibold flex items-center gap-2 mb-3">
               <span className="h-2 w-2 rounded-full bg-[var(--rose-gold)]" />
-              Salon Nabzı - Bu Hafta
+              Salon Nabzı - This Week
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={weeklyPulse}>
@@ -289,7 +289,7 @@ export function AnalyticsPage() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-base font-semibold flex items-center gap-2 mb-4">
               <Award className="w-4 h-4 text-[var(--rose-gold)]" />
-              Personel Performansı
+              Staff Performance
             </p>
             <div className="space-y-4">
               {(overview.staffPerformance || []).map((staff, idx) => {
@@ -322,7 +322,7 @@ export function AnalyticsPage() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-base font-semibold flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-[var(--rose-gold)]" />
-              En Çok Kazandıran Hizmetler
+              Top Revenue-Generating Services
             </p>
             <ResponsiveContainer width="100%" height={270}>
               <BarChart data={serviceRevenueData}>
@@ -351,7 +351,7 @@ export function AnalyticsPage() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-base font-semibold flex items-center gap-2 mb-3">
               <DollarSign className="w-4 h-4 text-[var(--rose-gold)]" />
-              Hizmet Gelir Dağılımı
+              Service Revenue Distribution
             </p>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>

@@ -585,7 +585,7 @@ export function AutomationsCrudPage() {
                         onClick={openReminderSettings}
                         className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
                       >
-                        Ayarları Düzenle
+                        Edit Settings
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -632,7 +632,7 @@ export function AutomationsCrudPage() {
                       onClick={openAttendanceSettings}
                       className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
                     >
-                      Ayarları Düzenle
+                      Edit Settings
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -710,13 +710,13 @@ export function AutomationsCrudPage() {
           ) : null}
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>İptal</Button>
+            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
             <Button
               onClick={() => void saveReminderSettings()}
               disabled={savingKey === 'reminder'}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
             >
-              Kaydet
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -952,13 +952,13 @@ export function AutomationsCrudPage() {
           ) : null}
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>İptal</Button>
+            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
             <Button
               onClick={() => void saveAttendanceSettings()}
               disabled={savingKey === 'attendance'}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
             >
-              Kaydet
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
