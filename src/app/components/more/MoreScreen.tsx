@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
-import { BarChart3, Package, Sparkles, MessageCircle, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { useAuth } from '../../context/AuthContext';
-import { readSnapshot, writeSnapshot } from '../../lib/ui-cache';
 
 interface MoreScreenProps {
   isDarkMode: boolean;
@@ -13,12 +11,6 @@ interface MoreScreenProps {
 }
 
 export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScreenProps) {
-  const { apiFetch } = useAuth();
-  const cachedChakraStatus = readSnapshot<{ connected?: boolean; isActive?: boolean }>('chakra:status', 1000 * 60 * 10);
-  const [whatsappConnected, setWhatsappConnected] = useState(
-    Boolean(cachedChakraStatus?.connected) || Boolean(cachedChakraStatus?.isActive),
-  );
-  const [whatsappStatusLoaded, setWhatsappStatusLoaded] = useState(Boolean(cachedChakraStatus));
   const [warningModal, setWarningModal] = useState<{ 
     title: string; 
     message: string; 
@@ -76,17 +68,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
   // Advanced Modules — Altta
   const advancedModules = [
     {
-      icon: MessageCircle,
-      label: 'WhatsApp Settings',
-      description: 'Connection, AI agent and reminder settings',
-      action: () => onNavigate('whatsapp-settings'),
-      color: '#22C55E',
-      badge: whatsappStatusLoaded ? (whatsappConnected ? 'Connected' : 'Setup') : 'Check',
-      badgeColor: whatsappStatusLoaded
-        ? (whatsappConnected ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700')
-        : 'bg-muted text-muted-foreground',
-    },
-    {
       icon: ShieldCheck,
       label: 'Meta Direct (Beta)',
       description: 'Instagram DM review preparation',
@@ -114,31 +95,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       badgeColor: 'bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]',
     },
   ];
-
-  useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      try {
-        const status = await apiFetch<{ connected?: boolean; isActive?: boolean; hasPlugin?: boolean }>('/api/app/chakra/status');
-        if (!mounted) {
-          return;
-        }
-        setWhatsappConnected(Boolean(status?.connected) || Boolean(status?.isActive));
-        writeSnapshot('chakra:status', status || {});
-      } catch (error) {
-        console.warn('Chakra status fetch failed in MoreScreen:', error);
-      } finally {
-        if (mounted) {
-          setWhatsappStatusLoaded(true);
-        }
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [apiFetch]);
 
   return (
     <div className="h-full pb-20 relative overflow-y-auto">
