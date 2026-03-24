@@ -34,9 +34,9 @@ interface WebsiteContentResponse {
 }
 
 const defaultGalleryImages: GalleryImageItem[] = [
-  { id: 'seed-1', label: 'Saç Boyama', emoji: '💇‍♀️' },
-  { id: 'seed-2', label: 'Manikür', emoji: '💅' },
-  { id: 'seed-3', label: 'Cilt Bakımı', emoji: '✨' },
+  { id: 'seed-1', label: 'Hair Coloring', emoji: '💇‍♀️' },
+  { id: 'seed-2', label: 'Manicure', emoji: '💅' },
+  { id: 'seed-3', label: 'Skin Care', emoji: '✨' },
   { id: 'seed-4', label: 'Salon', emoji: '🌸' },
 ];
 
@@ -54,14 +54,14 @@ function normalizeInstagram(value: string) {
 
 function buildLocalWebsiteCopy(name: string, cityHint?: string) {
   const salonName = name.trim() || 'Salonunuz';
-  const city = cityHint?.trim() || 'şehrinizde';
+  const city = cityHint?.trim() || 'in your city';
 
   return {
-    heroText: `${salonName} ile kendinize iyi bakın`,
-    tagline: `${city} profesyonel güzellik deneyimi`,
+    heroText: `${salonName} take care of yourself with`,
+    tagline: `${city} professional beauty experience`,
     description:
-      `${salonName}, uzman ekibiyle saç, cilt ve bakım hizmetlerinde güvenilir sonuçlar sunar. ` +
-      'Hijyenik salon ortamı, kaliteli ürünler ve kişiselleştirilmiş dokunuşlarla her ziyareti keyifli bir deneyime dönüştürür.',
+      `${salonName}, with its expert team hair, skin, and care delivers reliable results in its services. ` +
+      'The hygienic salon environment turns every visit into a pleasant experience with quality products and personalized touches.',
   };
 }
 
@@ -74,13 +74,13 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const [salonName, setSalonName] = useState('Beauté Salon');
-  const [tagline, setTagline] = useState('Güzelliğinizi Keşfedin');
+  const [tagline, setTagline] = useState('Discover Your Beauty');
   const [description, setDescription] = useState(
-    "Istanbul'un kalbinde, lüks ve konforun buluştuğu özel güzellik deneyimi. Uzman ekibimizle kendinizi özel hissedin.",
+    "A special beauty experience where luxury and comfort meet in the heart of Istanbul. Feel special with our expert team.",
   );
   const [instagram, setInstagram] = useState('@beautesalon');
   const [whatsapp, setWhatsapp] = useState('+90 532 123 4567');
-  const [heroText, setHeroText] = useState('Profesyonel Bakım, Kişisel Dokunuş');
+  const [heroText, setHeroText] = useState('Professional Care, Personal Touch');
   const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(defaultGalleryImages);
 
   useEffect(() => {
@@ -95,8 +95,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
         }
 
         setSalonName(response.salon.name || bootstrap?.salon?.name || salonName);
-        setTagline(response.salon.tagline || 'Güzelliğinizi Keşfedin');
-        setHeroText(response.salon.heroText || response.salon.tagline || 'Profesyonel Bakım, Kişisel Dokunuş');
+        setTagline(response.salon.tagline || 'Discover Your Beauty');
+        setHeroText(response.salon.heroText || response.salon.tagline || 'Professional Care, Personal Touch');
         setDescription(response.salon.about || description);
         setInstagram(response.salon.instagramUrl || '@beautesalon');
         setWhatsapp(response.salon.whatsappPhone || '+90 532 123 4567');
@@ -105,7 +105,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
           setGalleryImages(
             response.gallery.map((image) => ({
               id: `db-${image.id}`,
-              label: image.altText || 'Salon Görseli',
+              label: image.altText || 'Hall Image',
               imageUrl: image.imageUrl,
             })),
           );
@@ -115,7 +115,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
       } catch (error) {
         console.error('Website content load failed:', error);
         if (mounted) {
-          setStatus({ type: 'error', message: 'Web sitesi içeriği yüklenemedi. Varsayılan içerik kullanılıyor.' });
+          setStatus({ type: 'error', message: 'The website content could not be loaded. Default content is used.' });
         }
       } finally {
         if (mounted) {
@@ -161,14 +161,14 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
       setHeroText(result.generated.heroText);
       setTagline(result.generated.tagline);
       setDescription(result.generated.description);
-      setStatus({ type: 'success', message: 'Yeni metin önerileri üretildi.' });
+      setStatus({ type: 'success', message: 'New text suggestions were produced.' });
     } catch (error) {
       console.warn('Website generate endpoint failed, using local fallback:', error);
       const fallback = buildLocalWebsiteCopy(salonName, bootstrap?.salon?.city || undefined);
       setHeroText(fallback.heroText);
       setTagline(fallback.tagline);
       setDescription(fallback.description);
-      setStatus({ type: 'success', message: 'Yerel yedek metin önerileri üretildi.' });
+      setStatus({ type: 'success', message: 'Local replacement text suggestions were generated.' });
     } finally {
       setIsGenerating(false);
     }
@@ -192,10 +192,10 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
         }),
       });
 
-      setStatus({ type: 'success', message: 'Web sitesi içeriği kaydedildi ve yayınlandı.' });
+      setStatus({ type: 'success', message: 'Website content has been saved and published.' });
     } catch (error) {
       console.error('Website content save failed:', error);
-      setStatus({ type: 'error', message: 'Saveme sırasında hata oluştu. Lütfen tekrar deneyin.' });
+      setStatus({ type: 'error', message: 'An error occurred during saveme. Please try again.' });
     } finally {
       setIsSaving(false);
     }
@@ -240,10 +240,10 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
         return [...next, newImage];
       });
 
-      setStatus({ type: 'success', message: 'Fotoğraf eklendi. Save ile yayınlayabilirsiniz.' });
+      setStatus({ type: 'success', message: 'Photo added. You can publish it with Save.' });
     };
     reader.onerror = () => {
-      setStatus({ type: 'error', message: 'Fotoğraf okunamadı.' });
+      setStatus({ type: 'error', message: 'The photo could not be read.' });
     };
 
     reader.readAsDataURL(file);
@@ -255,7 +255,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
         <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Geri</span>
+          <span className="text-sm">Back</span>
         </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -263,8 +263,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
               <Globe className="w-5 h-5 text-[var(--deep-indigo)]" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">Web Sitesi Oluşturucu</h1>
-              <p className="text-xs text-muted-foreground">Salonunuzun web sitesini yönetin</p>
+              <h1 className="text-xl font-semibold">Website Builder</h1>
+              <p className="text-xs text-muted-foreground">Manage your salon website</p>
             </div>
           </div>
           <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">
@@ -295,7 +295,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
 
           {isLoading && (
             <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-              Web sitesi içeriği yükleniyor...
+              Loading website content...
             </div>
           )}
 
@@ -310,7 +310,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   value={salonName}
                   onChange={(e) => setSalonName(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Salon adınız"
+                  placeholder="Your salon name"
                 />
               </div>
               <div>
@@ -319,16 +319,16 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   value={tagline}
                   onChange={(e) => setTagline(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Salonunuzun sloganı"
+                  placeholder="Your salon's motto"
                 />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Hero Başlığı</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Hero Title</label>
                 <input
                   value={heroText}
                   onChange={(e) => setHeroText(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Ana sayfa başlığı"
+                  placeholder="Home page title"
                 />
               </div>
               <div>
@@ -338,7 +338,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all resize-none"
-                  placeholder="Salonunuzun kısa açıklaması"
+                  placeholder="Brief description of your salon"
                 />
               </div>
             </CardContent>
@@ -346,13 +346,13 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
 
           <Card className="border-border/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Sosyal Medya & İletişim</CardTitle>
+              <CardTitle className="text-sm">Social Media & Contact</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
                   <Instagram className="w-3.5 h-3.5 text-pink-500" />
-                  Instagram Hesabı
+                  Instagram Account
                 </label>
                 <input
                   value={instagram}
@@ -364,7 +364,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
                   <MessageCircle className="w-3.5 h-3.5 text-green-500" />
-                  WhatsApp Numarası
+                  WhatsApp Number
                 </label>
                 <input
                   value={whatsapp}
@@ -380,7 +380,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Camera className="w-4 h-4" />
-                Galeri Görselleri
+                Gallery Images
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -414,7 +414,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                 className="w-full py-2.5 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground flex items-center justify-center gap-2 active:scale-95 transition-transform"
               >
                 <Camera className="w-4 h-4" />
-                Fotoğraf Ekle
+                Add Photo
               </button>
             </CardContent>
           </Card>
@@ -426,8 +426,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   <Sparkles className="w-5 h-5 text-[var(--rose-gold)]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">AI ile İçerik Üret</p>
-                  <p className="text-xs text-muted-foreground">Salonunuz için otomatik metin oluştur</p>
+                  <p className="text-sm font-medium">Generate Content with AI</p>
+                  <p className="text-xs text-muted-foreground">Generate automatic text for your salon</p>
                 </div>
                 <button
                   type="button"
@@ -437,7 +437,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   disabled={isGenerating}
                   className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {isGenerating ? 'Üretiliyor...' : 'Üret'}
+                  {isGenerating ? 'Being produced...' : 'produce'}
                 </button>
               </div>
             </CardContent>
@@ -451,7 +451,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             disabled={isSaving}
             className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all active:scale-98 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isSaving ? 'Kaydediliyor...' : 'Save Changes & Yayınla'}
+            {isSaving ? 'Saving...' : 'Save Changes & Publish'}
           </button>
         </motion.div>
       </div>

@@ -46,7 +46,7 @@ export interface Service {
   color: string;
   category: ServiceCategory;
   categoryOrder?: number; // Kategori içindeki sıralama
-  allowSpecialistSelection?: boolean; // Müşteri uzman seçebilir mi?
+  allowSpecialistSelection?: boolean; // Customer uzman seçebilir mi?
 }
 
 export interface CategoryOrder {

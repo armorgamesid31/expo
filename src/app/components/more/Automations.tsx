@@ -38,98 +38,98 @@ const initialAutomations: Automation[] = [
   {
     id: 'reminder-24h',
     name: 'Appointment Reminder (24 Hours)',
-    description: 'Randevudan 24 saat önce otomatik hatırlatma',
+    description: 'Automatic reminder 24 hours before appointment',
     icon: Bell,
     color: '#3B82F6',
     enabled: true,
     category: 'reminder',
-    timing: '24 saat önce',
-    details: 'Müşteriye randevu tarihi, saati, hizmeti ve çalışan bilgisi WhatsApp ile gönderilir.',
+    timing: '24 hours ago',
+    details: 'Appointment date, time, service and employee information is sent to the customer via WhatsApp.',
     settings: [
-      { key: 'timing', label: 'Gönderim Zamanı', type: 'select', value: '24h', options: [
-        { value: '48h', label: '48 saat önce' },
-        { value: '24h', label: '24 saat önce' },
-        { value: '12h', label: '12 saat önce' },
-        { value: '6h', label: '6 saat önce' },
+      { key: 'timing', label: 'Shipping Time', type: 'select', value: '24h', options: [
+        { value: '48h', label: '48 hours ago' },
+        { value: '24h', label: '24 hours ago' },
+        { value: '12h', label: '12 hours ago' },
+        { value: '6h', label: '6 hours ago' },
       ]},
-      { key: 'includeDirections', label: 'Yol Tarifi Ekle', type: 'toggle', value: true },
-      { key: 'confirmButton', label: 'Onay Butonu Ekle', type: 'toggle', value: true },
+      { key: 'includeDirections', label: 'Add Directions', type: 'toggle', value: true },
+      { key: 'confirmButton', label: 'Add Confirmation Button', type: 'toggle', value: true },
     ],
   },
   {
     id: 'reminder-2h',
     name: 'Appointment Reminder (2 Hours)',
-    description: 'Randevudan 2 saat önce kısa hatırlatma',
+    description: 'Quick reminder 2 hours before the appointment',
     icon: Clock,
     color: '#8B5CF6',
     enabled: true,
     category: 'reminder',
-    timing: '2 saat önce',
-    details: 'Kısa bir WhatsApp mesajı ile müşteriye randevusu hatırlatılır.',
+    timing: '2 hours ago',
+    details: 'The customer is reminded of his appointment with a short WhatsApp message.',
     settings: [
-      { key: 'timing', label: 'Gönderim Zamanı', type: 'select', value: '2h', options: [
-        { value: '3h', label: '3 saat önce' },
-        { value: '2h', label: '2 saat önce' },
-        { value: '1h', label: '1 saat önce' },
+      { key: 'timing', label: 'Shipping Time', type: 'select', value: '2h', options: [
+        { value: '3h', label: '3 hours ago' },
+        { value: '2h', label: '2 hours ago' },
+        { value: '1h', label: '1 hour ago' },
       ]},
     ],
   },
   {
     id: 'directions',
     name: 'Directions Message',
-    description: 'Randevudan önce salon konumu ve yol tarifi',
+    description: 'Salon location and directions before your appointment',
     icon: MapPin,
     color: '#22C55E',
     enabled: true,
     category: 'info',
-    timing: 'Hatırlatma ile birlikte',
-    details: 'Google Maps bağlantısı ile müşteriye yol tarifi gönderilir. Salon Information\'ndeki harita URL\'si kullanılır.',
+    timing: 'With reminder',
+    details: 'Directions are sent to the customer via a Google Maps link. The map URL from Hall Information is used.',
     settings: [
-      { key: 'standalone', label: 'Ayrı Mesaj Olarak Gönder', type: 'toggle', value: false },
-      { key: 'includeParking', label: 'Park Bilgisi Ekle', type: 'toggle', value: true },
+      { key: 'standalone', label: 'Send as Separate Message', type: 'toggle', value: false },
+      { key: 'includeParking', label: 'Add Parking Info', type: 'toggle', value: true },
     ],
   },
   {
     id: 'post-visit',
     name: 'Post-Visit Thank You',
-    description: 'Randevu tamamlandıktan sonra teşekkür mesajı',
+    description: 'Thank you message after the appointment is completed',
     icon: Star,
     color: '#F59E0B',
     enabled: true,
     category: 'feedback',
     timing: '2 saat sonra',
-    details: 'Müşteriye teşekkür mesajı ve memnuniyet anketi gönderilir.',
+    details: 'A thank you message and satisfaction survey are sent to the customer.',
     settings: [
-      { key: 'timing', label: 'Gönderim Zamanı', type: 'select', value: '2h_after', options: [
+      { key: 'timing', label: 'Shipping Time', type: 'select', value: '2h_after', options: [
         { value: '1h_after', label: '1 saat sonra' },
         { value: '2h_after', label: '2 saat sonra' },
-        { value: '24h_after', label: 'Ertesi gün' },
+        { value: '24h_after', label: 'the next day' },
       ]},
-      { key: 'includeRating', label: 'Puan Değerlendirme İste', type: 'toggle', value: true },
-      { key: 'includeRebookLink', label: 'Tekrar Randevu Bağlantısı', type: 'toggle', value: true },
+      { key: 'includeRating', label: 'Request Score Evaluation', type: 'toggle', value: true },
+      { key: 'includeRebookLink', label: 'Reappointment Link', type: 'toggle', value: true },
     ],
   },
   {
     id: 'no-show-warning',
     name: 'No-Show Alert',
-    description: 'Randevuya gelmeyenlere otomatik bilgilendirme',
+    description: 'Automatic information for customers who miss appointments',
     icon: CalendarCheck,
     color: '#EF4444',
     enabled: true,
     category: 'reminder',
-    timing: 'No-show sonrası 1 saat',
-    details: 'Randevuya gelmeyen müşteriye bilgilendirme mesajı gönderilir. 3+ no-show yapanlara kara liste uyarısı eklenir.',
+    timing: '1 hour after no-show',
+    details: 'An information message is sent to the customer who does not attend the appointment. A blacklist warning is added to those who perform 3+ no-shows.',
     settings: [
-      { key: 'autoBlacklist', label: 'Otomatik Kara Liste (3+ no-show)', type: 'toggle', value: false },
-      { key: 'includeReschedule', label: 'Yeniden Randevu Bağlantısı', type: 'toggle', value: true },
+      { key: 'autoBlacklist', label: 'Auto Blacklist (3+ no-shows)', type: 'toggle', value: false },
+      { key: 'includeReschedule', label: 'Reappointment Link', type: 'toggle', value: true },
     ],
   },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  reminder: 'Hatırlatmalar',
-  feedback: 'Geri Bildirim',
-  info: 'Bilgilendirme',
+  reminder: 'Reminders',
+  feedback: 'Feedback',
+  info: 'Information',
 };
 
 const CATEGORY_ORDER = ['reminder', 'info', 'feedback'];
@@ -184,7 +184,7 @@ export function Automations({ onBack }: AutomationsProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold">Otomasyonlar</h1>
-            <p className="text-sm text-muted-foreground">Otomatik bildirim ve hatırlatmalar</p>
+            <p className="text-sm text-muted-foreground">Automated notifications and reminders</p>
           </div>
         </div>
       </div>
@@ -210,7 +210,7 @@ export function Automations({ onBack }: AutomationsProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold text-[var(--rose-gold)]">847</p>
-                <p className="text-[10px] text-muted-foreground">This Month Gönderilen</p>
+                <p className="text-[10px] text-muted-foreground">Sent This Month</p>
               </div>
             </CardContent>
           </Card>
@@ -285,12 +285,12 @@ export function Automations({ onBack }: AutomationsProps) {
               <div>
                 <h4 className="font-semibold text-sm mb-1">Message Usage</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  WhatsApp mesajları Business API üzerinden gönderilir.
-                  Aylık kotanız: <span className="font-semibold text-foreground">1.000 WhatsApp</span>
+                  WhatsApp messages are sent through Business API.
+                  Your monthly quota: <span className="font-semibold text-foreground">1.000 WhatsApp</span>
                 </p>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">WhatsApp kullanımı</span>
+                    <span className="text-muted-foreground">WhatsApp usage</span>
                     <span className="font-medium">672 / 1.000</span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">

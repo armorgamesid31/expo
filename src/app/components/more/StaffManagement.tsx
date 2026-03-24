@@ -103,7 +103,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
   };
 
   const handleDelete = (staffId: string) => {
-    if (confirm('Bu çalışanı silmek istediğinizden emin misiniz?')) {
+    if (confirm('Are you sure you want to delete this employee?')) {
       setStaffList(staffList.filter(s => s.id !== staffId));
     }
   };
@@ -151,7 +151,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Çalışan Yönetimi</h1>
+            <h1 className="text-2xl font-semibold">Staff Management</h1>
             <p className="text-sm text-muted-foreground">Personel ve yetkiler</p>
           </div>
           <Button
@@ -160,7 +160,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
             style={{ backgroundColor: hasServices ? 'var(--rose-gold)' : undefined, color: hasServices ? 'white' : undefined }}
           >
             <Plus className="w-4 h-4 mr-1" />
-            Ekle
+            Add
           </Button>
         </div>
 
@@ -168,7 +168,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
           <Alert className="mt-3 border-amber-500/50 bg-amber-500/10">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-sm text-amber-800">
-              Çalışan ekleyebilmek için önce en az bir hizmet tanımlamalısınız.
+              To add staff, define at least one service first.
             </AlertDescription>
           </Alert>
         )}
@@ -259,10 +259,10 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
               >
                 <User className="w-8 h-8" style={{ color: 'var(--rose-gold)' }} />
               </div>
-              <p className="text-muted-foreground mb-4">Henüz çalışan eklenmedi</p>
+              <p className="text-muted-foreground mb-4">No staff added yet</p>
               <Button onClick={openAddDialog} style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
                 <Plus className="w-4 h-4 mr-1" />
-                İlk Çalışanı Ekle
+                Add First Staff Member
               </Button>
             </CardContent>
           </Card>
@@ -274,7 +274,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>
-              {editingStaff ? 'Çalışanı Düzenle' : 'Yeni Çalışan Ekle'}
+              {editingStaff ? 'Edit Employee' : 'Add New Employee'}
             </DialogTitle>
           </DialogHeader>
 
@@ -287,17 +287,17 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                   id="name"
                   value={formData.name || ''}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Örn: Ayşe Yılmaz"
+                  placeholder="For example: Ayse Yilmaz"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Ünvan *</Label>
+                <Label htmlFor="role">Title *</Label>
                 <Input
                   id="role"
                   value={formData.role || ''}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  placeholder="Örn: Saç Uzmanı"
+                  placeholder="Ex: Hair Specialist"
                 />
               </div>
             </div>
@@ -324,9 +324,9 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
             {/* Services */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Hizmetler *</Label>
+                <Label>Services *</Label>
                 <span className="text-xs text-muted-foreground">
-                  {selectedServices.size} hizmet seçildi
+                  {selectedServices.size} services selected
                 </span>
               </div>
 
@@ -334,7 +334,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                 <Alert className="border-amber-500/50 bg-amber-500/10">
                   <AlertCircle className="h-4 w-4 text-amber-600" />
                   <AlertDescription className="text-xs text-amber-800">
-                    En az bir hizmet seçmelisiniz
+                    You must select at least one service
                   </AlertDescription>
                 </Alert>
               )}
@@ -420,7 +420,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                                     }}
                                   />
                                   <Label htmlFor={`custom-duration-${service.id}`} className="text-xs flex-1">
-                                    Custom Süre
+                                    Custom Duration
                                   </Label>
                                   {customDurationEnabled[service.id] && (
                                     <Input
@@ -456,7 +456,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
               disabled={!formData.name || !formData.role || selectedServices.size === 0}
               style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
             >
-              {editingStaff ? 'Update' : 'Ekle'}
+              {editingStaff ? 'Update' : 'Add'}
             </Button>
           </DialogFooter>
         </DialogContent>

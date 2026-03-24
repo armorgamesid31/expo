@@ -78,7 +78,7 @@ export function AnalyticsRangeSelector(props: AnalyticsRangeSelectorProps) {
         </div>
       ) : compact ? null : (
         <p className="text-xs text-muted-foreground">
-          Görünen metrik ve grafikler seçtiğin zaman aralığına göre hesaplanır.
+          Visible metrics and charts are calculated based on your selected time range.
         </p>
       )}
     </div>

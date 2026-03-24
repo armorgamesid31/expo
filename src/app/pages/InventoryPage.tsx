@@ -74,18 +74,18 @@ export function InventoryPage() {
     <div className="p-4 space-y-4">
       <div>
         <h1 className="text-xl font-semibold">Inventory</h1>
-        <p className="text-xs text-muted-foreground">Stok create/read + hareket güncelleme aktif.</p>
+        <p className="text-xs text-muted-foreground">Stok create/read + hareket dayscelleme aktif.</p>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
       <form className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3" onSubmit={createItem}>
         <input className="col-span-2 rounded-md border border-border px-3 py-2 text-sm" placeholder="Product name" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
-        <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Kategori" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
+        <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Category" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
         <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Birim" value={form.unit} onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))} />
         <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} placeholder="starting stock" value={form.currentStock} onChange={(e) => setForm((prev) => ({ ...prev, currentStock: Number(e.target.value) }))} />
         <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} placeholder="Min stok" value={form.minStock} onChange={(e) => setForm((prev) => ({ ...prev, minStock: Number(e.target.value) }))} />
-        <button type="submit" disabled={saving} className="col-span-2 rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Add Product'}</button>
+        <button type="submit" disabled={saving} className="col-span-2 rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Addniyor...' : 'Add Product'}</button>
       </form>
 
       {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
@@ -107,7 +107,7 @@ export function InventoryPage() {
       </div>
 
       {!loading && !items.length ? (
-        <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Inventory boş.</div>
+        <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Inventory is empty.</div>
       ) : null}
     </div>
   );

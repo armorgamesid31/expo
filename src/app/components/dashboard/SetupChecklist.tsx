@@ -28,7 +28,7 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
     {
       id: 'hours',
       label: 'Working Hours',
-      description: 'Salon çalışma saatlerini belirleyin',
+      description: 'Determine salon working hours',
       done: false,
       rawDone: Boolean(checklist?.workingHours),
       navigateTo: '/app/salon-info',
@@ -36,8 +36,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
     },
     {
       id: 'address',
-      label: 'Adres Bilgisi',
-      description: 'Salon adresini ekleyin',
+      label: 'Address Information',
+      description: 'Add salon address',
       done: false,
       rawDone: Boolean(checklist?.address),
       navigateTo: '/app/salon-info',
@@ -45,8 +45,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
     },
     {
       id: 'phone',
-      label: 'Telefon Numarası',
-      description: 'Salon iletişim numarasını girin',
+      label: 'Phone Number',
+      description: 'Enter salon contact number',
       done: false,
       rawDone: Boolean(checklist?.phone),
       navigateTo: '/app/salon-info',
@@ -54,8 +54,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
     },
     {
       id: 'service',
-      label: 'Hizmet Ekle',
-      description: 'En az 1 hizmet tanımlayın',
+      label: 'Add Service',
+      description: 'Define at least 1 service',
       done: false,
       rawDone: Boolean(checklist?.service),
       navigateTo: '/app/services',
@@ -63,8 +63,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
     },
     {
       id: 'staff',
-      label: 'Personel Ekle',
-      description: 'En az 1 çalışan ekleyin',
+      label: 'Add Staff',
+      description: 'Add at least 1 employee',
       done: false,
       rawDone: Boolean(checklist?.staff),
       navigateTo: '/app/staff',
@@ -89,7 +89,7 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[var(--rose-gold)]" />
-            Zorunlu Kurulum Adımları
+            Required Setup Steps
           </CardTitle>
           <span className="text-sm font-medium text-[var(--rose-gold)]">
             {completedCount}/{totalCount}
@@ -106,8 +106,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
         </div>
         <p className="text-xs text-muted-foreground mt-2">
           {completedCount === totalCount
-            ? '🎉 Tüm zorunlu adımlar tamamlandı!'
-            : 'Sistemi kullanmaya başlamak için sırayla tamamlayın'}
+            ? '🎉 All mandatory steps completed!'
+            : 'Complete in order to start using the system'}
         </p>
       </CardHeader>
       <CardContent className="space-y-2">

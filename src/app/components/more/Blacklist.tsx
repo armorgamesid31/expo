@@ -33,9 +33,9 @@ interface BlacklistSettings {
 const initialBlacklist: BlacklistEntry[] = [
   {
     id: 'bl1',
-    name: 'Deniz Aktaş',
+    name: 'Deniz Aktas',
     phone: '+90 538 111 2233',
-    reason: 'Üst üste 4 kez randevuya gelmedi. Telefonla ulaşılamıyor.',
+    reason: 'He missed the appointment 4 times in a row. Cannot be reached by phone.',
     date: '2026-01-15',
     noShowCount: 4,
   },
@@ -43,15 +43,15 @@ const initialBlacklist: BlacklistEntry[] = [
     id: 'bl2',
     name: 'Gizem Polat',
     phone: '+90 539 222 3344',
-    reason: 'Çalışanlara karşı kaba davranış. Salon kurallarına uymama.',
+    reason: 'Rude behavior towards employees. Failure to comply with salon rules.',
     date: '2026-02-03',
     noShowCount: 1,
   },
   {
     id: 'bl3',
-    name: 'Cem Yıldız',
+    name: 'Cem Yildiz',
     phone: '+90 540 333 4455',
-    reason: 'Ödeme yapmadan salonu terk etti. Ödeme taleplerine yanıt vermiyor.',
+    reason: 'He left the hall without paying. Does not respond to payment requests.',
     date: '2025-12-20',
     noShowCount: 2,
   },
@@ -124,7 +124,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
   return (
@@ -136,8 +136,8 @@ export function Blacklist({ onBack }: BlacklistProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Kara Liste</h1>
-            <p className="text-sm text-muted-foreground">Engellenen müşteriler ve ayarlar</p>
+            <h1 className="text-2xl font-semibold">Blacklist</h1>
+            <p className="text-sm text-muted-foreground">Blocked customers and settings</p>
           </div>
           {activeTab === 'list' && (
             <Button
@@ -149,7 +149,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
               style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
             >
               <Plus className="w-4 h-4 mr-1" />
-              Ekle
+              Add
             </Button>
           )}
         </div>
@@ -165,7 +165,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
             }`}
           >
             <ShieldBan className="w-4 h-4 inline mr-2" />
-            Kara Liste
+            Blacklist
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -176,7 +176,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
             }`}
           >
             <Settings className="w-4 h-4 inline mr-2" />
-            Ayarlar
+            Settings
           </button>
         </div>
 
@@ -202,7 +202,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs text-amber-800 dark:text-amber-400">
-                  Kara listedeki kişiler online randevu alırken uyarı görür ve otomatik randevu oluşturulamaz. Manuel randevu girişinde de uyarı gösterilir.
+                  People in the blacklist see a warning during online booking and automatic appointment creation is blocked. A warning is also shown during manual booking.
                 </p>
               </div>
             </CardContent>
@@ -292,7 +292,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                     <p className="text-xs text-muted-foreground leading-relaxed">{entry.reason}</p>
                     {(entry.noShowCount || 0) > 0 && (
                       <Badge variant="secondary" className="mt-2 text-[10px] bg-red-500/10 text-red-600">
-                        {entry.noShowCount} kez gelmedi
+                        {entry.noShowCount} times missed
                       </Badge>
                     )}
                   </div>
@@ -308,7 +308,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                   <User className="w-8 h-8 text-green-600" />
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  {searchQuery ? 'Aramanızla eşleşen kayıt bulunamadı' : 'Kara listede kimse yok'}
+                  {searchQuery ? 'No records matching your search were found' : 'No one is blacklisted'}
                 </p>
               </CardContent>
             </Card>
@@ -319,14 +319,14 @@ export function Blacklist({ onBack }: BlacklistProps) {
         <div className="p-4 space-y-4">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-sm">Otomatik Engelleme</CardTitle>
+              <CardTitle className="text-sm">Automatic Blocking</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Label className="text-sm font-medium">Otomatik Kara Liste</Label>
+                  <Label className="text-sm font-medium">Automatic Blacklist</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Belirtilen no-show sayısına ulaşan müşterileri otomatik engelle
+                    Automatically block customers reaching the specified no-show count
                   </p>
                 </div>
                 <Switch
@@ -337,19 +337,19 @@ export function Blacklist({ onBack }: BlacklistProps) {
 
               {settings.autoBlock && (
                 <div className="space-y-2 pl-4 border-l-2 border-muted">
-                  <Label className="text-xs">No-Show Eşiği</Label>
+                  <Label className="text-xs">No-Show Threshold</Label>
                   <select
                     value={settings.noShowThreshold}
                     onChange={(e) => setSettings({ ...settings, noShowThreshold: parseInt(e.target.value) })}
                     className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm"
                   >
-                    <option value="2">2 kez</option>
-                    <option value="3">3 kez</option>
-                    <option value="4">4 kez</option>
-                    <option value="5">5 kez</option>
+                    <option value="2">2 times</option>
+                    <option value="3">3 times</option>
+                    <option value="4">4 times</option>
+                    <option value="5">5 times</option>
                   </select>
                   <p className="text-xs text-muted-foreground">
-                    Müşteri bu kadar no-show yaptığında otomatik olarak kara listeye eklenir
+                    Customer is automatically blacklisted after this many no-shows
                   </p>
                 </div>
               )}
@@ -358,14 +358,14 @@ export function Blacklist({ onBack }: BlacklistProps) {
 
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-sm">Randevu Kısıtlamaları</CardTitle>
+              <CardTitle className="text-sm">Appointment Restrictions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Label className="text-sm font-medium">Online Randevu Engelle</Label>
+                  <Label className="text-sm font-medium">Block Online Appointments</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Kara listedekiler online randevu alamaz
+                    Blacklisted customers cannot book online appointments
                   </p>
                 </div>
                 <Switch
@@ -376,9 +376,9 @@ export function Blacklist({ onBack }: BlacklistProps) {
 
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Label className="text-sm font-medium">Manuel Randevu Uyarısı</Label>
+                  <Label className="text-sm font-medium">Manual Appointment Warning</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Personel randevu girişinde uyarı göster
+                    Show warning during staff appointment entry
                   </p>
                 </div>
                 <Switch
@@ -391,14 +391,14 @@ export function Blacklist({ onBack }: BlacklistProps) {
 
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-sm">Bildirimler</CardTitle>
+              <CardTitle className="text-sm">Notifications</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Label className="text-sm font-medium">Personele Bildir</Label>
+                  <Label className="text-sm font-medium">Notify Staff</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Yeni kara liste eklendiğinde tüm personele bildirim gönder
+                    Notify all staff when a new blacklist entry is added
                   </p>
                 </div>
                 <Switch
@@ -412,7 +412,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
           <Card className="border-green-500/30 bg-green-500/5">
             <CardContent className="p-4 flex items-center gap-2 text-sm text-green-700">
               <Check className="w-4 h-4" />
-              Ayarlar otomatik kaydedildi
+              Settings are saved automatically
             </CardContent>
           </Card>
         </div>
@@ -422,7 +422,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle>Kara Listeye Ekle</DialogTitle>
+            <DialogTitle>Blacklistye Add</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -437,7 +437,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                placeholder="Müşteri adı"
+                placeholder="Customer name"
               />
               
               {/* Customer Suggestions */}
@@ -468,7 +468,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bl-phone">Telefon *</Label>
+              <Label htmlFor="bl-phone">Phone *</Label>
               <Input
                 id="bl-phone"
                 value={formData.phone || ''}
@@ -478,7 +478,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bl-noshow">No-Show Sayısı</Label>
+              <Label htmlFor="bl-noshow">No-show Count</Label>
               <Input
                 id="bl-noshow"
                 type="number"
@@ -495,7 +495,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                 value={formData.reason || ''}
                 onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                 rows={3}
-                placeholder="Engelleme nedenini açıklayın..."
+                placeholder="Explain the reason for blocking..."
                 className="w-full bg-transparent rounded-lg px-3 py-2 text-sm outline-none border border-input focus:ring-2 focus:ring-[var(--rose-gold)]/30 resize-none"
               />
             </div>
@@ -514,7 +514,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
               disabled={!formData.name || !formData.phone || !formData.reason}
               className="bg-red-500 hover:bg-red-600 text-white"
             >
-              Kara Listeye Ekle
+              Blacklistye Add
             </Button>
           </DialogFooter>
         </DialogContent>

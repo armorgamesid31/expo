@@ -31,7 +31,7 @@ export function BlacklistPage() {
       );
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || 'Kara liste alınamadı.');
+      setError(err?.message || 'Could not get blacklist.');
     } finally {
       setLoading(false);
     }
@@ -71,15 +71,15 @@ export function BlacklistPage() {
       });
       setItems((prev) => prev.map((current) => (current.id === item.id ? response.item : current)));
     } catch (err: any) {
-      setError(err?.message || 'Register güncellenemedi.');
+      setError(err?.message || 'Register could not be updated.');
     }
   };
 
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Kara Liste</h1>
-        <p className="text-xs text-muted-foreground">Create/read + aktif/pasif güncelleme aktif.</p>
+        <h1 className="text-xl font-semibold">Blacklist</h1>
+        <p className="text-xs text-muted-foreground">Create/read + aktif/pasif dayscelleme aktif.</p>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -87,17 +87,17 @@ export function BlacklistPage() {
       <div className="rounded-lg border border-border bg-card p-3">
         <input
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="İsim, telefon veya neden ile ara"
+          placeholder="Search by name, phone or reason"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
         />
       </div>
 
       <form className="space-y-2 rounded-lg border border-border p-3" onSubmit={createItem}>
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Ad soyad" value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} />
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Telefon" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
+        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} />
+        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Phone" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Neden" value={form.reason} onChange={(e) => setForm((prev) => ({ ...prev, reason: e.target.value }))} />
-        <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Ekleniyor...' : 'Kara Listeye Ekle'}</button>
+        <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Adding...' : 'Blacklistye Add'}</button>
       </form>
 
       {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
@@ -108,7 +108,7 @@ export function BlacklistPage() {
             <div className="flex items-center justify-between gap-2">
               <div>
                 <p className="font-medium">{item.fullName || item.phone || `#${item.id}`}</p>
-                <p className="text-xs text-muted-foreground">{item.phone || 'Telefon yok'} • {item.reason || 'Neden yok'}</p>
+                <p className="text-xs text-muted-foreground">{item.phone || 'Phone yok'} • {item.reason || 'No reason'}</p>
               </div>
               <button type="button" onClick={() => void toggle(item)} className={`rounded-md border px-2 py-1 text-xs ${item.isActive ? 'border-red-500 text-red-500' : 'border-border text-muted-foreground'}`}>
                 {item.isActive ? 'Aktif' : 'Pasif'}
@@ -118,7 +118,7 @@ export function BlacklistPage() {
         ))}
       </div>
 
-      {!loading && !items.length ? <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Kara liste boş.</div> : null}
+      {!loading && !items.length ? <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Blacklist is empty.</div> : null}
     </div>
   );
 }

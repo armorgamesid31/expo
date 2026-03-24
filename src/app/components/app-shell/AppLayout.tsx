@@ -166,7 +166,7 @@ export function AppLayout() {
                 type="button"
                 onClick={() => navigate(backTarget, { state: { navDirection: 'back' } })}
                 className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground"
-                aria-label="Geri"
+                aria-label="Back"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>

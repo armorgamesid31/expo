@@ -23,12 +23,12 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<Service>>({});
 
-  // Kategorileri sırala
+  // Categoryleri sırala
   const sortedCategories = [...categoryOrders]
     .sort((a, b) => a.order - b.order)
     .map(co => co.category);
 
-  // Kategoriye göre hizmetleri grupla
+  // Categoryye göre hizmetleri grupla
   const getServicesByCategory = (category: ServiceCategory) => {
     return services
       .filter(s => s.category === category)
@@ -77,7 +77,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
       // Updateme
       setServices(services.map(s => s.id === editingService.id ? { ...formData as Service } : s));
     } else {
-      // Yeni ekleme
+      // New ekleme
       const newService: Service = {
         id: `s${Date.now()}`,
         name: formData.name!,
@@ -96,7 +96,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
   };
 
   const handleDelete = (serviceId: string) => {
-    if (confirm('Bu hizmeti silmek istediğinizden emin misiniz?')) {
+    if (confirm('Are you sure you want to delete this service?')) {
       setServices(services.filter(s => s.id !== serviceId));
     }
   };
@@ -195,7 +195,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                     className="shrink-0"
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Ekle
+                    Add
                   </Button>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                 id="name"
                 value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Örn: Kesim & Şekillendirme"
+                placeholder="Ex: Cutting & Styling"
               />
             </div>
 
@@ -327,7 +327,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
             {!editingService && (
               <div className="space-y-2">
-                <Label htmlFor="category">Kategori</Label>
+                <Label htmlFor="category">Category</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value: ServiceCategory) => setFormData({ ...formData, category: value })}
@@ -356,7 +356,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Aktifse müşteriler bu hizmet için tercih ettikleri uzmanı seçebilir
+                If enabled, customers can choose their preferred specialist for this service
               </p>
             </div>
           </div>
@@ -370,7 +370,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
               disabled={!formData.name || !formData.duration || !formData.price || !formData.category}
               style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
             >
-              {editingService ? 'Update' : 'Ekle'}
+              {editingService ? 'Update' : 'Add'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -221,11 +221,11 @@ export function CustomersPage() {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setError('Ad soyad zorunlu.');
+      setError('Full name is required.');
       return;
     }
     if (!phone.trim()) {
-      setError('Telefon zorunlu.');
+      setError('Phone is required.');
       return;
     }
 
@@ -357,7 +357,7 @@ export function CustomersPage() {
 
     const trimmedPhone = editPhone.trim();
     if (!trimmedPhone) {
-      setProfileError('Telefon zorunlu.');
+      setProfileError('Phone is required.');
       return;
     }
 
@@ -445,7 +445,7 @@ export function CustomersPage() {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('tr-TR', {
+    return new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: 'TRY',
       maximumFractionDigits: 0,
@@ -464,7 +464,7 @@ export function CustomersPage() {
 
   const riskLabelTr = (level: 'LOW' | 'MEDIUM' | 'HIGH') => {
     if (level === 'HIGH') return 'High Risk';
-    if (level === 'MEDIUM') return 'Orta Risk';
+    if (level === 'MEDIUM') return 'Medium Risk';
     return 'Low Risk';
   };
 
@@ -485,7 +485,7 @@ export function CustomersPage() {
       case 'CANCELLED':
         return 'Cancel';
       case 'NO_SHOW':
-        return 'Gelmedi';
+        return 'No-show';
       default:
         return status;
     }
@@ -505,14 +505,14 @@ export function CustomersPage() {
   };
 
   const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('tr-TR', {
+    new Date(date).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
     });
 
   const formatTime = (date: string) =>
-    new Date(date).toLocaleTimeString('tr-TR', {
+    new Date(date).toLocaleTimeString('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -520,21 +520,21 @@ export function CustomersPage() {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Müşteriler</h1>
+        <h1 className="text-xl font-semibold">Customers</h1>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => navigate('/app/automations?section=attendance')}
             className="rounded-md border border-border px-3 py-1.5 text-xs"
           >
-            Randevuya Gelmeme Takibi
+            No-show Tracking
           </button>
           <button
             type="button"
             onClick={() => navigate('/app/blacklist')}
             className="rounded-md border border-border px-3 py-1.5 text-xs"
           >
-            Kara Liste
+            Blacklist
           </button>
         </div>
       </div>
@@ -542,7 +542,7 @@ export function CustomersPage() {
       <div className="rounded-xl border border-border bg-card p-3">
         <input
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Ad, telefon veya Instagram ile ara"
+          placeholder="Search by name, phone, or Instagram"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
         />
@@ -550,13 +550,13 @@ export function CustomersPage() {
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">Yeni Müşteri</p>
+          <p className="text-sm font-medium">New Customer</p>
           <button
             type="button"
             onClick={() => setShowCreateForm((prev) => !prev)}
             className="rounded-md border border-border px-3 py-1.5 text-xs"
           >
-            {showCreateForm ? 'Kapat' : 'Add Customer'}
+            {showCreateForm ? 'Close' : 'Add Customer'}
           </button>
         </div>
 
@@ -564,19 +564,19 @@ export function CustomersPage() {
           <div className="space-y-2">
             <input
               className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Ad + Soyad"
+              placeholder="Full Name"
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
             <input
               className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Telefon"
+              placeholder="Phone"
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
             />
             <input
               className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Instagram (opsiyonel)"
+              placeholder="Instagram (optional)"
               value={instagram}
               onChange={(event) => setInstagram(event.target.value)}
             />
@@ -592,7 +592,7 @@ export function CustomersPage() {
                 checked={acceptMarketing}
                 onChange={(event) => setAcceptMarketing(event.target.checked)}
               />
-              Kampanya iletişimi izni
+              Campaign contact permission
             </label>
             <button
               type="button"
@@ -600,7 +600,7 @@ export function CustomersPage() {
               disabled={creating}
               className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60"
             >
-              {creating ? 'Ekleniyor...' : 'Save'}
+              {creating ? 'Adding...' : 'Save'}
             </button>
           </div>
         ) : null}
@@ -625,14 +625,14 @@ export function CustomersPage() {
             </div>
             <p className="text-sm mt-1">{item.phone}</p>
             {item.instagram ? <p className="text-xs text-muted-foreground mt-1">@{item.instagram.replace(/^@/, '')}</p> : null}
-            <p className="text-xs text-muted-foreground mt-1">Randevu sayısı: {item.appointmentCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">Appointment count: {item.appointmentCount}</p>
           </button>
         ))}
       </div>
 
       {!loading && !items.length ? (
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Registerlı müşteri bulunmuyor.
+          No registered customer found.
         </div>
       ) : null}
 
@@ -651,7 +651,7 @@ export function CustomersPage() {
         <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[1px] flex items-end">
           <div className="w-full max-h-[88vh] overflow-y-auto rounded-t-2xl bg-background border-t border-border p-4 pb-24 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Müşteri Profili</h2>
+              <h2 className="text-lg font-semibold">Customer Profile</h2>
               <button
                 type="button"
                 className="h-8 w-8 grid place-items-center rounded-md border border-border"
@@ -669,7 +669,7 @@ export function CustomersPage() {
               </button>
             </div>
 
-            {detailLoading ? <p className="text-sm text-muted-foreground">Profil yükleniyor...</p> : null}
+            {detailLoading ? <p className="text-sm text-muted-foreground">Loading profile...</p> : null}
             {detailError ? <p className="text-sm text-red-500">{detailError}</p> : null}
 
             {selectedCustomer ? (
@@ -683,7 +683,7 @@ export function CustomersPage() {
                         <p className="text-sm text-muted-foreground">@{selectedCustomer.customer.instagram.replace(/^@/, '')}</p>
                       ) : null}
                       <p className="text-xs text-muted-foreground">
-                        Oluşturulma: {new Date(selectedCustomer.customer.createdAt).toLocaleString('tr-TR')}
+                        Created at: {new Date(selectedCustomer.customer.createdAt).toLocaleString('en-GB')}
                       </p>
                     </div>
                     <button
@@ -709,19 +709,19 @@ export function CustomersPage() {
                     <div className="space-y-2 rounded-md border border-border p-2.5">
                       <input
                         className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                        placeholder="Ad + Soyad"
+                        placeholder="Full Name"
                         value={editName}
                         onChange={(event) => setEditName(event.target.value)}
                       />
                       <input
                         className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                        placeholder="Telefon"
+                        placeholder="Phone"
                         value={editPhone}
                         onChange={(event) => setEditPhone(event.target.value)}
                       />
                       <input
                         className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                        placeholder="Instagram (opsiyonel)"
+                        placeholder="Instagram (optional)"
                         value={editInstagram}
                         onChange={(event) => setEditInstagram(event.target.value)}
                       />
@@ -737,7 +737,7 @@ export function CustomersPage() {
                           checked={editAcceptMarketing}
                           onChange={(event) => setEditAcceptMarketing(event.target.checked)}
                         />
-                        Kampanya iletişimi izni
+                        Campaign contact permission
                       </label>
                       {profileError ? <p className="text-sm text-red-500">{profileError}</p> : null}
                       <button
@@ -746,21 +746,21 @@ export function CustomersPage() {
                         disabled={profileSaving}
                         className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
                       >
-                        {profileSaving ? 'Kaydediliyor...' : 'Bilgileri Save'}
+                        {profileSaving ? 'Saving...' : 'Save Details'}
                       </button>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                       <p>
-                        Doğum Tarihi:{' '}
+                        Date of Birth:{' '}
                         <span className="text-foreground">
                           {selectedCustomer.customer.birthDate
-                            ? new Date(selectedCustomer.customer.birthDate).toLocaleDateString('tr-TR')
+                            ? new Date(selectedCustomer.customer.birthDate).toLocaleDateString('en-GB')
                             : 'Belirtilmedi'}
                         </span>
                       </p>
                       <p>
-                        Kampanya İzni:{' '}
+                        Campaign Permission:{' '}
                         <span className="text-foreground">
                           {selectedCustomer.customer.acceptMarketing ? 'Open' : 'Closed'}
                         </span>
@@ -773,7 +773,7 @@ export function CustomersPage() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">Toplam Randevu (gün)</p>
+                    <p className="text-xs text-muted-foreground">Total Appointments (day)</p>
                     <p className="text-lg font-semibold">{selectedCustomer.summary.totalAppointmentDays}</p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
@@ -781,7 +781,7 @@ export function CustomersPage() {
                     <p className="text-lg font-semibold">{formatCurrency(selectedCustomer.summary.totalRevenue)}</p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">Favori Çalışan</p>
+                    <p className="text-xs text-muted-foreground">Favorite Staff</p>
                     <p className="text-sm font-medium">
                       {selectedCustomer.summary.favoriteStaff
                         ? `${selectedCustomer.summary.favoriteStaff.name} (${selectedCustomer.summary.favoriteStaff.count})`
@@ -789,7 +789,7 @@ export function CustomersPage() {
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">Randevuya Gelmeme Skoru</p>
+                    <p className="text-xs text-muted-foreground">No-show Score</p>
                     <div className="flex items-center justify-between gap-2 mt-1">
                       <span className="text-lg font-semibold">{selectedCustomer.summary.noShowRiskScore}</span>
                       <div className="flex items-center gap-2">
@@ -823,14 +823,14 @@ export function CustomersPage() {
                     <p className="text-[11px] text-muted-foreground mt-1">
                       No-show: {selectedCustomer.summary.noShowCount} / {selectedCustomer.summary.totalBookings}
                       {' • '}
-                      Katılım: %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
+                      Attendance: %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
                     </p>
                     {riskError ? <p className="text-[11px] text-red-500 mt-1">{riskError}</p> : null}
                   </div>
                 </div>
 
                 <div className="rounded-lg border border-border p-3 space-y-3">
-                  <p className="text-sm font-medium">İndirim Tanımla</p>
+                  <p className="text-sm font-medium">Define Discount</p>
 
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -842,7 +842,7 @@ export function CustomersPage() {
                           : 'border-border'
                       }`}
                     >
-                      Yüzde (%)
+                      Percentage (%)
                     </button>
                     <button
                       type="button"
@@ -882,7 +882,7 @@ export function CustomersPage() {
                         checked={discountNotify}
                         onChange={(event) => setDiscountNotify(event.target.checked)}
                       />
-                      Mesaj bildirimi gönder
+                      Send message notification
                     </label>
                     {discountNotify ? (
                       <textarea
@@ -899,7 +899,7 @@ export function CustomersPage() {
                     <p className="text-xs text-muted-foreground">
                       Aktif indirim: {selectedCustomer.discount.kind === 'PERCENT' ? `%${selectedCustomer.discount.value}` : `${selectedCustomer.discount.value} TL`}
                       {' • '}
-                      Son durum: {selectedCustomer.discount.lastNotificationStatus || 'bilinmiyor'}
+                      Son statuses: {selectedCustomer.discount.lastNotificationStatus || 'bilinmiyor'}
                     </p>
                   ) : null}
 
@@ -912,12 +912,12 @@ export function CustomersPage() {
                     disabled={discountSaving}
                     className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
                   >
-                    {discountSaving ? 'Kaydediliyor...' : 'Save Discount'}
+                    {discountSaving ? 'Saving...' : 'Save Discount'}
                   </button>
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-sm font-medium">Randevu Geçmişi</p>
+                  <p className="text-sm font-medium">Appointment History</p>
                   {selectedCustomer.appointments.length ? (
                     selectedCustomer.appointments.map((appointment) => (
                       <div key={appointment.id} className="rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
@@ -937,7 +937,7 @@ export function CustomersPage() {
                         {appointment.customerRating || appointment.customerReview ? (
                           <div className="mt-3 rounded-lg border border-border bg-muted/20 p-2.5">
                             <div className="flex items-center justify-between gap-2">
-                              <p className="text-xs font-medium">Müşteri değerlendirmesi</p>
+                              <p className="text-xs font-medium">Customer review</p>
                               <p className="text-xs font-semibold">
                                 {appointment.customerRating ? `${appointment.customerRating}/5` : 'Puan yok'}
                               </p>
@@ -953,17 +953,17 @@ export function CustomersPage() {
                             ) : null}
                             {appointment.customerReviewedAt ? (
                               <p className="text-[11px] text-muted-foreground mt-1">
-                                {new Date(appointment.customerReviewedAt).toLocaleString('tr-TR')}
+                                {new Date(appointment.customerReviewedAt).toLocaleString('en-GB')}
                               </p>
                             ) : null}
                           </div>
                         ) : (
-                          <p className="mt-3 text-[11px] text-muted-foreground">Bu randevu için değerlendirme yok.</p>
+                          <p className="mt-3 text-[11px] text-muted-foreground">No review for this appointment.</p>
                         )}
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-muted-foreground">Henüz randevu kaydı bulunmuyor.</p>
+                    <p className="text-sm text-muted-foreground">No appointment record yet.</p>
                   )}
                 </div>
               </>

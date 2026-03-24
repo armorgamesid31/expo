@@ -16,7 +16,7 @@ export const staff: Staff[] = [
   { 
     id: '1', 
     name: 'Sevcan', 
-    role: 'Saç Uzmanı', 
+    role: 'Hair Expert', 
     color: '#B76E79', 
     avatar: '',
     serviceIds: ['s1', 's2', 's8'],
@@ -24,8 +24,8 @@ export const staff: Staff[] = [
   },
   { 
     id: '2', 
-    name: 'Pınar', 
-    role: 'Tırnak Uzmanı', 
+    name: 'Spring', 
+    role: 'Nail Expert', 
     color: '#3C3F58', 
     avatar: '',
     serviceIds: ['s3', 's4'],
@@ -33,7 +33,7 @@ export const staff: Staff[] = [
   { 
     id: '3', 
     name: 'Ceren', 
-    role: 'Cilt Bakım Uzmanı', 
+    role: 'Skin Care Specialist', 
     color: '#D4A5A5', 
     avatar: '',
     serviceIds: ['s5', 's6', 's7', 's8'],
@@ -42,11 +42,11 @@ export const staff: Staff[] = [
 ];
 
 export const services: Service[] = [
-  { id: 's1', name: 'Kesim & Şekillendirme', duration: 60, price: 150, color: '#B76E79', category: 'HAIR', categoryOrder: 0 },
-  { id: 's2', name: 'Saç Boyama', duration: 120, price: 350, color: '#8B5A5A', category: 'HAIR', categoryOrder: 1 },
-  { id: 's3', name: 'Manikür', duration: 45, price: 80, color: '#3C3F58', category: 'NAILS', categoryOrder: 0 },
-  { id: 's4', name: 'Pedikür', duration: 60, price: 100, color: '#5A5E7D', category: 'NAILS', categoryOrder: 1 },
-  { id: 's5', name: 'Cilt Bakımı', duration: 90, price: 200, color: '#D4A5A5', category: 'SKINCARE', categoryOrder: 0 },
+  { id: 's1', name: 'Cutting & Styling', duration: 60, price: 150, color: '#B76E79', category: 'HAIR', categoryOrder: 0 },
+  { id: 's2', name: 'Hair Coloring', duration: 120, price: 350, color: '#8B5A5A', category: 'HAIR', categoryOrder: 1 },
+  { id: 's3', name: 'Manicure', duration: 45, price: 80, color: '#3C3F58', category: 'NAILS', categoryOrder: 0 },
+  { id: 's4', name: 'Pedicure', duration: 60, price: 100, color: '#5A5E7D', category: 'NAILS', categoryOrder: 1 },
+  { id: 's5', name: 'Skin Care', duration: 90, price: 200, color: '#D4A5A5', category: 'SKINCARE', categoryOrder: 0 },
   { id: 's6', name: 'Masaj', duration: 60, price: 180, color: '#7A7E9D', category: 'BODY_CARE', categoryOrder: 0 },
   { id: 's7', name: 'Kirpik Lifting', duration: 90, price: 250, color: '#B76E79', category: 'BROWS_LASHES', categoryOrder: 0 },
   { id: 's8', name: 'Makyaj', duration: 45, price: 120, color: '#D4A5A5', category: 'MAKEUP', categoryOrder: 0 },
@@ -55,7 +55,7 @@ export const services: Service[] = [
 export const customers: Customer[] = [
   {
     id: 'c1',
-    name: 'Ayşe Yılmaz',
+    name: 'Ayse Yilmaz',
     phone: '+90 532 123 4567',
     email: 'ayse.yilmaz@example.com',
     visitCount: 24,
@@ -91,7 +91,7 @@ export const customers: Customer[] = [
   },
   {
     id: 'c4',
-    name: 'Fatma Özkan',
+    name: 'Fatma Ozkan',
     phone: '+90 535 456 7890',
     email: 'fatma.ozkan@example.com',
     visitCount: 3,
@@ -103,7 +103,7 @@ export const customers: Customer[] = [
   },
   {
     id: 'c5',
-    name: 'Merve Şahin',
+    name: 'Merve Sahin',
     phone: '+90 536 567 8901',
     email: 'merve.sahin@example.com',
     visitCount: 18,
@@ -131,7 +131,7 @@ export const appointments: Appointment[] = [
   {
     id: 'a1',
     customerId: 'c1',
-    customerName: 'Ayşe Yılmaz',
+    customerName: 'Ayse Yilmaz',
     staffId: '1',
     staffName: 'Sevcan',
     services: [services[0]],
@@ -145,7 +145,7 @@ export const appointments: Appointment[] = [
     customerId: 'c2',
     customerName: 'Elif Demir',
     staffId: '2',
-    staffName: 'Pınar',
+    staffName: 'Spring',
     services: [services[2]],
     startTime: '10:00',
     endTime: '10:45',
@@ -155,7 +155,7 @@ export const appointments: Appointment[] = [
   {
     id: 'a3',
     customerId: 'c5',
-    customerName: 'Merve Şahin',
+    customerName: 'Merve Sahin',
     staffId: '1',
     staffName: 'Sevcan',
     services: [services[0], services[1]],
@@ -182,7 +182,7 @@ export const appointments: Appointment[] = [
     customerId: 'c6',
     customerName: 'Selin Arslan',
     staffId: '2',
-    staffName: 'Pınar',
+    staffName: 'Spring',
     services: [services[2], services[3]],
     startTime: '15:00',
     endTime: '16:45',
@@ -193,7 +193,7 @@ export const appointments: Appointment[] = [
   {
     id: 'a6',
     customerId: 'c1',
-    customerName: 'Ayşe Yılmaz',
+    customerName: 'Ayse Yilmaz',
     staffId: '1',
     staffName: 'Sevcan',
     services: [services[0]],
@@ -205,14 +205,14 @@ export const appointments: Appointment[] = [
 ];
 
 export const inventoryItems: InventoryItem[] = [
-  { id: 'i1', name: 'Saç Boyası - Beyaz', category: 'Saç Boyası', currentStock: 3, minStock: 5, unit: 'şişe', price: 45, supplier: 'Güzellik Tedarik Co.' },
-  { id: 'i2', name: 'Şampuan - Profesyonel', category: 'Saç Bakımı', currentStock: 12, minStock: 8, unit: 'şişe', price: 25, supplier: 'Salon Temelleri' },
-  { id: 'i3', name: 'Tırnak Boyası - Kırmızı', category: 'Tırnak Bakımı', currentStock: 2, minStock: 4, unit: 'şişe', price: 15, supplier: 'Nail Art Pro' },
-  { id: 'i4', name: 'Tırnak Boyası - Pembe', category: 'Tırnak Bakımı', currentStock: 8, minStock: 4, unit: 'şişe', price: 15, supplier: 'Nail Art Pro' },
-  { id: 'i5', name: 'Yüz Maske - Nemlendirici', category: 'Cilt Bakımı', currentStock: 5, minStock: 6, unit: 'paket', price: 35, supplier: 'Güzellik Tedarik Co.' },
-  { id: 'i6', name: 'Masaj Yağı', category: 'Vücut Bakımı', currentStock: 4, minStock: 3, unit: 'şişe', price: 30, supplier: 'Sağlık Ürünleri' },
-  { id: 'i7', name: 'Saç Sprayi', category: 'Saç Şekillendirme', currentStock: 15, minStock: 6, unit: 'kutu', price: 20, supplier: 'Salon Temelleri' },
-  { id: 'i8', name: 'Tek Kullanım Eldiveni', category: 'Malzemeler', currentStock: 45, minStock: 50, unit: 'kutu', price: 12, supplier: 'Tıbbi Tedarik Ltd.' },
+  { id: 'i1', name: 'Hair Dye - White', category: 'Hair Dye', currentStock: 3, minStock: 5, unit: 'bottle', price: 45, supplier: 'Beauty Supply Co.' },
+  { id: 'i2', name: 'Shampoo - Professional', category: 'Hair Care', currentStock: 12, minStock: 8, unit: 'bottle', price: 25, supplier: 'Salon Temelleri' },
+  { id: 'i3', name: 'Nail Paint - Red', category: 'Nail Care', currentStock: 2, minStock: 4, unit: 'bottle', price: 15, supplier: 'Nail Art Pro' },
+  { id: 'i4', name: 'Nail Paint - Pink', category: 'Nail Care', currentStock: 8, minStock: 4, unit: 'bottle', price: 15, supplier: 'Nail Art Pro' },
+  { id: 'i5', name: 'Face Mask - Moisturizing', category: 'Skin Care', currentStock: 5, minStock: 6, unit: 'paket', price: 35, supplier: 'Beauty Supply Co.' },
+  { id: 'i6', name: 'Massage Oil', category: 'Body Care', currentStock: 4, minStock: 3, unit: 'bottle', price: 30, supplier: 'Health Products' },
+  { id: 'i7', name: 'Hair Spray', category: 'Hair Styling', currentStock: 15, minStock: 6, unit: 'kutu', price: 20, supplier: 'Salon Temelleri' },
+  { id: 'i8', name: 'Disposable Gloves', category: 'Malzemeler', currentStock: 45, minStock: 50, unit: 'kutu', price: 12, supplier: 'Medical Supply Ltd.' },
 ];
 
 export const dashboardStats: DashboardStats = {
@@ -226,31 +226,31 @@ export const dashboardStats: DashboardStats = {
 
 export const staffPerformance: StaffPerformance[] = [
   { staffId: '1', staffName: 'Sevcan', revenue: 8500, appointments: 45, avgRating: 4.9 },
-  { staffId: '2', staffName: 'Pınar', revenue: 6200, appointments: 52, avgRating: 4.8 },
+  { staffId: '2', staffName: 'Spring', revenue: 6200, appointments: 52, avgRating: 4.8 },
   { staffId: '3', staffName: 'Ceren', revenue: 9800, appointments: 38, avgRating: 4.95 },
 ];
 
 export const customerVisits: Record<string, Visit[]> = {
   c1: [
-    { id: 'v1', date: '2026-02-20', services: ['Kesim & Şekillendirme'], total: 150, staff: 'Sevcan', status: 'completed' },
-    { id: 'v2', date: '2026-01-15', services: ['Kesim & Şekillendirme', 'Saç Boyama'], total: 500, staff: 'Sevcan', status: 'completed' },
-    { id: 'v3', date: '2025-12-10', services: ['Kesim & Şekillendirme'], total: 150, staff: 'Sevcan', status: 'completed' },
+    { id: 'v1', date: '2026-02-20', services: ['Cutting & Styling'], total: 150, staff: 'Sevcan', status: 'completed' },
+    { id: 'v2', date: '2026-01-15', services: ['Cutting & Styling', 'Hair Coloring'], total: 500, staff: 'Sevcan', status: 'completed' },
+    { id: 'v3', date: '2025-12-10', services: ['Cutting & Styling'], total: 150, staff: 'Sevcan', status: 'completed' },
   ],
   c2: [
-    { id: 'v4', date: '2026-02-18', services: ['Manikür'], total: 80, staff: 'Pınar', status: 'completed' },
-    { id: 'v5', date: '2026-02-01', services: ['Manikür', 'Pedikür'], total: 180, staff: 'Pınar', status: 'completed' },
+    { id: 'v4', date: '2026-02-18', services: ['Manicure'], total: 80, staff: 'Spring', status: 'completed' },
+    { id: 'v5', date: '2026-02-01', services: ['Manicure', 'Pedicure'], total: 180, staff: 'Spring', status: 'completed' },
   ],
   c3: [
-    { id: 'v6', date: '2026-02-15', services: ['Cilt Bakımı'], total: 200, staff: 'Ceren', status: 'completed' },
-    { id: 'v7', date: '2026-01-20', services: ['Cilt Bakımı'], total: 200, staff: 'Ceren', status: 'no-show' },
+    { id: 'v6', date: '2026-02-15', services: ['Skin Care'], total: 200, staff: 'Ceren', status: 'completed' },
+    { id: 'v7', date: '2026-01-20', services: ['Skin Care'], total: 200, staff: 'Ceren', status: 'no-show' },
   ],
   c4: [
-    { id: 'v8', date: '2026-01-30', services: ['Kesim & Şekillendirme'], total: 150, staff: 'Sevcan', status: 'completed' },
-    { id: 'v9', date: '2026-01-10', services: ['Manikür'], total: 80, staff: 'Pınar', status: 'no-show' },
+    { id: 'v8', date: '2026-01-30', services: ['Cutting & Styling'], total: 150, staff: 'Sevcan', status: 'completed' },
+    { id: 'v9', date: '2026-01-10', services: ['Manicure'], total: 80, staff: 'Spring', status: 'no-show' },
   ],
   c5: [
-    { id: 'v10', date: '2026-02-22', services: ['Cilt Bakımı', 'Masaj'], total: 380, staff: 'Ceren', status: 'completed' },
-    { id: 'v11', date: '2026-02-08', services: ['Kesim & Şekillendirme', 'Makyaj'], total: 270, staff: 'Sevcan', status: 'completed' },
+    { id: 'v10', date: '2026-02-22', services: ['Skin Care', 'Masaj'], total: 380, staff: 'Ceren', status: 'completed' },
+    { id: 'v11', date: '2026-02-08', services: ['Cutting & Styling', 'Makyaj'], total: 270, staff: 'Sevcan', status: 'completed' },
     { id: 'v12', date: '2026-01-25', services: ['Kirpik Lifting'], total: 250, staff: 'Ceren', status: 'completed' },
   ],
 };
@@ -266,10 +266,10 @@ export const revenueChartData = [
 ];
 
 export const servicePerformanceData = [
-  { name: 'Kesim & Şekillendirme', value: 4500, bookings: 30 },
-  { name: 'Saç Boyama', value: 7000, bookings: 20 },
-  { name: 'Cilt Bakımı', value: 6000, bookings: 30 },
+  { name: 'Cutting & Styling', value: 4500, bookings: 30 },
+  { name: 'Hair Coloring', value: 7000, bookings: 20 },
+  { name: 'Skin Care', value: 6000, bookings: 30 },
   { name: 'Kirpik Lifting', value: 5000, bookings: 20 },
-  { name: 'Manikür', value: 2400, bookings: 30 },
+  { name: 'Manicure', value: 2400, bookings: 30 },
   { name: 'Masaj', value: 3600, bookings: 20 },
 ];

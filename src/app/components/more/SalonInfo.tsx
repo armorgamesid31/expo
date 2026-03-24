@@ -11,7 +11,7 @@ interface SalonInfoProps {
   onBack: () => void;
 }
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Fridayrtesi', 'Sunday'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const COUNTRIES = [
   { code: 'TR', name: 'Turkey', flag: '🇹🇷', format: '(XXX) XXX XX XX', example: '(5XX) XXX XX XX' },
@@ -32,10 +32,10 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
   const [selectedCountry, setSelectedCountry] = useState('TR');
   const [showCountrySelect, setShowCountrySelect] = useState(false);
   const [salonData, setSalonData] = useState({
-    name: 'Güzellik Atölyesi',
+    name: 'Beauty Workshop',
     phone: '(538) 111 22 33',
-    address: 'Nişantaşı Mah. Valikonağı Cad. No:42/A, Şişli/İstanbul',
-    description: 'Nişantaşı\'nın kalbinde, 15 yıllık deneyimle profesyonel güzellik hizmetleri sunuyoruz.',
+    address: 'Nisantasi Mah. Valikonagi Cad. No:42/A, Sisli/Istanbul',
+    description: 'In the heart of Nisantasi, we offer professional beauty services with 15 years of experience.',
     mapUrl: 'https://maps.google.com/?q=Nisantasi+Istanbul',
     logoUrl: '',
   });
@@ -89,7 +89,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
 
   const handleAIEnhance = async () => {
     // Simulate AI enhancement
-    const enhanced = salonData.description + ' Uzman ekibimiz, en son teknoloji ekipmanlar ve premium ürünlerle size özel bakım deneyimi sunmaktadır.';
+    const enhanced = salonData.description + 'Our expert team offers you a special care experience with state-of-the-art equipment and premium products.';
     setSalonData({ ...salonData, description: enhanced });
   };
 
@@ -151,7 +151,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="salon-phone">Telefon</Label>
+                <Label htmlFor="salon-phone">Phone</Label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowCountrySelect(!showCountrySelect)}
@@ -199,7 +199,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="salon-address">Adres</Label>
+                <Label htmlFor="salon-address">Address</Label>
                 <div className="relative">
                   <MapPin className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
                   <textarea
@@ -221,7 +221,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                   placeholder="https://maps.google.com/..."
                 />
                 <p className="text-xs text-muted-foreground">
-                  Müşterilere randevu hatırlatmalarında yol tarifi olarak gönderilir
+                  Sent to customers as directions in appointment reminders
                 </p>
               </div>
 

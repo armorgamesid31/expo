@@ -14,24 +14,24 @@ interface SettingsScreenProps {
 export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter, onLogout }: SettingsScreenProps) {
   const settingGroups = [
     {
-      title: "Hesap & İşletme",
+      title: "Account & Business",
       items: [
-        { icon: User, label: "Profil Bilgileri", description: "Kişisel detaylar ve fotoğraf", color: "var(--rose-gold)" },
-        { icon: Palette, label: "Görünüm", description: "Tema ve yazı tipi", color: "var(--deep-indigo)", isThemeToggle: true },
-        { icon: Shield, label: "Güvenlik", description: "Şifre ve iki aşamalı doğrulama", color: "var(--rose-gold)" },
+        { icon: User, label: "Profile Information", description: "Personal details and photo", color: "var(--rose-gold)" },
+        { icon: Palette, label: "Appearance", description: "Theme and font", color: "var(--deep-indigo)", isThemeToggle: true },
+        { icon: Shield, label: "Security", description: "Password and two-step verification", color: "var(--rose-gold)" },
       ]
     },
     {
-      title: "Bildirimler",
+      title: "Notifications",
       items: [
-        { icon: Bell, label: "Randevu Hatırlatıcıları", description: "WhatsApp bildirimleri", color: "var(--deep-indigo)", hasSwitch: true },
-        { icon: Smartphone, label: "Anlık Bildirimler", description: "Uygulama içi uyarılar", color: "var(--rose-gold)", hasSwitch: true },
+        { icon: Bell, label: "Appointment Reminders", description: "WhatsApp notifications", color: "var(--deep-indigo)", hasSwitch: true },
+        { icon: Smartphone, label: "Push Notifications", description: "In-app alerts", color: "var(--rose-gold)", hasSwitch: true },
       ]
     },
     {
-      title: "Destek",
+      title: "Support",
       items: [
-        { icon: HelpCircle, label: "Help Center", description: "Sıkça sorulan sorular", color: "var(--deep-indigo)", onClick: onShowHelpCenter },
+        { icon: HelpCircle, label: "Help Center", description: "Frequently asked questions", color: "var(--deep-indigo)", onClick: onShowHelpCenter },
       ]
     }
   ];
@@ -39,8 +39,8 @@ export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter,
   return (
     <div className="h-full pb-20 overflow-y-auto">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Ayarlar</h1>
-        <p className="text-sm text-muted-foreground">Uygulama tercihlerinizi yönetin</p>
+        <h1 className="text-2xl font-semibold mb-1">Settings</h1>
+        <p className="text-sm text-muted-foreground">Manage your app preferences</p>
       </div>
 
       <div className="p-4 space-y-6">
@@ -92,11 +92,11 @@ export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter,
             onClick={onLogout}
           >
             <LogOut className="w-4 h-4 mr-2" />
-            Logout Yap
+            Log Out
           </Button>
           <div className="mt-4 text-center">
             <p className="text-[10px] text-muted-foreground">Salon OS Enterprise v3.2.0</p>
-            <p className="text-[10px] text-muted-foreground/60 mt-1">Geliştirici: Figma Make AI</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1">Developer: Figma Make AI</p>
           </div>
         </div>
       </div>

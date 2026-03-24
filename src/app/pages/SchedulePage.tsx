@@ -69,7 +69,7 @@ function readScheduleSnapshot(date: Date): ScheduleSnapshot | null {
 function statusLabel(status: string) {
   if (status === 'COMPLETED') return 'completed';
   if (status === 'CANCELLED') return 'Cancel';
-  if (status === 'NO_SHOW') return 'Gelmedi';
+  if (status === 'NO_SHOW') return 'No-show';
   return 'planned';
 }
 
@@ -291,12 +291,12 @@ export function SchedulePage() {
 
       const options = serviceStaffOptions[serviceId] || [];
       if (options.length === 0) {
-        setCreateError(`${service.name} için uygun uzman bulunamadı.`);
+        setCreateError(`${service.name} No suitable specialist found for`);
         return;
       }
 
       if (service.requiresSpecialist && options.length > 1 && !selectedStaffByService[serviceId]) {
-        setCreateError(`${service.name} için uzman seçmelisiniz.`);
+        setCreateError(`${service.name} You must select a specialist for`);
         return;
       }
     }
@@ -388,7 +388,7 @@ export function SchedulePage() {
         </button>
       </div>
 
-      {loading ? <p className="text-sm text-muted-foreground">Takvim yükleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading calendar...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -404,7 +404,7 @@ export function SchedulePage() {
                   </div>
                 ))}
                 {!staff.length ? (
-                  <div className="px-3 py-3 text-xs text-muted-foreground">Takvim için personel bulunamadı.</div>
+                  <div className="px-3 py-3 text-xs text-muted-foreground">No staff found for the calendar.</div>
                 ) : null}
               </div>
             </div>
@@ -464,7 +464,7 @@ export function SchedulePage() {
 
       {!loading && !appointments.length ? (
         <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-          Bu gün için randevu bulunmuyor.
+          No appointments for this day.
         </div>
       ) : null}
 
@@ -474,19 +474,19 @@ export function SchedulePage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">New Appointment</h2>
               <button type="button" onClick={closeCreateModal} className="text-sm text-muted-foreground">
-                Kapat
+                Close
               </button>
             </div>
 
             <div className="space-y-3">
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Registerlı Müşteri (opsiyonel)</span>
+                <span className="text-muted-foreground">Registered Customer (optional)</span>
                 <select
                   value={form.customerId}
                   onChange={(event) => handleCustomerSelect(event.target.value)}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 >
-                  <option value="">Yeni / elle gir</option>
+                  <option value="">New / elle gir</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {(customer.name || 'Anonymous')} • {customer.phone}
@@ -495,20 +495,20 @@ export function SchedulePage() {
                 </select>
               </label>
 
-              {loadingCustomers ? <p className="text-xs text-muted-foreground">Müşteriler yükleniyor...</p> : null}
+              {loadingCustomers ? <p className="text-xs text-muted-foreground">Loading customers...</p> : null}
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Müşteri Adı</span>
+                <span className="text-muted-foreground">Customer Name</span>
                 <input
                   value={form.customerName}
                   onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  placeholder="For example: Ayşe Yılmaz"
+                  placeholder="For example: Ayse Yilmaz"
                 />
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Müşteri Telefonu</span>
+                <span className="text-muted-foreground">Customer Phone</span>
                 <input
                   value={form.customerPhone}
                   onChange={(event) => setForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
@@ -518,7 +518,7 @@ export function SchedulePage() {
               </label>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Hizmetler (birden fazla seçebilirsiniz)</p>
+                <p className="text-sm text-muted-foreground">Services (you can select multiple)</p>
                 <div className="space-y-2 max-h-44 overflow-y-auto rounded-lg border border-border p-2">
                   {services.map((service) => {
                     const serviceId = String(service.id);
@@ -534,7 +534,7 @@ export function SchedulePage() {
                         <span className="text-sm flex-1">
                           <span className="font-medium">{service.name}</span>
                           <span className="text-muted-foreground"> • {service.duration} dk</span>
-                          {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Uzman seçimi</span> : null}
+                          {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Specialist selection</span> : null}
                         </span>
                       </label>
                     );
@@ -551,10 +551,10 @@ export function SchedulePage() {
                 return (
                   <div key={serviceId} className="space-y-1 rounded-lg border border-border p-2">
                     <p className="text-sm font-medium">{service?.name}</p>
-                    {loadingOptions ? <p className="text-xs text-muted-foreground">Uzmanlar yükleniyor...</p> : null}
+                    {loadingOptions ? <p className="text-xs text-muted-foreground">Loading specialists...</p> : null}
 
                     {!loadingOptions && options.length === 0 ? (
-                      <p className="text-xs text-red-500">Bu hizmet için uygun uzman bulunamadı.</p>
+                      <p className="text-xs text-red-500">No suitable specialist found for this service.</p>
                     ) : null}
 
                     {!loadingOptions && options.length === 1 ? (
@@ -569,7 +569,7 @@ export function SchedulePage() {
                         }
                         className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                       >
-                        <option value="">{required ? 'Choose an expert' : 'Otomatik ata'}</option>
+                        <option value="">{required ? 'Choose an expert' : 'Auto-assign'}</option>
                         {options.map((item) => (
                           <option key={item.id} value={item.id}>
                             {item.name}
@@ -582,7 +582,7 @@ export function SchedulePage() {
               })}
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Başlangıç Saati</span>
+                <span className="text-muted-foreground">Start Time</span>
                 <input
                   type="time"
                   value={form.time}
@@ -592,7 +592,7 @@ export function SchedulePage() {
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Not (opsiyonel)</span>
+                <span className="text-muted-foreground">Note (optional)</span>
                 <textarea
                   value={form.notes}
                   onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
@@ -609,11 +609,11 @@ export function SchedulePage() {
                 disabled={saving}
                 className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
               >
-                {saving ? 'Kaydediliyor...' : 'Create an Appointment'}
+                {saving ? 'Saving...' : 'Create an Appointment'}
               </button>
 
               <p className="text-[11px] text-muted-foreground">
-                Müsaitlik backend’de tüm seçili hizmetler için sırayla kontrol edilir.
+                Availability is checked in backend sequentially for all selected services.
               </p>
             </div>
           </div>

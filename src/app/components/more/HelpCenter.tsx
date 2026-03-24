@@ -16,79 +16,79 @@ interface FAQItem {
 
 const faqData: FAQItem[] = [
   {
-    question: 'Randevu nasıl oluşturabilirim?',
-    answer: 'Takvim sekmesinden istediğiniz tarih ve saate tıklayın, ardından müşteri, hizmet ve çalışan bilgilerini seçerek randevu oluşturun. Alternatif olarak, WhatsApp AI Ajanı da otomatik randevu oluşturabilir.',
-    category: 'Randevu Yönetimi',
+    question: 'How can I make an appointment?',
+    answer: 'Click on the date and time you want from the Calendar tab, then create an appointment by selecting customer, service and employee information. Alternatively, WhatsApp AI Agent can also create automatic appointments.',
+    category: 'Appointment Management',
   },
   {
-    question: 'Müşteri no-show durumunda ne yapmalıyım?',
-    answer: 'Randevuya gelmeyen müşteriler otomatik olarak kaydedilir. CRM bölümünden müşteri detaylarına giderek no-show sayısını görebilir, 3+ no-show yapan müşteriler için otomatik kara liste önerisi alabilirsiniz.',
-    category: 'Randevu Yönetimi',
+    question: 'What should I do in case of customer no-show?',
+    answer: 'Customers who do not show up for an appointment are automatically recorded. You can see the number of no-shows by going to customer details in the CRM section, and get an automatic blacklist recommendation for customers who have made 3+ no-shows.',
+    category: 'Appointment Management',
   },
   {
-    question: 'Kara listeye nasıl müşteri eklerim?',
-    answer: 'Customlikler > Kara Liste bölümüne gidin. Yeni müşteri ekle butonuna tıklayıp müşteri bilgilerini girin veya mevcut müşteri listesinden seçim yapın. Kara listedeki müşteriler randevu alamaz.',
-    category: 'Müşteri Yönetimi',
+    question: 'How do I add customers to the blacklist?',
+    answer: 'Go to Properties > Blacklist. Click the add new customer button and enter customer information or select from the existing customer list. Blacklisted customers cannot make an appointment.',
+    category: 'Customer Management',
   },
   {
-    question: 'WhatsApp AI Ajanı nasıl çalışır?',
-    answer: 'AI Ajan, WhatsApp Business API ile entegre çalışarak müşteri mesajlarını otomatik yanıtlar. Randevu alma, iptal/değişiklik ve SSS yanıtlama özelliklerini aktif ederek ajanın yeteneklerini belirleyebilirsiniz.',
+    question: 'How does WhatsApp AI Agent work?',
+    answer: 'AI Agent works integrated with WhatsApp Business API and automatically responds to customer messages. You can determine the agent\'s capabilities by activating the appointment making, cancellation/change and FAQ answering features.',
     category: 'AI ve Otomasyon',
   },
   {
-    question: 'Hangi otomasyonları kurabilirim?',
-    answer: 'WhatsApp Ayarları bölümünden randevu hatırlatıcılarını, Müşteri Yönetimi > Randevuya Gelmeme Takibi bölümünden ihlal bildirimlerini yönetebilirsiniz. Tüm mesajlar WhatsApp üzerinden gönderilir.',
+    question: 'What automations can I install?',
+    answer: 'You can manage appointment reminders in WhatsApp Settings and violation notifications in Customer Management > Appointment No-Show Tracking. All messages are sent via WhatsApp.',
     category: 'AI ve Otomasyon',
   },
   {
-    question: 'Kampanya nasıl oluşturabilirim?',
-    answer: 'Sundaylama Otomasyonu bölümünden yeni kampanya oluştur butonuna tıklayın. Müşteri segmenti seçin (VIP, pasif müşteriler, sık gelenler), mesajınızı yazın ve WhatsApp ile gönderin.',
-    category: 'Sundaylama',
+    question: 'How can I create a campaign?',
+    answer: 'Click on the create new campaign button in the Marketing Automation section. Choose a customer segment (VIP, passive customers, frequent visitors), write your message and send it via WhatsApp.',
+    category: 'Marketing',
   },
   {
-    question: 'Müşteri segmentleri nedir?',
-    answer: 'Sistem, müşterilerinizi otomatik olarak davranışlarına göre gruplar: VIP müşteriler (₺3000+ harcama), pasif müşteriler (3+ ay gelmeyenler), sık gelenler (ayda 2+ ziyaret). Bu segmentlere özel kampanyalar gönderebilirsiniz.',
-    category: 'Sundaylama',
+    question: 'What are customer segments?',
+    answer: 'The system automatically groups your customers based on their behavior: VIP customers (₺3000+ spend), passive customers (3+ months absent), frequent visitors (2+ visits per month). You can send special campaigns to these segments.',
+    category: 'Marketing',
   },
   {
-    question: 'Sadakat programı nasıl çalışır?',
-    answer: 'Her harcamadan puan kazanan müşteriler, biriken puanları indirim olarak kullanabilir. Campaigns bölümünden sadakat programı ayarlarını düzenleyebilir, puan oranını ve minimum kullanım limitini belirleyebilirsiniz.',
+    question: 'How does the loyalty program work?',
+    answer: 'Customers who earn points for every spending can use the accumulated points as a discount. You can edit the loyalty program settings, determine the point rate and minimum usage limit in the Campaigns section.',
     category: 'Campaigns',
   },
   {
-    question: 'Arkadaş davet programı nasıl kullanılır?',
-    answer: 'Müşterileriniz, Campaigns bölümünden aldıkları davet linklerini arkadaşlarıyla paylaşabilir. Her başarılı davet için hem davet eden hem de gelen kişi ödül kazanır.',
+    question: 'How to use the friend invitation program?',
+    answer: 'Your customers can share the invitation links they receive from the Campaigns section with their friends. For each successful invitation, both the inviter and the person receiving receive a reward.',
     category: 'Campaigns',
   },
   {
-    question: 'Web sitemi nasıl yönetebilirim?',
-    answer: 'Web Sitesi Oluşturucu bölümünden salon adı, slogan, açıklama, sosyal medya linkleri ve galeri görselleri gibi bilgileri düzenleyebilirsiniz. Değişiklikler anında yayına alınır.',
+    question: 'How can I manage my website?',
+    answer: 'You can edit information such as salon name, slogan, description, social media links and gallery images from the Website Creator section. Changes go live immediately.',
     category: 'Web Sitesi',
   },
   {
-    question: 'Analitik raporları nasıl görüntülerim?',
-    answer: 'Ana Sayfa bölümünden Performans Analizi kartına tıklayın. Gelir trendleri, hizmet dağılımı, çalışan performansı ve doluluk oranı gibi detaylı metrikleri görüntüleyebilirsiniz. Periyot seçiciden istediğiniz zaman aralığını seçin.',
+    question: 'How do I view analytical reports?',
+    answer: 'Click on the Performance Analysis card from the Home section. You can view detailed metrics such as revenue trends, service distribution, employee performance and occupancy rate. Select the time period you want from the period selector.',
     category: 'Raporlama',
   },
   {
-    question: 'Yeni çalışan nasıl eklerim?',
-    answer: 'Customlikler > Çalışan Yönetimi bölümüne gidin. Yeni çalışan ekle butonuna tıklayıp ad, rol, uzmanlık alanları ve çalışma saatlerini girin. Çalışanlar randevu oluştururken seçilebilir hale gelir.',
-    category: 'Çalışan Yönetimi',
+    question: 'How do I add a new employee?',
+    answer: 'Go to Properties > Employee Management. Click the Add new employee button and enter the name, role, areas of expertise and working hours. Employees become selectable when creating an appointment.',
+    category: 'Employee Management',
   },
   {
-    question: 'Hizmet fiyatlarını nasıl güncellerim?',
-    answer: 'Customlikler > Service Management bölümünden güncellemek istediğiniz hizmete tıklayın. Fiyat, süre ve açıklama bilgilerini düzenleyip kaydedin. Yeni fiyatlar anında geçerli olur.',
+    question: 'How do I update service prices?',
+    answer: 'Click on the service you want to update in the Properties > Service Management section. Edit and save price, duration and description information. New prices take effect immediately.',
     category: 'Service Management',
   },
   {
-    question: 'Birden fazla salon şubesi yönetebilir miyim?',
-    answer: 'Evet, Enterprise planınızda birden fazla salon ekleyebilir ve merkezi bir panelden tüm şubelerinizi yönetebilirsiniz. Her şube için ayrı çalışan, hizmet ve randevu yönetimi mümkündür.',
-    category: 'Salon Yönetimi',
+    question: 'Can I manage more than one salon branch?',
+    answer: 'Yes, you can add multiple salons in your Enterprise plan and manage all your branches from a central panel. Separate employee, service and appointment management is possible for each branch.',
+    category: 'Hall Management',
   },
   {
-    question: 'Müşteri notlarını nasıl kullanabilirim?',
-    answer: 'CRM bölümünden müşteri detayına giderek notlar ekleyebilirsiniz. Bu notlar, alerjiler, tercihler, özel talepler gibi önemli bilgileri saklamak için kullanılır ve tüm çalışanlar tarafından görülebilir.',
-    category: 'Müşteri Yönetimi',
+    question: 'How can I use customer notes?',
+    answer: 'You can add notes by going to customer details in the CRM section. These notes are used to store important information such as allergies, preferences, special requests, and are visible to all employees.',
+    category: 'Customer Management',
   },
 ];
 
@@ -96,9 +96,9 @@ const categories = [...new Set(faqData.map(item => item.category))];
 
 export function HelpCenter({ onBack }: HelpCenterProps) {
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Tümü');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  const filteredFAQs = selectedCategory === 'Tümü' 
+  const filteredFAQs = selectedCategory === 'All' 
     ? faqData 
     : faqData.filter(item => item.category === selectedCategory);
 
@@ -108,7 +108,7 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
         <Button variant="ghost" size="sm" onClick={onBack} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Ayarlara Dön
+          Back to Settings
         </Button>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[var(--deep-indigo)]/10 flex items-center justify-center">
@@ -126,14 +126,14 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <button
-              onClick={() => setSelectedCategory('Tümü')}
+              onClick={() => setSelectedCategory('All')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                selectedCategory === 'Tümü' 
+                selectedCategory === 'All' 
                   ? 'bg-[var(--rose-gold)] text-white' 
                   : 'bg-muted text-muted-foreground hover:bg-muted/70'
               }`}
             >
-              Tümü ({faqData.length})
+              All ({faqData.length})
             </button>
             {categories.map(cat => {
               const count = faqData.filter(item => item.category === cat).length;
@@ -213,7 +213,7 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">Sorunuz mu var?</h3>
-                  <p className="text-xs text-muted-foreground">Destek ekibimizle iletişime geçin</p>
+                  <p className="text-xs text-muted-foreground">Contact our support team</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">

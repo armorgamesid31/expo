@@ -43,13 +43,13 @@ export function CustomerList() {
     <div className="h-full pb-20">
       {/* Header */}
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <h1 className="text-2xl font-semibold mb-4">Müşteri Yönetimi</h1>
+        <h1 className="text-2xl font-semibold mb-4">Customer Management</h1>
         
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Müşteri ara..."
+            placeholder="Search for customers..."
             className="pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -66,13 +66,13 @@ export function CustomerList() {
             <p className="text-2xl font-bold text-green-600">
               {customers.filter(c => c.riskLevel === 'low').length}
             </p>
-            <p className="text-xs text-muted-foreground">Düşük Risk</p>
+            <p className="text-xs text-muted-foreground">Low Risk</p>
           </div>
           <div className="text-center p-3 bg-card rounded-lg border border-border">
             <p className="text-2xl font-bold text-red-600">
               {customers.filter(c => c.riskLevel === 'high').length}
             </p>
-            <p className="text-xs text-muted-foreground">Yüksek Risk</p>
+            <p className="text-xs text-muted-foreground">High Risk</p>
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function CustomerList() {
                       className={`text-xs ${getRiskBadgeStyle(customer.riskLevel)}`}
                     >
                       {getRiskIcon(customer.riskLevel)}
-                      <span className="ml-1 capitalize">{customer.riskLevel === 'low' ? 'düşük' : customer.riskLevel === 'medium' ? 'orta' : 'yüksek'}</span>
+                      <span className="ml-1 capitalize">{customer.riskLevel === 'low' ? 'low' : customer.riskLevel === 'medium' ? 'orta' : 'high'}</span>
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{customer.phone}</p>
@@ -116,7 +116,7 @@ export function CustomerList() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Gelmedi</p>
+                  <p className="text-xs text-muted-foreground">No-show</p>
                   <p className="text-sm font-semibold">{customer.noShowCount}</p>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export function CustomerList() {
                 <div className="mt-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
                   <p className="text-xs text-red-700 dark:text-red-300 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    Yüksek risk - Rezervasyon için depozito alınmalı
+                    High risk - Deposit required for booking
                   </p>
                 </div>
               )}

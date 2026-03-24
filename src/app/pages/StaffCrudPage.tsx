@@ -270,7 +270,7 @@ export function StaffCrudPage() {
       if (draft.useCustomPrice) {
         const parsed = Number(draft.customPrice);
         if (!Number.isFinite(parsed) || parsed < 0) {
-          throw new Error(`${service.name} için özel fiyat geçersiz.`);
+          throw new Error(`${service.name} has an invalid custom price.`);
         }
         customPrice = parsed;
       }
@@ -279,7 +279,7 @@ export function StaffCrudPage() {
       if (draft.useCustomDuration) {
         const parsed = Number(draft.customDuration);
         if (!Number.isFinite(parsed) || parsed <= 0) {
-          throw new Error(`${service.name} için özel süre geçersiz.`);
+          throw new Error(`${service.name} has an invalid custom duration.`);
         }
         customDuration = Math.round(parsed);
       }
@@ -294,7 +294,7 @@ export function StaffCrudPage() {
     event.preventDefault();
 
     if (!form.name.trim()) {
-      setError('Ad soyad zorunlu.');
+      setError('Full name is required.');
       return;
     }
 
@@ -347,7 +347,7 @@ export function StaffCrudPage() {
   };
 
   const deleteStaff = async (item: StaffItem) => {
-    const ok = window.confirm(`${item.name} kaydını silmek istiyor musunuz?`);
+    const ok = window.confirm(`${item.name} Do you want to delete this record?`);
     if (!ok) return;
 
     try {
@@ -362,8 +362,8 @@ export function StaffCrudPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Çalışan Yönetimi</h1>
-          <p className="text-sm text-muted-foreground">Personel ve hizmet yetkileri</p>
+          <h1 className="text-2xl font-semibold">Staff Management</h1>
+          <p className="text-sm text-muted-foreground">Staff and service permissions</p>
         </div>
         <button
           type="button"
@@ -371,7 +371,7 @@ export function StaffCrudPage() {
           className="h-10 px-4 rounded-lg bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 shrink-0"
         >
           <Plus className="h-4 w-4" />
-          Ekle
+          Add
         </button>
       </div>
 
@@ -439,7 +439,7 @@ export function StaffCrudPage() {
                 ) : null}
                 {!item.services.length ? (
                   <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs bg-muted text-muted-foreground">
-                    Hizmet ataması yok
+                    No service assignment
                   </span>
                 ) : null}
               </div>
@@ -448,7 +448,7 @@ export function StaffCrudPage() {
 
           {!staff.length ? (
             <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              Çalışan kaydı bulunamadı.
+              No staff records found.
             </div>
           ) : null}
         </div>
@@ -459,7 +459,7 @@ export function StaffCrudPage() {
           <div className="mx-auto mt-2 max-w-md rounded-2xl border border-border bg-background shadow-xl max-h-[calc(100dvh-16px)] flex flex-col overflow-hidden">
             <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
               <h2 className="text-lg font-semibold">{editingStaffId ? 'Edit Employee' : 'New Employee'}</h2>
-              <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Kapat</button>
+              <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Close</button>
             </div>
 
             <form onSubmit={save} className="p-4 space-y-4 overflow-y-auto pb-20">
@@ -474,7 +474,7 @@ export function StaffCrudPage() {
                 </label>
 
                 <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Unvan (opsiyonel)</span>
+                  <span className="text-muted-foreground">Title (optional)</span>
                   <input
                     value={form.title}
                     onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
@@ -484,7 +484,7 @@ export function StaffCrudPage() {
               </div>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Telefon (opsiyonel)</span>
+                <span className="text-muted-foreground">Phone (optional)</span>
                 <input
                   value={form.phone}
                   onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
@@ -494,8 +494,8 @@ export function StaffCrudPage() {
 
               <div className="rounded-xl border border-border p-3 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium">Hizmetler *</p>
-                  <span className="text-xs text-muted-foreground">{selectedServiceCount} hizmet seçili</span>
+                  <p className="text-sm font-medium">Services *</p>
+                  <span className="text-xs text-muted-foreground">{selectedServiceCount} services selected</span>
                 </div>
 
                 <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1">
@@ -560,7 +560,7 @@ export function StaffCrudPage() {
                                   ) : null}
 
                                   <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span>Custom süre</span>
+                                    <span>Custom duration</span>
                                     <ToggleSwitch
                                       checked={draft.useCustomDuration}
                                       onChange={(next) => updateDraftField(service.id, 'useCustomDuration', next)}
@@ -595,7 +595,7 @@ export function StaffCrudPage() {
                   disabled={saving}
                   className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
                 >
-                  {saving ? 'Kaydediliyor...' : editingStaffId ? 'Update' : 'Ekle'}
+                  {saving ? 'Saving...' : editingStaffId ? 'Update' : 'Add'}
                 </button>
               </div>
             </form>

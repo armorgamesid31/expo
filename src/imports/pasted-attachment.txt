@@ -246,9 +246,9 @@ Use realistic Turkish salon data:
 
 Names:
 Sevcan
-Pınar
+Pinar
 Ceren
-Ayşe
+Ayse
 
 Currency:
 ₺ Turkish Lira

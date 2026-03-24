@@ -16,8 +16,8 @@ interface WhatsAppAgentProps {
 const conversations = [
   {
     id: 1,
-    name: 'Ayşe Yılmaz',
-    message: 'Fridayrtesi için randevu alabilirim mi?',
+    name: 'Ayse Yilmaz',
+    message: 'Can I make an appointment for Saturday?',
     time: '14:23',
     resolved: true,
     converted: true,
@@ -25,7 +25,7 @@ const conversations = [
   {
     id: 2,
     name: 'Elif Demir',
-    message: 'Manikür fiyatlarınız nedir?',
+    message: 'What are your manicure prices?',
     time: '13:45',
     resolved: true,
     converted: false,
@@ -33,15 +33,15 @@ const conversations = [
   {
     id: 3,
     name: 'Zeynep Kaya',
-    message: 'Thursday randevumu iptal etmek istiyorum',
+    message: 'Thursday appointmentmu iptal etmek istiyorum',
     time: '12:10',
     resolved: true,
     converted: false,
   },
   {
     id: 4,
-    name: 'Merve Şahin',
-    message: 'Saç boyama ne kadar sürer?',
+    name: 'Merve Sahin',
+    message: 'How long does hair dyeing take?',
     time: '11:30',
     resolved: false,
     converted: false,
@@ -49,12 +49,12 @@ const conversations = [
 ];
 
 const salonFaqQuestions = [
-  { id: 'faq-working-hours', question: 'Çalışma saatleriniz ve uygun günleriniz nedir?' },
-  { id: 'faq-cancellation', question: 'Cancel ve değişiklik politikanız nedir?' },
-  { id: 'faq-payment', question: 'Hangi ödeme yöntemlerini kabul ediyorsunuz?' },
-  { id: 'faq-late-policy', question: 'Geç kalınan randevularda politikanız nedir?' },
-  { id: 'faq-first-visit', question: 'İlk ziyaret müşterileri için özel bilgilendirme var mı?' },
-  { id: 'faq-whatsapp-response', question: 'Müşteriler mesajlara ortalama ne kadar sürede yanıt alır?' },
+  { id: 'faq-working-hours', question: 'What are your working hours and available days?' },
+  { id: 'faq-cancellation', question: 'What is your cancel and change policy?' },
+  { id: 'faq-payment', question: 'What payment methods do you accept?' },
+  { id: 'faq-late-policy', question: 'What is your policy on late appointments?' },
+  { id: 'faq-first-visit', question: 'Is there special information for first visit customers?' },
+  { id: 'faq-whatsapp-response', question: 'How long does it take on average for customers to respond to messages?' },
 ];
 
 const CHAKRA_STATUS_CACHE_KEY = 'chakra:status';
@@ -92,12 +92,12 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const [handoverThreshold, setHandoverThreshold] = useState<'early' | 'balanced' | 'late'>(cachedSettings?.handoverThreshold || 'balanced');
   const [aiDisclosure, setAiDisclosure] = useState<'always' | 'onQuestion' | 'never'>(cachedSettings?.aiDisclosure || 'onQuestion');
   const [salonFaqAnswers, setSalonFaqAnswers] = useState<Record<string, string>>({
-    'faq-working-hours': 'Hafta içi 09:00-20:00, Fridayrtesi 10:00-18:00, Sunday kapalıyız.',
-    'faq-cancellation': 'Randevu saatinden en az 4 saat önce ücretsiz iptal/değişiklik yapabilirsiniz.',
-    'faq-payment': 'Nakit, kredi kartı ve havale ile ödeme kabul ediyoruz.',
-    'faq-late-policy': '15 dakikadan fazla gecikmede slot uygunluğuna göre yeni saat önerilir.',
-    'faq-first-visit': 'İlk ziyarette kısa bir ihtiyaç analizi yapıyoruz ve önerilen paketleri sunuyoruz.',
-    'faq-whatsapp-response': 'Çalışma saatlerinde ortalama 5-10 dakika içinde geri dönüş sağlıyoruz.',
+    'faq-working-hours': 'We are closed on weekdays 09:00-20:00, Saturday 10:00-18:00, Sunday.',
+    'faq-cancellation': 'You can cancel/change free of charge at least 4 hours before your appointment time.',
+    'faq-payment': 'We accept payment by cash, credit card and money order.',
+    'faq-late-policy': 'If there is a delay of more than 15 minutes, a new time is recommended based on slot availability.',
+    'faq-first-visit': 'During the first visit, we conduct a brief needs analysis and present recommended packages.',
+    'faq-whatsapp-response': 'We respond within 5-10 minutes on average during working hours.',
     ...(cachedSettings?.faqAnswers || {}),
   });
 
@@ -105,9 +105,9 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const totalConversations = 47;
   const resolvedByBot = 39;
   const toneExamples: Record<typeof tone, string> = {
-    friendly: '"Merhaba, size hemen yardımcı olayım. Uygun bir saat bulalım mi?"',
-    professional: '"Talebinizi aldım. Uygun zaman aralığını kontrol ederek net bir öneri paylaşabilirim."',
-    balanced: '"Müsait saatleri kontrol edip size en uygun randevu seçeneğini hemen iletebilirim."',
+    friendly: '"Hello, let me help you right away. Shall we find a suitable time?"',
+    professional: '"I have received your request. I can share a clear recommendation by checking the appropriate time period."',
+    balanced: '"I can check the available hours and immediately inform you of the most suitable appointment option."',
   };
 
   useEffect(() => {
@@ -165,12 +165,12 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     setToggleFeedback(null);
 
     if (!chakraConnected) {
-      setToggleError('Complete WhatsApp connection firstyın.');
+      setToggleError('Complete WhatsApp connection first.');
       return;
     }
 
     if (!chakraPluginActive) {
-      setToggleError('WhatsApp bağlantısı pasif. Activate the connection firstmelisiniz.');
+      setToggleError('WhatsApp connection is inactive. You must activate the connection first.');
       return;
     }
 
@@ -195,8 +195,8 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
 
       setToggleFeedback(
         nextValue
-          ? 'AI ajanı aktif edildi.'
-          : 'AI ajanı pasif duruma alındı.',
+          ? 'AI agent activated.'
+          : 'AI agent has been disabled.',
       );
       writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, {
         isEnabled: nextValue,
@@ -215,7 +215,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     } catch (error) {
       console.error('WhatsApp agent toggle failed:', error);
       setAgentEnabled(previous);
-      setToggleError('Aktiflik durumu güncellenemedi. Lütfen tekrar deneyin.');
+      setToggleError('Activity status could not be updated. Please try again.');
     } finally {
       setTogglingAgent(false);
     }
@@ -272,7 +272,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
         <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Geri</span>
+          <span className="text-sm">Back</span>
         </button>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
@@ -280,14 +280,14 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
           </div>
           <div className="flex-1 flex items-start justify-between gap-3">
             <div>
-              <h1 className="text-xl font-semibold">AI WhatsApp Ajanı</h1>
-              <p className="text-xs text-muted-foreground">Otomatik müşteri iletişimi</p>
+              <h1 className="text-xl font-semibold">AI WhatsApp Agent</h1>
+              <p className="text-xs text-muted-foreground">Automated customer communication</p>
             </div>
             <button
               type="button"
               onClick={() => navigate('/app/features/whatsapp-agent-faq')}
               className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground active:opacity-70 mt-0.5"
-              aria-label="AI agent standart SSS ekranını aç"
+              aria-label="Open AI agent standard FAQ screen"
             >
               <CircleHelp className="w-4 h-4" />
             </button>
@@ -345,11 +345,11 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                         }`}
                       >
                         {!chakraConnected
-                          ? 'Connected değil — Kurulum gerekli'
+                          ? 'Not connected — Setup required'
                           : !chakraPluginActive
-                            ? 'WhatsApp pasif — Bağlantıyı yönetden aç'
+                            ? 'WhatsApp disabled — Open the connection from manage'
                             : agentEnabled
-                              ? 'Aktif — Mesajları yanıtlıyor'
+                              ? 'Active — Replying to messages'
                               : 'Pasif'}
                       </span>
                     </div>
@@ -379,7 +379,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
               <XCircle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm text-amber-800 dark:text-amber-300">
-                  WhatsApp bağlantısı pasif. Activate the connection firstmeden AI ajan çalışmaz.
+                  WhatsApp connection is inactive. Activate the connection first for the AI agent to run.
                 </p>
                 <Button
                   type="button"
@@ -388,7 +388,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                   className="mt-2"
                   onClick={() => navigate('/app/features/whatsapp-settings', { state: { navDirection: 'back' } })}
                 >
-                  WhatsApp Ayarlarına Git
+                  Go to WhatsApp Settings
                 </Button>
               </div>
             </CardContent>
@@ -397,7 +397,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
 
         {/* Conversation Insights */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}>
-          <h2 className="font-semibold mb-3 px-1">Konuşma Analizi</h2>
+          <h2 className="font-semibold mb-3 px-1">Conversation Analytics</h2>
           <div className="grid grid-cols-3 gap-3 mb-3">
             <Card className="border-border/50">
               <CardContent className="p-3 text-center">
@@ -408,13 +408,13 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
             <Card className="border-border/50">
               <CardContent className="p-3 text-center">
                 <p className="text-2xl font-bold text-green-600">%{conversionRate}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Dönüşüm</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Conversion</p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
               <CardContent className="p-3 text-center">
                 <p className="text-2xl font-bold text-[var(--deep-indigo)]">{resolvedByBot}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Bot Çözdü</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Bot Resolved</p>
               </CardContent>
             </Card>
           </div>
@@ -425,7 +425,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-[var(--rose-gold)]" />
-                  Randevu Dönüşüm Oranı
+                  Appointment Conversion Rate
                 </span>
                 <span className="text-sm font-bold text-[var(--rose-gold)]">%{conversionRate}</span>
               </div>
@@ -437,14 +437,14 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                   transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">{totalConversations} konuşmadan {Math.round(totalConversations * conversionRate / 100)} randevu oluşturuldu</p>
+              <p className="text-xs text-muted-foreground mt-2">{totalConversations} conversations, {Math.round(totalConversations * conversionRate / 100)} appointments were created</p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* Recent Conversations */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}>
-          <h2 className="font-semibold mb-3 px-1">Son Konuşmalar</h2>
+          <h2 className="font-semibold mb-3 px-1">Recent Conversations</h2>
           <div className="space-y-2">
             {conversations.map((conv) => (
               <Card key={conv.id} className="border-border/50">
@@ -457,7 +457,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium truncate">{conv.name}</p>
                         {conv.converted && (
-                          <Badge variant="secondary" className="bg-green-500/10 text-green-700 text-[10px] py-0 h-4">Randevu</Badge>
+                          <Badge variant="secondary" className="bg-green-500/10 text-green-700 text-[10px] py-0 h-4">Appointment</Badge>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{conv.message}</p>
@@ -480,7 +480,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         {/* Salon FAQ Management */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
           <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="font-semibold">Salon SSS ve Ajan Ayarları</h2>
+            <h2 className="font-semibold">Salon FAQ and Agent Settings</h2>
           </div>
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
@@ -492,9 +492,9 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                     onClick={() => setIsFaqExpanded((prev) => !prev)}
                   >
                     <div>
-                      <p className="text-sm font-semibold">Sık Sorulan Sorular</p>
+                      <p className="text-sm font-semibold">Frequently Asked Questions</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        WhatsApp ajanınızın salonunuza verdiği cevapları kişiselleştirmek için bu alanı doldurun.
+                        Use this section to personalize your WhatsApp agent responses for your salon.
                       </p>
                     </div>
                     <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isFaqExpanded ? 'rotate-180' : ''}`} />
@@ -517,26 +517,26 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                               <p className="text-sm font-medium">{item.question}</p>
                               {!isEditing ? (
                                 <p className="text-xs text-muted-foreground mt-2 leading-5">
-                                  {answered ? answer : 'Henüz cevaplanmadı.'}
+                                  {answered ? answer : 'Not answered yet.'}
                                 </p>
                               ) : (
                                 <div className="mt-2 space-y-2">
                                   <textarea
                                     value={salonFaqAnswers[item.id] || ''}
                                     onChange={(e) => setSalonFaqAnswers((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                                    placeholder="Bu soruya salonunuza özel cevabı yazın"
+                                    placeholder="Write the answer to this question specific to your salon."
                                     rows={3}
                                     className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
                                   />
                                   <div className="flex gap-2">
                                     <Button type="button" size="sm" onClick={() => saveSettings('faq', { faqAnswers: salonFaqAnswers })} disabled={isSaving}>
-                                      {isSaving ? 'Kaydediliyor...' : 'Save'}
+                                      {isSaving ? 'Saving...' : 'Save'}
                                     </Button>
                                     <Button type="button" size="sm" variant="outline" onClick={() => setEditingQuestionId(null)}>
-                                      Vazgeç
+                                      Discard
                                     </Button>
                                   </div>
-                                  {savedField === 'faq' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
+                                  {savedField === 'faq' ? <p className="text-[11px] text-green-600">Saved.</p> : null}
                                 </div>
                               )}
                             </div>
@@ -547,7 +547,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                                 size="icon"
                                 className="w-8 h-8 shrink-0"
                                 onClick={() => setEditingQuestionId(item.id)}
-                                aria-label={answered ? 'Cevabı düzenle' : 'Cevap ekle'}
+                                aria-label={answered ? 'Edit answer' : 'Add answer'}
                               >
                                 {answered ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                               </Button>
@@ -563,72 +563,72 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
               <Card className="border-border/50">
                 <CardContent className="p-3 space-y-4">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Konuşma tonu</p>
-                    <p className="text-xs text-muted-foreground">Ajanın müşteriyle konuşurken kullanacağı genel üslup.</p>
+                    <p className="text-sm font-medium">Conversation tone</p>
+                    <p className="text-xs text-muted-foreground">The overall style the agent uses while talking to customers.</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => { setTone('friendly'); void saveSettings('tone', { tone: 'friendly' }); }}>Sevecen ve Samimi</Button>
-                      <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => { setTone('professional'); void saveSettings('tone', { tone: 'professional' }); }}>Profesyonel</Button>
-                      <Button type="button" className="col-span-2" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => { setTone('balanced'); void saveSettings('tone', { tone: 'balanced' }); }}>Dengeli</Button>
+                      <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => { setTone('friendly'); void saveSettings('tone', { tone: 'friendly' }); }}>Warm & Friendly</Button>
+                      <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => { setTone('professional'); void saveSettings('tone', { tone: 'professional' }); }}>Professional</Button>
+                      <Button type="button" className="col-span-2" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => { setTone('balanced'); void saveSettings('tone', { tone: 'balanced' }); }}>Balanced</Button>
                     </div>
                     <p className="text-xs text-muted-foreground border border-border/60 rounded-md p-2 bg-muted/30">
-                      Örnek yaklaşım: {toneExamples[tone]}
+                      Example approach: {toneExamples[tone]}
                     </p>
-                    {savedField === 'tone' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
+                    {savedField === 'tone' ? <p className="text-[11px] text-green-600">Saved.</p> : null}
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Cevap uzunluğu</p>
-                    <p className="text-xs text-muted-foreground">Müşteriye kısa mı, detaylı mı yanıt verileceğini belirler.</p>
+                    <p className="text-sm font-medium">Response length</p>
+                    <p className="text-xs text-muted-foreground">Controls whether responses to customers are short or detailed.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={answerLength === 'short' ? 'default' : 'outline'} onClick={() => { setAnswerLength('short'); void saveSettings('answerLength', { answerLength: 'short' }); }}>Kısa</Button>
-                      <Button type="button" variant={answerLength === 'medium' ? 'default' : 'outline'} onClick={() => { setAnswerLength('medium'); void saveSettings('answerLength', { answerLength: 'medium' }); }}>Orta</Button>
-                      <Button type="button" variant={answerLength === 'detailed' ? 'default' : 'outline'} onClick={() => { setAnswerLength('detailed'); void saveSettings('answerLength', { answerLength: 'detailed' }); }}>Detaylı</Button>
+                      <Button type="button" variant={answerLength === 'short' ? 'default' : 'outline'} onClick={() => { setAnswerLength('short'); void saveSettings('answerLength', { answerLength: 'short' }); }}>Short</Button>
+                      <Button type="button" variant={answerLength === 'medium' ? 'default' : 'outline'} onClick={() => { setAnswerLength('medium'); void saveSettings('answerLength', { answerLength: 'medium' }); }}>Medium</Button>
+                      <Button type="button" variant={answerLength === 'detailed' ? 'default' : 'outline'} onClick={() => { setAnswerLength('detailed'); void saveSettings('answerLength', { answerLength: 'detailed' }); }}>Detailed</Button>
                     </div>
-                    {savedField === 'answerLength' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
+                    {savedField === 'answerLength' ? <p className="text-[11px] text-green-600">Saved.</p> : null}
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Emoji kullanımı</p>
-                    <p className="text-xs text-muted-foreground">Yanıtlarda emoji yoğunluğunu kontrol eder.</p>
+                    <p className="text-sm font-medium">Emoji usage</p>
+                    <p className="text-xs text-muted-foreground">Controls emoji density in responses.</p>
                     <div className="grid grid-cols-3 gap-2">
                       <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('off'); void saveSettings('emojiUsage', { emojiUsage: 'off' }); }}>Closed</Button>
-                      <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('low'); void saveSettings('emojiUsage', { emojiUsage: 'low' }); }}>Az</Button>
+                      <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('low'); void saveSettings('emojiUsage', { emojiUsage: 'low' }); }}>Low</Button>
                       <Button type="button" variant={emojiUsage === 'normal' ? 'default' : 'outline'} onClick={() => { setEmojiUsage('normal'); void saveSettings('emojiUsage', { emojiUsage: 'normal' }); }}>Normal</Button>
                     </div>
-                    {savedField === 'emojiUsage' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
+                    {savedField === 'emojiUsage' ? <p className="text-[11px] text-green-600">Saved.</p> : null}
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Randevuya yönlendirme seviyesi</p>
-                    <p className="text-xs text-muted-foreground">Konuşma içinde müşteriyi randevu adımına ne kadar aktif yönlendireceğini belirler.</p>
+                    <p className="text-sm font-medium">Booking guidance level</p>
+                    <p className="text-xs text-muted-foreground">Determines how actively the customer is guided to booking during conversation.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={bookingGuidance === 'low' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('low'); void saveSettings('bookingGuidance', { bookingGuidance: 'low' }); }}>Düşük</Button>
-                      <Button type="button" variant={bookingGuidance === 'medium' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('medium'); void saveSettings('bookingGuidance', { bookingGuidance: 'medium' }); }}>Orta</Button>
-                      <Button type="button" variant={bookingGuidance === 'high' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('high'); void saveSettings('bookingGuidance', { bookingGuidance: 'high' }); }}>Yüksek</Button>
+                      <Button type="button" variant={bookingGuidance === 'low' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('low'); void saveSettings('bookingGuidance', { bookingGuidance: 'low' }); }}>Low</Button>
+                      <Button type="button" variant={bookingGuidance === 'medium' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('medium'); void saveSettings('bookingGuidance', { bookingGuidance: 'medium' }); }}>Medium</Button>
+                      <Button type="button" variant={bookingGuidance === 'high' ? 'default' : 'outline'} onClick={() => { setBookingGuidance('high'); void saveSettings('bookingGuidance', { bookingGuidance: 'high' }); }}>High</Button>
                     </div>
-                    {savedField === 'bookingGuidance' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
+                    {savedField === 'bookingGuidance' ? <p className="text-[11px] text-green-600">Saved.</p> : null}
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">İnsan personele devir eşiği</p>
-                    <p className="text-xs text-muted-foreground">Müşteri memnuniyeti riski, karmaşık talep veya şikayet durumunda ajanın görüşmeyi ne kadar erken gerçek personele devredeceğini belirler.</p>
+                    <p className="text-sm font-medium">Human handover threshold</p>
+                    <p className="text-xs text-muted-foreground">Determines how early the agent hands over to human staff in cases of dissatisfaction risk, complex requests, or complaints.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={handoverThreshold === 'early' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('early'); void saveSettings('handoverThreshold', { handoverThreshold: 'early' }); }}>Erken Devir</Button>
-                      <Button type="button" variant={handoverThreshold === 'balanced' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('balanced'); void saveSettings('handoverThreshold', { handoverThreshold: 'balanced' }); }}>Dengeli</Button>
-                      <Button type="button" variant={handoverThreshold === 'late' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('late'); void saveSettings('handoverThreshold', { handoverThreshold: 'late' }); }}>Geç Devir</Button>
+                      <Button type="button" variant={handoverThreshold === 'early' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('early'); void saveSettings('handoverThreshold', { handoverThreshold: 'early' }); }}>Early Handover</Button>
+                      <Button type="button" variant={handoverThreshold === 'balanced' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('balanced'); void saveSettings('handoverThreshold', { handoverThreshold: 'balanced' }); }}>Balanced</Button>
+                      <Button type="button" variant={handoverThreshold === 'late' ? 'default' : 'outline'} onClick={() => { setHandoverThreshold('late'); void saveSettings('handoverThreshold', { handoverThreshold: 'late' }); }}>Late Handover</Button>
                     </div>
-                    {savedField === 'handoverThreshold' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
+                    {savedField === 'handoverThreshold' ? <p className="text-[11px] text-green-600">Saved.</p> : null}
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Yapay zeka olduğunu belirtme</p>
-                    <p className="text-xs text-muted-foreground">Ajanın konuşmada kendisini yapay zeka olarak ne sıklıkta ifade edeceğini belirler.</p>
+                    <p className="text-sm font-medium">AI disclosure</p>
+                    <p className="text-xs text-muted-foreground">Determines how often the agent identifies itself as AI in conversation.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={aiDisclosure === 'always' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('always'); void saveSettings('aiDisclosure', { aiDisclosure: 'always' }); }}>Her zaman</Button>
-                      <Button type="button" variant={aiDisclosure === 'onQuestion' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('onQuestion'); void saveSettings('aiDisclosure', { aiDisclosure: 'onQuestion' }); }}>Sorulursa</Button>
-                      <Button type="button" variant={aiDisclosure === 'never' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('never'); void saveSettings('aiDisclosure', { aiDisclosure: 'never' }); }}>Belirtme</Button>
+                      <Button type="button" variant={aiDisclosure === 'always' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('always'); void saveSettings('aiDisclosure', { aiDisclosure: 'always' }); }}>Always</Button>
+                      <Button type="button" variant={aiDisclosure === 'onQuestion' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('onQuestion'); void saveSettings('aiDisclosure', { aiDisclosure: 'onQuestion' }); }}>If asked</Button>
+                      <Button type="button" variant={aiDisclosure === 'never' ? 'default' : 'outline'} onClick={() => { setAiDisclosure('never'); void saveSettings('aiDisclosure', { aiDisclosure: 'never' }); }}>Do not mention</Button>
                     </div>
-                    {savedField === 'aiDisclosure' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
+                    {savedField === 'aiDisclosure' ? <p className="text-[11px] text-green-600">Saved.</p> : null}
                   </div>
                 </CardContent>
               </Card>
@@ -644,8 +644,8 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
             <div className="flex items-center gap-3 relative z-10">
               <Zap className="w-6 h-6 text-white" />
               <div className="text-white">
-                <p className="font-semibold text-sm">Ajanı WhatsApp'a bağla</p>
-                <p className="text-xs text-white/70 mt-0.5">+90 544 xxx xxxx numaranızı doğrulayın</p>
+                <p className="font-semibold text-sm">Connect Agent to WhatsApp</p>
+                <p className="text-xs text-white/70 mt-0.5">Verify your number +90 544 xxx xxxx</p>
               </div>
               <ChevronRight className="w-5 h-5 text-white/60 ml-auto" />
             </div>

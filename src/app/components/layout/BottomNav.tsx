@@ -7,10 +7,10 @@ interface BottomNavProps {
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
-    { id: 'dashboard', label: 'Ana Sayfa', icon: LayoutDashboard },
-    { id: 'schedule', label: 'Takvim', icon: Calendar },
-    { id: 'features', label: 'Customlikler', icon: Sparkles },
-    { id: 'settings', label: 'Ayarlar', icon: Settings },
+    { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+    { id: 'schedule', label: 'Calendar', icon: Calendar },
+    { id: 'features', label: 'Features', icon: Sparkles },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (

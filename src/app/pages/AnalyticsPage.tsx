@@ -80,7 +80,7 @@ export function AnalyticsPage() {
     });
 
     if (!resolved.range) {
-      setRangeError(resolved.error || 'Zaman aralığı geçersiz.');
+      setRangeError(resolved.error || 'The time range is invalid.');
       setLoading(false);
       return;
     }
@@ -105,7 +105,7 @@ export function AnalyticsPage() {
       setOverview(analytics);
       writeSnapshot(cacheKey, analytics);
     } catch (err: any) {
-      setError(err?.message || 'Analitik veriler alınamadı.');
+      setError(err?.message || 'Analytical data could not be retrieved.');
     } finally {
       setLoading(false);
     }
@@ -181,7 +181,7 @@ export function AnalyticsPage() {
       setTemplates((prev) => [response.item, ...prev]);
       setTemplateName('');
     } catch (err: any) {
-      setError(err?.message || 'Rapor şablonu kaydedilemedi.');
+      setError(err?.message || 'The report template could not be saved.');
     }
   };
 
@@ -215,7 +215,7 @@ export function AnalyticsPage() {
     return [
       { day: 'Pzt', revenue: 0, appointments: 0 },
       { day: 'Sal', revenue: 0, appointments: 0 },
-      { day: 'Çar', revenue: 0, appointments: 0 },
+      { day: 'Tsar', revenue: 0, appointments: 0 },
       { day: 'Per', revenue: 0, appointments: 0 },
       { day: 'Cum', revenue: 0, appointments: 0 },
       { day: 'Cmt', revenue: 0, appointments: 0 },
@@ -234,7 +234,7 @@ export function AnalyticsPage() {
     <div className="p-4 space-y-4 pb-24">
       <div>
         <h1 className="text-xl font-semibold">Analytics</h1>
-        <p className="text-xs text-muted-foreground">Salon performansını tek ekranda takip edin.</p>
+        <p className="text-xs text-muted-foreground">Track salon performance on a single screen.</p>
       </div>
 
       <AnalyticsRangeSelector
@@ -257,7 +257,7 @@ export function AnalyticsPage() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-base font-semibold flex items-center gap-2 mb-3">
               <span className="h-2 w-2 rounded-full bg-[var(--rose-gold)]" />
-              Salon Nabzı - This Week
+              Salon Pulse - This Week
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={weeklyPulse}>
@@ -277,8 +277,8 @@ export function AnalyticsPage() {
                     borderRadius: 10,
                   }}
                   formatter={(value: number, _name: string, payload: any) => [
-                    `${formatCurrency(value || 0)} • ${payload?.payload?.appointments || 0} randevu`,
-                    'Günlük ciro',
+                    `${formatCurrency(value || 0)} • ${payload?.payload?.appointments || 0} appointment`,
+                    'Daily turnover',
                   ]}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="var(--rose-gold)" strokeWidth={2.5} fill="url(#pulseFill)" />
@@ -300,7 +300,7 @@ export function AnalyticsPage() {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="font-semibold text-sm">{staff.name}</p>
-                        <p className="text-xs text-muted-foreground">{staff.appointments} randevu</p>
+                        <p className="text-xs text-muted-foreground">{staff.appointments} appointment</p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-[var(--rose-gold)]">{formatCurrency(staff.revenue)}</p>
@@ -314,7 +314,7 @@ export function AnalyticsPage() {
                 );
               })}
               {!overview.staffPerformance?.length ? (
-                <p className="text-xs text-muted-foreground">Personel performans verisi henüz oluşmadı.</p>
+                <p className="text-xs text-muted-foreground">No staff performance data yet.</p>
               ) : null}
             </div>
           </div>
@@ -423,15 +423,15 @@ export function AnalyticsPage() {
       ) : null}
 
       <form className="space-y-2 rounded-xl border border-border bg-card p-3" onSubmit={addTemplate}>
-        <p className="text-sm font-medium">Rapor Şablonları</p>
+        <p className="text-sm font-medium">Report Templates</p>
         <input
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Şablon adı"
+          placeholder="template name"
           value={templateName}
           onChange={(e) => setTemplateName(e.target.value)}
         />
         <button type="submit" className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white">
-          Şablon Ekle
+          Add Template
         </button>
         <div className="space-y-1">
           {templates.map((template) => (
@@ -439,7 +439,7 @@ export function AnalyticsPage() {
               #{template.id} {template.name}
             </div>
           ))}
-          {!templates.length ? <p className="text-xs text-muted-foreground">Henüz şablon yok.</p> : null}
+          {!templates.length ? <p className="text-xs text-muted-foreground">No templates yet.</p> : null}
         </div>
       </form>
     </div>

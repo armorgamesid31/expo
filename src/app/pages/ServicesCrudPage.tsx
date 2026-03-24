@@ -399,7 +399,7 @@ export function ServicesCrudPage() {
       setEditingService(null);
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Hizmet kaydedilemedi.');
+      setError(err?.message || 'Service could not be saved.');
     } finally {
       setSaving(false);
     }
@@ -470,14 +470,14 @@ export function ServicesCrudPage() {
   };
 
   const deleteService = async (item: ServiceItem) => {
-    const ok = window.confirm(`${item.name} hizmetini silmek istiyor musunuz?`);
+    const ok = window.confirm(`${item.name} Do you want to delete this service?`);
     if (!ok) return;
 
     try {
       await apiFetch(`/api/admin/services/${item.id}`, { method: 'DELETE' });
       setServices((prev) => prev.filter((entry) => entry.id !== item.id));
     } catch (err: any) {
-      setError(err?.message || 'Hizmet silinemedi.');
+      setError(err?.message || 'Service could not be deleted.');
     }
   };
 
@@ -552,7 +552,7 @@ export function ServicesCrudPage() {
       setEditingGroup(null);
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Grup kaydedilemedi.');
+      setError(err?.message || 'Group could not be saved.');
     } finally {
       setSaving(false);
     }
@@ -616,8 +616,8 @@ export function ServicesCrudPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Hizmet Yönetimi</h1>
-        <p className="text-sm text-muted-foreground">Hizmetler ve kategoriler</p>
+        <h1 className="text-2xl font-semibold">Service Management</h1>
+        <p className="text-sm text-muted-foreground">Services and categories</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -627,7 +627,7 @@ export function ServicesCrudPage() {
           className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
         >
           <ListOrdered className="h-4 w-4" />
-          Kategori Sırası
+          Category Order
         </button>
 
         <button
@@ -636,12 +636,12 @@ export function ServicesCrudPage() {
           className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
         >
           <Layers className="h-4 w-4" />
-          Hizmet Grupları
+          Service Groups
         </button>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
 
       {!loading ? (
         <div className="space-y-3 pb-20">
@@ -692,7 +692,7 @@ export function ServicesCrudPage() {
                       className="inline-flex h-8 items-center gap-1 rounded-md px-1 text-sm font-medium hover:bg-muted"
                     >
                       <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">Ekle</span>
+                      <span className="hidden sm:inline">Add</span>
                     </button>
                   </div>
                 </div>
@@ -700,7 +700,7 @@ export function ServicesCrudPage() {
                 {expanded ? (
                   <div className="border-t border-border/50">
                     {categoryItems.length === 0 ? (
-                      <div className="px-4 py-4 text-sm text-muted-foreground">Bu kategoride henüz hizmet yok.</div>
+                      <div className="px-4 py-4 text-sm text-muted-foreground">No services yet in this category.</div>
                     ) : (
                       categoryItems.map((item) => (
                         <div
@@ -744,19 +744,19 @@ export function ServicesCrudPage() {
         <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">{editingService ? 'Edit Service' : 'Yeni Hizmet Ekle'}</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
+              <h2 className="text-lg font-semibold">{editingService ? 'Edit Service' : 'New Add Service'}</h2>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
             </div>
 
             <form className="space-y-3" onSubmit={saveService}>
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Kategori</span>
+                <span className="text-muted-foreground">Category</span>
                 <select
                   value={serviceForm.categoryId}
                   onChange={(event) => setServiceForm((prev) => ({ ...prev, categoryId: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 >
-                  <option value="">Kategori seçin</option>
+                  <option value="">Select category</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -766,13 +766,13 @@ export function ServicesCrudPage() {
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Hizmet Grubu (opsiyonel)</span>
+                <span className="text-muted-foreground">Service Group (optional)</span>
                 <select
                   value={serviceForm.serviceGroupId}
                   onChange={(event) => setServiceForm((prev) => ({ ...prev, serviceGroupId: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 >
-                  <option value="">Grup seçmeden devam et</option>
+                  <option value="">Continue without selecting a group</option>
                   {groups.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
@@ -782,7 +782,7 @@ export function ServicesCrudPage() {
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Hizmet Adı</span>
+                <span className="text-muted-foreground">Service Name</span>
                 <input
                   value={serviceForm.name}
                   onChange={(event) => setServiceForm((prev) => ({ ...prev, name: event.target.value }))}
@@ -792,7 +792,7 @@ export function ServicesCrudPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Süre (dk)</span>
+                  <span className="text-muted-foreground">Duration (min)</span>
                   <input
                     type="number"
                     min={5}
@@ -817,12 +817,12 @@ export function ServicesCrudPage() {
               </div>
 
               <div className="rounded-lg border border-border p-3 space-y-3">
-                <p className="text-sm font-medium">Hizmet Ayarları</p>
+                <p className="text-sm font-medium">Service Settings</p>
 
                 <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div>
-                    <p className="font-medium">Müşteri bu hizmette uzmanını seçsin</p>
-                    <p className="text-xs text-muted-foreground">Açık olduğunda randevu akışında uzman seçme opsiyonu gösterilir.</p>
+                    <p className="font-medium">Let customer choose specialist for this service</p>
+                    <p className="text-xs text-muted-foreground">When enabled, specialist selection appears in booking flow.</p>
                   </div>
                   <ToggleSwitch
                     checked={serviceForm.requiresSpecialist}
@@ -833,9 +833,9 @@ export function ServicesCrudPage() {
                 <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium">Aynı anda alınabilecek randevu sayısı</p>
+                      <p className="text-sm font-medium">Concurrent appointment capacity</p>
                       <p className="text-xs text-muted-foreground">
-                        Kapalıysa kategori ayarı kullanılır, açarsan bu hizmet için özel sayı tanımlarsın.
+                        If disabled, category setting is used; if enabled, set a custom value for this service.
                       </p>
                     </div>
                     <ToggleSwitch
@@ -895,9 +895,9 @@ export function ServicesCrudPage() {
                 <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium">Hazırlık süresi (dakika)</p>
+                      <p className="text-sm font-medium">Buffer duration (minutes)</p>
                       <p className="text-xs text-muted-foreground">
-                        Kapalıysa kategori ayarı kullanılır, açarsan bu hizmet için özel hazırlık süresi belirlenir.
+                        If disabled, category setting is used; if enabled, custom prep time is set for this service.
                       </p>
                     </div>
                     <ToggleSwitch
@@ -951,14 +951,14 @@ export function ServicesCrudPage() {
                           +
                         </button>
                       </div>
-                      <p className="text-xs text-muted-foreground">5 dakikalık adımlarla ayarlanır.</p>
+                      <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p>
                     </div>
                   ) : null}
                 </div>
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Kaydediliyor...' : editingService ? 'Update' : 'Ekle'}
+                {saving ? 'Saving...' : editingService ? 'Update' : 'Add'}
               </button>
             </form>
           </div>
@@ -969,16 +969,16 @@ export function ServicesCrudPage() {
         <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Kategori Ayarları · {editingCategory.name}</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
+              <h2 className="text-lg font-semibold">Category Settings · {editingCategory.name}</h2>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
             </div>
 
             <form className="space-y-3" onSubmit={saveCategorySettings}>
               <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium">Aynı anda alınabilecek randevu sayısı</p>
-                    <p className="text-xs text-muted-foreground">Bu kategoriye ait tüm hizmetlerin eş zamanlı kapasitesini belirler.</p>
+                    <p className="text-sm font-medium">Concurrent appointment capacity</p>
+                    <p className="text-xs text-muted-foreground">Determines concurrent capacity for all services in this category.</p>
                   </div>
                   <ToggleSwitch
                     checked={categoryCapacityEnabled}
@@ -1023,14 +1023,14 @@ export function ServicesCrudPage() {
                   </button>
                 </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Kapalıyken mevcut kategori kapasitesi korunur.</p>
+                  <p className="text-xs text-muted-foreground">When disabled, current category capacity is preserved.</p>
                 )}
               </div>
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                 <div>
-                  <p className="font-medium">Ardışık planlama</p>
-                  <p className="text-xs text-muted-foreground">Kategori içinde çoklu hizmet seçiminde hizmetler peş peşe planlanır.</p>
+                  <p className="font-medium">Sequential scheduling</p>
+                  <p className="text-xs text-muted-foreground">For multi-service selection in a category, services are scheduled sequentially.</p>
                 </div>
                 <ToggleSwitch
                   checked={categoryForm.sequentialRequired}
@@ -1041,8 +1041,8 @@ export function ServicesCrudPage() {
               <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium">Hazırlık süresi (dakika)</p>
-                    <p className="text-xs text-muted-foreground">Aynı personelde bu kategori hizmetleri arasına otomatik süre ekler.</p>
+                    <p className="text-sm font-medium">Buffer duration (minutes)</p>
+                    <p className="text-xs text-muted-foreground">Adds automatic buffer between this category’s services for the same staff member.</p>
                   </div>
                   <ToggleSwitch
                     checked={categoryBufferEnabled}
@@ -1088,13 +1088,13 @@ export function ServicesCrudPage() {
                   </button>
                 </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Kapalıyken mevcut kategori hazırlık süresi korunur.</p>
+                  <p className="text-xs text-muted-foreground">When disabled, current category buffer duration is preserved.</p>
                 )}
-                {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">5 dakikalık adımlarla ayarlanır.</p> : null}
+                {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p> : null}
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Kaydediliyor...' : 'Save Category Settings'}
+                {saving ? 'Saving...' : 'Save Category Settings'}
               </button>
             </form>
           </div>
@@ -1105,12 +1105,12 @@ export function ServicesCrudPage() {
         <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Kategori Sıralama</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
+              <h2 className="text-lg font-semibold">Category Sorting</h2>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Bu sıra, randevu sayfası ve web sitesindeki kategori görünüm sırasını belirler.
+              This order determines category display on appointment page and website.
             </p>
 
             <div className="space-y-2">
@@ -1144,12 +1144,12 @@ export function ServicesCrudPage() {
         <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Hizmet Grupları</h2>
-              <button type="button" onClick={() => setGroupManagerOpen(false)} className="text-sm text-muted-foreground">Kapat</button>
+              <h2 className="text-lg font-semibold">Service Groups</h2>
+              <button type="button" onClick={() => setGroupManagerOpen(false)} className="text-sm text-muted-foreground">Close</button>
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Gruplar ile hizmet setleri oluşturup kapasite ve ardışık planlama kuralını grup bazında yönetebilirsiniz.
+              Create service sets with groups and manage capacity and sequential planning per group.
             </p>
 
             <button
@@ -1158,7 +1158,7 @@ export function ServicesCrudPage() {
               className="mb-3 w-full h-10 rounded-lg border border-border text-sm inline-flex items-center justify-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              Yeni Grup Oluştur
+              Create New Group
             </button>
 
             <div className="space-y-2">
@@ -1200,7 +1200,7 @@ export function ServicesCrudPage() {
                 </div>
               ))}
 
-              {!groups.length ? <p className="text-sm text-muted-foreground">Henüz grup yok.</p> : null}
+              {!groups.length ? <p className="text-sm text-muted-foreground">No groups yet.</p> : null}
             </div>
           </div>
         </div>
@@ -1211,12 +1211,12 @@ export function ServicesCrudPage() {
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{editingGroup ? 'Edit Group' : 'Create New Group'}</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
             </div>
 
             <form className="space-y-3" onSubmit={saveGroup}>
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Grup adı</span>
+                <span className="text-muted-foreground">Group name</span>
                 <input
                   value={groupForm.name}
                   onChange={(event) => setGroupForm((prev) => ({ ...prev, name: event.target.value }))}
@@ -1225,7 +1225,7 @@ export function ServicesCrudPage() {
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Aynı anda kabul edilecek maksimum randevu</span>
+                <span className="text-muted-foreground">Maximum concurrent appointments accepted</span>
                 <input
                   type="number"
                   min={1}
@@ -1237,8 +1237,8 @@ export function ServicesCrudPage() {
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
                 <div>
-                  <p>Ardışık planlama</p>
-                  <p className="text-xs text-muted-foreground">Grup içindeki hizmetler seçildiğinde peş peşe planlanır.</p>
+                  <p>Sequential scheduling</p>
+                  <p className="text-xs text-muted-foreground">When services in a group are selected, they are scheduled one after another.</p>
                 </div>
                 <input
                   type="checkbox"
@@ -1250,7 +1250,7 @@ export function ServicesCrudPage() {
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Randevular arası hazırlık süresi (dk)</span>
+                <span className="text-muted-foreground">Buffer between appointments (min)</span>
                 <input
                   type="number"
                   min={0}
@@ -1264,7 +1264,7 @@ export function ServicesCrudPage() {
               </label>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Kaydediliyor...' : editingGroup ? 'Update' : 'Create'}
+                {saving ? 'Saving...' : editingGroup ? 'Update' : 'Create'}
               </button>
             </form>
           </div>

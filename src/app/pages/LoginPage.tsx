@@ -49,7 +49,7 @@ export function LoginPage() {
           />
         </div>
         <h1 className="text-xl font-semibold">Salon Mobile Login</h1>
-        <p className="text-sm text-muted-foreground mt-1">Hesabınız ile giriş yapın.</p>
+        <p className="text-sm text-muted-foreground mt-1">Sign in with your account.</p>
 
         <form className="mt-5 space-y-4" onSubmit={onSubmit}>
           <div>
@@ -64,7 +64,7 @@ export function LoginPage() {
           </div>
 
           <div>
-            <label className="text-sm block mb-1">Şifre</label>
+            <label className="text-sm block mb-1">Password</label>
             <input
               type="password"
               value={password}

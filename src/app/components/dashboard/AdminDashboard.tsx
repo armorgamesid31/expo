@@ -48,7 +48,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
     : [
         { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
         { label: 'Sal', revenue: 0, appointments: 0, date: '' },
-        { label: 'Çar', revenue: 0, appointments: 0, date: '' },
+        { label: 'Tsar', revenue: 0, appointments: 0, date: '' },
         { label: 'Per', revenue: 0, appointments: 0, date: '' },
         { label: 'Cum', revenue: 0, appointments: 0, date: '' },
         { label: 'Cmt', revenue: 0, appointments: 0, date: '' },
@@ -71,14 +71,14 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
     {
       title: 'Last Day Revenue',
       value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
-      subtitle: `Seçili aralıkta son gün • ${todayPoint?.appointments || 0} randevu`,
+      subtitle: `Last day in selected range • ${todayPoint?.appointments || 0} appointment`,
       icon: DollarSign,
       color: 'var(--rose-gold)',
     },
     {
       title: 'Monthly Total',
       value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
-      subtitle: `${completedAppointments}/${totalAppointments} randevu tamamlandı`,
+      subtitle: `${completedAppointments}/${totalAppointments} appointments completed`,
       icon: TrendingUp,
       color: 'var(--deep-indigo)',
     },
@@ -102,8 +102,8 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
     <div className="space-y-6 pb-20">
       {/* Header */}
       <div className="pt-6 px-4">
-        <h1 className="text-2xl font-semibold mb-1">Hoş geldiniz</h1>
-        <p className="text-muted-foreground text-sm">Salonunuzun performans özeti</p>
+        <h1 className="text-2xl font-semibold mb-1">Welcome</h1>
+        <p className="text-muted-foreground text-sm">Your salon performance summary</p>
       </div>
 
       {dayNavigator ? <div className="px-4">{dayNavigator}</div> : null}
@@ -148,7 +148,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
           <CardHeader className="pb-4">
             <CardTitle className="text-base flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[var(--rose-gold)] animate-pulse" />
-              Salon Nabzı - This Week
+              Salon Pulse - This Week
             </CardTitle>
           </CardHeader>
           <CardContent>

@@ -38,7 +38,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     },
     {
       icon: UserCog,
-      label: 'Çalışan Yönetimi',
+      label: 'Employee Management',
       description: 'Personel ve yetkiler',
       action: () => onNavigate('staff-management'),
       color: 'var(--deep-indigo)',
@@ -46,14 +46,14 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     {
       icon: Building2,
       label: 'Salon Information',
-      description: 'İşletme detayları ve saatler',
+      description: 'Business details and hours',
       action: () => onNavigate('salon-info'),
       color: 'var(--rose-gold)',
     },
     {
       icon: Users,
-      label: 'Müşteri Yönetimi',
-      description: 'CRM profilleri + katılım takibi',
+      label: 'Customer Management',
+      description: 'CRM profiles + attendance tracking',
       action: () => onNavigate('crm'),
       color: 'var(--rose-gold)',
     },
@@ -77,11 +77,11 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
   const advancedModules = [
     {
       icon: MessageCircle,
-      label: 'WhatsApp Ayarları',
-      description: 'Bağlantı, AI ajan ve hatırlatma ayarları',
+      label: 'WhatsApp Settings',
+      description: 'Connection, AI agent and reminder settings',
       action: () => onNavigate('whatsapp-settings'),
       color: '#22C55E',
-      badge: whatsappStatusLoaded ? (whatsappConnected ? 'Connected' : 'Kurulum') : 'Kontrol',
+      badge: whatsappStatusLoaded ? (whatsappConnected ? 'Connected' : 'Setup') : 'Check',
       badgeColor: whatsappStatusLoaded
         ? (whatsappConnected ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700')
         : 'bg-muted text-muted-foreground',
@@ -89,7 +89,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     {
       icon: ShieldCheck,
       label: 'Meta Direct (Beta)',
-      description: 'Instagram DM review hazırlığı',
+      description: 'Instagram DM review preparation',
       action: () => onNavigate('meta-direct'),
       color: 'var(--deep-indigo)',
       badge: 'Beta',
@@ -107,7 +107,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     {
       icon: Target,
       label: 'Campaigns',
-      description: 'Sadakat ve tavsiye programları',
+      description: 'Loyalty and referral programs',
       action: () => onNavigate('campaigns'),
       color: 'var(--rose-gold)',
       badge: '2 aktif',
@@ -182,7 +182,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
                   className="flex-1 rounded-lg bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white" 
                   onClick={() => setWarningModal(null)}
                 >
-                  Kapat
+                  Close
                 </Button>
                 {warningModal.actionText && (
                   <Button 
@@ -202,8 +202,8 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       )}
 
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Customlikler</h1>
-        <p className="text-sm text-muted-foreground">Yönetim araçları ve gelişmiş modüller</p>
+        <h1 className="text-2xl font-semibold mb-1">Features</h1>
+        <p className="text-sm text-muted-foreground">Management tools and advanced modules</p>
       </div>
 
       <div className="p-4 space-y-8">
@@ -221,12 +221,12 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold">
-                    Salon Sahibi
+                    Salon Owner
                   </h2>
                   <div className="flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-[var(--rose-gold)]" />
                     <span className="text-xs font-semibold text-[var(--rose-gold)]">
-                      Premium Paket
+                      Premium Plan
                     </span>
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
           </Card>
         </motion.div>
 
-        {/* Management Tools — Üstte */}
+        {/* Management Tools — Top */}
         <div>
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Management Tools</h3>
           <div className="grid grid-cols-2 gap-3">

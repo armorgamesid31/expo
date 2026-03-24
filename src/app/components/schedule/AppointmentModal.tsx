@@ -36,7 +36,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
     return service?.allowSpecialistSelection;
   });
 
-  // Uzman seçimi gerektiren hizmetler varsa otomatik atamayı devre dışı bırak
+  // Specialist selection gerektiren hizmetler varsa otomatik atamayı devre dışı bırak
   const canAutoAssign = !requiresSpecialistSelection;
 
   const toggleService = (serviceId: string) => {
@@ -70,7 +70,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
               </Button>
             </div>
             <SheetDescription className="sr-only">
-              Müşteri, hizmet ve tarih seçerek yeni bir randevu oluşturun
+              Create a new appointment by selecting customer, service, and date
             </SheetDescription>
           </SheetHeader>
 
@@ -151,7 +151,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
               {selectedServices.length > 1 && (
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                   <p className="text-xs text-amber-700 dark:text-amber-300">
-                    Ardışık rezervasyon: Hizmetler sırayla uygulanacak
+                    Sequential booking: Services will be applied in sequence
                   </p>
                 </div>
               )}
@@ -172,7 +172,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
                     <Switch checked={autoAssign} onCheckedChange={setAutoAssign} />
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
-                      Otomatik ata
+                      Auto-assign
                     </span>
                   </div>
                 )}
@@ -181,7 +181,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
               {requiresSpecialistSelection && (
                 <div className="p-3 bg-[var(--rose-gold)]/10 border border-[var(--rose-gold)]/20 rounded-lg">
                   <p className="text-xs text-[var(--rose-gold)]">
-                    Seçili hizmetler için uzman seçimi gereklidir
+                    Specialist selection is required for selected services
                   </p>
                 </div>
               )}
@@ -238,7 +238,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
                     Time Conflict Detected
                   </p>
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                    {selectedStaff ? staff.find(s => s.id === selectedStaff)?.name : 'Seçili personel'} bu saatte başka bir randevuya sahip. Lütfen farklı bir saat seçin.
+                    {selectedStaff ? staff.find(s => s.id === selectedStaff)?.name : 'Selected staff'} already has another appointment at this time. Please select a different time.
                   </p>
                 </div>
               </div>

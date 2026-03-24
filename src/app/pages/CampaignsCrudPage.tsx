@@ -800,7 +800,7 @@ export function CampaignsCrudPage() {
     <div className="h-full overflow-y-auto bg-[var(--luxury-bg)] pb-20">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
         <h1 className="text-2xl font-semibold mb-1">Campaigns</h1>
-        <p className="text-sm text-muted-foreground">Yeni campaign oluşturup performansı detayda takip edin.</p>
+        <p className="text-sm text-muted-foreground">Create a new campaign and track performance in detail.</p>
       </div>
 
       <div className="p-4 space-y-4">
@@ -846,7 +846,7 @@ export function CampaignsCrudPage() {
                     </div>
 
                     <Button className="mt-3 w-full" variant="outline" onClick={() => openCreateFromTemplate(template)}>
-                      Şablonu Settingla
+                      Save as Template
                     </Button>
                   </CardContent>
                 </Card>
@@ -909,7 +909,7 @@ export function CampaignsCrudPage() {
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-foreground">{displayCampaignName(item)}</p>
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full border text-muted-foreground border-border bg-muted/40">
-                      Geçmiş
+                      History
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -939,7 +939,7 @@ export function CampaignsCrudPage() {
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label>Startngıç tarihi</Label>
+                  <Label>Start date</Label>
                   <Input
                     type="date"
                     value={createDraft.startsAt}
@@ -947,7 +947,7 @@ export function CampaignsCrudPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Bitiş tarihi</Label>
+                  <Label>End date</Label>
                   <Input
                     type="date"
                     value={createDraft.endsAt}
@@ -999,7 +999,7 @@ export function CampaignsCrudPage() {
           aria-describedby={undefined}
         >
           <DialogHeader>
-            <DialogTitle>Campaign Detayı</DialogTitle>
+            <DialogTitle>Campaign Details</DialogTitle>
           </DialogHeader>
 
           {detailLoading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
@@ -1010,7 +1010,7 @@ export function CampaignsCrudPage() {
               {detailMetrics ? (
                 <Card className="border border-border bg-card">
                   <CardContent className="p-3 space-y-3">
-                    <p className="text-sm font-semibold">Performans Özeti</p>
+                    <p className="text-sm font-semibold">Performance Summary</p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div className="rounded-md border border-border p-2">
                         <p className="text-xs text-muted-foreground">Appointment</p>
@@ -1035,7 +1035,7 @@ export function CampaignsCrudPage() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Dönem: {formatDateLabel(detailMetrics.window.start)} - {formatDateLabel(detailMetrics.window.end)}
+                      Period: {formatDateLabel(detailMetrics.window.start)} - {formatDateLabel(detailMetrics.window.end)}
                     </p>
                   </CardContent>
                 </Card>
@@ -1047,7 +1047,7 @@ export function CampaignsCrudPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label>Startngıç tarihi</Label>
+                  <Label>Start date</Label>
                   <Input
                     type="date"
                     value={detailDraft.startsAt}
@@ -1055,7 +1055,7 @@ export function CampaignsCrudPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Bitiş tarihi</Label>
+                  <Label>End date</Label>
                   <Input
                     type="date"
                     value={detailDraft.endsAt}
@@ -1082,7 +1082,7 @@ export function CampaignsCrudPage() {
                 if (!template) {
                   return (
                     <p className="text-xs text-muted-foreground">
-                      Bu campaign tipi için editme alanı bulunmuyor.
+                      Editing is not available for this campaign type.
                     </p>
                   );
                 }

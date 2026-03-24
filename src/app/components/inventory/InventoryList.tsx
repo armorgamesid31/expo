@@ -66,14 +66,14 @@ export function InventoryList() {
               <p className="font-semibold text-sm">₺{item.price}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Tedarikçi</p>
+              <p className="text-xs text-muted-foreground">Supplier</p>
               <p className="font-semibold text-sm truncate">{item.supplier}</p>
             </div>
           </div>
 
           {/* Quick Adjust */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground flex-1">Hızlı Ayarla:</span>
+            <span className="text-xs text-muted-foreground flex-1">Quick Set:</span>
             <Button
               size="sm"
               variant="outline"
@@ -107,12 +107,12 @@ export function InventoryList() {
           <div className="p-3 bg-card rounded-lg border border-border">
             <Package className="w-5 h-5 text-[var(--rose-gold)] mb-2" />
             <p className="text-2xl font-bold">{items.length}</p>
-            <p className="text-xs text-muted-foreground">Toplam Ürün</p>
+            <p className="text-xs text-muted-foreground">Total Products</p>
           </div>
           <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
             <TrendingDown className="w-5 h-5 text-red-600 mb-2" />
             <p className="text-2xl font-bold text-red-600">{lowStockItems.length}</p>
-            <p className="text-xs text-red-700 dark:text-red-300">Düşük Stok Uyarısı</p>
+            <p className="text-xs text-red-700 dark:text-red-300">Low Stock Alert</p>
           </div>
         </div>
       </div>
@@ -123,7 +123,7 @@ export function InventoryList() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="w-5 h-5 text-red-600" />
-              <h2 className="font-semibold text-red-600">Düşük Stoklu Ürünler</h2>
+              <h2 className="font-semibold text-red-600">Low Stock Items</h2>
               <Badge variant="destructive" className="ml-auto">{lowStockItems.length}</Badge>
             </div>
             <div className="space-y-3">

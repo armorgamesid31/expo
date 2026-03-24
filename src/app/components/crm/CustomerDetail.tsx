@@ -29,7 +29,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
       case 'completed':
         return <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-300">Completed</Badge>;
       case 'no-show':
-        return <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-300">Gelmedi</Badge>;
+        return <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-300">No-show</Badge>;
       case 'cancelled':
         return <Badge variant="secondary" className="bg-gray-500/10 text-gray-700 dark:text-gray-300">Cancel</Badge>;
       default:
@@ -43,7 +43,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
         <Button variant="ghost" size="sm" onClick={onBack} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Müşterilere Dön
+          Back to Customers
         </Button>
 
         <div className="flex items-start justify-between">
@@ -55,7 +55,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
                 className={`text-xs ${getRiskBadgeStyle(customer.riskLevel)}`}
               >
                 {customer.riskLevel === 'high' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                <span className="capitalize">Risk: {customer.riskLevel === 'low' ? 'Düşük' : customer.riskLevel === 'medium' ? 'Orta' : 'Yüksek'}</span>
+                <span className="capitalize">Risk: {customer.riskLevel === 'low' ? 'Low' : customer.riskLevel === 'medium' ? 'Medium' : 'High'}</span>
               </Badge>
             </div>
           </div>
@@ -71,7 +71,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
                 <Phone className="w-5 h-5 text-[var(--rose-gold)]" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Telefon</p>
+                <p className="text-xs text-muted-foreground">Phone</p>
                 <p className="font-medium">{customer.phone}</p>
               </div>
             </div>
@@ -123,11 +123,11 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Gelmeme Sayısı:</span>
+                <span className="text-muted-foreground">No-show Count:</span>
                 <span className="font-semibold text-red-600">{customer.noShowCount}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Gelmeme Oranı:</span>
+                <span className="text-muted-foreground">No-show Rate:</span>
                 <span className="font-semibold">
                   %{((customer.noShowCount / customer.visitCount) * 100).toFixed(1)}
                 </span>
@@ -135,7 +135,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
               {customer.riskLevel === 'high' && (
                 <div className="pt-2 mt-2 border-t border-border">
                   <p className="text-xs text-red-700 dark:text-red-300">
-                    <strong>Öneri:</strong> Gelecek rezervasyonlar için depozito alın. Randevudan 24 saat önce WhatsApp hatırlatıcı gönderin.
+                    <strong>Recommendation:</strong> Take a deposit for future bookings. Send a WhatsApp reminder 24 hours before the appointment.
                   </p>
                 </div>
               )}
@@ -159,7 +159,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
         {/* Visit History */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle className="text-base">Ziyaret Geçmişi</CardTitle>
+            <CardTitle className="text-base">Visit History</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {visits.map(visit => (
@@ -189,11 +189,11 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
         <div className="grid grid-cols-2 gap-3">
           <Button variant="outline" className="w-full">
             <Calendar className="w-4 h-4 mr-2" />
-            Randevu Al
+            Appointment Al
           </Button>
           <Button className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)]">
             <Phone className="w-4 h-4 mr-2" />
-            Müşteriyi Ara
+            Call Customer
           </Button>
         </div>
       </div>

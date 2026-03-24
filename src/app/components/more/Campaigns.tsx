@@ -42,7 +42,7 @@ interface LoyaltyCampaign {
 const mockReferralCampaigns: ReferralCampaign[] = [
   {
     id: 'ref1',
-    name: 'Arkadaşını Getir Kampanyası',
+    name: 'Bring Your Friend Campaign',
     active: true,
     referrerReward: '₺50 indirim',
     refereeReward: '₺30 indirim',
@@ -57,7 +57,7 @@ const mockReferralCampaigns: ReferralCampaign[] = [
 const mockLoyaltyCampaigns: LoyaltyCampaign[] = [
   {
     id: 'loy1',
-    name: 'VIP Sadakat Programı',
+    name: 'VIP Loyalty Program',
     active: true,
     pointsPerLira: 1,
     pointsForReward: 500,
@@ -71,13 +71,13 @@ const mockLoyaltyCampaigns: LoyaltyCampaign[] = [
 
 const referralMetrics = [
   { month: 'Oca', referrals: 5, conversions: 3 },
-  { month: 'Şub', referrals: 8, conversions: 6 },
+  { month: 'feb', referrals: 8, conversions: 6 },
   { month: 'Mar', referrals: 11, conversions: 9 },
 ];
 
 const loyaltyMetrics = [
   { month: 'Oca', points: 3200, redeemed: 2 },
-  { month: 'Şub', points: 4100, redeemed: 3 },
+  { month: 'feb', points: 4100, redeemed: 3 },
   { month: 'Mar', points: 5150, redeemed: 3 },
 ];
 
@@ -176,14 +176,14 @@ export function Campaigns({ onBack }: CampaignsProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold">Campaigns</h1>
-            <p className="text-sm text-muted-foreground">Sadakat ve tavsiye programları</p>
+            <p className="text-sm text-muted-foreground">Loyalty and referral programs</p>
           </div>
           <Button
             onClick={() => setShowNewCampaign(!showNewCampaign)}
             style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
           >
             <Plus className="w-4 h-4 mr-1" />
-            Yeni
+            New
           </Button>
         </div>
 
@@ -198,7 +198,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
             }`}
           >
             <UserPlus className="w-4 h-4 inline mr-2" />
-            Arkadaş Davet
+            Referral
           </button>
           <button
             onClick={() => setActiveTab('loyalty')}
@@ -209,7 +209,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
             }`}
           >
             <Award className="w-4 h-4 inline mr-2" />
-            Sadakat Programı
+            Loyalty Program
           </button>
         </div>
       </div>
@@ -227,42 +227,42 @@ export function Campaigns({ onBack }: CampaignsProps) {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <SettingsIcon className="w-4 h-4 text-[var(--rose-gold)]" />
-                  Yeni {activeTab === 'referral' ? 'Arkadaş Davet' : 'Sadakat'} Kampanyası
+                  New {activeTab === 'referral' ? 'Invite a Friend' : 'Sadakat'} Campaign
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {activeTab === 'referral' ? (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="ref-name">Kampanya Adı *</Label>
+                      <Label htmlFor="ref-name">Campaign Name *</Label>
                       <Input
                         id="ref-name"
                         value={referralForm.name}
                         onChange={(e) => setReferralForm({ ...referralForm, name: e.target.value })}
-                        placeholder="Örn: Bahar Arkadaş Getir"
+                        placeholder="Ex: Bahar Bring a Friend"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="ref-reward">Öneren Kazanır</Label>
+                        <Label htmlFor="ref-reward">Referrer Reward</Label>
                         <Input
                           id="ref-reward"
                           value={referralForm.referrerReward}
                           onChange={(e) => setReferralForm({ ...referralForm, referrerReward: e.target.value })}
                           placeholder="₺50 indirim"
                         />
-                        <p className="text-xs text-muted-foreground">Arkadaşını getirene</p>
+                        <p className="text-xs text-muted-foreground">For the referrer</p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="ref-new">Yeni Müşteri Kazanır</Label>
+                        <Label htmlFor="ref-new">Win New Customers</Label>
                         <Input
                           id="ref-new"
                           value={referralForm.refereeReward}
                           onChange={(e) => setReferralForm({ ...referralForm, refereeReward: e.target.value })}
                           placeholder="₺30 indirim"
                         />
-                        <p className="text-xs text-muted-foreground">Gelen kişiye</p>
+                        <p className="text-xs text-muted-foreground">For the invited customer</p>
                       </div>
                     </div>
 
@@ -276,21 +276,21 @@ export function Campaigns({ onBack }: CampaignsProps) {
                           onChange={(e) => setReferralForm({ ...referralForm, minSpend: e.target.value })}
                           placeholder="200"
                         />
-                        <p className="text-xs text-muted-foreground">Ödül için gerekli (₺)</p>
+                        <p className="text-xs text-muted-foreground">Required amount for reward (₺)</p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="ref-expiry">Geçerlilik Süresi</Label>
+                        <Label htmlFor="ref-expiry">Validity Period</Label>
                         <select
                           id="ref-expiry"
                           value={referralForm.expiryDays}
                           onChange={(e) => setReferralForm({ ...referralForm, expiryDays: e.target.value })}
                           className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm"
                         >
-                          <option value="7">7 gün</option>
-                          <option value="14">14 gün</option>
-                          <option value="30">30 gün</option>
-                          <option value="60">60 gün</option>
-                          <option value="90">90 gün</option>
+                          <option value="7">7 days</option>
+                          <option value="14">14 days</option>
+                          <option value="30">30 days</option>
+                          <option value="60">60 days</option>
+                          <option value="90">90 days</option>
                         </select>
                       </div>
                     </div>
@@ -300,24 +300,24 @@ export function Campaigns({ onBack }: CampaignsProps) {
                       disabled={!referralForm.name || !referralForm.referrerReward || !referralForm.refereeReward}
                       className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
                     >
-                      Kampanyayı Oluştur
+                      Create Campaign
                     </Button>
                   </>
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="loy-name">Program Adı *</Label>
+                      <Label htmlFor="loy-name">Program Name *</Label>
                       <Input
                         id="loy-name"
                         value={loyaltyForm.name}
                         onChange={(e) => setLoyaltyForm({ ...loyaltyForm, name: e.target.value })}
-                        placeholder="Örn: VIP Sadakat Programı"
+                        placeholder="Ex: VIP Loyalty Program"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="loy-rate">Puan Oranı</Label>
+                        <Label htmlFor="loy-rate">Point Rate</Label>
                         <select
                           id="loy-rate"
                           value={loyaltyForm.pointsPerLira}
@@ -331,7 +331,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="loy-threshold">Ödül İçin Puan</Label>
+                        <Label htmlFor="loy-threshold">Points Required for Reward</Label>
                         <Input
                           id="loy-threshold"
                           type="number"
@@ -343,15 +343,15 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="loy-reward">Ödül</Label>
+                      <Label htmlFor="loy-reward">Reward</Label>
                       <Input
                         id="loy-reward"
                         value={loyaltyForm.rewardValue}
                         onChange={(e) => setLoyaltyForm({ ...loyaltyForm, rewardValue: e.target.value })}
-                        placeholder="₺100 indirim veya Ücretsiz manikür"
+                        placeholder="₺100 off or Free manicure"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Müşteri yeterli puana ulaştığında kazanacağı ödül
+                        Reward earned when customer reaches required points
                       </p>
                     </div>
 
@@ -360,7 +360,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                       disabled={!loyaltyForm.name || !loyaltyForm.pointsForReward || !loyaltyForm.rewardValue}
                       className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
                     >
-                      Programı Oluştur
+                      Create Program
                     </Button>
                   </>
                 )}
@@ -407,7 +407,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
 
             {/* Performance Chart */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}>
-              <h2 className="font-semibold mb-3 px-1">Tavsiye Performansı</h2>
+              <h2 className="font-semibold mb-3 px-1">Referral Performance</h2>
               <Card className="border-border/50">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -425,7 +425,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }}
                       />
                       <Bar key="referrals-bar" dataKey="referrals" name="Tavsiyeler" fill="var(--rose-gold)" opacity={0.6} radius={[4, 4, 0, 0]} />
-                      <Bar key="conversions-bar" dataKey="conversions" name="Dönüşenler" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                      <Bar key="conversions-bar" dataKey="conversions" name="Transformers" fill="#22C55E" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                   <div className="flex items-center gap-4 justify-center mt-2">
@@ -435,7 +435,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded-sm bg-green-500" />
-                      <span className="text-[10px] text-muted-foreground">Dönüşenler</span>
+                      <span className="text-[10px] text-muted-foreground">Converted</span>
                     </div>
                   </div>
                 </CardContent>
@@ -474,7 +474,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                           </div>
                           <div className="flex items-center gap-1">
                             <TrendingUp className="w-3 h-3 text-green-600" />
-                            <span className="text-muted-foreground">{campaign.successfulReferrals} dönüşüm</span>
+                            <span className="text-muted-foreground">{campaign.successfulReferrals} conversions</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Gift className="w-3 h-3 text-[var(--deep-indigo)]" />
@@ -492,11 +492,11 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         >
                           <div className="grid grid-cols-2 gap-3">
                             <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/20">
-                              <p className="text-xs text-muted-foreground mb-1">Öneren Kazanır</p>
+                              <p className="text-xs text-muted-foreground mb-1">Referrer Reward</p>
                               <p className="font-semibold text-green-700">{campaign.referrerReward}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                              <p className="text-xs text-muted-foreground mb-1">Yeni Müşteri Kazanır</p>
+                              <p className="text-xs text-muted-foreground mb-1">Win New Customers</p>
                               <p className="font-semibold text-blue-700">{campaign.refereeReward}</p>
                             </div>
                           </div>
@@ -507,17 +507,17 @@ export function Campaigns({ onBack }: CampaignsProps) {
                               <p className="font-medium">{campaign.minSpend ? `₺${campaign.minSpend}` : 'Yok'}</p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground mb-1">Geçerlilik</p>
-                              <p className="font-medium">{campaign.expiryDays} gün</p>
+                              <p className="text-muted-foreground mb-1">Validity</p>
+                              <p className="font-medium">{campaign.expiryDays} days</p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground mb-1">Başarı Oranı</p>
+                              <p className="text-muted-foreground mb-1">Success Rate</p>
                               <p className="font-medium text-green-600">
                                 %{campaign.totalReferrals > 0 ? Math.round((campaign.successfulReferrals / campaign.totalReferrals) * 100) : 0}
                               </p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground mb-1">Kişi Başı Gelir</p>
+                              <p className="text-muted-foreground mb-1">Revenue per Person</p>
                               <p className="font-medium text-[var(--deep-indigo)]">
                                 ₺{campaign.successfulReferrals > 0 ? Math.round(campaign.revenue / campaign.successfulReferrals) : 0}
                               </p>
@@ -525,7 +525,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                           </div>
 
                           <div className="flex items-center justify-between pt-2">
-                            <Label className="text-sm">Kampanya Durumu</Label>
+                            <Label className="text-sm">Campaign Status</Label>
                             <Switch
                               checked={campaign.active}
                               onCheckedChange={() => toggleCampaignActive(campaign.id, 'referral')}
@@ -542,7 +542,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     <CardContent className="p-12 text-center">
                       <UserPlus className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
                       <p className="text-sm text-muted-foreground">
-                        Henüz arkadaş davet kampanyası oluşturmadınız
+                        You have not created a referral campaign yet
                       </p>
                     </CardContent>
                   </Card>
@@ -567,7 +567,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                   <p className="text-2xl font-bold text-[var(--rose-gold)]">
                     {loyaltyCampaigns.reduce((sum, c) => sum + c.memberCount, 0)}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Üye Sayısı</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Member Count</p>
                 </CardContent>
               </Card>
               <Card className="border-border/50">
@@ -583,14 +583,14 @@ export function Campaigns({ onBack }: CampaignsProps) {
                   <p className="text-2xl font-bold text-green-600">
                     {loyaltyCampaigns.reduce((sum, c) => sum + c.rewardsRedeemed, 0)}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Kullanılan Ödül</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Redeemed Reward</p>
                 </CardContent>
               </Card>
             </motion.div>
 
             {/* Performance Chart */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}>
-              <h2 className="font-semibold mb-3 px-1">Puan Performansı</h2>
+              <h2 className="font-semibold mb-3 px-1">Points Performance</h2>
               <Card className="border-border/50">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -608,7 +608,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }}
                       />
                       <Line key="points-line" type="monotone" dataKey="points" name="Verilen Puan" stroke="var(--rose-gold)" strokeWidth={2} dot={{ r: 4 }} />
-                      <Line key="redeemed-line" type="monotone" dataKey="redeemed" name="Kullanılan" stroke="#22C55E" strokeWidth={2} dot={{ r: 4 }} />
+                      <Line key="redeemed-line" type="monotone" dataKey="redeemed" name="used" stroke="#22C55E" strokeWidth={2} dot={{ r: 4 }} />
                     </LineChart>
                   </ResponsiveContainer>
                   <div className="flex items-center gap-4 justify-center mt-2">
@@ -618,7 +618,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded-full bg-green-500" />
-                      <span className="text-[10px] text-muted-foreground">Kullanılan</span>
+                      <span className="text-[10px] text-muted-foreground">Redeemed</span>
                     </div>
                   </div>
                 </CardContent>
@@ -653,7 +653,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         <div className="flex items-center gap-4 text-xs">
                           <div className="flex items-center gap-1">
                             <Users className="w-3 h-3 text-[var(--rose-gold)]" />
-                            <span className="text-muted-foreground">{program.memberCount} üye</span>
+                            <span className="text-muted-foreground">{program.memberCount} members</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Award className="w-3 h-3 text-amber-600" />
@@ -661,7 +661,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                           </div>
                           <div className="flex items-center gap-1">
                             <Gift className="w-3 h-3 text-green-600" />
-                            <span className="text-muted-foreground">{program.rewardsRedeemed} ödül</span>
+                            <span className="text-muted-foreground">{program.rewardsRedeemed} rewards</span>
                           </div>
                         </div>
                       </button>
@@ -675,36 +675,36 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         >
                           <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
                             <div className="flex items-center justify-between mb-2">
-                              <p className="text-xs text-muted-foreground">Ödül Kazanma Sistemi</p>
+                              <p className="text-xs text-muted-foreground">Reward Earning System</p>
                               <Award className="w-4 h-4 text-amber-600" />
                             </div>
                             <p className="text-sm font-semibold mb-1">
-                              Her ₺{program.pointsPerLira === 1 ? '1' : `${1/program.pointsPerLira}`}'de {program.pointsPerLira} puan
+                              Per ₺{program.pointsPerLira === 1 ? '1' : `${1 / program.pointsPerLira}`}: {program.pointsPerLira} points
                             </p>
                             <p className="text-sm text-amber-700">
-                              {program.pointsForReward} puan = {program.rewardValue}
+                              {program.pointsForReward} points = {program.rewardValue}
                             </p>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3 text-xs">
                             <div>
-                              <p className="text-muted-foreground mb-1">Aktif Üyeler</p>
-                              <p className="font-medium text-[var(--rose-gold)]">{program.memberCount} kişi</p>
+                              <p className="text-muted-foreground mb-1">Active Members</p>
+                              <p className="font-medium text-[var(--rose-gold)]">{program.memberCount} people</p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground mb-1">Ortalama Puan</p>
+                              <p className="text-muted-foreground mb-1">Average Score</p>
                               <p className="font-medium text-amber-600">
                                 {program.memberCount > 0 ? Math.round(program.totalPointsIssued / program.memberCount) : 0}
                               </p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground mb-1">Kullanım Oranı</p>
+                              <p className="text-muted-foreground mb-1">Usage Rate</p>
                               <p className="font-medium text-green-600">
                                 %{program.memberCount > 0 ? Math.round((program.rewardsRedeemed / program.memberCount) * 100) : 0}
                               </p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground mb-1">Bekleyen Ödül</p>
+                              <p className="text-muted-foreground mb-1">Pending Reward</p>
                               <p className="font-medium text-[var(--deep-indigo)]">
                                 {program.totalPointsIssued > 0 ? Math.floor(program.totalPointsIssued / program.pointsForReward) - program.rewardsRedeemed : 0}
                               </p>
@@ -712,7 +712,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                           </div>
 
                           <div className="flex items-center justify-between pt-2">
-                            <Label className="text-sm">Program Durumu</Label>
+                            <Label className="text-sm">Program Status</Label>
                             <Switch
                               checked={program.active}
                               onCheckedChange={() => toggleCampaignActive(program.id, 'loyalty')}
@@ -729,7 +729,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     <CardContent className="p-12 text-center">
                       <Award className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
                       <p className="text-sm text-muted-foreground">
-                        Henüz sadakat programı oluşturmadınız
+                        You haven&apos;t created a loyalty program yet
                       </p>
                     </CardContent>
                   </Card>
