@@ -176,6 +176,9 @@ export function InstagramInboxPage() {
             <p className="text-xs text-muted-foreground mt-1">
               View DMs, send manual replies, and hand over AI conversations to staff.
             </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Automated replies may be used. Human handover is available for all conversations.
+            </p>
           </div>
           <Button type="button" size="sm" variant="outline" onClick={() => void loadConversations()} disabled={loadingConversations}>
             Refresh

@@ -172,6 +172,7 @@ export function ConversationsPage() {
         <div>
           <h1 className="text-xl font-semibold">Conversations</h1>
           <p className="text-xs text-muted-foreground mt-1">Track WhatsApp and Instagram conversations in one inbox.</p>
+          <p className="text-xs text-muted-foreground mt-1">For Meta App Review demo, use the dedicated Instagram Inbox screen.</p>
         </div>
         <Button type="button" size="sm" variant="outline" onClick={() => void loadConversations()} disabled={loadingConversations}>
           Refresh

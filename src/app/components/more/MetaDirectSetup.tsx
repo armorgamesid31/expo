@@ -256,7 +256,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
           <div className="min-w-0">
             <h1 className="text-xl font-semibold">Meta Direct Connection (Beta)</h1>
             <p className="text-xs text-muted-foreground mt-1">
-              Instagram DM direct onboarding and App Review preparation.
+              Instagram Login onboarding for Instagram DM and App Review preparation.
             </p>
           </div>
           <Badge className="bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)] border-[var(--deep-indigo)]/20">
@@ -319,7 +319,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
 
             <div className="flex flex-wrap gap-2">
               <Button type="button" size="sm" onClick={startConnect} disabled={isLoading}>
-                Start Connection
+                Start Instagram Login Connection
               </Button>
               <Button type="button" size="sm" variant="outline" onClick={runProbe} disabled={isLoading}>
                 Run Probe
