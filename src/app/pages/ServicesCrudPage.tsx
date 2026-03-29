@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 interface ServiceItem {
   id: number;
   name: string;
+  description?: string | null;
   category: string | null;
   categoryId?: number | null;
   categoryKey?: string | null;
@@ -162,6 +163,7 @@ export function ServicesCrudPage() {
 
   const [serviceForm, setServiceForm] = useState({
     name: '',
+    description: '',
     categoryId: '',
     regionId: '',
     serviceGroupId: '',
@@ -293,6 +295,7 @@ export function ServicesCrudPage() {
     setEditingService(null);
     setServiceForm({
       name: '',
+      description: '',
       categoryId: String(category.id),
       regionId: '',
       serviceGroupId: '',
@@ -310,6 +313,7 @@ export function ServicesCrudPage() {
     setEditingService(item);
     setServiceForm({
       name: item.name,
+      description: item.description || '',
       categoryId: item.categoryId ? String(item.categoryId) : '',
       regionId: item.regionId ? String(item.regionId) : '',
       serviceGroupId: item.serviceGroupId ? String(item.serviceGroupId) : '',
@@ -386,6 +390,7 @@ export function ServicesCrudPage() {
 
     const payload = {
       name: serviceForm.name.trim(),
+      description: serviceForm.description.trim() || null,
       category: category?.key || 'OTHER',
       categoryId,
       regionId,
@@ -872,6 +877,9 @@ export function ServicesCrudPage() {
                               {item.regionName ? ` • ${item.regionName}` : ''}
                               {item.serviceGroupName ? ` • ${item.serviceGroupName}` : ''}
                             </p>
+                            {item.description ? (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                            ) : null}
                           </div>
 
                           <StatusToggleChip
@@ -958,6 +966,15 @@ export function ServicesCrudPage() {
                   value={serviceForm.name}
                   onChange={(event) => setServiceForm((prev) => ({ ...prev, name: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Description (optional)</span>
+                <textarea
+                  value={serviceForm.description}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, description: event.target.value }))}
+                  className="w-full min-h-[90px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
                 />
               </label>
 
