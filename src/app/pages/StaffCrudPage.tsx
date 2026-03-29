@@ -30,6 +30,7 @@ interface StaffServiceItem {
   customDuration: number | null;
   effectivePrice: number;
   effectiveDuration: number;
+  gender?: string | null;
 }
 
 interface StaffItem {
@@ -50,6 +51,7 @@ type StaffDraftService = {
   customPrice: string;
   useCustomDuration: boolean;
   customDuration: string;
+  gender: 'female' | 'male' | 'other';
 };
 
 const PALETTE = ['#B76E79', '#6C7BA1', '#8C6F56', '#5B8A72', '#7B6D8D', '#A86D5D', '#5E7F91', '#9A7A5C'];
@@ -178,6 +180,7 @@ export function StaffCrudPage() {
 
     for (const service of nextServices) {
       const assigned = assignedMap.get(service.id);
+      const assignedGender = assigned?.gender === 'male' || assigned?.gender === 'other' ? assigned.gender : 'female';
       draft[service.id] = {
         selected: Boolean(assigned),
         useCustomPrice: assigned?.customPrice !== null && assigned?.customPrice !== undefined,
@@ -188,6 +191,7 @@ export function StaffCrudPage() {
           assigned?.customDuration !== null && assigned?.customDuration !== undefined
             ? String(assigned.customDuration)
             : String(service.duration),
+        gender: assignedGender,
       };
     }
 
@@ -257,7 +261,7 @@ export function StaffCrudPage() {
 
   const buildAssignmentsPayload = () => {
     const serviceMap = new Map(services.map((item) => [item.id, item]));
-    const payload: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null }> = [];
+    const payload: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null; gender: string }> = [];
 
     for (const [serviceIdString, draft] of Object.entries(serviceDrafts)) {
       const serviceId = Number(serviceIdString);
@@ -284,7 +288,8 @@ export function StaffCrudPage() {
         customDuration = Math.round(parsed);
       }
 
-      payload.push({ serviceId, customPrice, customDuration });
+      const gender = draft.gender === 'male' || draft.gender === 'other' ? draft.gender : 'female';
+      payload.push({ serviceId, customPrice, customDuration, gender });
     }
 
     return payload;
@@ -298,7 +303,7 @@ export function StaffCrudPage() {
       return;
     }
 
-    let assignments: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null }> = [];
+    let assignments: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null; gender: string }> = [];
     try {
       assignments = buildAssignmentsPayload();
     } catch (err: any) {
@@ -511,6 +516,7 @@ export function StaffCrudPage() {
                             customPrice: String(service.price),
                             useCustomDuration: false,
                             customDuration: String(service.duration),
+                            gender: 'female' as const,
                           };
 
                           return (
@@ -538,6 +544,18 @@ export function StaffCrudPage() {
 
                               {draft.selected ? (
                                 <div className="mt-2 space-y-2 rounded-md bg-muted/40 p-2">
+                                  <label className="block text-xs space-y-1">
+                                    <span className="text-muted-foreground">Cinsiyet</span>
+                                    <select
+                                      value={draft.gender}
+                                      onChange={(event) => updateDraftField(service.id, 'gender', event.target.value)}
+                                      className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
+                                    >
+                                      <option value="female">Kadın</option>
+                                      <option value="male">Erkek</option>
+                                      <option value="other">Unisex</option>
+                                    </select>
+                                  </label>
                                   <div className="flex items-center justify-between gap-2 text-xs">
                                     <span>Custom fiyat</span>
                                     <ToggleSwitch
