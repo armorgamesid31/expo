@@ -11,6 +11,12 @@ const DAYS = [
   { key: 'SUN', label: 'Paz' },
 ];
 
+const PRESET_SALON_QUESTIONS = [
+  { id: 'payment_card', question: 'Kredi kartı geçerli mi?' },
+  { id: 'parking', question: 'Otopark var mı?' },
+  { id: 'pets', question: 'Evcil hayvan kabul ediliyor mu?' },
+];
+
 interface SetupResponse {
   salon: {
     name: string;
@@ -42,7 +48,8 @@ export function SalonSetupPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [commonQuestions, setCommonQuestions] = useState<Array<{ question: string; answer: string }>>([]);
+  const [presetAnswers, setPresetAnswers] = useState<Record<string, string>>({});
+  const [customQuestions, setCustomQuestions] = useState<Array<{ question: string; answer: string }>>([]);
   const [form, setForm] = useState({
     name: '',
     address: '',
@@ -65,6 +72,19 @@ export function SalonSetupPage() {
       .filter((item: any) => item.question || item.answer);
   };
 
+  const buildPresetAnswerMap = (items: Array<{ question: string; answer: string }>) => {
+    const map = new Map(
+      items
+        .filter((item) => item.question)
+        .map((item) => [item.question.toLowerCase(), item.answer || '']),
+    );
+    const output: Record<string, string> = {};
+    for (const preset of PRESET_SALON_QUESTIONS) {
+      output[preset.question] = map.get(preset.question.toLowerCase()) || '';
+    }
+    return output;
+  };
+
   const load = async () => {
     setLoading(true);
     setError(null);
@@ -83,7 +103,13 @@ export function SalonSetupPage() {
           ? response.settings.workingDays
           : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']) as string[],
       });
-      setCommonQuestions(normalizeCommonQuestions(response.settings?.commonQuestions));
+      const normalizedQuestions = normalizeCommonQuestions(response.settings?.commonQuestions);
+      const presetMap = buildPresetAnswerMap(normalizedQuestions);
+      setPresetAnswers(presetMap);
+      const presetKeys = new Set(PRESET_SALON_QUESTIONS.map((item) => item.question.toLowerCase()));
+      setCustomQuestions(
+        normalizedQuestions.filter((item) => !presetKeys.has(item.question.toLowerCase())),
+      );
     } catch (err: any) {
       setError(err?.message || 'Could not fetch setup information.');
     } finally {
@@ -106,17 +132,21 @@ export function SalonSetupPage() {
   };
 
   const addCommonQuestion = () => {
-    setCommonQuestions((prev) => [...prev, { question: '', answer: '' }]);
+    setCustomQuestions((prev) => [...prev, { question: '', answer: '' }]);
   };
 
   const updateCommonQuestion = (index: number, field: 'question' | 'answer', value: string) => {
-    setCommonQuestions((prev) =>
+    setCustomQuestions((prev) =>
       prev.map((item, idx) => (idx === index ? { ...item, [field]: value } : item)),
     );
   };
 
   const removeCommonQuestion = (index: number) => {
-    setCommonQuestions((prev) => prev.filter((_, idx) => idx !== index));
+    setCustomQuestions((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const updatePresetAnswer = (question: string, value: string) => {
+    setPresetAnswers((prev) => ({ ...prev, [question]: value }));
   };
 
   const schedulePreview = useMemo(() => {
@@ -130,12 +160,21 @@ export function SalonSetupPage() {
     setError(null);
     setMessage(null);
 
-    const cleanedQuestions = commonQuestions
+    const presetQuestions = PRESET_SALON_QUESTIONS.map((item) => ({
+      question: item.question,
+      answer: (presetAnswers[item.question] || '').trim(),
+    }));
+
+    const cleanedQuestions = customQuestions
       .map((item) => ({
         question: item.question.trim(),
         answer: item.answer.trim(),
       }))
       .filter((item) => item.question || item.answer);
+
+    const mergedQuestions = [...presetQuestions, ...cleanedQuestions].filter(
+      (item) => item.question || item.answer,
+    );
 
     try {
       await apiFetch('/api/admin/setup', {
@@ -150,7 +189,7 @@ export function SalonSetupPage() {
           workEndHour: form.workEndHour,
           slotInterval: form.slotInterval,
           workingDays: form.workingDays,
-          commonQuestions: cleanedQuestions,
+          commonQuestions: mergedQuestions,
         }),
       });
 
@@ -216,8 +255,8 @@ export function SalonSetupPage() {
         <div className="rounded-md border border-border p-3 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Sık Sorulan Sorular</p>
-              <p className="text-xs text-muted-foreground">Müşterilere en sık sorulan soruların kısa cevapları.</p>
+              <p className="text-sm font-medium">Salon Bilgileri · Sık Sorular</p>
+              <p className="text-xs text-muted-foreground">Önceden tanımlı sorular için sadece cevapları girin.</p>
             </div>
             <button
               type="button"
@@ -228,37 +267,51 @@ export function SalonSetupPage() {
             </button>
           </div>
 
-          {commonQuestions.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Henüz soru eklenmedi.</p>
-          ) : (
-            <div className="space-y-2">
-              {commonQuestions.map((item, index) => (
-                <div key={`faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
-                  <input
-                    className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                    placeholder="Soru"
-                    value={item.question}
-                    onChange={(e) => updateCommonQuestion(index, 'question', e.target.value)}
-                  />
-                  <textarea
-                    className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
-                    placeholder="Cevap"
-                    value={item.answer}
-                    onChange={(e) => updateCommonQuestion(index, 'answer', e.target.value)}
-                  />
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => removeCommonQuestion(index)}
-                      className="text-xs text-red-600"
-                    >
-                      Sil
-                    </button>
+          <div className="space-y-2">
+            {PRESET_SALON_QUESTIONS.map((preset) => (
+              <div key={preset.id} className="rounded-md border border-border/60 p-2 space-y-2 bg-muted/20">
+                <p className="text-xs font-medium text-muted-foreground">{preset.question}</p>
+                <textarea
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
+                  placeholder="Cevap"
+                  value={presetAnswers[preset.question] || ''}
+                  onChange={(e) => updatePresetAnswer(preset.question, e.target.value)}
+                />
+              </div>
+            ))}
+
+            {customQuestions.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Ek soru yok. İstersen + Soru Ekle ile ekleyebilirsin.</p>
+            ) : (
+              <div className="space-y-2">
+                {customQuestions.map((item, index) => (
+                  <div key={`faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
+                    <input
+                      className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                      placeholder="Soru"
+                      value={item.question}
+                      onChange={(e) => updateCommonQuestion(index, 'question', e.target.value)}
+                    />
+                    <textarea
+                      className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
+                      placeholder="Cevap"
+                      value={item.answer}
+                      onChange={(e) => updateCommonQuestion(index, 'answer', e.target.value)}
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => removeCommonQuestion(index)}
+                        className="text-xs text-red-600"
+                      >
+                        Sil
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <button
