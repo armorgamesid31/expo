@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MessageCircle, Bot, Zap, TrendingUp, CheckCircle2, XCircle, ChevronRight, CircleHelp, Plus, Pencil, ChevronDown } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Bot, Zap, TrendingUp, CheckCircle2, XCircle, ChevronRight, CircleHelp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../ui/card';
 import { Switch } from '../ui/switch';
@@ -48,15 +48,6 @@ const conversations = [
   },
 ];
 
-const salonFaqQuestions = [
-  { id: 'faq-working-hours', question: 'What are your working hours and available days?' },
-  { id: 'faq-cancellation', question: 'What is your cancel and change policy?' },
-  { id: 'faq-payment', question: 'What payment methods do you accept?' },
-  { id: 'faq-late-policy', question: 'What is your policy on late appointments?' },
-  { id: 'faq-first-visit', question: 'Is there special information for first visit customers?' },
-  { id: 'faq-whatsapp-response', question: 'How long does it take on average for customers to respond to messages?' },
-];
-
 const CHAKRA_STATUS_CACHE_KEY = 'chakra:status';
 const WHATSAPP_AGENT_SETTINGS_CACHE_KEY = 'whatsapp:agent-settings';
 
@@ -72,7 +63,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     bookingGuidance?: 'low' | 'medium' | 'high';
     handoverThreshold?: 'early' | 'balanced' | 'late';
     aiDisclosure?: 'always' | 'onQuestion' | 'never';
-    faqAnswers?: Record<string, string>;
   }>(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, 1000 * 60 * 10);
 
   const [agentEnabled, setAgentEnabled] = useState(Boolean(cachedSettings?.isEnabled));
@@ -81,8 +71,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const [togglingAgent, setTogglingAgent] = useState(false);
   const [toggleFeedback, setToggleFeedback] = useState<string | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
-  const [isFaqExpanded, setIsFaqExpanded] = useState(false);
-  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedField, setSavedField] = useState<string | null>(null);
   const [tone, setTone] = useState<'friendly' | 'professional' | 'balanced'>(cachedSettings?.tone || 'balanced');
@@ -91,15 +79,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const [bookingGuidance, setBookingGuidance] = useState<'low' | 'medium' | 'high'>(cachedSettings?.bookingGuidance || 'medium');
   const [handoverThreshold, setHandoverThreshold] = useState<'early' | 'balanced' | 'late'>(cachedSettings?.handoverThreshold || 'balanced');
   const [aiDisclosure, setAiDisclosure] = useState<'always' | 'onQuestion' | 'never'>(cachedSettings?.aiDisclosure || 'onQuestion');
-  const [salonFaqAnswers, setSalonFaqAnswers] = useState<Record<string, string>>({
-    'faq-working-hours': 'We are closed on weekdays 09:00-20:00, Saturday 10:00-18:00, Sunday.',
-    'faq-cancellation': 'You can cancel/change free of charge at least 4 hours before your appointment time.',
-    'faq-payment': 'We accept payment by cash, credit card and money order.',
-    'faq-late-policy': 'If there is a delay of more than 15 minutes, a new time is recommended based on slot availability.',
-    'faq-first-visit': 'During the first visit, we conduct a brief needs analysis and present recommended packages.',
-    'faq-whatsapp-response': 'We respond within 5-10 minutes on average during working hours.',
-    ...(cachedSettings?.faqAnswers || {}),
-  });
 
   const conversionRate = 68;
   const totalConversations = 47;
@@ -123,7 +102,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
               bookingGuidance?: 'low' | 'medium' | 'high';
               handoverThreshold?: 'early' | 'balanced' | 'late';
               aiDisclosure?: 'always' | 'onQuestion' | 'never';
-              faqAnswers?: Record<string, string>;
               isEnabled?: boolean;
             };
           }>('/api/admin/whatsapp-agent/settings'),
@@ -147,9 +125,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         if (response.settings.bookingGuidance) setBookingGuidance(response.settings.bookingGuidance);
         if (response.settings.handoverThreshold) setHandoverThreshold(response.settings.handoverThreshold);
         if (response.settings.aiDisclosure) setAiDisclosure(response.settings.aiDisclosure);
-        if (response.settings.faqAnswers) {
-          setSalonFaqAnswers((prev) => ({ ...prev, ...response.settings.faqAnswers }));
-        }
         writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, response.settings);
       } catch (error) {
         console.error('WhatsApp agent settings load failed:', error);
@@ -189,7 +164,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
           bookingGuidance,
           handoverThreshold,
           aiDisclosure,
-          faqAnswers: salonFaqAnswers,
         }),
       });
 
@@ -206,7 +180,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         bookingGuidance,
         handoverThreshold,
         aiDisclosure,
-        faqAnswers: salonFaqAnswers,
       });
       setTimeout(() => {
         setToggleFeedback(null);
@@ -229,7 +202,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     bookingGuidance: 'low' | 'medium' | 'high';
     handoverThreshold: 'early' | 'balanced' | 'late';
     aiDisclosure: 'always' | 'onQuestion' | 'never';
-    faqAnswers: Record<string, string>;
   }>) {
     setIsSaving(true);
     try {
@@ -243,7 +215,6 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
           bookingGuidance: overrides?.bookingGuidance ?? bookingGuidance,
           handoverThreshold: overrides?.handoverThreshold ?? handoverThreshold,
           aiDisclosure: overrides?.aiDisclosure ?? aiDisclosure,
-          faqAnswers: overrides?.faqAnswers ?? salonFaqAnswers,
         }),
       });
       setSavedField(fieldKey);
@@ -255,10 +226,8 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
         bookingGuidance: overrides?.bookingGuidance ?? bookingGuidance,
         handoverThreshold: overrides?.handoverThreshold ?? handoverThreshold,
         aiDisclosure: overrides?.aiDisclosure ?? aiDisclosure,
-        faqAnswers: overrides?.faqAnswers ?? salonFaqAnswers,
       });
       setTimeout(() => setSavedField((prev) => (prev === fieldKey ? null : prev)), 1800);
-      setEditingQuestionId(null);
     } catch (error) {
       console.error('WhatsApp agent settings save failed:', error);
     } finally {
@@ -477,89 +446,13 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
           </div>
         </motion.div>
 
-        {/* Salon FAQ Management */}
+        {/* Agent Settings */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
           <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="font-semibold">Salon FAQ and Agent Settings</h2>
+            <h2 className="font-semibold">Agent Settings</h2>
           </div>
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
-              <Card className="border-border/50">
-                <CardContent className="p-3">
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-between text-left"
-                    onClick={() => setIsFaqExpanded((prev) => !prev)}
-                  >
-                    <div>
-                      <p className="text-sm font-semibold">Frequently Asked Questions</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Use this section to personalize your WhatsApp agent responses for your salon.
-                      </p>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isFaqExpanded ? 'rotate-180' : ''}`} />
-                  </button>
-                </CardContent>
-              </Card>
-
-              {isFaqExpanded ? (
-                <div className="space-y-2">
-                  {salonFaqQuestions.map((item) => {
-                    const answer = (salonFaqAnswers[item.id] || '').trim();
-                    const answered = answer.length > 0;
-                    const isEditing = editingQuestionId === item.id;
-                    return (
-                      <Card key={item.id} className="border-border/50">
-                        <CardContent className="p-3">
-                          <div className="flex items-start gap-2">
-                            <div className={`w-2 h-2 rounded-full mt-1.5 ${answered ? 'bg-green-500' : 'bg-amber-500'}`} />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">{item.question}</p>
-                              {!isEditing ? (
-                                <p className="text-xs text-muted-foreground mt-2 leading-5">
-                                  {answered ? answer : 'Not answered yet.'}
-                                </p>
-                              ) : (
-                                <div className="mt-2 space-y-2">
-                                  <textarea
-                                    value={salonFaqAnswers[item.id] || ''}
-                                    onChange={(e) => setSalonFaqAnswers((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                                    placeholder="Write the answer to this question specific to your salon."
-                                    rows={3}
-                                    className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
-                                  />
-                                  <div className="flex gap-2">
-                                    <Button type="button" size="sm" onClick={() => saveSettings('faq', { faqAnswers: salonFaqAnswers })} disabled={isSaving}>
-                                      {isSaving ? 'Saving...' : 'Save'}
-                                    </Button>
-                                    <Button type="button" size="sm" variant="outline" onClick={() => setEditingQuestionId(null)}>
-                                      Discard
-                                    </Button>
-                                  </div>
-                                  {savedField === 'faq' ? <p className="text-[11px] text-green-600">Saved.</p> : null}
-                                </div>
-                              )}
-                            </div>
-                            {!isEditing ? (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                className="w-8 h-8 shrink-0"
-                                onClick={() => setEditingQuestionId(item.id)}
-                                aria-label={answered ? 'Edit answer' : 'Add answer'}
-                              >
-                                {answered ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                              </Button>
-                            ) : null}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              ) : null}
-
               <Card className="border-border/50">
                 <CardContent className="p-3 space-y-4">
                   <div className="space-y-2">
