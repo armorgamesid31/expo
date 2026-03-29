@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, ListOrdered, Pencil, Plus, Settings2, Trash2, Layers, HelpCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -165,6 +165,9 @@ export function ServicesCrudPage() {
   const [groupManagerOpen, setGroupManagerOpen] = useState(false);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [focusCategoryFaq, setFocusCategoryFaq] = useState(false);
+
+  const categoryFaqRef = useRef<HTMLDivElement | null>(null);
 
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
@@ -239,6 +242,14 @@ export function ServicesCrudPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    if (!categoryDialogOpen || !focusCategoryFaq) return;
+    const timer = window.setTimeout(() => {
+      categoryFaqRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [categoryDialogOpen, focusCategoryFaq]);
 
   const groupedServices = useMemo(() => {
     const map: Record<number, ServiceItem[]> = {};
@@ -330,6 +341,21 @@ export function ServicesCrudPage() {
   };
 
   const openCategorySettings = (category: CategoryItem) => {
+    setFocusCategoryFaq(false);
+    setEditingCategory(category);
+    setCategoryForm({
+      capacity: String(category.capacity ?? 1),
+      sequentialRequired: Boolean(category.sequentialRequired),
+      bufferMinutes: String(category.bufferMinutes ?? 0),
+    });
+    setCategoryQuestions(normalizeCommonQuestions(category.commonQuestions));
+    setCategoryCapacityEnabled(category.capacity !== null && category.capacity !== undefined);
+    setCategoryBufferEnabled(category.bufferMinutes !== null && category.bufferMinutes !== undefined);
+    setCategoryDialogOpen(true);
+  };
+
+  const openCategoryFaq = (category: CategoryItem) => {
+    setFocusCategoryFaq(true);
     setEditingCategory(category);
     setCategoryForm({
       capacity: String(category.capacity ?? 1),
@@ -351,6 +377,7 @@ export function ServicesCrudPage() {
     setEditingService(null);
     setEditingCategory(null);
     setEditingGroup(null);
+    setFocusCategoryFaq(false);
   };
 
   const saveService = async (event: FormEvent) => {
@@ -746,7 +773,7 @@ export function ServicesCrudPage() {
                   <div className="ml-auto flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
-                      onClick={() => openCategorySettings(category)}
+                      onClick={() => openCategoryFaq(category)}
                       className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
                       title="Kategori Sık Sorular"
                     >
@@ -1208,7 +1235,10 @@ export function ServicesCrudPage() {
                 {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p> : null}
               </div>
 
-              <div className="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3">
+              <div
+                ref={categoryFaqRef}
+                className={`rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3 ${focusCategoryFaq ? 'ring-2 ring-amber-300/70' : ''}`}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">Kategoriye Özel Sık Sorular</p>
