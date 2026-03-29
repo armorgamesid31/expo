@@ -232,7 +232,7 @@ export function ServicesCrudPage() {
         (a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999) || a.id - b.id,
       );
       const sortedRegions = [...(regionsRes.items || [])].sort(
-        (a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999) || a.name.localeCompare(b.name, 'tr'),
+        (a, b) => a.name.localeCompare(b.name, 'tr') || a.id - b.id,
       );
 
       setServices(servicesRes.items || []);
@@ -722,25 +722,6 @@ export function ServicesCrudPage() {
       setError(err?.message || 'Region could not be saved.');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const moveRegion = async (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= regions.length) return;
-
-    const next = [...regions];
-    const [moved] = next.splice(fromIndex, 1);
-    next.splice(toIndex, 0, moved);
-    setRegions(next);
-
-    try {
-      await apiFetch('/api/admin/service-regions/reorder', {
-        method: 'POST',
-        body: JSON.stringify({ orderedIds: next.map((item) => item.id) }),
-      });
-    } catch (err: any) {
-      setError(err?.message || 'Region order could not be saved.');
-      await load();
     }
   };
 
@@ -1469,7 +1450,7 @@ export function ServicesCrudPage() {
             </button>
 
             <div className="space-y-2">
-              {regions.map((region, index) => (
+              {regions.map((region) => (
                 <div key={region.id} className={`rounded-lg border border-border px-3 py-2 ${region.isActive === false ? 'opacity-65' : ''}`}>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
@@ -1479,22 +1460,6 @@ export function ServicesCrudPage() {
                         {region.categoryName ? ` • ${region.categoryName}` : ''}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => void moveRegion(index, index - 1)}
-                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                      disabled={index === 0}
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void moveRegion(index, index + 1)}
-                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                      disabled={index === regions.length - 1}
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </button>
                     <StatusToggleChip
                       active={region.isActive !== false}
                       onToggle={(next) => void toggleRegionActive(region, next)}
