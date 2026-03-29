@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, ListOrdered, Pencil, Plus, Settings2, Trash2, Layers, HelpCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -161,16 +161,15 @@ export function ServicesCrudPage() {
 
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [categoryFaqDialogOpen, setCategoryFaqDialogOpen] = useState(false);
   const [categoryOrderDialogOpen, setCategoryOrderDialogOpen] = useState(false);
   const [groupManagerOpen, setGroupManagerOpen] = useState(false);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [focusCategoryFaq, setFocusCategoryFaq] = useState(false);
-
-  const categoryFaqRef = useRef<HTMLDivElement | null>(null);
 
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+  const [editingCategoryFaq, setEditingCategoryFaq] = useState<CategoryItem | null>(null);
   const [editingGroup, setEditingGroup] = useState<ServiceGroupItem | null>(null);
 
   const [serviceForm, setServiceForm] = useState({
@@ -242,14 +241,6 @@ export function ServicesCrudPage() {
   useEffect(() => {
     void load();
   }, []);
-
-  useEffect(() => {
-    if (!categoryDialogOpen || !focusCategoryFaq) return;
-    const timer = window.setTimeout(() => {
-      categoryFaqRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
-    return () => window.clearTimeout(timer);
-  }, [categoryDialogOpen, focusCategoryFaq]);
 
   const groupedServices = useMemo(() => {
     const map: Record<number, ServiceItem[]> = {};
@@ -341,43 +332,39 @@ export function ServicesCrudPage() {
   };
 
   const openCategorySettings = (category: CategoryItem) => {
-    setFocusCategoryFaq(false);
+    setCategoryFaqDialogOpen(false);
+    setEditingCategoryFaq(null);
     setEditingCategory(category);
     setCategoryForm({
       capacity: String(category.capacity ?? 1),
       sequentialRequired: Boolean(category.sequentialRequired),
       bufferMinutes: String(category.bufferMinutes ?? 0),
     });
-    setCategoryQuestions(normalizeCommonQuestions(category.commonQuestions));
     setCategoryCapacityEnabled(category.capacity !== null && category.capacity !== undefined);
     setCategoryBufferEnabled(category.bufferMinutes !== null && category.bufferMinutes !== undefined);
     setCategoryDialogOpen(true);
   };
 
   const openCategoryFaq = (category: CategoryItem) => {
-    setFocusCategoryFaq(true);
-    setEditingCategory(category);
-    setCategoryForm({
-      capacity: String(category.capacity ?? 1),
-      sequentialRequired: Boolean(category.sequentialRequired),
-      bufferMinutes: String(category.bufferMinutes ?? 0),
-    });
+    setCategoryDialogOpen(false);
+    setEditingCategory(null);
+    setEditingCategoryFaq(category);
     setCategoryQuestions(normalizeCommonQuestions(category.commonQuestions));
-    setCategoryCapacityEnabled(category.capacity !== null && category.capacity !== undefined);
-    setCategoryBufferEnabled(category.bufferMinutes !== null && category.bufferMinutes !== undefined);
-    setCategoryDialogOpen(true);
+    setCategoryFaqDialogOpen(true);
   };
 
   const closeDialogs = () => {
     if (saving) return;
     setServiceDialogOpen(false);
     setCategoryDialogOpen(false);
+    setCategoryFaqDialogOpen(false);
     setCategoryOrderDialogOpen(false);
     setGroupDialogOpen(false);
     setEditingService(null);
     setEditingCategory(null);
+    setEditingCategoryFaq(null);
     setEditingGroup(null);
-    setFocusCategoryFaq(false);
+    setCategoryQuestions([]);
   };
 
   const saveService = async (event: FormEvent) => {
@@ -490,14 +477,6 @@ export function ServicesCrudPage() {
       sequentialRequired: categoryForm.sequentialRequired,
     };
 
-    const cleanedQuestions = categoryQuestions
-      .map((item) => ({
-        question: item.question.trim(),
-        answer: item.answer.trim(),
-      }))
-      .filter((item) => item.question || item.answer);
-    updates.commonQuestions = cleanedQuestions;
-
     if (categoryCapacityEnabled) {
       const capacity = Number(categoryForm.capacity);
       if (!Number.isInteger(capacity) || capacity <= 0) {
@@ -530,6 +509,36 @@ export function ServicesCrudPage() {
       await load();
     } catch (err: any) {
       setError(err?.message || 'Category settings could not be saved.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveCategoryFaq = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!editingCategoryFaq) return;
+
+    const cleanedQuestions = categoryQuestions
+      .map((item) => ({
+        question: item.question.trim(),
+        answer: item.answer.trim(),
+      }))
+      .filter((item) => item.question || item.answer);
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await apiFetch(`/api/admin/service-categories/${editingCategoryFaq.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ commonQuestions: cleanedQuestions }),
+      });
+
+      setCategoryFaqDialogOpen(false);
+      setEditingCategoryFaq(null);
+      await load();
+    } catch (err: any) {
+      setError(err?.message || 'Kategori SSS kaydedilemedi.');
     } finally {
       setSaving(false);
     }
@@ -1235,13 +1244,27 @@ export function ServicesCrudPage() {
                 {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p> : null}
               </div>
 
-              <div
-                ref={categoryFaqRef}
-                className={`rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3 ${focusCategoryFaq ? 'ring-2 ring-amber-300/70' : ''}`}
-              >
+              <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
+                {saving ? 'Saving...' : 'Save Category Settings'}
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {categoryFaqDialogOpen && editingCategoryFaq ? (
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Kategori Sık Sorular · {editingCategoryFaq.name}</h2>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
+            </div>
+
+            <form className="space-y-3" onSubmit={saveCategoryFaq}>
+              <div className="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">Kategoriye Özel Sık Sorular</p>
+                    <p className="text-sm font-medium">Sık Sorulan Sorular</p>
                     <p className="text-xs text-muted-foreground">Bu kategori için müşterilerin sık sorduğu sorular.</p>
                   </div>
                   <button type="button" onClick={addCategoryQuestion} className="text-xs rounded-full border border-border px-3 py-1">
@@ -1279,7 +1302,7 @@ export function ServicesCrudPage() {
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Saving...' : 'Save Category Settings'}
+                {saving ? 'Saving...' : 'SSS Kaydet'}
               </button>
             </form>
           </div>
