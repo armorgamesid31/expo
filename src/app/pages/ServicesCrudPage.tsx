@@ -13,6 +13,7 @@ interface ServiceItem {
   regionId?: number | null;
   regionName?: string | null;
   regionCategoryId?: number | null;
+  genders?: string[] | null;
   duration: number;
   price: number;
   requiresSpecialist?: boolean | null;
@@ -135,6 +136,20 @@ function clampInt(value: number, min: number, max: number) {
   return Math.min(Math.max(Math.round(value), min), max);
 }
 
+function formatGenderLabel(genders?: string[] | null) {
+  const normalized = (genders || [])
+    .map((item) => String(item).toLowerCase().trim())
+    .filter((item) => item === 'female' || item === 'male' || item === 'other');
+  if (normalized.length === 0) {
+    return 'Kadın • Erkek';
+  }
+  const labels: string[] = [];
+  if (normalized.includes('female')) labels.push('Kadın');
+  if (normalized.includes('male')) labels.push('Erkek');
+  if (normalized.includes('other')) labels.push('Unisex');
+  return labels.join(' • ');
+}
+
 export function ServicesCrudPage() {
   const { apiFetch } = useAuth();
 
@@ -170,6 +185,8 @@ export function ServicesCrudPage() {
     duration: '60',
     price: '0',
     requiresSpecialist: false,
+    genderFemale: true,
+    genderMale: true,
     capacityOverride: '',
     preparationMinutes: '',
     isActive: true,
@@ -302,6 +319,8 @@ export function ServicesCrudPage() {
       duration: '60',
       price: '0',
       requiresSpecialist: false,
+      genderFemale: true,
+      genderMale: true,
       capacityOverride: '',
       preparationMinutes: '',
       isActive: true,
@@ -320,6 +339,12 @@ export function ServicesCrudPage() {
       duration: String(item.duration || 60),
       price: String(item.price || 0),
       requiresSpecialist: Boolean(item.requiresSpecialist),
+      genderFemale: item.genders?.length
+        ? item.genders.some((gender) => String(gender).toLowerCase().trim() === 'female')
+        : true,
+      genderMale: item.genders?.length
+        ? item.genders.some((gender) => String(gender).toLowerCase().trim() === 'male')
+        : true,
       capacityOverride:
         item.capacityOverride === null || item.capacityOverride === undefined ? '' : String(item.capacityOverride),
       preparationMinutes:
@@ -387,6 +412,9 @@ export function ServicesCrudPage() {
     setError(null);
 
     const category = categories.find((item) => item.id === categoryId);
+    const genders: string[] = [];
+    if (serviceForm.genderFemale) genders.push('female');
+    if (serviceForm.genderMale) genders.push('male');
 
     const payload = {
       name: serviceForm.name.trim(),
@@ -398,6 +426,7 @@ export function ServicesCrudPage() {
       duration,
       price,
       requiresSpecialist: serviceForm.requiresSpecialist,
+      genders,
       capacityOverride: parseNullableInt(serviceForm.capacityOverride),
       sequentialOverride: null,
       bufferOverride: parseNullableInt(serviceForm.preparationMinutes),
@@ -874,6 +903,7 @@ export function ServicesCrudPage() {
                             <p className="font-medium truncate">{item.name}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {item.duration} dk &nbsp;&nbsp; ₺{item.price}
+                              {` • ${formatGenderLabel(item.genders)}`}
                               {item.regionName ? ` • ${item.regionName}` : ''}
                               {item.serviceGroupName ? ` • ${item.serviceGroupName}` : ''}
                             </p>
@@ -977,6 +1007,27 @@ export function ServicesCrudPage() {
                   className="w-full min-h-[90px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
                 />
               </label>
+
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <p className="text-sm font-medium">Hizmet Cinsiyeti</p>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={serviceForm.genderFemale}
+                    onChange={(event) => setServiceForm((prev) => ({ ...prev, genderFemale: event.target.checked }))}
+                  />
+                  <span>Kadın</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={serviceForm.genderMale}
+                    onChange={(event) => setServiceForm((prev) => ({ ...prev, genderMale: event.target.checked }))}
+                  />
+                  <span>Erkek</span>
+                </label>
+                <p className="text-xs text-muted-foreground">İkisi de seçilirse unisex olarak değerlendirilir.</p>
+              </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <label className="block text-sm space-y-1">
