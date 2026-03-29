@@ -36,6 +36,7 @@ interface CategoryItem {
   sequentialRequired: boolean | null;
   bufferMinutes: number | null;
   marketingDescription?: string | null;
+  commonQuestions?: Array<{ question: string; answer: string }> | null;
   serviceCount: number;
   isActive?: boolean | null;
 }
@@ -136,6 +137,16 @@ function clampInt(value: number, min: number, max: number) {
   return Math.min(Math.max(Math.round(value), min), max);
 }
 
+function normalizeCommonQuestions(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item: any) => ({
+      question: typeof item?.question === 'string' ? item.question.trim() : '',
+      answer: typeof item?.answer === 'string' ? item.answer.trim() : '',
+    }))
+    .filter((item: any) => item.question || item.answer);
+}
+
 function formatGenderLabel(genders?: string[] | null) {
   const normalized = (genders || [])
     .map((item) => String(item).toLowerCase().trim())
@@ -197,6 +208,7 @@ export function ServicesCrudPage() {
     sequentialRequired: false,
     bufferMinutes: '0',
   });
+  const [categoryQuestions, setCategoryQuestions] = useState<Array<{ question: string; answer: string }>>([]);
   const [categoryCapacityEnabled, setCategoryCapacityEnabled] = useState(true);
   const [categoryBufferEnabled, setCategoryBufferEnabled] = useState(true);
 
@@ -361,6 +373,7 @@ export function ServicesCrudPage() {
       sequentialRequired: Boolean(category.sequentialRequired),
       bufferMinutes: String(category.bufferMinutes ?? 0),
     });
+    setCategoryQuestions(normalizeCommonQuestions(category.commonQuestions));
     setCategoryCapacityEnabled(category.capacity !== null && category.capacity !== undefined);
     setCategoryBufferEnabled(category.bufferMinutes !== null && category.bufferMinutes !== undefined);
     setCategoryDialogOpen(true);
@@ -495,6 +508,14 @@ export function ServicesCrudPage() {
       sequentialRequired: categoryForm.sequentialRequired,
     };
 
+    const cleanedQuestions = categoryQuestions
+      .map((item) => ({
+        question: item.question.trim(),
+        answer: item.answer.trim(),
+      }))
+      .filter((item) => item.question || item.answer);
+    updates.commonQuestions = cleanedQuestions;
+
     if (categoryCapacityEnabled) {
       const capacity = Number(categoryForm.capacity);
       if (!Number.isInteger(capacity) || capacity <= 0) {
@@ -549,6 +570,20 @@ export function ServicesCrudPage() {
       setError(err?.message || 'Category order could not be saved.');
       await load();
     }
+  };
+
+  const addCategoryQuestion = () => {
+    setCategoryQuestions((prev) => [...prev, { question: '', answer: '' }]);
+  };
+
+  const updateCategoryQuestion = (index: number, field: 'question' | 'answer', value: string) => {
+    setCategoryQuestions((prev) =>
+      prev.map((item, idx) => (idx === index ? { ...item, [field]: value } : item)),
+    );
+  };
+
+  const removeCategoryQuestion = (index: number) => {
+    setCategoryQuestions((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const deleteService = async (item: ServiceItem) => {
@@ -1311,6 +1346,46 @@ export function ServicesCrudPage() {
                   <p className="text-xs text-muted-foreground">When disabled, current category buffer duration is preserved.</p>
                 )}
                 {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p> : null}
+              </div>
+
+              <div className="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Kategoriye Özel Sık Sorular</p>
+                    <p className="text-xs text-muted-foreground">Bu kategori için müşterilerin sık sorduğu sorular.</p>
+                  </div>
+                  <button type="button" onClick={addCategoryQuestion} className="text-xs rounded-full border border-border px-3 py-1">
+                    + Soru Ekle
+                  </button>
+                </div>
+
+                {categoryQuestions.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Henüz soru eklenmedi.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {categoryQuestions.map((item, index) => (
+                      <div key={`cat-faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
+                        <input
+                          className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                          placeholder="Soru"
+                          value={item.question}
+                          onChange={(event) => updateCategoryQuestion(index, 'question', event.target.value)}
+                        />
+                        <textarea
+                          className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
+                          placeholder="Cevap"
+                          value={item.answer}
+                          onChange={(event) => updateCategoryQuestion(index, 'answer', event.target.value)}
+                        />
+                        <div className="flex justify-end">
+                          <button type="button" onClick={() => removeCategoryQuestion(index)} className="text-xs text-red-600">
+                            Sil
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
