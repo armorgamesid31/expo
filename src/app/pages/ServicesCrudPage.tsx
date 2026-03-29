@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, ListOrdered, Pencil, Plus, Settings2, Trash2, Layers } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, ListOrdered, Pencil, Plus, Settings2, Trash2, Layers, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface ServiceItem {
@@ -9,6 +9,9 @@ interface ServiceItem {
   categoryId?: number | null;
   categoryKey?: string | null;
   categoryName?: string | null;
+  regionId?: number | null;
+  regionName?: string | null;
+  regionCategoryId?: number | null;
   duration: number;
   price: number;
   requiresSpecialist?: boolean | null;
@@ -43,6 +46,17 @@ interface ServiceGroupItem {
   capacity: number | null;
   sequentialRequired: boolean | null;
   preparationMinutes: number | null;
+  serviceCount: number;
+  isActive?: boolean | null;
+}
+
+interface RegionItem {
+  id: number;
+  name: string;
+  categoryId?: number | null;
+  categoryKey?: string | null;
+  categoryName?: string | null;
+  displayOrder: number | null;
   serviceCount: number;
   isActive?: boolean | null;
 }
@@ -126,6 +140,7 @@ export function ServicesCrudPage() {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [groups, setGroups] = useState<ServiceGroupItem[]>([]);
+  const [regions, setRegions] = useState<RegionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -136,15 +151,19 @@ export function ServicesCrudPage() {
   const [categoryOrderDialogOpen, setCategoryOrderDialogOpen] = useState(false);
   const [groupManagerOpen, setGroupManagerOpen] = useState(false);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+  const [regionManagerOpen, setRegionManagerOpen] = useState(false);
+  const [regionDialogOpen, setRegionDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [editingGroup, setEditingGroup] = useState<ServiceGroupItem | null>(null);
+  const [editingRegion, setEditingRegion] = useState<RegionItem | null>(null);
 
   const [serviceForm, setServiceForm] = useState({
     name: '',
     categoryId: '',
+    regionId: '',
     serviceGroupId: '',
     duration: '60',
     price: '0',
@@ -170,14 +189,21 @@ export function ServicesCrudPage() {
     isActive: true,
   });
 
+  const [regionForm, setRegionForm] = useState({
+    name: '',
+    categoryId: '',
+    isActive: true,
+  });
+
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [servicesRes, categoriesRes, groupsRes] = await Promise.all([
+      const [servicesRes, categoriesRes, groupsRes, regionsRes] = await Promise.all([
         apiFetch<{ items: ServiceItem[] }>('/api/admin/services'),
         apiFetch<{ items: CategoryItem[] }>('/api/admin/service-categories'),
         apiFetch<{ items: ServiceGroupItem[] }>('/api/admin/service-groups'),
+        apiFetch<{ items: RegionItem[] }>('/api/admin/service-regions'),
       ]);
 
       const sortedCategories = [...(categoriesRes.items || [])].sort(
@@ -186,10 +212,14 @@ export function ServicesCrudPage() {
       const sortedGroups = [...(groupsRes.items || [])].sort(
         (a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999) || a.id - b.id,
       );
+      const sortedRegions = [...(regionsRes.items || [])].sort(
+        (a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999) || a.name.localeCompare(b.name, 'tr'),
+      );
 
       setServices(servicesRes.items || []);
       setCategories(sortedCategories);
       setGroups(sortedGroups);
+      setRegions(sortedRegions);
 
       setExpandedCategories((prev) => {
         if (Object.keys(prev).length > 0) return prev;
@@ -247,6 +277,14 @@ export function ServicesCrudPage() {
     return map;
   }, [categories, services]);
 
+  const availableRegions = useMemo(() => {
+    const categoryId = Number(serviceForm.categoryId);
+    if (!Number.isInteger(categoryId)) {
+      return regions;
+    }
+    return regions.filter((region) => !region.categoryId || region.categoryId === categoryId);
+  }, [regions, serviceForm.categoryId]);
+
   const toggleCategory = (categoryId: number) => {
     setExpandedCategories((prev) => ({ ...prev, [categoryId]: !prev[categoryId] }));
   };
@@ -256,6 +294,7 @@ export function ServicesCrudPage() {
     setServiceForm({
       name: '',
       categoryId: String(category.id),
+      regionId: '',
       serviceGroupId: '',
       duration: '60',
       price: '0',
@@ -272,6 +311,7 @@ export function ServicesCrudPage() {
     setServiceForm({
       name: item.name,
       categoryId: item.categoryId ? String(item.categoryId) : '',
+      regionId: item.regionId ? String(item.regionId) : '',
       serviceGroupId: item.serviceGroupId ? String(item.serviceGroupId) : '',
       duration: String(item.duration || 60),
       price: String(item.price || 0),
@@ -303,9 +343,11 @@ export function ServicesCrudPage() {
     setCategoryDialogOpen(false);
     setCategoryOrderDialogOpen(false);
     setGroupDialogOpen(false);
+    setRegionDialogOpen(false);
     setEditingService(null);
     setEditingCategory(null);
     setEditingGroup(null);
+    setEditingRegion(null);
   };
 
   const saveService = async (event: FormEvent) => {
@@ -318,6 +360,7 @@ export function ServicesCrudPage() {
     const duration = Number(serviceForm.duration);
     const price = Number(serviceForm.price);
     const categoryId = Number(serviceForm.categoryId);
+    const regionId = serviceForm.regionId ? Number(serviceForm.regionId) : null;
 
     if (!Number.isFinite(duration) || duration <= 0) {
       setError('Duration must be a positive number.');
@@ -331,6 +374,10 @@ export function ServicesCrudPage() {
       setError('Category selection is mandatory.');
       return;
     }
+    if (regionId !== null && (!Number.isInteger(regionId) || regionId <= 0)) {
+      setError('Region selection is invalid.');
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -341,6 +388,7 @@ export function ServicesCrudPage() {
       name: serviceForm.name.trim(),
       category: category?.key || 'OTHER',
       categoryId,
+      regionId,
       serviceGroupId: serviceForm.serviceGroupId ? Number(serviceForm.serviceGroupId) : null,
       duration,
       price,
@@ -577,6 +625,103 @@ export function ServicesCrudPage() {
     }
   };
 
+  const openCreateRegion = () => {
+    setEditingRegion(null);
+    setRegionForm({
+      name: '',
+      categoryId: '',
+      isActive: true,
+    });
+    setRegionDialogOpen(true);
+  };
+
+  const openEditRegion = (region: RegionItem) => {
+    setEditingRegion(region);
+    setRegionForm({
+      name: region.name,
+      categoryId: region.categoryId ? String(region.categoryId) : '',
+      isActive: region.isActive !== false,
+    });
+    setRegionDialogOpen(true);
+  };
+
+  const saveRegion = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!regionForm.name.trim()) {
+      setError('Region name is required.');
+      return;
+    }
+
+    const categoryId = regionForm.categoryId ? Number(regionForm.categoryId) : null;
+    if (categoryId !== null && (!Number.isInteger(categoryId) || categoryId <= 0)) {
+      setError('Region category must be a valid category.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    const payload = {
+      name: regionForm.name.trim(),
+      categoryId,
+      isActive: regionForm.isActive,
+    };
+
+    try {
+      if (editingRegion) {
+        await apiFetch(`/api/admin/service-regions/${editingRegion.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await apiFetch('/api/admin/service-regions', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      }
+
+      setRegionDialogOpen(false);
+      setEditingRegion(null);
+      await load();
+    } catch (err: any) {
+      setError(err?.message || 'Region could not be saved.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const moveRegion = async (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= regions.length) return;
+
+    const next = [...regions];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    setRegions(next);
+
+    try {
+      await apiFetch('/api/admin/service-regions/reorder', {
+        method: 'POST',
+        body: JSON.stringify({ orderedIds: next.map((item) => item.id) }),
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Region order could not be saved.');
+      await load();
+    }
+  };
+
+  const toggleRegionActive = async (region: RegionItem, next: boolean) => {
+    try {
+      await apiFetch(`/api/admin/service-regions/${region.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: next }),
+      });
+      setRegions((prev) => prev.map((item) => (item.id === region.id ? { ...item, isActive: next } : item)));
+    } catch (err: any) {
+      setError(err?.message || 'Region status could not be updated.');
+    }
+  };
+
   const toggleCategoryActive = async (category: CategoryItem, next: boolean) => {
     try {
       await apiFetch(`/api/admin/service-categories/${category.id}`, {
@@ -637,6 +782,15 @@ export function ServicesCrudPage() {
         >
           <Layers className="h-4 w-4" />
           Service Groups
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setRegionManagerOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+        >
+          <MapPin className="h-4 w-4" />
+          Service Regions
         </button>
       </div>
 
@@ -715,6 +869,7 @@ export function ServicesCrudPage() {
                             <p className="font-medium truncate">{item.name}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {item.duration} dk &nbsp;&nbsp; ₺{item.price}
+                              {item.regionName ? ` • ${item.regionName}` : ''}
                               {item.serviceGroupName ? ` • ${item.serviceGroupName}` : ''}
                             </p>
                           </div>
@@ -760,6 +915,22 @@ export function ServicesCrudPage() {
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Region (optional)</span>
+                <select
+                  value={serviceForm.regionId}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, regionId: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                >
+                  <option value="">Continue without selecting a region</option>
+                  {availableRegions.map((region) => (
+                    <option key={region.id} value={region.id}>
+                      {region.name}
                     </option>
                   ))}
                 </select>
@@ -1202,6 +1373,132 @@ export function ServicesCrudPage() {
 
               {!groups.length ? <p className="text-sm text-muted-foreground">No groups yet.</p> : null}
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {regionManagerOpen ? (
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+          <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Service Regions</h2>
+              <button type="button" onClick={() => setRegionManagerOpen(false)} className="text-sm text-muted-foreground">
+                Close
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground mb-3">
+              Regions help classify services by body area or target zone.
+            </p>
+
+            <button
+              type="button"
+              onClick={openCreateRegion}
+              className="mb-3 w-full h-10 rounded-lg border border-border text-sm inline-flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create New Region
+            </button>
+
+            <div className="space-y-2">
+              {regions.map((region, index) => (
+                <div key={region.id} className={`rounded-lg border border-border px-3 py-2 ${region.isActive === false ? 'opacity-65' : ''}`}>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{region.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {region.serviceCount} hizmet
+                        {region.categoryName ? ` • ${region.categoryName}` : ''}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void moveRegion(index, index - 1)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                      disabled={index === 0}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void moveRegion(index, index + 1)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                      disabled={index === regions.length - 1}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </button>
+                    <StatusToggleChip
+                      active={region.isActive !== false}
+                      onToggle={(next) => void toggleRegionActive(region, next)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openEditRegion(region)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {!regions.length ? <p className="text-sm text-muted-foreground">No regions yet.</p> : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {regionDialogOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/35 p-4">
+          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">{editingRegion ? 'Edit Region' : 'Create New Region'}</h2>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">
+                Close
+              </button>
+            </div>
+
+            <form className="space-y-3" onSubmit={saveRegion}>
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Region name</span>
+                <input
+                  value={regionForm.name}
+                  onChange={(event) => setRegionForm((prev) => ({ ...prev, name: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Category (optional)</span>
+                <select
+                  value={regionForm.categoryId}
+                  onChange={(event) => setRegionForm((prev) => ({ ...prev, categoryId: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                >
+                  <option value="">Continue without selecting a category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
+                <div>
+                  <p>Active</p>
+                  <p className="text-xs text-muted-foreground">Controls whether the region is selectable.</p>
+                </div>
+                <ToggleSwitch
+                  checked={regionForm.isActive}
+                  onChange={(next) => setRegionForm((prev) => ({ ...prev, isActive: next }))}
+                />
+              </label>
+
+              <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
+                {saving ? 'Saving...' : editingRegion ? 'Update' : 'Create'}
+              </button>
+            </form>
           </div>
         </div>
       ) : null}

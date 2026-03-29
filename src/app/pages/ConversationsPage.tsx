@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { useAuth } from '../context/AuthContext';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
+const SHOW_WHATSAPP_INBOX = false;
 
 interface ConversationItem {
   channel: ChannelType;
@@ -55,6 +56,7 @@ function badgeClass(channel: ChannelType): string {
 
 export function ConversationsPage() {
   const { apiFetch } = useAuth();
+  const [channelView, setChannelView] = useState<ChannelType>('INSTAGRAM');
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -75,7 +77,9 @@ export function ConversationsPage() {
     setLoadingConversations(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: ConversationItem[] }>('/api/admin/conversations?limit=60');
+      const response = await apiFetch<{ items: ConversationItem[] }>(
+        `/api/admin/conversations?limit=60&channel=${channelView}`,
+      );
       const next = response?.items || [];
       setConversations(next);
       if (!selectedConversationId && next.length > 0) {
@@ -106,7 +110,7 @@ export function ConversationsPage() {
   useEffect(() => {
     void loadConversations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [channelView]);
 
   useEffect(() => {
     if (!selectedConversation) {
@@ -171,7 +175,7 @@ export function ConversationsPage() {
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <h1 className="text-xl font-semibold">Conversations</h1>
-          <p className="text-xs text-muted-foreground mt-1">Track WhatsApp and Instagram conversations in one inbox.</p>
+          <p className="text-xs text-muted-foreground mt-1">Channel-based inbox for Instagram and WhatsApp.</p>
           <p className="text-xs text-muted-foreground mt-1">For Meta App Review demo, use the dedicated Instagram Inbox screen.</p>
         </div>
         <Button type="button" size="sm" variant="outline" onClick={() => void loadConversations()} disabled={loadingConversations}>
@@ -179,10 +183,41 @@ export function ConversationsPage() {
         </Button>
       </div>
 
+      <div className="inline-flex rounded-lg border border-border bg-card p-1 mb-4">
+        <button
+          type="button"
+          onClick={() => {
+            setChannelView('INSTAGRAM');
+            setSelectedConversationId(null);
+            setMessages([]);
+          }}
+          className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+            channelView === 'INSTAGRAM' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'
+          }`}
+        >
+          Instagram Inbox
+        </button>
+        {SHOW_WHATSAPP_INBOX ? (
+          <button
+            type="button"
+            onClick={() => {
+              setChannelView('WHATSAPP');
+              setSelectedConversationId(null);
+              setMessages([]);
+            }}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+              channelView === 'WHATSAPP' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'
+            }`}
+          >
+            WhatsApp Inbox
+          </button>
+        ) : null}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-4">
         <Card className="border-border/50">
           <CardContent className="p-3 space-y-2">
-            <p className="text-sm font-semibold">Conversations</p>
+              <p className="text-sm font-semibold">{channelView === 'INSTAGRAM' ? 'Instagram Conversations' : 'WhatsApp Conversations'}</p>
             {loadingConversations ? (
               <div className="py-6 grid place-items-center text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
