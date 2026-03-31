@@ -6,6 +6,8 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useAuth } from '../context/AuthContext';
 
+type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
+
 interface ConversationItem {
   conversationKey: string;
   customerName: string | null;
@@ -17,6 +19,12 @@ interface ConversationItem {
   hasHandoverRequest: boolean;
   identityLinked?: boolean;
   linkedCustomerId?: number | null;
+  automationMode?: AutomationMode;
+  manualAlways?: boolean;
+  humanPendingSince?: string | null;
+  humanActiveUntil?: string | null;
+  lastHumanMessageAt?: string | null;
+  lastCustomerMessageAt?: string | null;
 }
 
 interface MessageItem {
@@ -27,6 +35,15 @@ interface MessageItem {
   status: string;
   direction: 'inbound' | 'outbound' | 'system';
   eventTimestamp: string;
+}
+
+interface ConversationStatePayload {
+  automationMode?: AutomationMode;
+  manualAlways?: boolean;
+  humanPendingSince?: string | null;
+  humanActiveUntil?: string | null;
+  lastHumanMessageAt?: string | null;
+  lastCustomerMessageAt?: string | null;
 }
 
 function formatTs(value: string): string {
@@ -49,6 +66,39 @@ function getPreview(item: ConversationItem): string {
   return `[${item.lastMessageType}]`;
 }
 
+function normalizeAutomationMode(value: unknown): AutomationMode {
+  if (
+    value === 'AUTO' ||
+    value === 'HUMAN_PENDING' ||
+    value === 'HUMAN_ACTIVE' ||
+    value === 'MANUAL_ALWAYS' ||
+    value === 'AUTO_RESUME_PENDING'
+  ) {
+    return value;
+  }
+  return 'AUTO';
+}
+
+function automationBadgeClass(mode: AutomationMode): string {
+  if (mode === 'HUMAN_PENDING') return 'bg-amber-500/10 text-amber-700';
+  if (mode === 'HUMAN_ACTIVE') return 'bg-blue-500/10 text-blue-700';
+  if (mode === 'MANUAL_ALWAYS') return 'bg-slate-500/10 text-slate-700';
+  if (mode === 'AUTO_RESUME_PENDING') return 'bg-cyan-500/10 text-cyan-700';
+  return 'bg-emerald-500/10 text-emerald-700';
+}
+
+function automationLabel(mode: AutomationMode): string {
+  if (mode === 'HUMAN_PENDING') return 'Human Pending';
+  if (mode === 'HUMAN_ACTIVE') return 'Human Active';
+  if (mode === 'MANUAL_ALWAYS') return 'Manual Always';
+  if (mode === 'AUTO_RESUME_PENDING') return 'Auto Resume';
+  return 'Auto';
+}
+
+function isHandoverInProgress(mode: AutomationMode): boolean {
+  return mode === 'HUMAN_PENDING' || mode === 'HUMAN_ACTIVE';
+}
+
 export function InstagramInboxPage() {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
@@ -63,6 +113,7 @@ export function InstagramInboxPage() {
   const [replyText, setReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const [sendingHandover, setSendingHandover] = useState(false);
+  const [sendingResume, setSendingResume] = useState(false);
   const [actionInfo, setActionInfo] = useState<string | null>(null);
 
   const selectedConversation = useMemo(
@@ -91,10 +142,24 @@ export function InstagramInboxPage() {
     setLoadingMessages(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: MessageItem[] }>(
+      const response = await apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload }>(
         `/api/admin/instagram-inbox/conversations/${encodeURIComponent(conversationKey)}/messages?limit=120`,
       );
       setMessages(response?.items || []);
+      if (response?.conversationState) {
+        const patch = response.conversationState;
+        setConversations((prev) =>
+          prev.map((item) =>
+            item.conversationKey === conversationKey
+              ? {
+                  ...item,
+                  ...patch,
+                  automationMode: normalizeAutomationMode(patch.automationMode || item.automationMode),
+                }
+              : item,
+          ),
+        );
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to load conversation messages.');
     } finally {
@@ -147,11 +212,14 @@ export function InstagramInboxPage() {
     setActionInfo(null);
     setError(null);
     try {
-      await apiFetch(`/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/handover`, {
-        method: 'POST',
-        body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' }),
-      });
-      setActionInfo('Handover request created.');
+      const response = await apiFetch<{ alreadyRequested?: boolean }>(
+        `/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/handover`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' }),
+        },
+      );
+      setActionInfo(response?.alreadyRequested ? 'This conversation is already under human handover.' : 'Handover request created.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
@@ -160,6 +228,29 @@ export function InstagramInboxPage() {
       setSendingHandover(false);
     }
   };
+
+  const resumeAuto = async () => {
+    if (!selectedKey) return;
+
+    setSendingResume(true);
+    setActionInfo(null);
+    setError(null);
+    try {
+      await apiFetch(`/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/resume-auto`, {
+        method: 'POST',
+      });
+      setActionInfo('AI automation resumed for this conversation.');
+      await loadMessages(selectedKey);
+      await loadConversations();
+    } catch (err: any) {
+      setError(err?.message || 'Resume action failed.');
+    } finally {
+      setSendingResume(false);
+    }
+  };
+
+  const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
+  const handoverInProgress = isHandoverInProgress(selectedMode);
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -220,6 +311,11 @@ export function InstagramInboxPage() {
                             </span>
                           ) : null}
                           <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}
+                          >
+                            {automationLabel(normalizeAutomationMode(item.automationMode))}
+                          </span>
+                          <span
                             className={`text-[10px] px-1.5 py-0.5 rounded ${
                               item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'
                             }`}
@@ -248,13 +344,23 @@ export function InstagramInboxPage() {
                       {selectedConversation.customerName || `User ${selectedConversation.conversationKey}`}
                     </p>
                     <p className="text-xs text-muted-foreground">Key: {selectedConversation.conversationKey}</p>
+                    <div className="mt-1">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(selectedMode)}`}>
+                        {automationLabel(selectedMode)}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {selectedConversation.hasHandoverRequest ? (
                       <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Handover requested</span>
                     ) : null}
-                    <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover}>
-                      {sendingHandover ? 'Requesting...' : 'Request Handover'}
+                    {handoverInProgress ? (
+                      <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
+                        {sendingResume ? 'Resuming...' : 'Resume AI'}
+                      </Button>
+                    ) : null}
+                    <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
+                      {sendingHandover ? 'Requesting...' : handoverInProgress ? 'Handover Active' : 'Request Handover'}
                     </Button>
                   </div>
                 </div>
