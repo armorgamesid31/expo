@@ -18,6 +18,8 @@ interface ConversationItem {
   unreadCount: number;
   messageCount: number;
   hasHandoverRequest: boolean;
+  identityLinked?: boolean;
+  linkedCustomerId?: number | null;
 }
 
 interface MessageItem {
@@ -240,7 +242,16 @@ export function ConversationsPage() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium truncate">{item.customerName || `User ${item.conversationKey}`}</p>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${badgeClass(item.channel)}`}>{item.channel}</span>
+                        <div className="flex items-center gap-1">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${badgeClass(item.channel)}`}>{item.channel}</span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded ${
+                              item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'
+                            }`}
+                          >
+                            {item.identityLinked ? 'Linked' : 'Unlinked'}
+                          </span>
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
                       <p className="text-[10px] text-muted-foreground mt-1">{formatTs(item.lastEventTimestamp)}</p>

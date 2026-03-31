@@ -15,6 +15,8 @@ interface ConversationItem {
   unreadCount: number;
   messageCount: number;
   hasHandoverRequest: boolean;
+  identityLinked?: boolean;
+  linkedCustomerId?: number | null;
 }
 
 interface MessageItem {
@@ -211,11 +213,20 @@ export function InstagramInboxPage() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium truncate">{item.customerName || `User ${item.conversationKey}`}</p>
-                        {item.unreadCount > 0 ? (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
-                            {item.unreadCount}
+                        <div className="flex items-center gap-1">
+                          {item.unreadCount > 0 ? (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
+                              {item.unreadCount}
+                            </span>
+                          ) : null}
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded ${
+                              item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'
+                            }`}
+                          >
+                            {item.identityLinked ? 'Linked' : 'Unlinked'}
                           </span>
-                        ) : null}
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
                       <p className="text-[10px] text-muted-foreground mt-1">{formatTs(item.lastEventTimestamp)}</p>
