@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Send, UserRound } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../lib/config';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
@@ -210,7 +211,7 @@ function mergeAndSortMessages(responses: Array<{ items: MessageItem[] } | null |
 }
 
 export function ConversationsPage() {
-  const { apiFetch } = useAuth();
+  const { apiFetch, accessToken } = useAuth();
   const [channelView, setChannelView] = useState<ChannelType>('INSTAGRAM');
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
@@ -223,14 +224,15 @@ export function ConversationsPage() {
   const [sendingHandover, setSendingHandover] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
   const [actionInfo, setActionInfo] = useState<string | null>(null);
+  const sseRefreshTimerRef = useRef<number | null>(null);
 
   const selectedConversation = useMemo(() => {
     if (!selectedConversationId) return null;
     return conversations.find((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId) || null;
   }, [conversations, selectedConversationId]);
 
-  const loadConversations = async () => {
-    setLoadingConversations(true);
+  const loadConversations = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoadingConversations(true);
     setError(null);
     try {
       const response = await apiFetch<{ items: ConversationItem[] }>(
@@ -244,12 +246,12 @@ export function ConversationsPage() {
     } catch (err: any) {
       setError(err?.message || 'Failed to load conversations.');
     } finally {
-      setLoadingConversations(false);
+      if (showLoading) setLoadingConversations(false);
     }
-  };
+  }, [apiFetch, channelView, selectedConversationId]);
 
-  const loadMessages = async (channel: ChannelType, conversationKey: string) => {
-    setLoadingMessages(true);
+  const loadMessages = useCallback(async (channel: ChannelType, conversationKey: string, showLoading = true) => {
+    if (showLoading) setLoadingMessages(true);
     setError(null);
     try {
       const relatedKeys = findRelatedConversationKeys(conversations, { channel, conversationKey }).slice(0, 5);
@@ -279,14 +281,13 @@ export function ConversationsPage() {
     } catch (err: any) {
       setError(err?.message || 'Failed to load conversation messages.');
     } finally {
-      setLoadingMessages(false);
+      if (showLoading) setLoadingMessages(false);
     }
-  };
+  }, [apiFetch, conversations]);
 
   useEffect(() => {
     void loadConversations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelView]);
+  }, [loadConversations]);
 
   useEffect(() => {
     if (!selectedConversation) {
@@ -294,8 +295,46 @@ export function ConversationsPage() {
       return;
     }
     void loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedConversationId]);
+  }, [loadMessages, selectedConversation]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const streamUrl =
+      `${API_BASE_URL}/api/admin/conversations/stream` +
+      `?authToken=${encodeURIComponent(accessToken)}` +
+      `&channel=${encodeURIComponent(channelView)}`;
+    const es = new EventSource(streamUrl);
+
+    const scheduleRefresh = () => {
+      if (sseRefreshTimerRef.current) return;
+      sseRefreshTimerRef.current = window.setTimeout(() => {
+        sseRefreshTimerRef.current = null;
+        void loadConversations(false);
+        if (selectedConversation) {
+          void loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
+        }
+      }, 350);
+    };
+
+    es.addEventListener('conversation.update', scheduleRefresh);
+
+    return () => {
+      es.removeEventListener('conversation.update', scheduleRefresh);
+      es.close();
+      if (sseRefreshTimerRef.current) {
+        window.clearTimeout(sseRefreshTimerRef.current);
+        sseRefreshTimerRef.current = null;
+      }
+    };
+  }, [
+    accessToken,
+    channelView,
+    loadConversations,
+    loadMessages,
+    selectedConversation?.channel,
+    selectedConversation?.conversationKey,
+  ]);
 
   const sendReply = async () => {
     if (!selectedConversation || !replyText.trim()) return;
