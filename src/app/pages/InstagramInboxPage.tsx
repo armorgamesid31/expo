@@ -212,11 +212,21 @@ export function InstagramInboxPage() {
   const [sendingResume, setSendingResume] = useState(false);
   const [actionInfo, setActionInfo] = useState<string | null>(null);
   const sseRefreshTimerRef = useRef<number | null>(null);
+  const conversationsRef = useRef<ConversationItem[]>([]);
+  const selectedKeyRef = useRef<string | null>(null);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.conversationKey === selectedKey) || null,
     [conversations, selectedKey],
   );
+
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
+  useEffect(() => {
+    selectedKeyRef.current = selectedKey;
+  }, [selectedKey]);
 
   const loadConversations = useCallback(async (showLoading = true) => {
     if (showLoading) setLoadingConversations(true);
@@ -225,21 +235,24 @@ export function InstagramInboxPage() {
       const response = await apiFetch<{ items: ConversationItem[] }>('/api/admin/instagram-inbox/conversations?limit=40');
       const next = response?.items || [];
       setConversations(next);
-      if (!selectedKey && next.length > 0) {
-        setSelectedKey(next[0].conversationKey);
+      conversationsRef.current = next;
+      if (!selectedKeyRef.current && next.length > 0) {
+        const nextKey = next[0].conversationKey;
+        selectedKeyRef.current = nextKey;
+        setSelectedKey(nextKey);
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to load conversations.');
     } finally {
       if (showLoading) setLoadingConversations(false);
     }
-  }, [apiFetch, selectedKey]);
+  }, [apiFetch]);
 
   const loadMessages = useCallback(async (conversationKey: string, showLoading = true) => {
     if (showLoading) setLoadingMessages(true);
     setError(null);
     try {
-      const relatedKeys = findRelatedConversationKeys(conversations, conversationKey).slice(0, 5);
+      const relatedKeys = findRelatedConversationKeys(conversationsRef.current, conversationKey).slice(0, 5);
       const responses = await Promise.all(
         relatedKeys.map((key) =>
           apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload }>(
@@ -268,7 +281,7 @@ export function InstagramInboxPage() {
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
-  }, [apiFetch, conversations]);
+  }, [apiFetch]);
 
   useEffect(() => {
     void loadConversations();
@@ -296,8 +309,9 @@ export function InstagramInboxPage() {
       sseRefreshTimerRef.current = window.setTimeout(() => {
         sseRefreshTimerRef.current = null;
         void loadConversations(false);
-        if (selectedKey) {
-          void loadMessages(selectedKey, false);
+        const activeKey = selectedKeyRef.current;
+        if (activeKey) {
+          void loadMessages(activeKey, false);
         }
       }, 350);
     };
@@ -312,7 +326,7 @@ export function InstagramInboxPage() {
         sseRefreshTimerRef.current = null;
       }
     };
-  }, [accessToken, loadConversations, loadMessages, selectedKey]);
+  }, [accessToken, loadConversations, loadMessages]);
 
   const sendReply = async () => {
     if (!selectedKey || !replyText.trim()) {

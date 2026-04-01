@@ -225,11 +225,21 @@ export function ConversationsPage() {
   const [sendingResume, setSendingResume] = useState(false);
   const [actionInfo, setActionInfo] = useState<string | null>(null);
   const sseRefreshTimerRef = useRef<number | null>(null);
+  const conversationsRef = useRef<ConversationItem[]>([]);
+  const selectedConversationIdRef = useRef<string | null>(null);
 
   const selectedConversation = useMemo(() => {
     if (!selectedConversationId) return null;
     return conversations.find((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId) || null;
   }, [conversations, selectedConversationId]);
+
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
+  useEffect(() => {
+    selectedConversationIdRef.current = selectedConversationId;
+  }, [selectedConversationId]);
 
   const loadConversations = useCallback(async (showLoading = true) => {
     if (showLoading) setLoadingConversations(true);
@@ -240,21 +250,24 @@ export function ConversationsPage() {
       );
       const next = response?.items || [];
       setConversations(next);
-      if (!selectedConversationId && next.length > 0) {
-        setSelectedConversationId(`${next[0].channel}:${next[0].conversationKey}`);
+      conversationsRef.current = next;
+      if (!selectedConversationIdRef.current && next.length > 0) {
+        const nextId = `${next[0].channel}:${next[0].conversationKey}`;
+        selectedConversationIdRef.current = nextId;
+        setSelectedConversationId(nextId);
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to load conversations.');
     } finally {
       if (showLoading) setLoadingConversations(false);
     }
-  }, [apiFetch, channelView, selectedConversationId]);
+  }, [apiFetch, channelView]);
 
   const loadMessages = useCallback(async (channel: ChannelType, conversationKey: string, showLoading = true) => {
     if (showLoading) setLoadingMessages(true);
     setError(null);
     try {
-      const relatedKeys = findRelatedConversationKeys(conversations, { channel, conversationKey }).slice(0, 5);
+      const relatedKeys = findRelatedConversationKeys(conversationsRef.current, { channel, conversationKey }).slice(0, 5);
       const responses = await Promise.all(
         relatedKeys.map((item) =>
           apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload }>(
@@ -283,19 +296,25 @@ export function ConversationsPage() {
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
-  }, [apiFetch, conversations]);
+  }, [apiFetch]);
 
   useEffect(() => {
     void loadConversations();
   }, [loadConversations]);
 
   useEffect(() => {
-    if (!selectedConversation) {
+    if (!selectedConversationId || !selectedConversationId.includes(':')) {
       setMessages([]);
       return;
     }
-    void loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
-  }, [loadMessages, selectedConversation]);
+    const [rawChannel, ...rest] = selectedConversationId.split(':');
+    const rawKey = rest.join(':');
+    if ((rawChannel !== 'INSTAGRAM' && rawChannel !== 'WHATSAPP') || !rawKey) {
+      setMessages([]);
+      return;
+    }
+    void loadMessages(rawChannel as ChannelType, rawKey);
+  }, [loadMessages, selectedConversationId]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -311,8 +330,13 @@ export function ConversationsPage() {
       sseRefreshTimerRef.current = window.setTimeout(() => {
         sseRefreshTimerRef.current = null;
         void loadConversations(false);
-        if (selectedConversation) {
-          void loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
+        const activeId = selectedConversationIdRef.current;
+        if (activeId && activeId.includes(':')) {
+          const [rawChannel, ...rest] = activeId.split(':');
+          const rawKey = rest.join(':');
+          if ((rawChannel === 'INSTAGRAM' || rawChannel === 'WHATSAPP') && rawKey) {
+            void loadMessages(rawChannel as ChannelType, rawKey, false);
+          }
         }
       }, 350);
     };
@@ -327,14 +351,7 @@ export function ConversationsPage() {
         sseRefreshTimerRef.current = null;
       }
     };
-  }, [
-    accessToken,
-    channelView,
-    loadConversations,
-    loadMessages,
-    selectedConversation?.channel,
-    selectedConversation?.conversationKey,
-  ]);
+  }, [accessToken, channelView, loadConversations, loadMessages]);
 
   const sendReply = async () => {
     if (!selectedConversation || !replyText.trim()) return;
