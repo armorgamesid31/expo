@@ -37,6 +37,11 @@ interface MessageItem {
   text: string | null;
   status: string;
   direction: 'inbound' | 'outbound' | 'system';
+  deliveryChannel?: 'INSTAGRAM' | 'WHATSAPP';
+  outboundSource?: 'AI_AGENT' | 'HUMAN_APP' | 'HUMAN_EXTERNAL' | null;
+  outboundSourceLabel?: string | null;
+  outboundSenderUserId?: number | null;
+  outboundSenderEmail?: string | null;
   eventTimestamp: string;
 }
 
@@ -426,6 +431,11 @@ export function InstagramInboxPage() {
                     messages.map((msg) => {
                       const isOutbound = msg.direction === 'outbound';
                       const isSystem = msg.direction === 'system';
+                      const senderLabel = isSystem
+                        ? 'System'
+                        : isOutbound
+                          ? msg.outboundSourceLabel || 'Salon'
+                          : 'Customer';
                       return (
                         <div
                           key={msg.id}
@@ -439,7 +449,7 @@ export function InstagramInboxPage() {
                         >
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
                             {isSystem ? <AlertTriangle className="w-3 h-3" /> : isOutbound ? <Send className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
-                            <span>{isSystem ? 'System' : isOutbound ? 'Salon' : 'Customer'}</span>
+                            <span>{senderLabel}</span>
                             <span>•</span>
                             <span>{formatTs(msg.eventTimestamp)}</span>
                           </div>
