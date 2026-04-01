@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { useAuth } from '../context/AuthContext';
 
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
@@ -11,6 +12,8 @@ type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS
 interface ConversationItem {
   conversationKey: string;
   customerName: string | null;
+  profileUsername?: string | null;
+  profilePicUrl?: string | null;
   lastMessageType: string;
   lastMessageText: string | null;
   lastEventTimestamp: string;
@@ -64,6 +67,27 @@ function getPreview(item: ConversationItem): string {
   if (item.lastMessageType === 'video') return '[Video]';
   if (item.lastMessageType === 'handover_request') return '[Handover Requested]';
   return `[${item.lastMessageType}]`;
+}
+
+function normalizeUsername(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim().replace(/^@/, '');
+  return trimmed || null;
+}
+
+function conversationDisplayName(item: Pick<ConversationItem, 'customerName' | 'profileUsername' | 'conversationKey'>): string {
+  if (item.customerName && item.customerName.trim()) return item.customerName.trim();
+  const username = normalizeUsername(item.profileUsername);
+  if (username) return `@${username}`;
+  return `User ${item.conversationKey}`;
+}
+
+function initialsFromLabel(value: string): string {
+  const cleaned = value.replace(/^@/, '').trim();
+  if (!cleaned) return 'U';
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
 }
 
 function normalizeAutomationMode(value: unknown): AutomationMode {
@@ -293,6 +317,7 @@ export function InstagramInboxPage() {
               <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
                 {conversations.map((item) => {
                   const active = item.conversationKey === selectedKey;
+                  const displayName = conversationDisplayName(item);
                   return (
                     <button
                       key={item.conversationKey}
@@ -303,7 +328,13 @@ export function InstagramInboxPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium truncate">{item.customerName || `User ${item.conversationKey}`}</p>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Avatar className="size-8 border border-border/60">
+                            {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
+                            <AvatarFallback className="text-[10px]">{initialsFromLabel(displayName)}</AvatarFallback>
+                          </Avatar>
+                          <p className="text-sm font-medium truncate">{displayName}</p>
+                        </div>
                         <div className="flex items-center gap-1">
                           {item.unreadCount > 0 ? (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
@@ -339,15 +370,34 @@ export function InstagramInboxPage() {
             {selectedConversation ? (
               <>
                 <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {selectedConversation.customerName || `User ${selectedConversation.conversationKey}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Key: {selectedConversation.conversationKey}</p>
-                    <div className="mt-1">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(selectedMode)}`}>
-                        {automationLabel(selectedMode)}
-                      </span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="size-10 border border-border/60">
+                      {selectedConversation.profilePicUrl ? (
+                        <AvatarImage
+                          src={selectedConversation.profilePicUrl}
+                          alt={conversationDisplayName(selectedConversation)}
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-xs">
+                        {initialsFromLabel(conversationDisplayName(selectedConversation))}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">
+                        {conversationDisplayName(selectedConversation)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Key: {selectedConversation.conversationKey}</p>
+                      {(() => {
+                        const username = normalizeUsername(selectedConversation.profileUsername);
+                        return username ? (
+                          <p className="text-[10px] text-muted-foreground truncate">@{username}</p>
+                        ) : null;
+                      })()}
+                      <div className="mt-1">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(selectedMode)}`}>
+                          {automationLabel(selectedMode)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
