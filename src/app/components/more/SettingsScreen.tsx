@@ -2,22 +2,31 @@ import { ChevronRight, Bell, Shield, Smartphone, HelpCircle, LogOut, User, Palet
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
-import { UserRole } from '../../types';
 
 interface SettingsScreenProps {
   isDarkMode: boolean;
   onToggleDarkMode: (nextValue: boolean) => void;
+  locale: 'tr' | 'en';
+  onChangeLocale: (nextLocale: 'tr' | 'en') => void;
   onShowHelpCenter?: () => void;
   onLogout?: () => void;
 }
 
-export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter, onLogout }: SettingsScreenProps) {
+export function SettingsScreen({
+  isDarkMode,
+  onToggleDarkMode,
+  locale,
+  onChangeLocale,
+  onShowHelpCenter,
+  onLogout,
+}: SettingsScreenProps) {
   const settingGroups = [
     {
       title: "Account & Business",
       items: [
         { icon: User, label: "Profile Information", description: "Personal details and photo", color: "var(--rose-gold)" },
         { icon: Palette, label: "Appearance", description: "Theme and font", color: "var(--deep-indigo)", isThemeToggle: true },
+        { icon: Smartphone, label: "Language", description: "App language", color: "var(--deep-indigo)", isLanguageSelector: true },
         { icon: Shield, label: "Security", description: "Password and two-step verification", color: "var(--rose-gold)" },
       ]
     },
@@ -72,6 +81,16 @@ export function SettingsScreen({ isDarkMode, onToggleDarkMode, onShowHelpCenter,
                       
                       {item.isThemeToggle ? (
                         <Switch checked={isDarkMode} onCheckedChange={onToggleDarkMode} />
+                      ) : item.isLanguageSelector ? (
+                        <select
+                          value={locale}
+                          onChange={(event) => onChangeLocale(event.target.value as 'tr' | 'en')}
+                          onClick={(event) => event.stopPropagation()}
+                          className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+                        >
+                          <option value="tr">Turkish</option>
+                          <option value="en">English</option>
+                        </select>
                       ) : item.hasSwitch ? (
                         <Switch defaultChecked />
                       ) : (

@@ -21,6 +21,7 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { BlacklistPage } from './pages/BlacklistPage';
 import { InstagramInboxPage } from './pages/InstagramInboxPage';
 import { ConversationsPage } from './pages/ConversationsPage';
+import { LocaleProvider } from './context/LocaleContext';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
 
@@ -109,11 +110,13 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ThemeBootstrap />
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <LocaleProvider>
+      <AuthProvider>
+        <ThemeBootstrap />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </LocaleProvider>
   );
 }
