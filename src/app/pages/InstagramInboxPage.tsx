@@ -80,6 +80,12 @@ function normalizeUsername(value: string | null | undefined): string | null {
   return trimmed || null;
 }
 
+function normalizeName(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed || null;
+}
+
 function conversationDisplayName(item: Pick<ConversationItem, 'customerName' | 'profileUsername' | 'conversationKey'>): string {
   if (item.customerName && item.customerName.trim()) return item.customerName.trim();
   const username = normalizeUsername(item.profileUsername);
@@ -128,6 +134,66 @@ function isHandoverInProgress(mode: AutomationMode): boolean {
   return mode === 'HUMAN_PENDING' || mode === 'HUMAN_ACTIVE';
 }
 
+function findRelatedConversationKeys(items: ConversationItem[], selectedKey: string): string[] {
+  const selected = items.find((item) => item.conversationKey === selectedKey);
+  if (!selected) return [selectedKey];
+
+  const selectedUsername = normalizeUsername(selected.profileUsername);
+  const selectedName = normalizeName(selected.customerName);
+  const selectedLinkedId =
+    typeof selected.linkedCustomerId === 'number' && selected.linkedCustomerId > 0
+      ? selected.linkedCustomerId
+      : null;
+
+  const related = items.filter((item) => {
+    if (item.conversationKey === selected.conversationKey) return true;
+    const linkedId = typeof item.linkedCustomerId === 'number' && item.linkedCustomerId > 0 ? item.linkedCustomerId : null;
+    if (selectedLinkedId && linkedId && selectedLinkedId === linkedId) return true;
+
+    const itemUsername = normalizeUsername(item.profileUsername);
+    if (selectedUsername && itemUsername && selectedUsername === itemUsername) return true;
+
+    const itemName = normalizeName(item.customerName);
+    if (selectedName && itemName && selectedName === itemName) return true;
+
+    return false;
+  });
+
+  return Array.from(
+    new Set(
+      related
+        .sort((a, b) => {
+          if (a.conversationKey === selectedKey) return -1;
+          if (b.conversationKey === selectedKey) return 1;
+          return (b.messageCount || 0) - (a.messageCount || 0);
+        })
+        .map((item) => item.conversationKey),
+    ),
+  );
+}
+
+function mergeAndSortMessages(responses: Array<{ items: MessageItem[] } | null | undefined>): MessageItem[] {
+  const merged = new Map<string, MessageItem>();
+  for (const response of responses) {
+    const items = response?.items || [];
+    for (const msg of items) {
+      const providerId = typeof msg.providerMessageId === 'string' ? msg.providerMessageId.trim() : '';
+      const fingerprint = providerId
+        ? `provider:${providerId}`
+        : `fallback:${msg.direction}|${msg.messageType}|${msg.eventTimestamp}|${msg.text || ''}`;
+      if (!merged.has(fingerprint)) {
+        merged.set(fingerprint, msg);
+      }
+    }
+  }
+  return Array.from(merged.values()).sort((a, b) => {
+    const tsA = new Date(a.eventTimestamp).getTime();
+    const tsB = new Date(b.eventTimestamp).getTime();
+    if (!Number.isFinite(tsA) || !Number.isFinite(tsB)) return 0;
+    return tsA - tsB;
+  });
+}
+
 export function InstagramInboxPage() {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
@@ -171,10 +237,16 @@ export function InstagramInboxPage() {
     setLoadingMessages(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload }>(
-        `/api/admin/instagram-inbox/conversations/${encodeURIComponent(conversationKey)}/messages?limit=120`,
+      const relatedKeys = findRelatedConversationKeys(conversations, conversationKey).slice(0, 5);
+      const responses = await Promise.all(
+        relatedKeys.map((key) =>
+          apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload }>(
+            `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`,
+          ),
+        ),
       );
-      setMessages(response?.items || []);
+      const response = responses[0];
+      setMessages(mergeAndSortMessages(responses));
       if (response?.conversationState) {
         const patch = response.conversationState;
         setConversations((prev) =>
