@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, MessageCircle, Send, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
@@ -214,6 +214,8 @@ export function InstagramInboxPage() {
   const sseRefreshTimerRef = useRef<number | null>(null);
   const conversationsRef = useRef<ConversationItem[]>([]);
   const selectedKeyRef = useRef<string | null>(null);
+  const messagesViewportRef = useRef<HTMLDivElement | null>(null);
+  const stickToBottomRef = useRef(true);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.conversationKey === selectedKey) || null,
@@ -226,6 +228,10 @@ export function InstagramInboxPage() {
 
   useEffect(() => {
     selectedKeyRef.current = selectedKey;
+  }, [selectedKey]);
+
+  useEffect(() => {
+    stickToBottomRef.current = true;
   }, [selectedKey]);
 
   const loadConversations = useCallback(async (showLoading = true) => {
@@ -294,6 +300,13 @@ export function InstagramInboxPage() {
     }
     void loadMessages(selectedKey);
   }, [loadMessages, selectedKey]);
+
+  useLayoutEffect(() => {
+    const viewport = messagesViewportRef.current;
+    if (!viewport) return;
+    if (!stickToBottomRef.current) return;
+    viewport.scrollTop = viewport.scrollHeight;
+  }, [messages, selectedKey]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -400,7 +413,7 @@ export function InstagramInboxPage() {
   const handoverInProgress = isHandoverInProgress(selectedMode);
 
   return (
-    <div className="h-full pb-20 overflow-y-auto">
+    <div className="h-full pb-20 overflow-y-auto bg-gradient-to-b from-background to-muted/20">
       <div className="sticky top-0 bg-[var(--luxury-bg)] z-10 border-b border-border p-4">
         <button
           type="button"
@@ -426,8 +439,8 @@ export function InstagramInboxPage() {
         </div>
       </div>
 
-      <div className="p-4 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-4">
-        <Card className="border-border/50">
+      <div className="p-4 grid grid-cols-1 lg:grid-cols-[340px,1fr] gap-4">
+        <Card className="border-border/60 shadow-sm backdrop-blur bg-card/85">
           <CardContent className="p-3 space-y-2">
             <p className="text-sm font-semibold">Conversations</p>
             {loadingConversations ? (
@@ -446,8 +459,10 @@ export function InstagramInboxPage() {
                       key={item.conversationKey}
                       type="button"
                       onClick={() => setSelectedKey(item.conversationKey)}
-                      className={`w-full text-left rounded-lg border p-3 transition-colors ${
-                        active ? 'border-[var(--deep-indigo)] bg-[var(--deep-indigo)]/5' : 'border-border hover:bg-muted/40'
+                      className={`w-full text-left rounded-xl border p-3 transition-all ${
+                        active
+                          ? 'border-[var(--deep-indigo)]/60 bg-[var(--deep-indigo)]/10 shadow-sm'
+                          : 'border-border/70 hover:bg-muted/40 hover:border-border'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -479,7 +494,10 @@ export function InstagramInboxPage() {
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">{formatTs(item.lastEventTimestamp)}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <p className="text-[10px] text-muted-foreground">{formatTs(item.lastEventTimestamp)}</p>
+                        <span className="text-[10px] text-muted-foreground">{item.messageCount} msg</span>
+                      </div>
                     </button>
                   );
                 })}
@@ -488,7 +506,7 @@ export function InstagramInboxPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
+        <Card className="border-border/60 shadow-sm backdrop-blur bg-card/85">
           <CardContent className="p-3 space-y-3">
             {selectedConversation ? (
               <>
@@ -538,7 +556,15 @@ export function InstagramInboxPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-muted/20 p-3 max-h-[52vh] overflow-y-auto space-y-2">
+                <div
+                  ref={messagesViewportRef}
+                  onScroll={(event) => {
+                    const el = event.currentTarget;
+                    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+                    stickToBottomRef.current = distanceToBottom < 48;
+                  }}
+                  className="rounded-xl border border-border/70 bg-muted/20 p-3 max-h-[52vh] overflow-y-auto space-y-2"
+                >
                   {loadingMessages ? (
                     <div className="py-6 grid place-items-center text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
