@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -82,14 +82,6 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   const [state, setState] = useState<MetaDirectState>(initialState);
   const [isLoading, setIsLoading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
-  const popupPollRef = useRef<number | null>(null);
-
-  const clearPopupPoll = () => {
-    if (popupPollRef.current !== null) {
-      window.clearInterval(popupPollRef.current);
-      popupPollRef.current = null;
-    }
-  };
 
   const mapStatus = (status?: string, connected?: boolean): ChannelStatus => {
     const normalized = String(status || '').toUpperCase();
@@ -121,9 +113,6 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
 
   useEffect(() => {
     refreshStatus();
-    return () => {
-      clearPopupPoll();
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -185,19 +174,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
         throw new Error('OAuth URL is empty.');
       }
 
-      const popup = window.open(url, 'meta-direct-instagram', 'width=620,height=780');
-      if (!popup) {
-        throw new Error('Popup blocked. Please allow popups for this site and try again.');
-      }
-
-      clearPopupPoll();
-      popupPollRef.current = window.setInterval(() => {
-        if (popup.closed) {
-          clearPopupPoll();
-          void refreshStatus();
-        }
-      }, 1000);
-
+      window.open(url, '_blank', 'noopener,noreferrer,width=620,height=780');
       setInstagram({
         status: 'oauth_opened',
         message: 'OAuth window opened. Waiting for callback...',
