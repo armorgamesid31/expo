@@ -22,6 +22,16 @@ const mimeTypes = {
   '.woff2': 'font/woff2',
 };
 
+const robotsTxt = `User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+User-agent: *
+Allow: /
+`;
+
 function getAssetPath(urlPath) {
   const decoded = decodeURIComponent(urlPath.split('?')[0]);
   const safePath = decoded.replace(/^\/+/, '');
@@ -55,6 +65,29 @@ const server = createServer(async (req, res) => {
   }
 
   const urlPath = req.url || '/';
+  const requestHost = req.headers.host;
+  const forwardedProto = (req.headers['x-forwarded-proto'] || '').toString().toLowerCase();
+
+  // Respect reverse-proxy scheme info and force HTTPS in production traffic.
+  if (requestHost && forwardedProto === 'http') {
+    res.statusCode = 301;
+    res.setHeader('Location', `https://${requestHost}${urlPath}`);
+    res.end();
+    return;
+  }
+
+  if (urlPath === '/robots.txt') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    if (method === 'HEAD') {
+      res.end();
+      return;
+    }
+    res.end(robotsTxt);
+    return;
+  }
+
   const filePath = getAssetPath(urlPath);
 
   const isAssetRequest = path.extname(filePath) !== '' || urlPath.startsWith('/assets/');
