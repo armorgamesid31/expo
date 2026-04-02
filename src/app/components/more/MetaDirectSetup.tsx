@@ -160,7 +160,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   }, []);
 
   const connectedCount = useMemo(
-    () => Number(state.instagram.status === 'connected' || state.instagram.status === 'degraded'),
+    () => Number(state.instagram.status === 'connected'),
     [state.instagram.status],
   );
 
@@ -255,7 +255,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   };
 
   const channel = state.instagram;
-  const isConnected = channel.status === 'connected' || channel.status === 'degraded';
+  const isConnected = channel.status === 'connected';
   const steps = [
     { key: 'preparing', label: 'Start connection' },
     { key: 'oauth_opened', label: 'Open OAuth' },
