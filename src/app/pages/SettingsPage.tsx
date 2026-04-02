@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import { SettingsScreen } from '../components/more/SettingsScreen';
 import { useAuth } from '../context/AuthContext';
-import { useLocale } from '../context/LocaleContext';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
 
 export function SettingsPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { locale, setLocale } = useLocale();
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof document === 'undefined') {
       return false;
@@ -52,8 +50,6 @@ export function SettingsPage() {
     <SettingsScreen
       isDarkMode={isDarkMode}
       onToggleDarkMode={(nextValue) => setIsDarkMode(nextValue)}
-      locale={locale}
-      onChangeLocale={setLocale}
       onShowHelpCenter={() => navigate('/app/features/help-center')}
       onLogout={() => {
         void handleLogout();

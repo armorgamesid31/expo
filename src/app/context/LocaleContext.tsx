@@ -207,25 +207,12 @@ function LocaleDomTranslator({ locale }: { locale: AppLocale }) {
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<AppLocale>('tr');
+  const [locale, setLocaleState] = useState<AppLocale>('en');
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const saved = await Preferences.get({ key: LOCALE_PREF_KEY });
-      if (!mounted) {
-        return;
-      }
-      if (saved.value === 'tr' || saved.value === 'en') {
-        setLocaleState(saved.value);
-        return;
-      }
-      setLocaleState(detectInitialLocale());
-    })();
-
-    return () => {
-      mounted = false;
-    };
+    // Language switching is temporarily disabled. Keep app locale fixed to English.
+    setLocaleState('en');
+    void Preferences.set({ key: LOCALE_PREF_KEY, value: 'en' });
   }, []);
 
   useEffect(() => {
@@ -235,7 +222,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale,
-      setLocale: (next: AppLocale) => setLocaleState(next),
+      setLocale: () => setLocaleState('en'),
     }),
     [locale],
   );
