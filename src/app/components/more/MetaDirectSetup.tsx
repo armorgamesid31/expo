@@ -22,6 +22,7 @@ type ChannelStatus =
   | 'oauth_opened'
   | 'callback_received'
   | 'connected'
+  | 'degraded'
   | 'failed';
 
 interface ChannelState {
@@ -94,6 +95,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   const mapStatus = (status?: string, connected?: boolean): ChannelStatus => {
     const normalized = String(status || '').toUpperCase();
     if (normalized === 'CONNECTED' || connected) return 'connected';
+    if (normalized === 'DEGRADED') return 'degraded';
     if (normalized === 'FAILED') return 'failed';
     if (normalized === 'CONNECTING') return 'preparing';
     return 'not_connected';
@@ -158,7 +160,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   }, []);
 
   const connectedCount = useMemo(
-    () => Number(state.instagram.status === 'connected'),
+    () => Number(state.instagram.status === 'connected' || state.instagram.status === 'degraded'),
     [state.instagram.status],
   );
 
@@ -253,7 +255,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   };
 
   const channel = state.instagram;
-  const isConnected = channel.status === 'connected';
+  const isConnected = channel.status === 'connected' || channel.status === 'degraded';
   const steps = [
     { key: 'preparing', label: 'Start connection' },
     { key: 'oauth_opened', label: 'Open OAuth' },
