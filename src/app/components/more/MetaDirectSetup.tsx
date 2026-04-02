@@ -55,26 +55,26 @@ const initialState: MetaDirectState = {
   },
 };
 
-const reviewChecklist = [
+const productionChecklist = [
   {
-    title: 'Business verification',
-    detail: 'Confirm verified status in Meta Business Manager.',
+    title: 'OAuth redirect URI',
+    detail: 'Ensure the callback URL matches exactly in Meta and app env settings.',
   },
   {
-    title: 'Privacy Policy URL',
-    detail: 'Provide a public URL and keep it updated.',
+    title: 'Required permissions',
+    detail: 'Confirm Instagram business permissions are enabled in app configuration.',
   },
   {
-    title: 'Data deletion instructions URL',
-    detail: 'Provide a public URL for data deletion requests.',
+    title: 'Webhook verification',
+    detail: 'Verify webhook callback URL and verify token values are in sync.',
   },
   {
-    title: 'Reviewer test instructions',
-    detail: 'Share clear step-by-step instructions in English.',
+    title: 'Webhook event subscriptions',
+    detail: 'Subscribe Instagram messaging events needed for inbox delivery.',
   },
   {
-    title: 'Screencast link',
-    detail: 'Show successful permission usage and message flows.',
+    title: 'Token health monitoring',
+    detail: 'Run probe after connection and monitor status diagnostics regularly.',
   },
 ];
 
@@ -277,13 +277,13 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
         </button>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl font-semibold">Meta Direct Connection (Beta)</h1>
+            <h1 className="text-xl font-semibold">Meta Direct Connection</h1>
             <p className="text-xs text-muted-foreground mt-1">
-              Instagram Login onboarding for Instagram DM and App Review preparation.
+              Instagram Login onboarding for Instagram DM.
             </p>
           </div>
-          <Badge className="bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)] border-[var(--deep-indigo)]/20">
-            Beta
+          <Badge className="bg-green-500/10 text-green-700 border-green-500/20">
+            Live
           </Badge>
         </div>
       </div>
@@ -316,7 +316,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">{isConnected ? 'Connected' : 'Not Connected'}</Badge>
-                <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20">Review Prep</Badge>
+                <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Live</Badge>
               </div>
             </div>
 
@@ -358,10 +358,10 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <ListChecks className="w-4 h-4 text-[var(--rose-gold)]" />
-              <p className="text-sm font-semibold">App Review Checklist</p>
+              <p className="text-sm font-semibold">Production Checklist</p>
             </div>
             <div className="space-y-3">
-              {reviewChecklist.map((item) => (
+              {productionChecklist.map((item) => (
                 <div key={item.title} className="rounded-lg border border-border/60 bg-muted/10 p-3">
                   <p className="text-sm font-medium">{item.title}</p>
                   <p className="text-xs text-muted-foreground mt-1">{item.detail}</p>

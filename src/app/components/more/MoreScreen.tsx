@@ -69,20 +69,20 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
   const advancedModules = [
     {
       icon: MessageCircle,
-      label: 'Instagram Inbox (Beta)',
+      label: 'Instagram Inbox',
       description: 'Conversation center + manual handover',
       action: () => onNavigate('instagram-inbox'),
       color: '#C13584',
-      badge: 'Beta',
+      badge: 'Live',
       badgeColor: 'bg-[#C13584]/10 text-[#C13584]',
     },
     {
       icon: ShieldCheck,
-      label: 'Meta Direct (Beta)',
-      description: 'Instagram DM review preparation',
+      label: 'Meta Direct',
+      description: 'Instagram DM connection and management',
       action: () => onNavigate('meta-direct'),
       color: 'var(--deep-indigo)',
-      badge: 'Beta',
+      badge: 'Live',
       badgeColor: 'bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)]',
     },
     {
