@@ -40,11 +40,22 @@ interface ScheduleSnapshot {
   appointments: AdminAppointmentsResponse['items'];
 }
 
+interface AppointmentGroup {
+  key: string;
+  customerName: string;
+  customerPhone: string;
+  startTime: string;
+  endTime: string;
+  items: AdminAppointmentItem[];
+  totalPrice: number;
+}
+
 const DAY_START_HOUR = 9;
 const DAY_END_HOUR = 21;
 const SLOT_HEIGHT = 72;
 const COLUMN_WIDTH = 180;
 const SCHEDULE_CACHE_PREFIX = 'schedule:day';
+const APPOINTMENT_STATUSES = ['BOOKED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'] as const;
 
 function toWindowQuery(date: Date) {
   return {
@@ -92,17 +103,27 @@ function hourLabel(hour: number) {
 
 type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
 
-function askPaymentMethod(defaultMethod?: PaymentMethod | null): PaymentMethod | null {
-  const raw = window.prompt(
-    'Enter payment method (cash/card/transfer/other)',
-    defaultMethod ? defaultMethod.toLowerCase() : 'cash',
-  );
-  if (!raw) return null;
-  const value = raw.trim().toUpperCase();
-  if (value === 'CASH' || value === 'CARD' || value === 'TRANSFER' || value === 'OTHER') {
-    return value as PaymentMethod;
-  }
-  return null;
+function paymentMethodLabel(method: PaymentMethod) {
+  if (method === 'CASH') return 'Cash';
+  if (method === 'CARD') return 'Card';
+  if (method === 'TRANSFER') return 'Bank Transfer';
+  return 'Other';
+}
+
+function formatPrice(value: number) {
+  return `₺${Math.round(value).toLocaleString('tr-TR')}`;
+}
+
+function deriveGroupStatus(items: AdminAppointmentItem[]): string {
+  if (!items.length) return 'BOOKED';
+  const first = items[0].status;
+  if (items.every((item) => item.status === first)) return first;
+  return 'MIXED';
+}
+
+function groupStatusClass(status: string) {
+  if (status === 'MIXED') return 'border-l-2 border-sky-400 bg-sky-50';
+  return statusClass(status);
 }
 
 export function SchedulePage() {
@@ -120,8 +141,13 @@ export function SchedulePage() {
   const [loading, setLoading] = useState<boolean>(() => !initialScheduleSnapshot);
   const [error, setError] = useState<string | null>(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
+  const [statusBusy, setStatusBusy] = useState(false);
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
-  const [selectedAppointment, setSelectedAppointment] = useState<AdminAppointmentItem | null>(null);
+  const [selectedAppointmentGroup, setSelectedAppointmentGroup] = useState<AppointmentGroup | null>(null);
+  const [paymentSelection, setPaymentSelection] = useState<{
+    appointmentIds: number[];
+    mode: 'STATUS_COMPLETE' | 'PAYMENT_ONLY';
+  } | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -165,6 +191,64 @@ export function SchedulePage() {
       (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
     );
   }, [appointments]);
+
+  const groupedAppointments = useMemo(() => {
+    const groups: AppointmentGroup[] = [];
+    const mergeThresholdMs = 5 * 60 * 1000;
+
+    for (const appointment of sortedAppointments) {
+      const customerKey = `${appointment.customerPhone || ''}|${(appointment.customerName || '').trim().toLowerCase()}`;
+      const startMs = new Date(appointment.startTime).getTime();
+      const endMs = new Date(appointment.endTime).getTime();
+      const lastGroup = groups[groups.length - 1];
+
+      if (!lastGroup) {
+        groups.push({
+          key: `${customerKey}-${appointment.id}`,
+          customerName: appointment.customerName || 'Guest',
+          customerPhone: appointment.customerPhone || '-',
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          items: [appointment],
+          totalPrice: appointment.service?.price || 0,
+        });
+        continue;
+      }
+
+      const lastGroupCustomerKey = `${lastGroup.customerPhone || ''}|${(lastGroup.customerName || '').trim().toLowerCase()}`;
+      const lastEndMs = new Date(lastGroup.endTime).getTime();
+      const isSameCustomer = customerKey === lastGroupCustomerKey;
+      const isBackToBack = startMs <= lastEndMs + mergeThresholdMs;
+
+      if (isSameCustomer && isBackToBack) {
+        lastGroup.items.push(appointment);
+        lastGroup.endTime = endMs > lastEndMs ? appointment.endTime : lastGroup.endTime;
+        lastGroup.totalPrice += appointment.service?.price || 0;
+      } else {
+        groups.push({
+          key: `${customerKey}-${appointment.id}`,
+          customerName: appointment.customerName || 'Guest',
+          customerPhone: appointment.customerPhone || '-',
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          items: [appointment],
+          totalPrice: appointment.service?.price || 0,
+        });
+      }
+    }
+
+    return groups;
+  }, [sortedAppointments]);
+
+  const appointmentGroupById = useMemo(() => {
+    const map: Record<number, AppointmentGroup> = {};
+    for (const group of groupedAppointments) {
+      for (const item of group.items) {
+        map[item.id] = group;
+      }
+    }
+    return map;
+  }, [groupedAppointments]);
 
   const loadSchedule = useCallback(async () => {
     const window = toWindowQuery(activeDate);
@@ -376,46 +460,89 @@ export function SchedulePage() {
   };
 
   const updateAppointmentPayment = async (appointmentId: number, paymentMethod: PaymentMethod) => {
-    try {
-      await apiFetch(`/api/admin/appointments/${appointmentId}/payment`, {
-        method: 'PATCH',
-        body: JSON.stringify({ paymentMethod }),
-      });
-      return true;
-    } catch {
-      return false;
-    }
+    await apiFetch(`/api/admin/appointments/${appointmentId}/payment`, {
+      method: 'PATCH',
+      body: JSON.stringify({ paymentMethod }),
+    });
   };
 
   const updateAppointmentStatus = async (
     appointmentId: number,
     status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW',
-    currentPaymentMethod?: PaymentMethod | null,
+    paymentMethod?: PaymentMethod,
   ) => {
-    setStatusUpdatingId(appointmentId);
+    const payload: { status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'; paymentMethod?: PaymentMethod } = { status };
+    if (status === 'COMPLETED' && paymentMethod) {
+      payload.paymentMethod = paymentMethod;
+    }
+    return apiFetch<AppointmentStatusUpdateResponse>(`/api/admin/appointments/${appointmentId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+  };
+
+  const applyStatusToAppointments = async (
+    appointmentIds: number[],
+    status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW',
+    paymentMethod?: PaymentMethod,
+  ) => {
+    if (!appointmentIds.length) return;
+
+    setStatusBusy(true);
+    setStatusUpdatingId(appointmentIds[0] || null);
     setStatusFeedback(null);
     try {
-      let payload: { status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'; paymentMethod?: PaymentMethod } = { status };
-      if (status === 'COMPLETED') {
-        const chosenPayment = askPaymentMethod(currentPaymentMethod);
-        if (chosenPayment) {
-          payload = { status, paymentMethod: chosenPayment };
-        }
+      const allEvents: AppointmentStatusUpdateResponse['packageAutomation']['events'] = [];
+      for (const appointmentId of appointmentIds) {
+        const response = await updateAppointmentStatus(appointmentId, status, paymentMethod);
+        allEvents.push(...(response.packageAutomation?.events || []));
       }
-      const response = await apiFetch<AppointmentStatusUpdateResponse>(`/api/admin/appointments/${appointmentId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify(payload),
-      });
-      const summary = summarizePackageAutomation(response.packageAutomation?.events || []);
-      setStatusFeedback(`Appointment #${appointmentId}: ${summary}`);
+
+      const summary = summarizePackageAutomation(allEvents);
+      setStatusFeedback(`${appointmentIds.length} appointment(s) updated: ${summary}`);
       await loadSchedule();
-      return true;
+      setSelectedAppointmentGroup(null);
     } catch (err: any) {
       setStatusFeedback(err?.message || 'Status could not be updated.');
-      return false;
     } finally {
       setStatusUpdatingId(null);
+      setStatusBusy(false);
     }
+  };
+
+  const applyPaymentToAppointments = async (appointmentIds: number[], paymentMethod: PaymentMethod) => {
+    if (!appointmentIds.length) return;
+
+    setStatusBusy(true);
+    setStatusUpdatingId(appointmentIds[0] || null);
+    setStatusFeedback(null);
+    try {
+      for (const appointmentId of appointmentIds) {
+        await updateAppointmentPayment(appointmentId, paymentMethod);
+      }
+      setStatusFeedback(`Payment set to ${paymentMethodLabel(paymentMethod)} for ${appointmentIds.length} appointment(s).`);
+      await loadSchedule();
+      setSelectedAppointmentGroup(null);
+    } catch (err: any) {
+      setStatusFeedback(err?.message || 'Payment could not be updated.');
+    } finally {
+      setStatusUpdatingId(null);
+      setStatusBusy(false);
+    }
+  };
+
+  const requestStatusChange = (appointmentIds: number[], nextStatus: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW') => {
+    if (!appointmentIds.length) return;
+    if (nextStatus === 'COMPLETED') {
+      setPaymentSelection({ appointmentIds, mode: 'STATUS_COMPLETE' });
+      return;
+    }
+    void applyStatusToAppointments(appointmentIds, nextStatus);
+  };
+
+  const requestPaymentSelection = (appointmentIds: number[]) => {
+    if (!appointmentIds.length) return;
+    setPaymentSelection({ appointmentIds, mode: 'PAYMENT_ONLY' });
   };
 
   const getAppointmentStyle = (startIso: string, endIso: string) => {
@@ -557,7 +684,7 @@ export function SchedulePage() {
                               )}`}
                               style={{ top: block.top, height: block.height }}
                               title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointment.status)}`}
-                              onClick={() => setSelectedAppointment(appointment)}
+                              onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}
                             >
                               <p className="font-semibold truncate">{appointment.customerName}</p>
                               <p className="truncate text-muted-foreground">{appointment.service.name}</p>
@@ -575,75 +702,77 @@ export function SchedulePage() {
         </div>
       ) : (
         <div className="rounded-2xl border border-border bg-card p-3 space-y-2">
-          {sortedAppointments.length === 0 ? (
+          {groupedAppointments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No appointments for this day.</p>
           ) : (
-            sortedAppointments.map((appointment) => {
-              const start = format(new Date(appointment.startTime), 'HH:mm');
-              const end = format(new Date(appointment.endTime), 'HH:mm');
+            groupedAppointments.map((group) => {
+              const start = format(new Date(group.startTime), 'HH:mm');
+              const end = format(new Date(group.endTime), 'HH:mm');
+              const groupStatus = deriveGroupStatus(group.items);
+              const serviceNames = Array.from(new Set(group.items.map((item) => item.service.name)));
+              const staffNames = Array.from(new Set(group.items.map((item) => item.staff.name)));
+              const groupPayment = group.items.every((item) => item.paymentMethod === group.items[0].paymentMethod)
+                ? (group.items[0].paymentMethod as PaymentMethod | null | undefined)
+                : null;
+
               return (
                 <div
-                  key={appointment.id}
-                  className={`rounded-lg border p-3 cursor-pointer ${statusClass(appointment.status)}`}
-                  onClick={() => setSelectedAppointment(appointment)}
+                  key={group.key}
+                  className={`rounded-lg border p-3 cursor-pointer ${groupStatusClass(groupStatus)}`}
+                  onClick={() => setSelectedAppointmentGroup(group)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-sm font-semibold">{appointment.customerName}</p>
-                      <p className="text-xs text-muted-foreground">{appointment.customerPhone}</p>
+                      <p className="text-sm font-semibold">{group.customerName}</p>
+                      <p className="text-xs text-muted-foreground">{group.customerPhone}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-semibold">{start} - {end}</p>
-                      <p className="text-[11px] text-muted-foreground">{statusLabel(appointment.status)}</p>
-                      {appointment.status === 'COMPLETED' ? (
+                      <p className="text-[11px] text-muted-foreground">
+                        {groupStatus === 'MIXED' ? 'Mixed statuses' : statusLabel(groupStatus)}
+                      </p>
+                      {groupStatus === 'COMPLETED' ? (
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          Payment: {appointment.paymentMethod || 'MISSING'}
+                          Payment: {groupPayment ? paymentMethodLabel(groupPayment) : 'Not recorded'}
                         </p>
                       ) : null}
                     </div>
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
-                    <p>{appointment.service.name}</p>
-                    <p>{appointment.staff.name}</p>
+                    <p>{serviceNames.join(', ')}</p>
+                    <p>{staffNames.join(', ')}</p>
+                    <p className="mt-1 text-foreground font-medium">Total: {formatPrice(group.totalPrice)}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {(['BOOKED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'] as const).map((status) => (
+                    {APPOINTMENT_STATUSES.map((status) => (
                       <button
                         key={status}
                         type="button"
-                        disabled={statusUpdatingId === appointment.id || appointment.status === status}
+                        disabled={
+                          statusBusy ||
+                          (groupStatus !== 'MIXED' && groupStatus === status) ||
+                          statusUpdatingId === group.items[0]?.id
+                        }
                         onClick={(event) => {
                           event.stopPropagation();
-                          void updateAppointmentStatus(
-                            appointment.id,
-                            status,
-                            (appointment.paymentMethod || null) as PaymentMethod | null,
-                          );
+                          requestStatusChange(group.items.map((item) => item.id), status);
                         }}
                         className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
-                          appointment.status === status ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' : 'border-border'
+                          groupStatus !== 'MIXED' && groupStatus === status
+                            ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
+                            : 'border-border'
                         }`}
                       >
-                        {status}
+                        {status.replace('_', ' ')}
                       </button>
                     ))}
-                    {appointment.status === 'COMPLETED' ? (
+                    {(groupStatus === 'COMPLETED' || groupStatus === 'MIXED') ? (
                       <button
                         type="button"
-                        disabled={statusUpdatingId === appointment.id}
-                        onClick={async (event) => {
+                        disabled={statusBusy || statusUpdatingId === group.items[0]?.id}
+                        onClick={(event) => {
                           event.stopPropagation();
-                          const chosen = askPaymentMethod((appointment.paymentMethod || null) as PaymentMethod | null);
-                          if (!chosen) return;
-                          setStatusUpdatingId(appointment.id);
-                          const success = await updateAppointmentPayment(appointment.id, chosen);
-                          if (success) {
-                            setStatusFeedback(`Appointment #${appointment.id}: payment set to ${chosen}`);
-                            await loadSchedule();
-                          } else {
-                            setStatusFeedback('Payment could not be updated.');
-                          }
-                          setStatusUpdatingId(null);
+                          requestPaymentSelection(group.items.map((item) => item.id));
                         }}
                         className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
                       >
@@ -664,86 +793,94 @@ export function SchedulePage() {
         </div>
       ) : null}
 
-      {selectedAppointment ? (
-        <div className="fixed inset-0 z-50 bg-black/35 p-4" onClick={() => setSelectedAppointment(null)}>
+      {selectedAppointmentGroup ? (
+        <div className="fixed inset-0 z-50 bg-black/35 p-4" onClick={() => setSelectedAppointmentGroup(null)}>
           <div
             className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Appointment Details</h2>
-              <button type="button" onClick={() => setSelectedAppointment(null)} className="text-sm text-muted-foreground">
+              <button type="button" onClick={() => setSelectedAppointmentGroup(null)} className="text-sm text-muted-foreground">
                 Close
               </button>
             </div>
 
             <div className="space-y-2 text-sm">
               <div className="rounded-lg border border-border p-3">
-                <p className="font-semibold">{selectedAppointment.customerName}</p>
-                <p className="text-xs text-muted-foreground">{selectedAppointment.customerPhone}</p>
+                <p className="font-semibold">{selectedAppointmentGroup.customerName}</p>
+                <p className="text-xs text-muted-foreground">{selectedAppointmentGroup.customerPhone}</p>
               </div>
               <div className="rounded-lg border border-border p-3 space-y-1">
                 <p>
                   <span className="text-muted-foreground">Time:</span>{' '}
-                  {format(new Date(selectedAppointment.startTime), 'HH:mm')} - {format(new Date(selectedAppointment.endTime), 'HH:mm')}
+                  {format(new Date(selectedAppointmentGroup.startTime), 'HH:mm')} -{' '}
+                  {format(new Date(selectedAppointmentGroup.endTime), 'HH:mm')}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Service:</span> {selectedAppointment.service.name}
+                  <span className="text-muted-foreground">Status:</span>{' '}
+                  {deriveGroupStatus(selectedAppointmentGroup.items) === 'MIXED'
+                    ? 'Mixed statuses'
+                    : statusLabel(deriveGroupStatus(selectedAppointmentGroup.items))}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Specialist:</span> {selectedAppointment.staff.name}
+                  <span className="text-muted-foreground">Total price:</span> {formatPrice(selectedAppointmentGroup.totalPrice)}
                 </p>
-                <p>
-                  <span className="text-muted-foreground">Status:</span> {statusLabel(selectedAppointment.status)}
-                </p>
-                {selectedAppointment.status === 'COMPLETED' ? (
-                  <p>
-                    <span className="text-muted-foreground">Payment:</span> {selectedAppointment.paymentMethod || 'Not recorded'}
-                  </p>
-                ) : null}
+              </div>
+
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <p className="text-xs text-muted-foreground font-medium">Included appointments</p>
+                {selectedAppointmentGroup.items.map((item) => (
+                  <div key={item.id} className="rounded-md border border-border/70 p-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium">{item.service.name}</p>
+                      <p className="text-xs text-muted-foreground">{formatPrice(item.service.price || 0)}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(item.startTime), 'HH:mm')} - {format(new Date(item.endTime), 'HH:mm')} • {item.staff.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {statusLabel(item.status)}
+                      {item.status === 'COMPLETED' && item.paymentMethod ? ` • ${paymentMethodLabel(item.paymentMethod as PaymentMethod)}` : ''}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {(['BOOKED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'] as const).map((status) => (
+              {APPOINTMENT_STATUSES.map((status) => (
                 <button
                   key={status}
                   type="button"
-                  disabled={statusUpdatingId === selectedAppointment.id || selectedAppointment.status === status}
-                  onClick={async () => {
-                    const success = await updateAppointmentStatus(
-                      selectedAppointment.id,
+                  disabled={
+                    statusBusy ||
+                    (deriveGroupStatus(selectedAppointmentGroup.items) !== 'MIXED' &&
+                      deriveGroupStatus(selectedAppointmentGroup.items) === status)
+                  }
+                  onClick={() => {
+                    requestStatusChange(
+                      selectedAppointmentGroup.items.map((item) => item.id),
                       status,
-                      (selectedAppointment.paymentMethod || null) as PaymentMethod | null,
                     );
-                    if (success) {
-                      setSelectedAppointment(null);
-                    }
                   }}
                   className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
-                    selectedAppointment.status === status ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' : 'border-border'
+                    deriveGroupStatus(selectedAppointmentGroup.items) !== 'MIXED' &&
+                    deriveGroupStatus(selectedAppointmentGroup.items) === status
+                      ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
+                      : 'border-border'
                   }`}
                 >
-                  {status}
+                  {status.replace('_', ' ')}
                 </button>
               ))}
-              {selectedAppointment.status === 'COMPLETED' ? (
+              {(deriveGroupStatus(selectedAppointmentGroup.items) === 'COMPLETED' ||
+                deriveGroupStatus(selectedAppointmentGroup.items) === 'MIXED') ? (
                 <button
                   type="button"
-                  disabled={statusUpdatingId === selectedAppointment.id}
-                  onClick={async () => {
-                    const chosen = askPaymentMethod((selectedAppointment.paymentMethod || null) as PaymentMethod | null);
-                    if (!chosen) return;
-                    setStatusUpdatingId(selectedAppointment.id);
-                    const success = await updateAppointmentPayment(selectedAppointment.id, chosen);
-                    if (success) {
-                      setStatusFeedback(`Appointment #${selectedAppointment.id}: payment set to ${chosen}`);
-                      await loadSchedule();
-                      setSelectedAppointment(null);
-                    } else {
-                      setStatusFeedback('Payment could not be updated.');
-                    }
-                    setStatusUpdatingId(null);
+                  disabled={statusBusy}
+                  onClick={() => {
+                    requestPaymentSelection(selectedAppointmentGroup.items.map((item) => item.id));
                   }}
                   className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
                 >
@@ -751,6 +888,54 @@ export function SchedulePage() {
                 </button>
               ) : null}
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {paymentSelection ? (
+        <div className="fixed inset-0 z-[60] bg-black/45 p-4" onClick={() => (!statusBusy ? setPaymentSelection(null) : undefined)}>
+          <div
+            className="mx-auto mt-16 max-w-sm rounded-2xl border border-border bg-background p-4 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold">Select Payment Method</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {paymentSelection.mode === 'STATUS_COMPLETE'
+                ? 'Choose payment method to mark appointment as completed.'
+                : 'Choose payment method to update the selected appointment(s).'}
+            </p>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) => (
+                <button
+                  key={method}
+                  type="button"
+                  disabled={statusBusy}
+                  onClick={async () => {
+                    const ids = paymentSelection.appointmentIds;
+                    const mode = paymentSelection.mode;
+                    setPaymentSelection(null);
+                    if (mode === 'STATUS_COMPLETE') {
+                      await applyStatusToAppointments(ids, 'COMPLETED', method);
+                    } else {
+                      await applyPaymentToAppointments(ids, method);
+                    }
+                  }}
+                  className="h-10 rounded-lg border border-border bg-card text-sm font-medium hover:border-[var(--rose-gold)] disabled:opacity-50"
+                >
+                  {paymentMethodLabel(method)}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              disabled={statusBusy}
+              onClick={() => setPaymentSelection(null)}
+              className="mt-3 w-full h-10 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       ) : null}
