@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDays, endOfDay, format, formatISO, startOfDay } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
+import { Banknote, CalendarCheck2, CalendarDays, CircleHelp, CreditCard, RefreshCw, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { AdminAppointmentItem, AdminAppointmentsResponse, AppointmentStatusUpdateResponse } from '../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
@@ -55,7 +55,9 @@ const DAY_END_HOUR = 21;
 const SLOT_HEIGHT = 72;
 const COLUMN_WIDTH = 180;
 const SCHEDULE_CACHE_PREFIX = 'schedule:day';
-const APPOINTMENT_STATUSES = ['BOOKED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'] as const;
+type UIAppointmentStatus = 'BOOKED' | 'CONFIRMED' | 'UPDATED' | 'NO_SHOW' | 'CANCELLED' | 'COMPLETED' | 'MIXED';
+type UIAppointmentAction = 'BOOKED' | 'CONFIRMED' | 'UPDATED' | 'NO_SHOW' | 'CANCELLED' | 'COMPLETED';
+const APPOINTMENT_STATUS_ACTIONS: UIAppointmentAction[] = ['BOOKED', 'CONFIRMED', 'UPDATED', 'NO_SHOW', 'CANCELLED'];
 
 function toWindowQuery(date: Date) {
   return {
@@ -76,18 +78,24 @@ function readScheduleSnapshot(date: Date): ScheduleSnapshot | null {
   return readSnapshot<ScheduleSnapshot>(scheduleCacheKey(dayKeyFromDate(date)), 1000 * 60 * 60 * 6);
 }
 
-function statusLabel(status: string) {
+function statusLabel(status: UIAppointmentStatus | string) {
   if (status === 'COMPLETED') return 'Completed';
   if (status === 'CANCELLED') return 'Cancelled';
   if (status === 'NO_SHOW') return 'No-show';
+  if (status === 'CONFIRMED') return 'Confirmed';
+  if (status === 'UPDATED') return 'Updated';
+  if (status === 'MIXED') return 'Mixed statuses';
   return 'Booked';
 }
 
-function statusClass(status: string) {
-  if (status === 'COMPLETED') return 'border-l-2 border-emerald-400 bg-emerald-50';
-  if (status === 'CANCELLED') return 'border-l-2 border-zinc-400 bg-zinc-100';
-  if (status === 'NO_SHOW') return 'border-l-2 border-amber-400 bg-amber-50';
-  return 'border-l-2 border-[var(--rose-gold)] bg-[var(--rose-gold)]/10';
+function statusClass(status: UIAppointmentStatus | string) {
+  if (status === 'COMPLETED') return 'border-l-2 border-emerald-500 bg-emerald-500/12';
+  if (status === 'CANCELLED') return 'border-l-2 border-slate-400 bg-slate-400/12';
+  if (status === 'NO_SHOW') return 'border-l-2 border-amber-500 bg-amber-500/14';
+  if (status === 'CONFIRMED') return 'border-l-2 border-sky-500 bg-sky-500/12';
+  if (status === 'UPDATED') return 'border-l-2 border-violet-500 bg-violet-500/12';
+  if (status === 'MIXED') return 'border-l-2 border-indigo-500 bg-indigo-500/12';
+  return 'border-l-2 border-[var(--rose-gold)] bg-[var(--rose-gold)]/14';
 }
 
 function combineDateTime(date: Date, timeValue: string): string {
@@ -106,24 +114,25 @@ type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
 function paymentMethodLabel(method: PaymentMethod) {
   if (method === 'CASH') return 'Cash';
   if (method === 'CARD') return 'Card';
-  if (method === 'TRANSFER') return 'Bank Transfer';
+  if (method === 'TRANSFER') return 'Other';
   return 'Other';
+}
+
+function paymentMethodIcon(method: 'CASH' | 'CARD' | 'OTHER') {
+  if (method === 'CASH') return Banknote;
+  if (method === 'CARD') return CreditCard;
+  return CircleHelp;
 }
 
 function formatPrice(value: number) {
   return `₺${Math.round(value).toLocaleString('tr-TR')}`;
 }
 
-function deriveGroupStatus(items: AdminAppointmentItem[]): string {
+function deriveGroupStatus(items: AdminAppointmentItem[], getStatus: (item: AdminAppointmentItem) => UIAppointmentStatus): UIAppointmentStatus {
   if (!items.length) return 'BOOKED';
-  const first = items[0].status;
-  if (items.every((item) => item.status === first)) return first;
+  const first = getStatus(items[0]);
+  if (items.every((item) => getStatus(item) === first)) return first;
   return 'MIXED';
-}
-
-function groupStatusClass(status: string) {
-  if (status === 'MIXED') return 'border-l-2 border-sky-400 bg-sky-50';
-  return statusClass(status);
 }
 
 export function SchedulePage() {
@@ -143,6 +152,7 @@ export function SchedulePage() {
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
+  const [statusOverrides, setStatusOverrides] = useState<Record<number, 'CONFIRMED' | 'UPDATED'>>({});
   const [selectedAppointmentGroup, setSelectedAppointmentGroup] = useState<AppointmentGroup | null>(null);
   const [paymentSelection, setPaymentSelection] = useState<{
     appointmentIds: number[];
@@ -249,6 +259,29 @@ export function SchedulePage() {
     }
     return map;
   }, [groupedAppointments]);
+
+  const getDisplayStatus = useCallback(
+    (item: AdminAppointmentItem): UIAppointmentStatus => {
+      if (item.status === 'COMPLETED') return 'COMPLETED';
+      if (item.status === 'CANCELLED') return 'CANCELLED';
+      if (item.status === 'NO_SHOW') return 'NO_SHOW';
+      return statusOverrides[item.id] || 'BOOKED';
+    },
+    [statusOverrides],
+  );
+
+  useEffect(() => {
+    setStatusOverrides((previous) => {
+      const next: Record<number, 'CONFIRMED' | 'UPDATED'> = {};
+      for (const appointment of appointments) {
+        const override = previous[appointment.id];
+        if (override && appointment.status === 'BOOKED') {
+          next[appointment.id] = override;
+        }
+      }
+      return next;
+    });
+  }, [appointments]);
 
   const loadSchedule = useCallback(async () => {
     const window = toWindowQuery(activeDate);
@@ -481,12 +514,20 @@ export function SchedulePage() {
     });
   };
 
+  const mapUiActionToBackendStatus = (action: UIAppointmentAction): 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' => {
+    if (action === 'NO_SHOW') return 'NO_SHOW';
+    if (action === 'CANCELLED') return 'CANCELLED';
+    if (action === 'COMPLETED') return 'COMPLETED';
+    return 'BOOKED';
+  };
+
   const applyStatusToAppointments = async (
     appointmentIds: number[],
-    status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW',
+    action: UIAppointmentAction,
     paymentMethod?: PaymentMethod,
   ) => {
     if (!appointmentIds.length) return;
+    const status = mapUiActionToBackendStatus(action);
 
     setStatusBusy(true);
     setStatusUpdatingId(appointmentIds[0] || null);
@@ -498,9 +539,28 @@ export function SchedulePage() {
         allEvents.push(...(response.packageAutomation?.events || []));
       }
 
-      const summary = summarizePackageAutomation(allEvents);
-      setStatusFeedback(`${appointmentIds.length} appointment(s) updated: ${summary}`);
+      if (action === 'CONFIRMED') {
+        setStatusFeedback(`${appointmentIds.length} appointment(s) marked as confirmed.`);
+      } else if (action === 'UPDATED') {
+        setStatusFeedback(`${appointmentIds.length} appointment(s) marked as updated.`);
+      } else if (action === 'BOOKED') {
+        setStatusFeedback(`${appointmentIds.length} appointment(s) moved to booked.`);
+      } else {
+        const summary = summarizePackageAutomation(allEvents);
+        setStatusFeedback(`${appointmentIds.length} appointment(s) updated: ${summary}`);
+      }
       await loadSchedule();
+      setStatusOverrides((previous) => {
+        const next = { ...previous };
+        for (const appointmentId of appointmentIds) {
+          if (action === 'CONFIRMED' || action === 'UPDATED') {
+            next[appointmentId] = action;
+          } else {
+            delete next[appointmentId];
+          }
+        }
+        return next;
+      });
       setSelectedAppointmentGroup(null);
     } catch (err: any) {
       setStatusFeedback(err?.message || 'Status could not be updated.');
@@ -531,7 +591,7 @@ export function SchedulePage() {
     }
   };
 
-  const requestStatusChange = (appointmentIds: number[], nextStatus: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW') => {
+  const requestStatusChange = (appointmentIds: number[], nextStatus: UIAppointmentAction) => {
     if (!appointmentIds.length) return;
     if (nextStatus === 'COMPLETED') {
       setPaymentSelection({ appointmentIds, mode: 'STATUS_COMPLETE' });
@@ -671,6 +731,7 @@ export function SchedulePage() {
 
                         {rows.map((appointment) => {
                           const block = getAppointmentStyle(appointment.startTime, appointment.endTime);
+                          const appointmentDisplayStatus = getDisplayStatus(appointment);
                           const timeRange = `${format(new Date(appointment.startTime), 'HH:mm')} - ${format(
                             new Date(appointment.endTime),
                             'HH:mm',
@@ -680,10 +741,10 @@ export function SchedulePage() {
                             <div
                               key={appointment.id}
                               className={`absolute left-1 right-1 rounded-lg px-2 py-2 text-[11px] shadow-sm cursor-pointer ${statusClass(
-                                appointment.status,
+                                appointmentDisplayStatus,
                               )}`}
                               style={{ top: block.top, height: block.height }}
-                              title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointment.status)}`}
+                              title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointmentDisplayStatus)}`}
                               onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}
                             >
                               <p className="font-semibold truncate">{appointment.customerName}</p>
@@ -708,7 +769,7 @@ export function SchedulePage() {
             groupedAppointments.map((group) => {
               const start = format(new Date(group.startTime), 'HH:mm');
               const end = format(new Date(group.endTime), 'HH:mm');
-              const groupStatus = deriveGroupStatus(group.items);
+              const groupStatus = deriveGroupStatus(group.items, getDisplayStatus);
               const serviceNames = Array.from(new Set(group.items.map((item) => item.service.name)));
               const staffNames = Array.from(new Set(group.items.map((item) => item.staff.name)));
               const groupPayment = group.items.every((item) => item.paymentMethod === group.items[0].paymentMethod)
@@ -718,7 +779,7 @@ export function SchedulePage() {
               return (
                 <div
                   key={group.key}
-                  className={`rounded-lg border p-3 cursor-pointer ${groupStatusClass(groupStatus)}`}
+                  className={`rounded-lg border p-3 cursor-pointer ${statusClass(groupStatus)}`}
                   onClick={() => setSelectedAppointmentGroup(group)}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -728,9 +789,7 @@ export function SchedulePage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-semibold">{start} - {end}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {groupStatus === 'MIXED' ? 'Mixed statuses' : statusLabel(groupStatus)}
-                      </p>
+                      <p className="text-[11px] text-muted-foreground">{statusLabel(groupStatus)}</p>
                       {groupStatus === 'COMPLETED' ? (
                         <p className="text-[11px] text-muted-foreground mt-1">
                           Payment: {groupPayment ? paymentMethodLabel(groupPayment) : 'Not recorded'}
@@ -744,7 +803,7 @@ export function SchedulePage() {
                     <p className="mt-1 text-foreground font-medium">Total: {formatPrice(group.totalPrice)}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {APPOINTMENT_STATUSES.map((status) => (
+                    {APPOINTMENT_STATUS_ACTIONS.map((status) => (
                       <button
                         key={status}
                         type="button"
@@ -763,9 +822,22 @@ export function SchedulePage() {
                             : 'border-border'
                         }`}
                       >
-                        {status.replace('_', ' ')}
+                        {statusLabel(status)}
                       </button>
                     ))}
+                    {(groupStatus === 'BOOKED' || groupStatus === 'CONFIRMED' || groupStatus === 'UPDATED') ? (
+                      <button
+                        type="button"
+                        disabled={statusBusy || statusUpdatingId === group.items[0]?.id}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          requestStatusChange(group.items.map((item) => item.id), 'COMPLETED');
+                        }}
+                        className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] disabled:opacity-50"
+                      >
+                        Complete & Payment
+                      </button>
+                    ) : null}
                     {(groupStatus === 'COMPLETED' || groupStatus === 'MIXED') ? (
                       <button
                         type="button"
@@ -776,7 +848,7 @@ export function SchedulePage() {
                         }}
                         className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
                       >
-                        Set Payment
+                        Update Payment
                       </button>
                     ) : null}
                   </div>
@@ -819,9 +891,7 @@ export function SchedulePage() {
                 </p>
                 <p>
                   <span className="text-muted-foreground">Status:</span>{' '}
-                  {deriveGroupStatus(selectedAppointmentGroup.items) === 'MIXED'
-                    ? 'Mixed statuses'
-                    : statusLabel(deriveGroupStatus(selectedAppointmentGroup.items))}
+                  {statusLabel(deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus))}
                 </p>
                 <p>
                   <span className="text-muted-foreground">Total price:</span> {formatPrice(selectedAppointmentGroup.totalPrice)}
@@ -840,7 +910,7 @@ export function SchedulePage() {
                       {format(new Date(item.startTime), 'HH:mm')} - {format(new Date(item.endTime), 'HH:mm')} • {item.staff.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {statusLabel(item.status)}
+                      {statusLabel(getDisplayStatus(item))}
                       {item.status === 'COMPLETED' && item.paymentMethod ? ` • ${paymentMethodLabel(item.paymentMethod as PaymentMethod)}` : ''}
                     </p>
                   </div>
@@ -849,14 +919,14 @@ export function SchedulePage() {
             </div>
 
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {APPOINTMENT_STATUSES.map((status) => (
+              {APPOINTMENT_STATUS_ACTIONS.map((status) => (
                 <button
                   key={status}
                   type="button"
                   disabled={
                     statusBusy ||
-                    (deriveGroupStatus(selectedAppointmentGroup.items) !== 'MIXED' &&
-                      deriveGroupStatus(selectedAppointmentGroup.items) === status)
+                    (deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) !== 'MIXED' &&
+                      deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === status)
                   }
                   onClick={() => {
                     requestStatusChange(
@@ -865,17 +935,31 @@ export function SchedulePage() {
                     );
                   }}
                   className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
-                    deriveGroupStatus(selectedAppointmentGroup.items) !== 'MIXED' &&
-                    deriveGroupStatus(selectedAppointmentGroup.items) === status
+                    deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) !== 'MIXED' &&
+                    deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === status
                       ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
                       : 'border-border'
                   }`}
                 >
-                  {status.replace('_', ' ')}
+                  {statusLabel(status)}
                 </button>
               ))}
-              {(deriveGroupStatus(selectedAppointmentGroup.items) === 'COMPLETED' ||
-                deriveGroupStatus(selectedAppointmentGroup.items) === 'MIXED') ? (
+              {(deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'BOOKED' ||
+                deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'CONFIRMED' ||
+                deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'UPDATED') ? (
+                <button
+                  type="button"
+                  disabled={statusBusy}
+                  onClick={() => {
+                    requestStatusChange(selectedAppointmentGroup.items.map((item) => item.id), 'COMPLETED');
+                  }}
+                  className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] disabled:opacity-50"
+                >
+                  Complete & Payment
+                </button>
+              ) : null}
+              {(deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'COMPLETED' ||
+                deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'MIXED') ? (
                 <button
                   type="button"
                   disabled={statusBusy}
@@ -884,7 +968,7 @@ export function SchedulePage() {
                   }}
                   className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
                 >
-                  Set Payment
+                  Update Payment
                 </button>
               ) : null}
             </div>
@@ -905,8 +989,10 @@ export function SchedulePage() {
                 : 'Choose payment method to update the selected appointment(s).'}
             </p>
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) => (
+            <div className="mt-4 grid grid-cols-1 gap-2">
+              {(['CASH', 'CARD', 'OTHER'] as const).map((method) => {
+                const Icon = paymentMethodIcon(method);
+                return (
                 <button
                   key={method}
                   type="button"
@@ -921,11 +1007,13 @@ export function SchedulePage() {
                       await applyPaymentToAppointments(ids, method);
                     }
                   }}
-                  className="h-10 rounded-lg border border-border bg-card text-sm font-medium hover:border-[var(--rose-gold)] disabled:opacity-50"
+                  className="h-11 rounded-lg border border-border bg-card text-sm font-medium hover:border-[var(--rose-gold)] disabled:opacity-50 px-3 flex items-center gap-2 justify-start"
                 >
+                  <Icon className="h-4 w-4 text-[var(--rose-gold)]" />
                   {paymentMethodLabel(method)}
                 </button>
-              ))}
+                );
+              })}
             </div>
 
             <button
