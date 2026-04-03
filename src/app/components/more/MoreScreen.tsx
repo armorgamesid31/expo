@@ -73,7 +73,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
     {
       icon: Bell,
       label: 'Notification Role Matrix',
-      description: 'Role bazli bildirim alicilari',
+      description: 'Control who receives each alert type',
       action: () => onNavigate('notification-role-matrix'),
       color: 'var(--deep-indigo)',
     },

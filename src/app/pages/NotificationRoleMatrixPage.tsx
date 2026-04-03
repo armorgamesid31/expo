@@ -2,35 +2,77 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const EVENTS = [
-  'HANDOVER_REQUIRED',
-  'HANDOVER_REMINDER',
-  'SAME_DAY_APPOINTMENT_CHANGE',
-  'END_OF_DAY_MISSING_DATA',
-  'DAILY_MANAGER_REPORT',
+  {
+    key: 'HANDOVER_REQUIRED',
+    title: 'Customer Needs Salon Support',
+    description: 'Sends an alert when AI hands the conversation to your team.',
+  },
+  {
+    key: 'HANDOVER_REMINDER',
+    title: 'Handover Reminder',
+    description: 'Repeats reminders while handover is still pending.',
+  },
+  {
+    key: 'SAME_DAY_APPOINTMENT_CHANGE',
+    title: 'Same-Day Appointment Changes',
+    description: 'Notifies new bookings, updates, and cancellations for today.',
+  },
+  {
+    key: 'END_OF_DAY_MISSING_DATA',
+    title: 'End-of-Day Missing Data',
+    description: 'Reminds the team when check-in or payment info is missing.',
+  },
+  {
+    key: 'DAILY_MANAGER_REPORT',
+    title: 'Daily Manager Report',
+    description: 'Sends the daily summary after closing.',
+  },
 ] as const;
 
-const ROLES = ['OWNER', 'MANAGER', 'RECEPTION', 'STAFF', 'FINANCE'] as const;
+const ROLES = [
+  { key: 'OWNER', label: 'Owner' },
+  { key: 'MANAGER', label: 'Manager' },
+  { key: 'RECEPTION', label: 'Reception' },
+  { key: 'STAFF', label: 'Staff' },
+  { key: 'FINANCE', label: 'Finance' },
+] as const;
 
 type EventType = (typeof EVENTS)[number];
-type RoleType = (typeof ROLES)[number];
+type EventKey = EventType['key'];
+type RoleType = (typeof ROLES)[number]['key'];
+
+type NotificationPolicy = {
+  recipients?: Partial<Record<EventKey, RoleType[]>>;
+  handoverReminderIntervalMinutes?: number;
+  handoverReminderMaxCount?: number;
+};
 
 export function NotificationRoleMatrixPage() {
   const { apiFetch } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [policy, setPolicy] = useState<any>(null);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [policy, setPolicy] = useState<NotificationPolicy>({
+    recipients: {},
+    handoverReminderIntervalMinutes: 30,
+    handoverReminderMaxCount: 6,
+  });
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const response = await apiFetch<{ policy: any }>('/api/admin/notification-settings');
+        const response = await apiFetch<{ policy: NotificationPolicy }>('/api/admin/notification-settings');
         if (!active) return;
-        setPolicy(response.policy || {});
+        setPolicy({
+          recipients: response.policy?.recipients || {},
+          handoverReminderIntervalMinutes: response.policy?.handoverReminderIntervalMinutes || 30,
+          handoverReminderMaxCount: response.policy?.handoverReminderMaxCount || 6,
+        });
       } catch (err: any) {
         if (!active) return;
-        setError(err?.message || 'Role matrix yüklenemedi.');
+        setError(err?.message || 'Notification settings could not be loaded.');
       } finally {
         if (active) setLoading(false);
       }
@@ -40,8 +82,9 @@ export function NotificationRoleMatrixPage() {
     };
   }, [apiFetch]);
 
-  const toggle = (eventType: EventType, role: RoleType) => {
-    setPolicy((prev: any) => {
+  const toggle = (eventType: EventKey, role: RoleType) => {
+    setSavedMessage(null);
+    setPolicy((prev) => {
       const recipients = { ...(prev?.recipients || {}) };
       const current = Array.isArray(recipients[eventType]) ? [...recipients[eventType]] : [];
       const next = current.includes(role) ? current.filter((item) => item !== role) : [...current, role];
@@ -50,16 +93,27 @@ export function NotificationRoleMatrixPage() {
     });
   };
 
+  const setAllForEvent = (eventType: EventKey, enabled: boolean) => {
+    setSavedMessage(null);
+    setPolicy((prev) => {
+      const recipients = { ...(prev?.recipients || {}) };
+      recipients[eventType] = enabled ? ROLES.map((item) => item.key) : [];
+      return { ...prev, recipients };
+    });
+  };
+
   const save = async () => {
     setSaving(true);
     setError(null);
+    setSavedMessage(null);
     try {
       await apiFetch('/api/admin/notification-settings', {
         method: 'PUT',
-        body: JSON.stringify(policy || {}),
+        body: JSON.stringify(policy),
       });
+      setSavedMessage('Notification settings saved.');
     } catch (err: any) {
-      setError(err?.message || 'Role matrix kaydedilemedi.');
+      setError(err?.message || 'Notification settings could not be saved.');
     } finally {
       setSaving(false);
     }
@@ -67,26 +121,55 @@ export function NotificationRoleMatrixPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Notification Role Matrix</h1>
-      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+      <h1 className="text-2xl font-semibold">Notification Rules</h1>
+      <p className="text-sm text-muted-foreground">
+        Choose which team roles receive each notification type.
+      </p>
+      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {savedMessage ? <p className="text-sm text-emerald-600">{savedMessage}</p> : null}
 
       {!loading ? (
         <div className="space-y-3">
-          {EVENTS.map((eventType) => {
-            const selected = (policy?.recipients?.[eventType] || []) as string[];
+          {EVENTS.map((eventItem) => {
+            const selected = (policy?.recipients?.[eventItem.key] || []) as string[];
             return (
-              <div key={eventType} className="rounded-xl border border-border bg-card p-3 space-y-2">
-                <p className="text-sm font-semibold">{eventType}</p>
+              <div key={eventItem.key} className="rounded-xl border border-border bg-card p-3 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">{eventItem.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{eventItem.description}</p>
+                  </div>
+                  <div className="shrink-0 flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setAllForEvent(eventItem.key, true)}
+                      className="h-7 px-2 rounded-md border border-border text-[11px]"
+                    >
+                      Enable all
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAllForEvent(eventItem.key, false)}
+                      className="h-7 px-2 rounded-md border border-border text-[11px]"
+                    >
+                      Disable all
+                    </button>
+                  </div>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {ROLES.map((role) => (
                     <button
-                      key={role}
+                      key={role.key}
                       type="button"
-                      onClick={() => toggle(eventType, role)}
-                      className={`px-2.5 h-8 rounded-full border text-xs ${selected.includes(role) ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/15' : 'border-border'}`}
+                      onClick={() => toggle(eventItem.key, role.key)}
+                      className={`px-2.5 h-8 rounded-full border text-xs ${
+                        selected.includes(role.key)
+                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/15 text-[var(--deep-indigo)]'
+                          : 'border-border text-muted-foreground'
+                      }`}
                     >
-                      {role}
+                      {role.label}
                     </button>
                   ))}
                 </div>
@@ -94,23 +177,40 @@ export function NotificationRoleMatrixPage() {
             );
           })}
 
-          <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-            <p className="text-sm font-semibold">Handover Repeat</p>
+          <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+            <p className="text-sm font-semibold">Handover Reminder Rules</p>
+            <p className="text-xs text-muted-foreground">
+              If handover stays active, reminders are repeated with these limits.
+            </p>
             <label className="flex items-center justify-between text-sm">
-              <span>Interval (dk)</span>
+              <span>Reminder interval (min)</span>
               <input
                 type="number"
+                min={5}
+                max={180}
                 value={policy?.handoverReminderIntervalMinutes || 30}
-                onChange={(e) => setPolicy((prev: any) => ({ ...prev, handoverReminderIntervalMinutes: Number(e.target.value) || 30 }))}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    handoverReminderIntervalMinutes: Math.min(180, Math.max(5, Number(e.target.value) || 30)),
+                  }))
+                }
                 className="w-20 h-8 rounded border border-border px-2"
               />
             </label>
             <label className="flex items-center justify-between text-sm">
-              <span>Max tekrar</span>
+              <span>Max reminders</span>
               <input
                 type="number"
+                min={1}
+                max={12}
                 value={policy?.handoverReminderMaxCount || 6}
-                onChange={(e) => setPolicy((prev: any) => ({ ...prev, handoverReminderMaxCount: Number(e.target.value) || 6 }))}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    handoverReminderMaxCount: Math.min(12, Math.max(1, Number(e.target.value) || 6)),
+                  }))
+                }
                 className="w-20 h-8 rounded border border-border px-2"
               />
             </label>
