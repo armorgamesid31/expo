@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDays, endOfDay, format, formatISO, startOfDay } from 'date-fns';
-import { Banknote, CalendarCheck2, CalendarDays, CircleHelp, CreditCard, RefreshCw, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
+import { Banknote, CalendarDays, CircleHelp, CreditCard, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import type { AdminAppointmentItem, AdminAppointmentsResponse, AppointmentStatusUpdateResponse } from '../types/mobile-api';
+import type {
+  AdminAppointmentItem,
+  AdminAppointmentsResponse,
+  AdminAppointmentReschedulePreviewResponse,
+  AppointmentStatusUpdateResponse,
+} from '../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
 interface StaffItem {
@@ -109,12 +114,11 @@ function hourLabel(hour: number) {
   return `${String(hour).padStart(2, '0')}:00`;
 }
 
-type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
+type PaymentMethod = 'CASH' | 'CARD' | 'OTHER';
 
 function paymentMethodLabel(method: PaymentMethod) {
   if (method === 'CASH') return 'Cash';
   if (method === 'CARD') return 'Card';
-  if (method === 'TRANSFER') return 'Other';
   return 'Other';
 }
 
@@ -134,6 +138,16 @@ function deriveGroupStatus(items: AdminAppointmentItem[], getStatus: (item: Admi
   if (items.every((item) => getStatus(item) === first)) return first;
   return 'MIXED';
 }
+
+type RescheduleSelectionState = {
+  appointmentIds: number[];
+  date: string;
+  time: string;
+  preview: AdminAppointmentReschedulePreviewResponse | null;
+  assignments: Record<number, number>;
+  error: string | null;
+  loading: boolean;
+};
 
 export function SchedulePage() {
   const { apiFetch } = useAuth();
@@ -158,6 +172,7 @@ export function SchedulePage() {
     appointmentIds: number[];
     mode: 'STATUS_COMPLETE' | 'PAYMENT_ONLY';
   } | null>(null);
+  const [rescheduleSelection, setRescheduleSelection] = useState<RescheduleSelectionState | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -259,6 +274,14 @@ export function SchedulePage() {
     }
     return map;
   }, [groupedAppointments]);
+
+  const appointmentById = useMemo(() => {
+    const map: Record<number, AdminAppointmentItem> = {};
+    for (const item of appointments) {
+      map[item.id] = item;
+    }
+    return map;
+  }, [appointments]);
 
   const getDisplayStatus = useCallback(
     (item: AdminAppointmentItem): UIAppointmentStatus => {
@@ -514,6 +537,15 @@ export function SchedulePage() {
     });
   };
 
+  const toRescheduleAssignmentsPayload = (assignments: Record<number, number>) => {
+    return Object.entries(assignments)
+      .map(([appointmentId, staffId]) => ({
+        appointmentId: Number(appointmentId),
+        staffId: Number(staffId),
+      }))
+      .filter((item) => Number.isInteger(item.appointmentId) && item.appointmentId > 0 && Number.isInteger(item.staffId) && item.staffId > 0);
+  };
+
   const mapUiActionToBackendStatus = (action: UIAppointmentAction): 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' => {
     if (action === 'NO_SHOW') return 'NO_SHOW';
     if (action === 'CANCELLED') return 'CANCELLED';
@@ -591,10 +623,130 @@ export function SchedulePage() {
     }
   };
 
+  const runReschedulePreview = async () => {
+    if (!rescheduleSelection) return;
+    const parsed = new Date(`${rescheduleSelection.date}T${rescheduleSelection.time}:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      setRescheduleSelection((prev) => (prev ? { ...prev, error: 'Please choose a valid date and time.' } : prev));
+      return;
+    }
+
+    setRescheduleSelection((prev) => (prev ? { ...prev, loading: true, error: null } : prev));
+    try {
+      const preview = await apiFetch<AdminAppointmentReschedulePreviewResponse>('/api/admin/appointments/reschedule-preview', {
+        method: 'POST',
+        body: JSON.stringify({
+          appointmentIds: rescheduleSelection.appointmentIds,
+          newStartTime: parsed.toISOString(),
+          assignments: toRescheduleAssignmentsPayload(rescheduleSelection.assignments),
+        }),
+      });
+
+      const error =
+        preview.hasConflicts && preview.conflicts.length
+          ? preview.conflicts[0].reason || 'Selected slot is not available.'
+          : null;
+      setRescheduleSelection((prev) => (prev ? { ...prev, preview, loading: false, error } : prev));
+    } catch (err: any) {
+      setRescheduleSelection((prev) =>
+        prev ? { ...prev, loading: false, error: err?.message || 'Reschedule preview failed.' } : prev,
+      );
+    }
+  };
+
+  const commitRescheduleSelection = async () => {
+    if (!rescheduleSelection) return;
+    const parsed = new Date(`${rescheduleSelection.date}T${rescheduleSelection.time}:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      setRescheduleSelection((prev) => (prev ? { ...prev, error: 'Please choose a valid date and time.' } : prev));
+      return;
+    }
+
+    if (!rescheduleSelection.preview) {
+      await runReschedulePreview();
+      return;
+    }
+    if (rescheduleSelection.preview.hasConflicts) {
+      setRescheduleSelection((prev) =>
+        prev ? { ...prev, error: prev.preview?.conflicts?.[0]?.reason || 'Selected slot has conflicts.' } : prev,
+      );
+      return;
+    }
+
+    const needsManualItems = rescheduleSelection.preview.items.filter((item) => item.needsManualChoice);
+    for (const item of needsManualItems) {
+      if (!rescheduleSelection.assignments[item.appointmentId]) {
+        setRescheduleSelection((prev) =>
+          prev ? { ...prev, error: `Please select a specialist for ${item.serviceName}.` } : prev,
+        );
+        return;
+      }
+    }
+
+    setStatusBusy(true);
+    setStatusUpdatingId(rescheduleSelection.appointmentIds[0] || null);
+    setStatusFeedback(null);
+    setRescheduleSelection((prev) => (prev ? { ...prev, loading: true, error: null } : prev));
+    try {
+      const committed = await apiFetch<{ batchId: string; previousAppointmentIds: number[]; items: AdminAppointmentItem[] }>(
+        '/api/admin/appointments/reschedule-commit',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            appointmentIds: rescheduleSelection.appointmentIds,
+            newStartTime: parsed.toISOString(),
+            assignments: toRescheduleAssignmentsPayload(rescheduleSelection.assignments),
+            idempotencyKey: `admin-${Date.now()}`,
+          }),
+        },
+      );
+
+      await loadSchedule();
+      setStatusOverrides((previous) => {
+        const next = { ...previous };
+        for (const id of committed.previousAppointmentIds || []) {
+          delete next[id];
+        }
+        for (const item of committed.items || []) {
+          next[item.id] = 'UPDATED';
+        }
+        return next;
+      });
+      setSelectedAppointmentGroup(null);
+      setRescheduleSelection(null);
+      setStatusFeedback(`${(committed.items || []).length} appointment(s) rescheduled successfully.`);
+    } catch (err: any) {
+      const message = err?.message || 'Reschedule failed.';
+      setStatusFeedback(message);
+      setRescheduleSelection((prev) => (prev ? { ...prev, loading: false, error: message } : prev));
+    } finally {
+      setStatusUpdatingId(null);
+      setStatusBusy(false);
+    }
+  };
+
   const requestStatusChange = (appointmentIds: number[], nextStatus: UIAppointmentAction) => {
     if (!appointmentIds.length) return;
     if (nextStatus === 'COMPLETED') {
       setPaymentSelection({ appointmentIds, mode: 'STATUS_COMPLETE' });
+      return;
+    }
+    if (nextStatus === 'UPDATED') {
+      const selectedItems = appointmentIds
+        .map((id) => appointmentById[id])
+        .filter((item): item is AdminAppointmentItem => Boolean(item))
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      if (!selectedItems.length) return;
+      const firstStart = new Date(selectedItems[0].startTime);
+      setRescheduleSelection({
+        appointmentIds,
+        date: format(firstStart, 'yyyy-MM-dd'),
+        time: format(firstStart, 'HH:mm'),
+        preview: null,
+        assignments: {},
+        error: null,
+        loading: false,
+      });
       return;
     }
     void applyStatusToAppointments(appointmentIds, nextStatus);
@@ -971,6 +1123,144 @@ export function SchedulePage() {
                   Update Payment
                 </button>
               ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {rescheduleSelection ? (
+        <div
+          className="fixed inset-0 z-[60] bg-black/45 p-4"
+          onClick={() => (!statusBusy && !rescheduleSelection.loading ? setRescheduleSelection(null) : undefined)}
+        >
+          <div
+            className="mx-auto mt-16 max-w-sm rounded-2xl border border-border bg-background p-4 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold">Reschedule Appointment</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Select a new start date/time. Related services will move together.
+            </p>
+
+            <div className="mt-4 space-y-3">
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Date</span>
+                <input
+                  type="date"
+                  value={rescheduleSelection.date}
+                  onChange={(event) =>
+                    setRescheduleSelection((prev) => (prev ? { ...prev, date: event.target.value } : prev))
+                  }
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Time</span>
+                <input
+                  type="time"
+                  value={rescheduleSelection.time}
+                  onChange={(event) =>
+                    setRescheduleSelection((prev) => (prev ? { ...prev, time: event.target.value } : prev))
+                  }
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+            </div>
+
+            <button
+              type="button"
+              disabled={statusBusy || rescheduleSelection.loading}
+              onClick={() => {
+                void runReschedulePreview();
+              }}
+              className="mt-3 h-10 w-full rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50"
+            >
+              {rescheduleSelection.loading ? 'Checking...' : 'Check Availability'}
+            </button>
+
+            {rescheduleSelection.error ? (
+              <p className="mt-3 rounded-lg border border-red-300/40 bg-red-500/10 px-3 py-2 text-xs text-red-700">
+                {rescheduleSelection.error}
+              </p>
+            ) : null}
+
+            {rescheduleSelection.preview ? (
+              <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
+                {rescheduleSelection.preview.items.map((item) => {
+                  const selectedStaffId =
+                    rescheduleSelection.assignments[item.appointmentId] || item.selectedStaffId || null;
+                  const availableCandidates = item.candidates.filter((candidate) => candidate.available);
+                  return (
+                    <div key={item.appointmentId} className="rounded-lg border border-border bg-card px-3 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{item.serviceName}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {format(new Date(item.newStartTime), 'HH:mm')} - {format(new Date(item.newEndTime), 'HH:mm')}
+                        </p>
+                      </div>
+                      {item.needsManualChoice ? (
+                        <div className="mt-1">
+                          <p className="text-[11px] text-muted-foreground">Preferred specialist is unavailable. Choose one:</p>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {availableCandidates.map((candidate) => (
+                              <button
+                                key={`${item.appointmentId}-${candidate.staffId}`}
+                                type="button"
+                                onClick={() =>
+                                  setRescheduleSelection((prev) =>
+                                    prev
+                                      ? {
+                                          ...prev,
+                                          assignments: {
+                                            ...prev.assignments,
+                                            [item.appointmentId]: candidate.staffId,
+                                          },
+                                          error: null,
+                                        }
+                                      : prev,
+                                  )
+                                }
+                                className={`rounded-md border px-2 py-1 text-[11px] ${
+                                  selectedStaffId === candidate.staffId
+                                    ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
+                                    : 'border-border'
+                                }`}
+                              >
+                                {candidate.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : selectedStaffId ? (
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          Specialist: {item.candidates.find((candidate) => candidate.staffId === selectedStaffId)?.name || `#${selectedStaffId}`}
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                disabled={statusBusy || rescheduleSelection.loading}
+                onClick={() => setRescheduleSelection(null)}
+                className="h-10 flex-1 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={statusBusy || rescheduleSelection.loading}
+                onClick={() => {
+                  void commitRescheduleSelection();
+                }}
+                className="h-10 flex-1 rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50"
+              >
+                {rescheduleSelection.loading ? 'Saving...' : 'Confirm Reschedule'}
+              </button>
             </div>
           </div>
         </div>

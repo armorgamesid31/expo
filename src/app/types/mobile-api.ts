@@ -93,6 +93,46 @@ export interface AdminAppointmentsResponse {
   count: number;
 }
 
+export interface AdminAppointmentRescheduleCandidate {
+  staffId: number;
+  name: string;
+  title?: string | null;
+  available: boolean;
+  reason?: string;
+}
+
+export interface AdminAppointmentReschedulePreviewItem {
+  appointmentId: number;
+  serviceId: number;
+  serviceName: string;
+  currentStartTime: string;
+  currentEndTime: string;
+  newStartTime: string;
+  newEndTime: string;
+  preferenceMode: 'ANY' | 'SPECIFIC';
+  preferredStaffId: number | null;
+  selectedStaffId: number | null;
+  needsManualChoice: boolean;
+  candidates: AdminAppointmentRescheduleCandidate[];
+  reason?: string;
+}
+
+export interface AdminAppointmentReschedulePreviewResponse {
+  items: AdminAppointmentReschedulePreviewItem[];
+  requiresManualSelection: boolean;
+  hasConflicts: boolean;
+  conflicts: Array<{
+    appointmentId: number;
+    reason: string;
+  }>;
+}
+
+export interface AdminAppointmentRescheduleCommitResponse {
+  batchId: string;
+  previousAppointmentIds: number[];
+  items: AdminAppointmentItem[];
+}
+
 export interface AdminCustomerItem {
   id: number;
   name: string | null;
