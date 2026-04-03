@@ -15,6 +15,7 @@ export function FeaturesPage() {
       automations: '/app/automations',
       'service-management': '/app/services',
       'staff-management': '/app/staff',
+      'team-management': '/app/team-management',
       packages: '/app/packages',
       'salon-info': '/app/salon-info',
       blacklist: '/app/blacklist',
@@ -23,7 +24,6 @@ export function FeaturesPage() {
       'help-center': '/app/features/help-center',
       'meta-direct': '/app/features/meta-direct',
       'instagram-inbox': '/app/instagram-inbox',
-      'notification-role-matrix': '/app/notification-role-matrix',
       'team-access': '/app/team-access',
     };
 
@@ -37,8 +37,12 @@ export function FeaturesPage() {
       onNavigate={handleNavigate}
       isFeatureVisible={(permissionKey) => {
         if (!permissionKey) return true;
-        if (permissionKey === 'access.any.manage') {
-          return hasPermission('access.users.manage') || hasPermission('access.roles.manage');
+        if (permissionKey === 'team.management') {
+          return (
+            hasPermission('staff.manage') ||
+            hasPermission('access.users.manage') ||
+            hasPermission('access.roles.manage')
+          );
         }
         return hasPermission(permissionKey);
       }}

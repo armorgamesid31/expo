@@ -26,6 +26,7 @@ import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
 import { NotificationsInboxPage } from './pages/NotificationsInboxPage';
 import { NotificationRoleMatrixPage } from './pages/NotificationRoleMatrixPage';
 import { TeamAccessPage } from './pages/TeamAccessPage';
+import { TeamManagementPage } from './pages/TeamManagementPage';
 import { LocaleProvider } from './context/LocaleContext';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
@@ -135,6 +136,14 @@ function AppRoutes() {
           <Route path="services" element={<ServicesCrudPage />} />
           <Route path="packages" element={<PackagesPage />} />
           <Route path="staff" element={<StaffCrudPage />} />
+          <Route
+            path="team-management"
+            element={
+              <AnyPermissionGuard permissionKeys={['staff.manage', 'access.users.manage', 'access.roles.manage', 'notifications.policy.manage']}>
+                <TeamManagementPage />
+              </AnyPermissionGuard>
+            }
+          />
           <Route path="features" element={<FeaturesPage />} />
           <Route path="features/:featureKey" element={<FeatureDetailPage />} />
           <Route path="settings" element={<SettingsPage />} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck, Bell, Shield } from 'lucide-react';
+import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -31,11 +31,11 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeature
       color: 'var(--rose-gold)',
     },
     {
-      featureKey: 'staff.manage',
+      featureKey: 'team.management',
       icon: UserCog,
-      label: 'Employee Management',
-      description: 'Personel ve yetkiler',
-      action: () => onNavigate('staff-management'),
+      label: 'Team Management',
+      description: 'Employees, team users, roles, and access',
+      action: () => onNavigate('team-management'),
       color: 'var(--deep-indigo)',
     },
     {
@@ -77,22 +77,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeature
       description: 'Stok takibi',
       action: () => onNavigate('inventory'),
       color: 'var(--rose-gold)',
-    },
-    {
-      featureKey: 'access.any.manage',
-      icon: Shield,
-      label: 'Team & Access',
-      description: 'Manage team users, roles, and permissions',
-      action: () => onNavigate('team-access'),
-      color: 'var(--rose-gold)',
-    },
-    {
-      featureKey: 'notifications.policy.manage',
-      icon: Bell,
-      label: 'Notification Rules',
-      description: 'Control who receives each alert type',
-      action: () => onNavigate('notification-role-matrix'),
-      color: 'var(--deep-indigo)',
     },
   ];
 
