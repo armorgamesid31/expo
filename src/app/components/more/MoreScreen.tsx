@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Sparkles, Users, AlertTriangle, X, UserCog, CheckCircle2, Circle, ShieldCheck, Layers, Megaphone } from 'lucide-react';
+import { BarChart3, Sparkles, AlertTriangle, X, UserCog, CheckCircle2, Circle, ShieldCheck, Layers, Megaphone } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -47,18 +47,10 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeature
       color: 'var(--rose-gold)',
     },
     {
-      featureKey: 'customers.manage',
-      icon: Users,
-      label: 'Customer Management',
-      description: 'CRM profiles + attendance tracking',
-      action: () => onNavigate('crm'),
-      color: 'var(--rose-gold)',
-    },
-    {
       featureKey: 'analytics.view',
       icon: BarChart3,
       label: 'Analytics',
-      description: 'Raporlar',
+      description: 'Business performance and trends',
       action: () => onNavigate('analytics'),
       color: 'var(--deep-indigo)',
     },

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Layers, Package, Boxes, ChevronRight } from 'lucide-react';
+import { Layers, Package, Boxes, ChevronRight, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export function OperationsStudioPage() {
@@ -9,8 +9,9 @@ export function OperationsStudioPage() {
   const canServices = hasPermission('services.manage');
   const canPackages = hasPermission('packages.manage');
   const canInventory = hasPermission('inventory.manage');
+  const canCustomers = hasPermission('customers.manage');
 
-  if (!canServices && !canPackages && !canInventory) {
+  if (!canServices && !canPackages && !canInventory && !canCustomers) {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-semibold">Operations Studio</h1>
@@ -25,10 +26,31 @@ export function OperationsStudioPage() {
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-semibold">Operations Studio</h1>
       <p className="text-sm text-muted-foreground">
-        Manage services, package operations, and inventory from one workspace.
+        Manage customers, services, package operations, and inventory from one workspace.
       </p>
 
       <div className="space-y-3">
+        {canCustomers ? (
+          <button
+            type="button"
+            onClick={() => navigate('/app/customers', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
+                  <Users className="h-5 w-5 text-[var(--deep-indigo)]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Customer Management</p>
+                  <p className="text-xs text-muted-foreground">Profiles, notes, history, and attendance</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </button>
+        ) : null}
+
         {canServices ? (
           <button
             type="button"

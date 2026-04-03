@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDays, endOfDay, format, formatISO, startOfDay } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import type { AdminAppointmentsResponse, AppointmentStatusUpdateResponse } from '../types/mobile-api';
+import type { AdminAppointmentItem, AdminAppointmentsResponse, AppointmentStatusUpdateResponse } from '../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
 interface StaffItem {
@@ -66,10 +66,10 @@ function readScheduleSnapshot(date: Date): ScheduleSnapshot | null {
 }
 
 function statusLabel(status: string) {
-  if (status === 'COMPLETED') return 'completed';
-  if (status === 'CANCELLED') return 'Cancel';
+  if (status === 'COMPLETED') return 'Completed';
+  if (status === 'CANCELLED') return 'Cancelled';
   if (status === 'NO_SHOW') return 'No-show';
-  return 'planned';
+  return 'Booked';
 }
 
 function statusClass(status: string) {
@@ -94,7 +94,7 @@ type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
 
 function askPaymentMethod(defaultMethod?: PaymentMethod | null): PaymentMethod | null {
   const raw = window.prompt(
-    'Odeme yontemi girin (cash/card/transfer/other)',
+    'Enter payment method (cash/card/transfer/other)',
     defaultMethod ? defaultMethod.toLowerCase() : 'cash',
   );
   if (!raw) return null;
@@ -121,6 +121,7 @@ export function SchedulePage() {
   const [error, setError] = useState<string | null>(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<AdminAppointmentItem | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -366,19 +367,24 @@ export function SchedulePage() {
     const idempotent = events.filter((item) => item.type === 'IDEMPOTENT').length;
 
     const parts: string[] = [];
-    if (consumed) parts.push(`${consumed} consumed`);
-    if (restored) parts.push(`${restored} restored`);
-    if (skippedExpired) parts.push(`${skippedExpired} skipped(expired)`);
-    if (skippedNoEligible) parts.push(`${skippedNoEligible} skipped(no package)`);
-    if (idempotent) parts.push(`${idempotent} already consumed`);
+    if (consumed) parts.push(`${consumed} service usage applied`);
+    if (restored) parts.push(`${restored} service usage restored`);
+    if (skippedExpired) parts.push(`${skippedExpired} skipped (expired package)`);
+    if (skippedNoEligible) parts.push(`${skippedNoEligible} skipped (no eligible package)`);
+    if (idempotent) parts.push(`${idempotent} already processed`);
     return parts.join(' • ');
   };
 
   const updateAppointmentPayment = async (appointmentId: number, paymentMethod: PaymentMethod) => {
-    await apiFetch(`/api/admin/appointments/${appointmentId}/payment`, {
-      method: 'PATCH',
-      body: JSON.stringify({ paymentMethod }),
-    });
+    try {
+      await apiFetch(`/api/admin/appointments/${appointmentId}/payment`, {
+        method: 'PATCH',
+        body: JSON.stringify({ paymentMethod }),
+      });
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const updateAppointmentStatus = async (
@@ -403,8 +409,10 @@ export function SchedulePage() {
       const summary = summarizePackageAutomation(response.packageAutomation?.events || []);
       setStatusFeedback(`Appointment #${appointmentId}: ${summary}`);
       await loadSchedule();
+      return true;
     } catch (err: any) {
       setStatusFeedback(err?.message || 'Status could not be updated.');
+      return false;
     } finally {
       setStatusUpdatingId(null);
     }
@@ -489,7 +497,7 @@ export function SchedulePage() {
         </button>
       </div>
 
-      {loading ? <p className="text-sm text-muted-foreground">Loading calendar...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading schedule...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {statusFeedback ? <p className="text-sm text-[var(--deep-indigo)]">{statusFeedback}</p> : null}
 
@@ -544,11 +552,12 @@ export function SchedulePage() {
                           return (
                             <div
                               key={appointment.id}
-                              className={`absolute left-1 right-1 rounded-lg px-2 py-2 text-[11px] shadow-sm ${statusClass(
+                              className={`absolute left-1 right-1 rounded-lg px-2 py-2 text-[11px] shadow-sm cursor-pointer ${statusClass(
                                 appointment.status,
                               )}`}
                               style={{ top: block.top, height: block.height }}
                               title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointment.status)}`}
+                              onClick={() => setSelectedAppointment(appointment)}
                             >
                               <p className="font-semibold truncate">{appointment.customerName}</p>
                               <p className="truncate text-muted-foreground">{appointment.service.name}</p>
@@ -573,7 +582,11 @@ export function SchedulePage() {
               const start = format(new Date(appointment.startTime), 'HH:mm');
               const end = format(new Date(appointment.endTime), 'HH:mm');
               return (
-                <div key={appointment.id} className={`rounded-lg border p-3 ${statusClass(appointment.status)}`}>
+                <div
+                  key={appointment.id}
+                  className={`rounded-lg border p-3 cursor-pointer ${statusClass(appointment.status)}`}
+                  onClick={() => setSelectedAppointment(appointment)}
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold">{appointment.customerName}</p>
@@ -599,7 +612,14 @@ export function SchedulePage() {
                         key={status}
                         type="button"
                         disabled={statusUpdatingId === appointment.id || appointment.status === status}
-                        onClick={() => void updateAppointmentStatus(appointment.id, status, (appointment.paymentMethod || null) as PaymentMethod | null)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void updateAppointmentStatus(
+                            appointment.id,
+                            status,
+                            (appointment.paymentMethod || null) as PaymentMethod | null,
+                          );
+                        }}
                         className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
                           appointment.status === status ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' : 'border-border'
                         }`}
@@ -611,19 +631,19 @@ export function SchedulePage() {
                       <button
                         type="button"
                         disabled={statusUpdatingId === appointment.id}
-                        onClick={async () => {
+                        onClick={async (event) => {
+                          event.stopPropagation();
                           const chosen = askPaymentMethod((appointment.paymentMethod || null) as PaymentMethod | null);
                           if (!chosen) return;
                           setStatusUpdatingId(appointment.id);
-                          try {
-                            await updateAppointmentPayment(appointment.id, chosen);
+                          const success = await updateAppointmentPayment(appointment.id, chosen);
+                          if (success) {
                             setStatusFeedback(`Appointment #${appointment.id}: payment set to ${chosen}`);
                             await loadSchedule();
-                          } catch (err: any) {
-                            setStatusFeedback(err?.message || 'Payment could not be updated.');
-                          } finally {
-                            setStatusUpdatingId(null);
+                          } else {
+                            setStatusFeedback('Payment could not be updated.');
                           }
+                          setStatusUpdatingId(null);
                         }}
                         className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
                       >
@@ -641,6 +661,97 @@ export function SchedulePage() {
       {!loading && !appointments.length && viewMode === 'calendar' ? (
         <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
           No appointments for this day.
+        </div>
+      ) : null}
+
+      {selectedAppointment ? (
+        <div className="fixed inset-0 z-50 bg-black/35 p-4" onClick={() => setSelectedAppointment(null)}>
+          <div
+            className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold">Appointment Details</h2>
+              <button type="button" onClick={() => setSelectedAppointment(null)} className="text-sm text-muted-foreground">
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="rounded-lg border border-border p-3">
+                <p className="font-semibold">{selectedAppointment.customerName}</p>
+                <p className="text-xs text-muted-foreground">{selectedAppointment.customerPhone}</p>
+              </div>
+              <div className="rounded-lg border border-border p-3 space-y-1">
+                <p>
+                  <span className="text-muted-foreground">Time:</span>{' '}
+                  {format(new Date(selectedAppointment.startTime), 'HH:mm')} - {format(new Date(selectedAppointment.endTime), 'HH:mm')}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Service:</span> {selectedAppointment.service.name}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Specialist:</span> {selectedAppointment.staff.name}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Status:</span> {statusLabel(selectedAppointment.status)}
+                </p>
+                {selectedAppointment.status === 'COMPLETED' ? (
+                  <p>
+                    <span className="text-muted-foreground">Payment:</span> {selectedAppointment.paymentMethod || 'Not recorded'}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {(['BOOKED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'] as const).map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  disabled={statusUpdatingId === selectedAppointment.id || selectedAppointment.status === status}
+                  onClick={async () => {
+                    const success = await updateAppointmentStatus(
+                      selectedAppointment.id,
+                      status,
+                      (selectedAppointment.paymentMethod || null) as PaymentMethod | null,
+                    );
+                    if (success) {
+                      setSelectedAppointment(null);
+                    }
+                  }}
+                  className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
+                    selectedAppointment.status === status ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' : 'border-border'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+              {selectedAppointment.status === 'COMPLETED' ? (
+                <button
+                  type="button"
+                  disabled={statusUpdatingId === selectedAppointment.id}
+                  onClick={async () => {
+                    const chosen = askPaymentMethod((selectedAppointment.paymentMethod || null) as PaymentMethod | null);
+                    if (!chosen) return;
+                    setStatusUpdatingId(selectedAppointment.id);
+                    const success = await updateAppointmentPayment(selectedAppointment.id, chosen);
+                    if (success) {
+                      setStatusFeedback(`Appointment #${selectedAppointment.id}: payment set to ${chosen}`);
+                      await loadSchedule();
+                      setSelectedAppointment(null);
+                    } else {
+                      setStatusFeedback('Payment could not be updated.');
+                    }
+                    setStatusUpdatingId(null);
+                  }}
+                  className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
+                >
+                  Set Payment
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -662,7 +773,7 @@ export function SchedulePage() {
                   onChange={(event) => handleCustomerSelect(event.target.value)}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 >
-                  <option value="">New / elle gir</option>
+                    <option value="">New customer / Enter manually</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {(customer.name || 'Anonymous')} • {customer.phone}
@@ -709,8 +820,8 @@ export function SchedulePage() {
                         />
                         <span className="text-sm flex-1">
                           <span className="font-medium">{service.name}</span>
-                          <span className="text-muted-foreground"> • {service.duration} dk</span>
-                          {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Specialist selection</span> : null}
+                          <span className="text-muted-foreground"> • {service.duration} min</span>
+                          {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Specialist required</span> : null}
                         </span>
                       </label>
                     );
@@ -734,7 +845,7 @@ export function SchedulePage() {
                     ) : null}
 
                     {!loadingOptions && options.length === 1 ? (
-                      <p className="text-xs text-muted-foreground">Atanacak uzman: {options[0].name}</p>
+                      <p className="text-xs text-muted-foreground">Assigned specialist: {options[0].name}</p>
                     ) : null}
 
                     {!loadingOptions && options.length > 1 ? (
@@ -789,7 +900,7 @@ export function SchedulePage() {
               </button>
 
               <p className="text-[11px] text-muted-foreground">
-                Availability is checked in backend sequentially for all selected services.
+                We automatically check availability for each selected service.
               </p>
             </div>
           </div>

@@ -41,6 +41,7 @@ export function FeaturesPage() {
         if (!permissionKey) return true;
         if (permissionKey === 'operations.studio') {
           return (
+            hasPermission('customers.manage') ||
             hasPermission('services.manage') ||
             hasPermission('packages.manage') ||
             hasPermission('inventory.manage')

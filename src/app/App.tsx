@@ -141,7 +141,7 @@ function AppRoutes() {
           <Route
             path="operations-studio"
             element={
-              <AnyPermissionGuard permissionKeys={['services.manage', 'packages.manage', 'inventory.manage']}>
+              <AnyPermissionGuard permissionKeys={['customers.manage', 'services.manage', 'packages.manage', 'inventory.manage']}>
                 <OperationsStudioPage />
               </AnyPermissionGuard>
             }
