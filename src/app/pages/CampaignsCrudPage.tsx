@@ -16,6 +16,10 @@ interface CampaignItem {
   description: string | null;
   config: unknown;
   isActive: boolean;
+  priority?: number | null;
+  deliveryMode?: 'AUTO' | 'MANUAL' | null;
+  maxGlobalUsage?: number | null;
+  maxPerCustomer?: number | null;
   startsAt?: string | null;
   endsAt?: string | null;
   createdAt?: string | null;
@@ -80,6 +84,10 @@ interface CampaignDraft {
   isActive: boolean;
   startsAt: string;
   endsAt: string;
+  priority: string;
+  deliveryMode: 'AUTO' | 'MANUAL';
+  maxGlobalUsage: string;
+  maxPerCustomer: string;
   configInputs: Record<string, string>;
 }
 
@@ -540,7 +548,7 @@ export function CampaignsCrudPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: CampaignItem[] }>('/api/namemin/campaigns');
+      const response = await apiFetch<{ items: CampaignItem[] }>('/api/admin/campaigns');
       setItems(response.items || []);
     } catch (err: any) {
       setError(err?.message || 'Campaigns cannot be received.');
@@ -589,6 +597,10 @@ export function CampaignsCrudPage() {
       isActive: true,
       startsAt: '',
       endsAt: '',
+      priority: '100',
+      deliveryMode: template.type === 'BIRTHDAY' || template.type === 'WINBACK' || template.type === 'WELCOME_FIRST_VISIT' ? 'AUTO' : 'MANUAL',
+      maxGlobalUsage: '',
+      maxPerCustomer: '',
       configInputs: buildConfigInputs(template),
     });
   };
@@ -605,13 +617,17 @@ export function CampaignsCrudPage() {
     setSavingCreate(true);
     setError(null);
     try {
-      const response = await apiFetch<{ item: CampaignItem }>('/api/namemin/campaigns', {
+      const response = await apiFetch<{ item: CampaignItem }>('/api/admin/campaigns', {
         method: 'POST',
         body: JSON.stringify({
           name: template.name,
           type: createDraft.type,
           description: null,
           isActive: true,
+          priority: Number(createDraft.priority || 100),
+          deliveryMode: createDraft.deliveryMode,
+          maxGlobalUsage: createDraft.maxGlobalUsage ? Number(createDraft.maxGlobalUsage) : null,
+          maxPerCustomer: createDraft.maxPerCustomer ? Number(createDraft.maxPerCustomer) : null,
           startsAt: toIsoFromDateOrNull(createDraft.startsAt),
           endsAt: toIsoFromDateOrNull(createDraft.endsAt),
           config: parseConfigFromInputs(template, createDraft.configInputs),
@@ -636,7 +652,7 @@ export function CampaignsCrudPage() {
     setDetailDraft(null);
 
     try {
-      const response = await apiFetch<CampaignDetailResponse>(`/api/namemin/campaigns/${item.id}`);
+      const response = await apiFetch<CampaignDetailResponse>(`/api/admin/campaigns/${item.id}`);
       const detailItem = response.item;
       const matchedTemplate = templateByType(detailItem.type);
 
@@ -648,6 +664,10 @@ export function CampaignsCrudPage() {
         isActive: detailItem.isActive,
         startsAt: toDateInput(detailItem.startsAt || null),
         endsAt: toDateInput(detailItem.endsAt || null),
+        priority: String(detailItem.priority ?? 100),
+        deliveryMode: detailItem.deliveryMode === 'AUTO' ? 'AUTO' : 'MANUAL',
+        maxGlobalUsage: detailItem.maxGlobalUsage ? String(detailItem.maxGlobalUsage) : '',
+        maxPerCustomer: detailItem.maxPerCustomer ? String(detailItem.maxPerCustomer) : '',
         configInputs: matchedTemplate ? buildConfigInputs(matchedTemplate, detailItem.config) : {},
       });
     } catch (err: any) {
@@ -670,12 +690,16 @@ export function CampaignsCrudPage() {
     setSavingDetail(true);
     setDetailError(null);
     try {
-      const response = await apiFetch<{ item: CampaignItem }>(`/api/namemin/campaigns/${detailDraft.id}`, {
+      const response = await apiFetch<{ item: CampaignItem }>(`/api/admin/campaigns/${detailDraft.id}`, {
         method: 'PATCH',
         body: JSON.stringify({
           type: detailDraft.type,
           description: null,
           isActive: detailDraft.isActive,
+          priority: Number(detailDraft.priority || 100),
+          deliveryMode: detailDraft.deliveryMode,
+          maxGlobalUsage: detailDraft.maxGlobalUsage ? Number(detailDraft.maxGlobalUsage) : null,
+          maxPerCustomer: detailDraft.maxPerCustomer ? Number(detailDraft.maxPerCustomer) : null,
           startsAt: toIsoFromDateOrNull(detailDraft.startsAt),
           endsAt: toIsoFromDateOrNull(detailDraft.endsAt),
           config: parseConfigFromInputs(template, detailDraft.configInputs),
@@ -703,7 +727,7 @@ export function CampaignsCrudPage() {
     setDeletingDetail(true);
     setDetailError(null);
     try {
-      await apiFetch(`/api/namemin/campaigns/${detailDraft.id}`, { method: 'DELETE' });
+      await apiFetch(`/api/admin/campaigns/${detailDraft.id}`, { method: 'DELETE' });
       setItems((prev) => prev.filter((item) => item.id !== detailDraft.id));
       setDetailOpen(false);
       setDetailDraft(null);
@@ -712,6 +736,27 @@ export function CampaignsCrudPage() {
       setDetailError(err?.message || 'Campaign deleteinemedi.');
     } finally {
       setDeletingDetail(false);
+    }
+  };
+
+  const publishDetail = async () => {
+    if (!detailDraft?.id) return;
+    try {
+      await apiFetch<{ item: CampaignItem }>(`/api/admin/campaigns/${detailDraft.id}/publish`, { method: 'POST' });
+      await loname();
+      await openDetail({ id: detailDraft.id, name: '', type: detailDraft.type, description: null, config: {}, isActive: true });
+    } catch (err: any) {
+      setDetailError(err?.message || 'Campaign publish failed.');
+    }
+  };
+
+  const sendDetail = async () => {
+    if (!detailDraft?.id) return;
+    try {
+      await apiFetch(`/api/admin/campaigns/${detailDraft.id}/send`, { method: 'POST' });
+      setDetailError(null);
+    } catch (err: any) {
+      setDetailError(err?.message || 'Campaign send failed.');
     }
   };
 
@@ -954,6 +999,51 @@ export function CampaignsCrudPage() {
                     onChange={(event) => setCreateDraft((prev) => (prev ? { ...prev, endsAt: event.target.value } : prev))}
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Priority</Label>
+                  <Input
+                    type="number"
+                    value={createDraft.priority}
+                    onChange={(event) => setCreateDraft((prev) => (prev ? { ...prev, priority: event.target.value } : prev))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Delivery mode</Label>
+                  <Select
+                    value={createDraft.deliveryMode}
+                    onValueChange={(value: 'AUTO' | 'MANUAL') =>
+                      setCreateDraft((prev) => (prev ? { ...prev, deliveryMode: value } : prev))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AUTO">AUTO</SelectItem>
+                      <SelectItem value="MANUAL">MANUAL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Max global usage</Label>
+                  <Input
+                    type="number"
+                    value={createDraft.maxGlobalUsage}
+                    onChange={(event) =>
+                      setCreateDraft((prev) => (prev ? { ...prev, maxGlobalUsage: event.target.value } : prev))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Max per customer</Label>
+                  <Input
+                    type="number"
+                    value={createDraft.maxPerCustomer}
+                    onChange={(event) =>
+                      setCreateDraft((prev) => (prev ? { ...prev, maxPerCustomer: event.target.value } : prev))
+                    }
+                  />
+                </div>
               </div>
 
               {(() => {
@@ -1062,6 +1152,51 @@ export function CampaignsCrudPage() {
                     onChange={(event) => setDetailDraft((prev) => (prev ? { ...prev, endsAt: event.target.value } : prev))}
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Priority</Label>
+                  <Input
+                    type="number"
+                    value={detailDraft.priority}
+                    onChange={(event) => setDetailDraft((prev) => (prev ? { ...prev, priority: event.target.value } : prev))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Delivery mode</Label>
+                  <Select
+                    value={detailDraft.deliveryMode}
+                    onValueChange={(value: 'AUTO' | 'MANUAL') =>
+                      setDetailDraft((prev) => (prev ? { ...prev, deliveryMode: value } : prev))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AUTO">AUTO</SelectItem>
+                      <SelectItem value="MANUAL">MANUAL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Max global usage</Label>
+                  <Input
+                    type="number"
+                    value={detailDraft.maxGlobalUsage}
+                    onChange={(event) =>
+                      setDetailDraft((prev) => (prev ? { ...prev, maxGlobalUsage: event.target.value } : prev))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Max per customer</Label>
+                  <Input
+                    type="number"
+                    value={detailDraft.maxPerCustomer}
+                    onChange={(event) =>
+                      setDetailDraft((prev) => (prev ? { ...prev, maxPerCustomer: event.target.value } : prev))
+                    }
+                  />
+                </div>
               </div>
 
               <button
@@ -1105,6 +1240,20 @@ export function CampaignsCrudPage() {
           ) : null}
 
           <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => void publishDetail()}
+              disabled={deletingDetail || savingDetail || !detailDraft?.id}
+            >
+              Publish
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void sendDetail()}
+              disabled={deletingDetail || savingDetail || !detailDraft?.id}
+            >
+              Send
+            </Button>
             <Button
               variant="destructive"
               onClick={() => void deleteDetail()}

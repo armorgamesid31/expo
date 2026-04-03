@@ -267,3 +267,47 @@ export interface NotificationInboxItem {
   payload: Record<string, unknown> | null;
   createdAt: string;
 }
+
+export interface CampaignItem {
+  id: number;
+  name: string;
+  type: string;
+  description: string | null;
+  config: Record<string, unknown> | null;
+  isActive: boolean;
+  priority: number;
+  deliveryMode: 'AUTO' | 'MANUAL';
+  maxGlobalUsage: number | null;
+  maxPerCustomer: number | null;
+  publishedAt: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CampaignPricingPreviewResponse {
+  currency: 'TRY';
+  subtotal: number;
+  discountTotal: number;
+  finalTotal: number;
+  lines: Array<{
+    serviceId: number;
+    listPrice: number;
+    discountTotal: number;
+    finalPrice: number;
+    packageCovered: boolean;
+    appliedCampaigns: Array<{
+      campaignId: number;
+      campaignType: string;
+      campaignName: string;
+      amount: number;
+    }>;
+  }>;
+  appliedCampaigns: Array<{
+    campaignId: number;
+    campaignType: string;
+    campaignName: string;
+    amount: number;
+  }>;
+}
