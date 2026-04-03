@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck } from 'lucide-react';
+import { BarChart3, Sparkles, Users, AlertTriangle, X, UserCog, CheckCircle2, Circle, ShieldCheck, Layers, Megaphone } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -23,12 +23,12 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeature
   // Management Tools — her zaman üstte
   const managementTools = [
     {
-      featureKey: 'services.manage',
-      icon: Briefcase,
-      label: 'Service Management',
-      description: 'Services and categories',
-      action: () => onNavigate('service-management'),
-      color: 'var(--rose-gold)',
+      featureKey: 'operations.studio',
+      icon: Layers,
+      label: 'Operations Studio',
+      description: 'Services, packages, and inventory in one workspace',
+      action: () => onNavigate('operations-studio'),
+      color: 'var(--deep-indigo)',
     },
     {
       featureKey: 'team.management',
@@ -39,11 +39,11 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeature
       color: 'var(--deep-indigo)',
     },
     {
-      featureKey: 'website.manage',
-      icon: Building2,
-      label: 'Salon Information',
-      description: 'Business details and hours',
-      action: () => onNavigate('salon-info'),
+      featureKey: 'brand.growth.hub',
+      icon: Megaphone,
+      label: 'Brand & Growth Hub',
+      description: 'Salon profile, website, and campaigns in one place',
+      action: () => onNavigate('brand-growth-hub'),
       color: 'var(--rose-gold)',
     },
     {
@@ -55,28 +55,12 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeature
       color: 'var(--rose-gold)',
     },
     {
-      featureKey: 'packages.manage',
-      icon: Package,
-      label: 'Package Management',
-      description: 'Templates and customer quotas',
-      action: () => onNavigate('packages'),
-      color: 'var(--deep-indigo)',
-    },
-    {
       featureKey: 'analytics.view',
       icon: BarChart3,
       label: 'Analytics',
       description: 'Raporlar',
       action: () => onNavigate('analytics'),
       color: 'var(--deep-indigo)',
-    },
-    {
-      featureKey: 'inventory.manage',
-      icon: Package,
-      label: 'Inventory',
-      description: 'Stok takibi',
-      action: () => onNavigate('inventory'),
-      color: 'var(--rose-gold)',
     },
   ];
 
@@ -90,24 +74,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeature
       color: 'var(--deep-indigo)',
       badge: 'Live',
       badgeColor: 'bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)]',
-    },
-    {
-      icon: Globe,
-      label: 'Website Settings',
-      description: 'Online booking site management',
-      action: () => onNavigate('website-builder'),
-      color: 'var(--deep-indigo)',
-      badge: 'Live',
-      badgeColor: 'bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)]',
-    },
-    {
-      icon: Target,
-      label: 'Campaigns',
-      description: 'Loyalty and referral programs',
-      action: () => onNavigate('campaigns'),
-      color: 'var(--rose-gold)',
-      badge: '2 aktif',
-      badgeColor: 'bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]',
     },
   ];
 

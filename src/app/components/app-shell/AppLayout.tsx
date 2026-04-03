@@ -28,7 +28,9 @@ function transitionKindFromPathname(pathname: string): TransitionKind {
     pathname.startsWith('/app/blacklist') ||
     pathname.startsWith('/app/salon-info') ||
     pathname.startsWith('/app/services') ||
-    pathname.startsWith('/app/staff')
+    pathname.startsWith('/app/staff') ||
+    pathname.startsWith('/app/operations-studio') ||
+    pathname.startsWith('/app/brand-growth-hub')
   ) {
     return 'soft-scale';
   }
@@ -89,6 +91,8 @@ function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/salon-info')) return 'features';
   if (pathname.startsWith('/app/services')) return 'features';
   if (pathname.startsWith('/app/staff')) return 'features';
+  if (pathname.startsWith('/app/operations-studio')) return 'features';
+  if (pathname.startsWith('/app/brand-growth-hub')) return 'features';
   if (pathname.startsWith('/app/features')) return 'features';
   if (pathname.startsWith('/app/settings')) return 'settings';
   if (pathname.startsWith('/app/notification-settings')) return 'settings';
@@ -119,6 +123,8 @@ function backTargetFromPathname(pathname: string): string | null {
     '/app/services',
     '/app/staff',
     '/app/team-management',
+    '/app/operations-studio',
+    '/app/brand-growth-hub',
   ];
 
   if (featureModuleRoutes.some((route) => pathname.startsWith(route))) {

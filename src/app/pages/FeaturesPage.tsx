@@ -25,6 +25,8 @@ export function FeaturesPage() {
       'meta-direct': '/app/features/meta-direct',
       'instagram-inbox': '/app/instagram-inbox',
       'team-access': '/app/team-access',
+      'operations-studio': '/app/operations-studio',
+      'brand-growth-hub': '/app/brand-growth-hub',
     };
 
     navigate(map[target] || `/app/features/${target}`, { state: { navDirection: 'forward' } });
@@ -37,6 +39,20 @@ export function FeaturesPage() {
       onNavigate={handleNavigate}
       isFeatureVisible={(permissionKey) => {
         if (!permissionKey) return true;
+        if (permissionKey === 'operations.studio') {
+          return (
+            hasPermission('services.manage') ||
+            hasPermission('packages.manage') ||
+            hasPermission('inventory.manage')
+          );
+        }
+        if (permissionKey === 'brand.growth.hub') {
+          return (
+            hasPermission('website.manage') ||
+            hasPermission('campaigns.manage') ||
+            hasPermission('campaigns.publish')
+          );
+        }
         if (permissionKey === 'team.management') {
           return (
             hasPermission('staff.manage') ||

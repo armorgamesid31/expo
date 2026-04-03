@@ -27,6 +27,8 @@ import { NotificationsInboxPage } from './pages/NotificationsInboxPage';
 import { NotificationRoleMatrixPage } from './pages/NotificationRoleMatrixPage';
 import { TeamAccessPage } from './pages/TeamAccessPage';
 import { TeamManagementPage } from './pages/TeamManagementPage';
+import { OperationsStudioPage } from './pages/OperationsStudioPage';
+import { BrandGrowthHubPage } from './pages/BrandGrowthHubPage';
 import { LocaleProvider } from './context/LocaleContext';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
@@ -136,6 +138,22 @@ function AppRoutes() {
           <Route path="services" element={<ServicesCrudPage />} />
           <Route path="packages" element={<PackagesPage />} />
           <Route path="staff" element={<StaffCrudPage />} />
+          <Route
+            path="operations-studio"
+            element={
+              <AnyPermissionGuard permissionKeys={['services.manage', 'packages.manage', 'inventory.manage']}>
+                <OperationsStudioPage />
+              </AnyPermissionGuard>
+            }
+          />
+          <Route
+            path="brand-growth-hub"
+            element={
+              <AnyPermissionGuard permissionKeys={['website.manage', 'campaigns.manage', 'campaigns.publish']}>
+                <BrandGrowthHubPage />
+              </AnyPermissionGuard>
+            }
+          />
           <Route
             path="team-management"
             element={
