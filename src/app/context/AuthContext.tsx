@@ -4,6 +4,7 @@ import { prefetchContentRuntimeBundle } from '../lib/content-runtime';
 import { secureGet, secureRemove, secureSet } from '../lib/secure-storage';
 import { STORAGE_KEYS } from '../lib/config';
 import type { BootstrapResponse } from '../types/mobile-api';
+import { initPushNotifications, unregisterPushToken } from '../lib/push-notifications';
 
 interface AuthTokens {
   accessToken: string;
@@ -86,6 +87,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
+      if (accessToken && bootstrap?.salon?.id) {
+        await unregisterPushToken(async <T,>(path: string, options?: RequestInit) =>
+          httpRequest<T>(path, {
+            ...(options || {}),
+            token: accessToken,
+            salonId: bootstrap.salon.id,
+          } as any),
+        );
+      }
+
       if (refreshToken) {
         await httpRequest('/auth/logout', {
           method: 'POST',
@@ -100,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setBootstrap(null);
       await clearTokens();
     }
-  }, [refreshToken]);
+  }, [refreshToken, accessToken, bootstrap?.salon?.id]);
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await httpRequest<{ accessToken: string; refreshToken: string }>('/auth/login', {
@@ -146,6 +157,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [accessToken, bootstrap?.salon?.id, rotateAccess, logout],
   );
+
+  useEffect(() => {
+    if (!accessToken || !bootstrap?.salon?.id) return;
+
+    initPushNotifications(apiFetch).catch((error) => {
+      console.warn('Push initialization failed:', error);
+    });
+  }, [accessToken, bootstrap?.salon?.id, apiFetch]);
 
   useEffect(() => {
     let active = true;

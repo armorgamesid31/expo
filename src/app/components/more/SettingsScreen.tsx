@@ -7,6 +7,8 @@ interface SettingsScreenProps {
   isDarkMode: boolean;
   onToggleDarkMode: (nextValue: boolean) => void;
   onShowHelpCenter?: () => void;
+  onOpenNotificationSettings?: () => void;
+  onOpenNotificationsInbox?: () => void;
   onLogout?: () => void;
 }
 
@@ -14,6 +16,8 @@ export function SettingsScreen({
   isDarkMode,
   onToggleDarkMode,
   onShowHelpCenter,
+  onOpenNotificationSettings,
+  onOpenNotificationsInbox,
   onLogout,
 }: SettingsScreenProps) {
   const settingGroups = [
@@ -28,8 +32,8 @@ export function SettingsScreen({
     {
       title: "Notifications",
       items: [
-        { icon: Bell, label: "Appointment Reminders", description: "WhatsApp notifications", color: "var(--deep-indigo)", hasSwitch: true },
-        { icon: Smartphone, label: "Push Notifications", description: "In-app alerts", color: "var(--rose-gold)", hasSwitch: true },
+        { icon: Bell, label: "Notification Inbox", description: "In-app alerts", color: "var(--deep-indigo)", onClick: onOpenNotificationsInbox },
+        { icon: Smartphone, label: "Notification Settings", description: "Push ve event tercihleri", color: "var(--rose-gold)", onClick: onOpenNotificationSettings },
       ]
     },
     {

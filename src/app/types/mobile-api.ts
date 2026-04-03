@@ -40,6 +40,8 @@ export interface AdminAppointmentItem {
   startTime: string;
   endTime: string;
   status: string;
+  paymentMethod?: 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER' | null;
+  paymentRecordedAt?: string | null;
   customerName: string;
   customerPhone: string;
   service: {
@@ -169,4 +171,31 @@ export interface AppointmentStatusUpdateResponse {
       balanceAfter?: number;
     }>;
   };
+}
+
+export interface NotificationPreferences {
+  masterEnabled: boolean;
+  eventConfig: {
+    events?: Partial<
+      Record<
+        'HANDOVER_REQUIRED' | 'HANDOVER_REMINDER' | 'SAME_DAY_APPOINTMENT_CHANGE' | 'END_OF_DAY_MISSING_DATA' | 'DAILY_MANAGER_REPORT',
+        boolean
+      >
+    >;
+    [key: string]: unknown;
+  };
+}
+
+export interface NotificationInboxItem {
+  deliveryId: number;
+  channel: 'IN_APP' | 'PUSH';
+  status: 'PENDING' | 'SENT' | 'SKIPPED' | 'FAILED';
+  readAt: string | null;
+  deliveryCreatedAt: string;
+  notificationId: number;
+  eventType: 'HANDOVER_REQUIRED' | 'HANDOVER_REMINDER' | 'SAME_DAY_APPOINTMENT_CHANGE' | 'END_OF_DAY_MISSING_DATA' | 'DAILY_MANAGER_REPORT';
+  title: string;
+  body: string;
+  payload: Record<string, unknown> | null;
+  createdAt: string;
 }

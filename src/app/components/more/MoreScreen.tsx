@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck } from 'lucide-react';
+import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck, Bell } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -69,6 +69,13 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       description: 'Stok takibi',
       action: () => onNavigate('inventory'),
       color: 'var(--rose-gold)',
+    },
+    {
+      icon: Bell,
+      label: 'Notification Role Matrix',
+      description: 'Role bazli bildirim alicilari',
+      action: () => onNavigate('notification-role-matrix'),
+      color: 'var(--deep-indigo)',
     },
   ];
 

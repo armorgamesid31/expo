@@ -51,6 +51,8 @@ export function SettingsPage() {
       isDarkMode={isDarkMode}
       onToggleDarkMode={(nextValue) => setIsDarkMode(nextValue)}
       onShowHelpCenter={() => navigate('/app/features/help-center')}
+      onOpenNotificationSettings={() => navigate('/app/notification-settings', { state: { navDirection: 'forward' } })}
+      onOpenNotificationsInbox={() => navigate('/app/notifications', { state: { navDirection: 'forward' } })}
       onLogout={() => {
         void handleLogout();
       }}

@@ -13,6 +13,9 @@ function transitionKindFromPathname(pathname: string): TransitionKind {
   if (pathname.startsWith('/app/conversations')) return 'soft-scale';
   if (pathname.startsWith('/app/dashboard')) return 'fade-lift';
   if (pathname.startsWith('/app/settings')) return 'fade';
+  if (pathname.startsWith('/app/notifications')) return 'soft-scale';
+  if (pathname.startsWith('/app/notification-settings')) return 'fade';
+  if (pathname.startsWith('/app/notification-role-matrix')) return 'soft-scale';
   if (
     pathname.startsWith('/app/customers') ||
     pathname.startsWith('/app/analytics') ||
@@ -86,11 +89,17 @@ function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/staff')) return 'features';
   if (pathname.startsWith('/app/features')) return 'features';
   if (pathname.startsWith('/app/settings')) return 'settings';
+  if (pathname.startsWith('/app/notification-settings')) return 'settings';
+  if (pathname.startsWith('/app/notifications')) return 'settings';
+  if (pathname.startsWith('/app/notification-role-matrix')) return 'features';
   return 'dashboard';
 }
 
 function backTargetFromPathname(pathname: string): string | null {
   if (pathname.startsWith('/app/features/')) return '/app/features';
+  if (pathname.startsWith('/app/notification-role-matrix')) return '/app/features';
+  if (pathname.startsWith('/app/notification-settings')) return '/app/settings';
+  if (pathname.startsWith('/app/notifications')) return '/app/settings';
 
   const featureModuleRoutes = [
     '/app/customers',

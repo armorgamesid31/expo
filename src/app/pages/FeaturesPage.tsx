@@ -21,6 +21,7 @@ export function FeaturesPage() {
       'help-center': '/app/features/help-center',
       'meta-direct': '/app/features/meta-direct',
       'instagram-inbox': '/app/instagram-inbox',
+      'notification-role-matrix': '/app/notification-role-matrix',
     };
 
     navigate(map[target] || `/app/features/${target}`, { state: { navDirection: 'forward' } });

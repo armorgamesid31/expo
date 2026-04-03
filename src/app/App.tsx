@@ -22,6 +22,9 @@ import { BlacklistPage } from './pages/BlacklistPage';
 import { InstagramInboxPage } from './pages/InstagramInboxPage';
 import { ConversationsPage } from './pages/ConversationsPage';
 import { PackagesPage } from './pages/PackagesPage';
+import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
+import { NotificationsInboxPage } from './pages/NotificationsInboxPage';
+import { NotificationRoleMatrixPage } from './pages/NotificationRoleMatrixPage';
 import { LocaleProvider } from './context/LocaleContext';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
@@ -102,6 +105,9 @@ function AppRoutes() {
           <Route path="features" element={<FeaturesPage />} />
           <Route path="features/:featureKey" element={<FeatureDetailPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="notification-settings" element={<NotificationSettingsPage />} />
+          <Route path="notifications" element={<NotificationsInboxPage />} />
+          <Route path="notification-role-matrix" element={<NotificationRoleMatrixPage />} />
         </Route>
       </Route>
 

@@ -90,6 +90,21 @@ function hourLabel(hour: number) {
   return `${String(hour).padStart(2, '0')}:00`;
 }
 
+type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
+
+function askPaymentMethod(defaultMethod?: PaymentMethod | null): PaymentMethod | null {
+  const raw = window.prompt(
+    'Odeme yontemi girin (cash/card/transfer/other)',
+    defaultMethod ? defaultMethod.toLowerCase() : 'cash',
+  );
+  if (!raw) return null;
+  const value = raw.trim().toUpperCase();
+  if (value === 'CASH' || value === 'CARD' || value === 'TRANSFER' || value === 'OTHER') {
+    return value as PaymentMethod;
+  }
+  return null;
+}
+
 export function SchedulePage() {
   const { apiFetch } = useAuth();
   const [initialScheduleSnapshot] = useState<ScheduleSnapshot | null>(() => readScheduleSnapshot(new Date()));
@@ -359,13 +374,31 @@ export function SchedulePage() {
     return parts.join(' • ');
   };
 
-  const updateAppointmentStatus = async (appointmentId: number, status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW') => {
+  const updateAppointmentPayment = async (appointmentId: number, paymentMethod: PaymentMethod) => {
+    await apiFetch(`/api/admin/appointments/${appointmentId}/payment`, {
+      method: 'PATCH',
+      body: JSON.stringify({ paymentMethod }),
+    });
+  };
+
+  const updateAppointmentStatus = async (
+    appointmentId: number,
+    status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW',
+    currentPaymentMethod?: PaymentMethod | null,
+  ) => {
     setStatusUpdatingId(appointmentId);
     setStatusFeedback(null);
     try {
+      let payload: { status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'; paymentMethod?: PaymentMethod } = { status };
+      if (status === 'COMPLETED') {
+        const chosenPayment = askPaymentMethod(currentPaymentMethod);
+        if (chosenPayment) {
+          payload = { status, paymentMethod: chosenPayment };
+        }
+      }
       const response = await apiFetch<AppointmentStatusUpdateResponse>(`/api/admin/appointments/${appointmentId}/status`, {
         method: 'PATCH',
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(payload),
       });
       const summary = summarizePackageAutomation(response.packageAutomation?.events || []);
       setStatusFeedback(`Appointment #${appointmentId}: ${summary}`);
@@ -549,6 +582,11 @@ export function SchedulePage() {
                     <div className="text-right">
                       <p className="text-xs font-semibold">{start} - {end}</p>
                       <p className="text-[11px] text-muted-foreground">{statusLabel(appointment.status)}</p>
+                      {appointment.status === 'COMPLETED' ? (
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Payment: {appointment.paymentMethod || 'MISSING'}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
@@ -561,7 +599,7 @@ export function SchedulePage() {
                         key={status}
                         type="button"
                         disabled={statusUpdatingId === appointment.id || appointment.status === status}
-                        onClick={() => void updateAppointmentStatus(appointment.id, status)}
+                        onClick={() => void updateAppointmentStatus(appointment.id, status, (appointment.paymentMethod || null) as PaymentMethod | null)}
                         className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
                           appointment.status === status ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' : 'border-border'
                         }`}
@@ -569,6 +607,29 @@ export function SchedulePage() {
                         {status}
                       </button>
                     ))}
+                    {appointment.status === 'COMPLETED' ? (
+                      <button
+                        type="button"
+                        disabled={statusUpdatingId === appointment.id}
+                        onClick={async () => {
+                          const chosen = askPaymentMethod((appointment.paymentMethod || null) as PaymentMethod | null);
+                          if (!chosen) return;
+                          setStatusUpdatingId(appointment.id);
+                          try {
+                            await updateAppointmentPayment(appointment.id, chosen);
+                            setStatusFeedback(`Appointment #${appointment.id}: payment set to ${chosen}`);
+                            await loadSchedule();
+                          } catch (err: any) {
+                            setStatusFeedback(err?.message || 'Payment could not be updated.');
+                          } finally {
+                            setStatusUpdatingId(null);
+                          }
+                        }}
+                        className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
+                      >
+                        Set Payment
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               );
