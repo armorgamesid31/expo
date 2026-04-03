@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { MoreScreen } from '../components/more/MoreScreen';
+import { useAuth } from '../context/AuthContext';
 
 export function FeaturesPage() {
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
 
   const handleNavigate = (target: string) => {
     const map: Record<string, string> = {
@@ -22,6 +24,7 @@ export function FeaturesPage() {
       'meta-direct': '/app/features/meta-direct',
       'instagram-inbox': '/app/instagram-inbox',
       'notification-role-matrix': '/app/notification-role-matrix',
+      'team-access': '/app/team-access',
     };
 
     navigate(map[target] || `/app/features/${target}`, { state: { navDirection: 'forward' } });
@@ -32,6 +35,13 @@ export function FeaturesPage() {
       isDarkMode={false}
       onToggleDarkMode={() => undefined}
       onNavigate={handleNavigate}
+      isFeatureVisible={(permissionKey) => {
+        if (!permissionKey) return true;
+        if (permissionKey === 'access.any.manage') {
+          return hasPermission('access.users.manage') || hasPermission('access.roles.manage');
+        }
+        return hasPermission(permissionKey);
+      }}
     />
   );
 }

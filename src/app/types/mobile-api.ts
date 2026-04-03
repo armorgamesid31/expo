@@ -15,6 +15,8 @@ export interface BootstrapResponse {
   };
   capabilities: Record<string, boolean | string>;
   featureFlags: Record<string, boolean>;
+  permissions?: string[];
+  accessVersion?: number;
   subscription: {
     plan: string;
     status: string;
@@ -33,6 +35,32 @@ export interface BootstrapResponse {
     slotInterval: number | null;
     workingDays: string[] | null;
   };
+}
+
+export interface AccessPermissionDefinition {
+  key: string;
+  module: string;
+  description: string | null;
+  isCritical: boolean;
+}
+
+export interface AccessPermissionsResponse {
+  permissions: AccessPermissionDefinition[];
+  rolePermissions: Record<string, string[]>;
+  roles: Array<'OWNER' | 'MANAGER' | 'RECEPTION' | 'STAFF' | 'FINANCE'>;
+}
+
+export interface AccessUserItem {
+  id: number;
+  email: string;
+  displayName: string | null;
+  role: 'OWNER' | 'MANAGER' | 'RECEPTION' | 'STAFF' | 'FINANCE';
+  isActive: boolean;
+  passwordResetRequired: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  linkedStaff: { id: number; name: string } | null;
 }
 
 export interface AdminAppointmentItem {

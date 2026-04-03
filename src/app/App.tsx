@@ -25,6 +25,7 @@ import { PackagesPage } from './pages/PackagesPage';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
 import { NotificationsInboxPage } from './pages/NotificationsInboxPage';
 import { NotificationRoleMatrixPage } from './pages/NotificationRoleMatrixPage';
+import { TeamAccessPage } from './pages/TeamAccessPage';
 import { LocaleProvider } from './context/LocaleContext';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
@@ -79,6 +80,38 @@ function RootRedirect() {
   return <Navigate to={isAuthenticated ? '/app/dashboard' : '/auth/login'} replace />;
 }
 
+function PermissionGuard({
+  permissionKey,
+  fallback = '/app/dashboard',
+  children,
+}: {
+  permissionKey: string;
+  fallback?: string;
+  children: React.ReactNode;
+}) {
+  const { hasPermission } = useAuth();
+  if (!hasPermission(permissionKey)) {
+    return <Navigate to={fallback} replace />;
+  }
+  return <>{children}</>;
+}
+
+function AnyPermissionGuard({
+  permissionKeys,
+  fallback = '/app/dashboard',
+  children,
+}: {
+  permissionKeys: string[];
+  fallback?: string;
+  children: React.ReactNode;
+}) {
+  const { hasPermission } = useAuth();
+  if (!permissionKeys.some((key) => hasPermission(key))) {
+    return <Navigate to={fallback} replace />;
+  }
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -107,7 +140,22 @@ function AppRoutes() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notification-settings" element={<NotificationSettingsPage />} />
           <Route path="notifications" element={<NotificationsInboxPage />} />
-          <Route path="notification-role-matrix" element={<NotificationRoleMatrixPage />} />
+          <Route
+            path="notification-role-matrix"
+            element={
+              <PermissionGuard permissionKey="notifications.policy.manage">
+                <NotificationRoleMatrixPage />
+              </PermissionGuard>
+            }
+          />
+          <Route
+            path="team-access"
+            element={
+              <AnyPermissionGuard permissionKeys={['access.users.manage', 'access.roles.manage']}>
+                <TeamAccessPage />
+              </AnyPermissionGuard>
+            }
+          />
         </Route>
       </Route>
 

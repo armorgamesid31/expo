@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck, Bell } from 'lucide-react';
+import { BarChart3, Package, Sparkles, Globe, Users, AlertTriangle, X, Briefcase, UserCog, Building2, Target, CheckCircle2, Circle, ShieldCheck, Bell, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -8,9 +8,10 @@ interface MoreScreenProps {
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   onNavigate: (tab: string) => void;
+  isFeatureVisible?: (featureKey: string) => boolean;
 }
 
-export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScreenProps) {
+export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeatureVisible }: MoreScreenProps) {
   const [warningModal, setWarningModal] = useState<{ 
     title: string; 
     message: string; 
@@ -22,6 +23,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
   // Management Tools — her zaman üstte
   const managementTools = [
     {
+      featureKey: 'services.manage',
       icon: Briefcase,
       label: 'Service Management',
       description: 'Services and categories',
@@ -29,6 +31,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--rose-gold)',
     },
     {
+      featureKey: 'staff.manage',
       icon: UserCog,
       label: 'Employee Management',
       description: 'Personel ve yetkiler',
@@ -36,6 +39,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--deep-indigo)',
     },
     {
+      featureKey: 'website.manage',
       icon: Building2,
       label: 'Salon Information',
       description: 'Business details and hours',
@@ -43,6 +47,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--rose-gold)',
     },
     {
+      featureKey: 'customers.manage',
       icon: Users,
       label: 'Customer Management',
       description: 'CRM profiles + attendance tracking',
@@ -50,6 +55,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--rose-gold)',
     },
     {
+      featureKey: 'packages.manage',
       icon: Package,
       label: 'Package Management',
       description: 'Templates and customer quotas',
@@ -57,6 +63,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--deep-indigo)',
     },
     {
+      featureKey: 'analytics.view',
       icon: BarChart3,
       label: 'Analytics',
       description: 'Raporlar',
@@ -64,6 +71,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--deep-indigo)',
     },
     {
+      featureKey: 'inventory.manage',
       icon: Package,
       label: 'Inventory',
       description: 'Stok takibi',
@@ -71,8 +79,17 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--rose-gold)',
     },
     {
+      featureKey: 'access.any.manage',
+      icon: Shield,
+      label: 'Team & Access',
+      description: 'Manage team users, roles, and permissions',
+      action: () => onNavigate('team-access'),
+      color: 'var(--rose-gold)',
+    },
+    {
+      featureKey: 'notifications.policy.manage',
       icon: Bell,
-      label: 'Notification Role Matrix',
+      label: 'Notification Rules',
       description: 'Control who receives each alert type',
       action: () => onNavigate('notification-role-matrix'),
       color: 'var(--deep-indigo)',
@@ -209,7 +226,9 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
         <div>
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Management Tools</h3>
           <div className="grid grid-cols-2 gap-3">
-            {managementTools.map((item, idx) => {
+            {managementTools
+              .filter((item) => (isFeatureVisible ? isFeatureVisible((item as any).featureKey || '') : true))
+              .map((item, idx) => {
               const Icon = item.icon;
               return (
                 <motion.div

@@ -19,6 +19,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   apiFetch: <T>(path: string, options?: RequestInit) => Promise<T>;
+  hasPermission: (permissionKey: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -225,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadBootstrap, rotateAccess]);
 
   const value = useMemo<AuthContextValue>(() => {
+    const permissionSet = new Set(bootstrap?.permissions || []);
     return {
       isLoading,
       isAuthenticated: Boolean(accessToken && bootstrap),
@@ -233,6 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       logout,
       apiFetch,
+      hasPermission: (permissionKey: string) => permissionSet.has(permissionKey),
     };
   }, [isLoading, accessToken, bootstrap, login, logout, apiFetch]);
 
