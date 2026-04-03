@@ -50,6 +50,13 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate }: MoreScr
       color: 'var(--rose-gold)',
     },
     {
+      icon: Package,
+      label: 'Package Management',
+      description: 'Templates and customer quotas',
+      action: () => onNavigate('packages'),
+      color: 'var(--deep-indigo)',
+    },
+    {
       icon: BarChart3,
       label: 'Analytics',
       description: 'Raporlar',

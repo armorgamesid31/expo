@@ -21,6 +21,7 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { BlacklistPage } from './pages/BlacklistPage';
 import { InstagramInboxPage } from './pages/InstagramInboxPage';
 import { ConversationsPage } from './pages/ConversationsPage';
+import { PackagesPage } from './pages/PackagesPage';
 import { LocaleProvider } from './context/LocaleContext';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
@@ -96,6 +97,7 @@ function AppRoutes() {
           <Route path="instagram-inbox" element={<InstagramInboxPage />} />
           <Route path="salon-info" element={<SalonSetupPage />} />
           <Route path="services" element={<ServicesCrudPage />} />
+          <Route path="packages" element={<PackagesPage />} />
           <Route path="staff" element={<StaffCrudPage />} />
           <Route path="features" element={<FeaturesPage />} />
           <Route path="features/:featureKey" element={<FeatureDetailPage />} />

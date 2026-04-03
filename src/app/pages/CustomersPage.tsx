@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import type { AdminCustomerItem, AdminCustomersResponse } from '../types/mobile-api';
+import type {
+  AdminCustomerItem,
+  AdminCustomersResponse,
+  CustomerPackageItem,
+  PackageLedgerItem,
+  PackageTemplateItem,
+} from '../types/mobile-api';
 import { useNavigate } from 'react-router-dom';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
@@ -87,6 +93,18 @@ interface NoShowRiskUpdateResponse {
   };
 }
 
+interface CustomerPackagesResponse {
+  items: CustomerPackageItem[];
+}
+
+interface PackageTemplatesResponse {
+  items: PackageTemplateItem[];
+}
+
+interface PackageLedgerResponse {
+  items: PackageLedgerItem[];
+}
+
 interface CustomersListSnapshot {
   items: AdminCustomerItem[];
   nextCursor: string | null;
@@ -135,6 +153,21 @@ export function CustomersPage() {
   const [editAcceptMarketing, setEditAcceptMarketing] = useState(false);
   const [riskSaving, setRiskSaving] = useState(false);
   const [riskError, setRiskError] = useState<string | null>(null);
+  const [customerPackages, setCustomerPackages] = useState<CustomerPackageItem[]>([]);
+  const [packageTemplates, setPackageTemplates] = useState<PackageTemplateItem[]>([]);
+  const [packageLedger, setPackageLedger] = useState<PackageLedgerItem[]>([]);
+  const [packageLoading, setPackageLoading] = useState(false);
+  const [packageError, setPackageError] = useState<string | null>(null);
+  const [packageTemplateIdToAssign, setPackageTemplateIdToAssign] = useState('');
+  const [packageAssigning, setPackageAssigning] = useState(false);
+  const [packageAssignSuccess, setPackageAssignSuccess] = useState<string | null>(null);
+  const [packageAdjustTarget, setPackageAdjustTarget] = useState<{ packageId: string; serviceId: string }>({
+    packageId: '',
+    serviceId: '',
+  });
+  const [packageAdjustDelta, setPackageAdjustDelta] = useState('');
+  const [packageAdjustReason, setPackageAdjustReason] = useState('');
+  const [packageAdjusting, setPackageAdjusting] = useState(false);
 
   const loadPage = async (nextCursor?: string | null, search?: string) => {
     const query = new URLSearchParams({ limit: String(PAGE_LIMIT) });
@@ -272,6 +305,105 @@ export function CustomersPage() {
     }
   };
 
+  const loadCustomerPackageData = async (customerId: number) => {
+    setPackageLoading(true);
+    setPackageError(null);
+    setPackageAssignSuccess(null);
+    try {
+      const [packagesResponse, templatesResponse, ledgerResponse] = await Promise.all([
+        apiFetch<CustomerPackagesResponse>(`/api/admin/customers/${customerId}/packages`),
+        apiFetch<PackageTemplatesResponse>('/api/admin/package-templates'),
+        apiFetch<PackageLedgerResponse>(`/api/admin/customers/${customerId}/package-ledger?limit=60`),
+      ]);
+      setCustomerPackages(packagesResponse.items || []);
+      setPackageTemplates(templatesResponse.items || []);
+      setPackageLedger(ledgerResponse.items || []);
+    } catch (err: any) {
+      setPackageError(err?.message || 'Package data could not be loaded.');
+    } finally {
+      setPackageLoading(false);
+    }
+  };
+
+  const handleAssignTemplatePackage = async () => {
+    if (!selectedCustomer) {
+      return;
+    }
+    const parsedTemplateId = Number(packageTemplateIdToAssign);
+    if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
+      setPackageError('Select a valid package template.');
+      return;
+    }
+
+    setPackageAssigning(true);
+    setPackageError(null);
+    setPackageAssignSuccess(null);
+    try {
+      await apiFetch(`/api/admin/customers/${selectedCustomer.customer.id}/packages`, {
+        method: 'POST',
+        body: JSON.stringify({
+          templateId: parsedTemplateId,
+        }),
+      });
+      setPackageTemplateIdToAssign('');
+      await loadCustomerPackageData(selectedCustomer.customer.id);
+      setPackageAssignSuccess('Package assigned to customer.');
+    } catch (err: any) {
+      setPackageError(err?.message || 'Package could not be assigned.');
+    } finally {
+      setPackageAssigning(false);
+    }
+  };
+
+  const handleAdjustPackage = async () => {
+    if (!selectedCustomer) {
+      return;
+    }
+    const packageId = Number(packageAdjustTarget.packageId);
+    const serviceId = Number(packageAdjustTarget.serviceId);
+    const delta = Number(packageAdjustDelta);
+    const reason = packageAdjustReason.trim();
+
+    if (!Number.isInteger(packageId) || packageId <= 0) {
+      setPackageError('Select a package.');
+      return;
+    }
+    if (!Number.isInteger(serviceId) || serviceId <= 0) {
+      setPackageError('Select a service.');
+      return;
+    }
+    if (!Number.isInteger(delta) || delta === 0) {
+      setPackageError('Delta must be a non-zero integer.');
+      return;
+    }
+    if (!reason) {
+      setPackageError('Reason is required.');
+      return;
+    }
+
+    setPackageAdjusting(true);
+    setPackageError(null);
+    setPackageAssignSuccess(null);
+    try {
+      await apiFetch(`/api/admin/customers/${selectedCustomer.customer.id}/packages/${packageId}/adjust`, {
+        method: 'POST',
+        body: JSON.stringify({
+          serviceId,
+          delta,
+          reason,
+        }),
+      });
+      setPackageAdjustDelta('');
+      setPackageAdjustReason('');
+      await loadCustomerPackageData(selectedCustomer.customer.id);
+      setPackageAssignSuccess('Manual adjustment applied.');
+    } catch (err: any) {
+      setPackageError(err?.message || 'Adjustment failed.');
+    } finally {
+      setPackageAdjusting(false);
+    }
+  };
+
   const handleOpenCustomer = async (customerId: number) => {
     setDetailLoading(true);
     setDetailError(null);
@@ -280,6 +412,12 @@ export function CustomersPage() {
     setProfileError(null);
     setProfileSuccess(null);
     setRiskError(null);
+    setPackageError(null);
+    setPackageAssignSuccess(null);
+    setPackageTemplateIdToAssign('');
+    setPackageAdjustTarget({ packageId: '', serviceId: '' });
+    setPackageAdjustDelta('');
+    setPackageAdjustReason('');
 
     try {
       const response = await apiFetch<CustomerDetailResponse>(`/api/admin/customers/${customerId}`);
@@ -296,6 +434,7 @@ export function CustomersPage() {
       setDiscountMessage(response.discount?.messageTemplate || '');
       setDiscountError(null);
       setDiscountSuccess(null);
+      await loadCustomerPackageData(customerId);
     } catch (err: any) {
       setDetailError(err?.message || 'The customer profile could not be opened.');
     } finally {
@@ -517,6 +656,8 @@ export function CustomersPage() {
       minute: '2-digit',
     });
 
+  const selectedPackageForAdjust = customerPackages.find((item) => String(item.id) === packageAdjustTarget.packageId) || null;
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -663,6 +804,10 @@ export function CustomersPage() {
                   setProfileError(null);
                   setProfileSuccess(null);
                   setRiskError(null);
+                  setCustomerPackages([]);
+                  setPackageLedger([]);
+                  setPackageError(null);
+                  setPackageAssignSuccess(null);
                 }}
               >
                 <X className="h-4 w-4" />
@@ -914,6 +1059,143 @@ export function CustomersPage() {
                   >
                     {discountSaving ? 'Saving...' : 'Save Discount'}
                   </button>
+                </div>
+
+                <div className="rounded-lg border border-border p-3 space-y-3">
+                  <p className="text-sm font-medium">Package Management</p>
+
+                  <div className="rounded-md border border-border p-2.5 space-y-2">
+                    <p className="text-xs font-medium">Assign Package Template</p>
+                    <div className="flex gap-2">
+                      <select
+                        value={packageTemplateIdToAssign}
+                        onChange={(event) => setPackageTemplateIdToAssign(event.target.value)}
+                        className="h-10 flex-1 rounded-md border border-border px-3 text-sm bg-background"
+                      >
+                        <option value="">Select template</option>
+                        {packageTemplates
+                          .filter((template) => template.isActive)
+                          .map((template) => (
+                            <option key={template.id} value={template.id}>
+                              {template.name}
+                            </option>
+                          ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => void handleAssignTemplatePackage()}
+                        disabled={packageAssigning}
+                        className="rounded-md border border-border px-3 text-xs disabled:opacity-60"
+                      >
+                        {packageAssigning ? 'Assigning...' : 'Assign'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-border p-2.5 space-y-2">
+                    <p className="text-xs font-medium">Manual Service Adjustment</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select
+                        value={packageAdjustTarget.packageId}
+                        onChange={(event) =>
+                          setPackageAdjustTarget({ packageId: event.target.value, serviceId: '' })
+                        }
+                        className="h-10 rounded-md border border-border px-3 text-sm bg-background"
+                      >
+                        <option value="">Select package</option>
+                        {customerPackages.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name} ({item.status})
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={packageAdjustTarget.serviceId}
+                        onChange={(event) =>
+                          setPackageAdjustTarget((prev) => ({ ...prev, serviceId: event.target.value }))
+                        }
+                        className="h-10 rounded-md border border-border px-3 text-sm bg-background"
+                        disabled={!selectedPackageForAdjust}
+                      >
+                        <option value="">Select service</option>
+                        {(selectedPackageForAdjust?.serviceBalances || []).map((balance) => (
+                          <option key={balance.id} value={balance.serviceId}>
+                            {balance.service?.name || `#${balance.serviceId}`} ({balance.remainingQuota}/{balance.initialQuota})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <input
+                        type="number"
+                        step="1"
+                        value={packageAdjustDelta}
+                        onChange={(event) => setPackageAdjustDelta(event.target.value)}
+                        className="h-10 rounded-md border border-border px-3 text-sm"
+                        placeholder="+1 / -1"
+                      />
+                      <input
+                        value={packageAdjustReason}
+                        onChange={(event) => setPackageAdjustReason(event.target.value)}
+                        className="h-10 rounded-md border border-border px-3 text-sm"
+                        placeholder="Reason"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleAdjustPackage()}
+                      disabled={packageAdjusting}
+                      className="w-full rounded-md border border-border px-3 py-2 text-xs disabled:opacity-60"
+                    >
+                      {packageAdjusting ? 'Applying...' : 'Apply Adjustment'}
+                    </button>
+                  </div>
+
+                  {packageLoading ? <p className="text-sm text-muted-foreground">Loading package data...</p> : null}
+                  {packageError ? <p className="text-sm text-red-500">{packageError}</p> : null}
+                  {packageAssignSuccess ? <p className="text-sm text-green-600">{packageAssignSuccess}</p> : null}
+
+                  <div className="space-y-2">
+                    {customerPackages.length ? (
+                      customerPackages.map((item) => (
+                        <div key={item.id} className="rounded-md border border-border p-2.5 space-y-1.5">
+                          <p className="text-sm font-medium">
+                            {item.name} <span className="text-xs text-muted-foreground">({item.status})</span>
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {item.expiresAt ? `Expires: ${new Date(item.expiresAt).toLocaleDateString('en-GB')}` : 'No expiry'}
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {item.serviceBalances.map((balance) => (
+                              <span key={balance.id} className="text-[11px] rounded-full border border-border px-2 py-0.5">
+                                {balance.service?.name || `#${balance.serviceId}`}: {balance.remainingQuota}/{balance.initialQuota}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No package assigned yet.</p>
+                    )}
+                  </div>
+
+                  <div className="rounded-md border border-border p-2.5 space-y-2">
+                    <p className="text-xs font-medium">Package Ledger (Recent)</p>
+                    {packageLedger.length ? (
+                      packageLedger.slice(0, 12).map((entry) => (
+                        <div key={entry.id} className="text-[11px] border-b border-border/60 pb-1 last:border-b-0">
+                          <p className="font-medium">
+                            {entry.actionType} • {entry.serviceName || '-'} • {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
+                          </p>
+                          <p className="text-muted-foreground">
+                            Bakiye: {entry.balanceAfter ?? '-'} • {new Date(entry.createdAt).toLocaleString('en-GB')}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No package ledger record.</p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3">

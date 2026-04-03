@@ -13,6 +13,7 @@ export function FeaturesPage() {
       automations: '/app/automations',
       'service-management': '/app/services',
       'staff-management': '/app/staff',
+      packages: '/app/packages',
       'salon-info': '/app/salon-info',
       blacklist: '/app/blacklist',
       'website-builder': '/app/features/website-builder',

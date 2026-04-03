@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDays, endOfDay, format, formatISO, startOfDay } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import type { AdminAppointmentsResponse } from '../types/mobile-api';
+import type { AdminAppointmentsResponse, AppointmentStatusUpdateResponse } from '../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
 interface StaffItem {
@@ -104,6 +104,8 @@ export function SchedulePage() {
 
   const [loading, setLoading] = useState<boolean>(() => !initialScheduleSnapshot);
   const [error, setError] = useState<string | null>(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
+  const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -338,6 +340,43 @@ export function SchedulePage() {
     }
   };
 
+  const summarizePackageAutomation = (events: AppointmentStatusUpdateResponse['packageAutomation']['events']) => {
+    if (!events.length) {
+      return 'No package action.';
+    }
+    const consumed = events.filter((item) => item.type === 'AUTO_CONSUME').length;
+    const restored = events.filter((item) => item.type === 'AUTO_RESTORE').length;
+    const skippedExpired = events.filter((item) => item.type === 'SKIPPED_EXPIRED').length;
+    const skippedNoEligible = events.filter((item) => item.type === 'SKIPPED_NO_ELIGIBLE_PACKAGE').length;
+    const idempotent = events.filter((item) => item.type === 'IDEMPOTENT').length;
+
+    const parts: string[] = [];
+    if (consumed) parts.push(`${consumed} consumed`);
+    if (restored) parts.push(`${restored} restored`);
+    if (skippedExpired) parts.push(`${skippedExpired} skipped(expired)`);
+    if (skippedNoEligible) parts.push(`${skippedNoEligible} skipped(no package)`);
+    if (idempotent) parts.push(`${idempotent} already consumed`);
+    return parts.join(' • ');
+  };
+
+  const updateAppointmentStatus = async (appointmentId: number, status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW') => {
+    setStatusUpdatingId(appointmentId);
+    setStatusFeedback(null);
+    try {
+      const response = await apiFetch<AppointmentStatusUpdateResponse>(`/api/admin/appointments/${appointmentId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+      const summary = summarizePackageAutomation(response.packageAutomation?.events || []);
+      setStatusFeedback(`Appointment #${appointmentId}: ${summary}`);
+      await loadSchedule();
+    } catch (err: any) {
+      setStatusFeedback(err?.message || 'Status could not be updated.');
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
   const getAppointmentStyle = (startIso: string, endIso: string) => {
     const start = new Date(startIso);
     const end = new Date(endIso);
@@ -419,6 +458,7 @@ export function SchedulePage() {
 
       {loading ? <p className="text-sm text-muted-foreground">Loading calendar...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {statusFeedback ? <p className="text-sm text-[var(--deep-indigo)]">{statusFeedback}</p> : null}
 
       {viewMode === 'calendar' ? (
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -514,6 +554,21 @@ export function SchedulePage() {
                   <div className="mt-2 text-xs text-muted-foreground">
                     <p>{appointment.service.name}</p>
                     <p>{appointment.staff.name}</p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {(['BOOKED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'] as const).map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        disabled={statusUpdatingId === appointment.id || appointment.status === status}
+                        onClick={() => void updateAppointmentStatus(appointment.id, status)}
+                        className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
+                          appointment.status === status ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' : 'border-border'
+                        }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
                   </div>
                 </div>
               );

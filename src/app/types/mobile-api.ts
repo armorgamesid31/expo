@@ -81,3 +81,92 @@ export interface AdminCustomersResponse {
   nextCursor: string | null;
   hasMore: boolean;
 }
+
+export interface PackageServiceBalanceItem {
+  id: number;
+  serviceId: number;
+  initialQuota: number;
+  remainingQuota: number;
+  service?: {
+    id: number;
+    name: string;
+  } | null;
+}
+
+export interface PackageTemplateItem {
+  id: number;
+  salonId: number;
+  name: string;
+  scopeType: 'SINGLE_SERVICE' | 'POOL';
+  isActive: boolean;
+  price: number | null;
+  validityDays: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  services: Array<{
+    id: number;
+    serviceId: number;
+    initialQuota: number;
+    service?: {
+      id: number;
+      name: string;
+    } | null;
+  }>;
+}
+
+export interface CustomerPackageItem {
+  id: number;
+  customerId: number;
+  packageTemplateId: number | null;
+  sourceType: 'TEMPLATE' | 'CUSTOM';
+  scopeType: 'SINGLE_SERVICE' | 'POOL';
+  status: 'ACTIVE' | 'DEPLETED' | 'EXPIRED' | 'CANCELLED';
+  name: string;
+  startsAt: string | null;
+  expiresAt: string | null;
+  price: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  template?: {
+    id: number;
+    name: string;
+  } | null;
+  serviceBalances: PackageServiceBalanceItem[];
+}
+
+export interface PackageLedgerItem {
+  id: number;
+  customerPackageId: number | null;
+  packageName: string | null;
+  serviceId: number | null;
+  serviceName: string | null;
+  appointmentId: number | null;
+  actionType:
+    | 'ASSIGNED'
+    | 'AUTO_CONSUME'
+    | 'AUTO_RESTORE'
+    | 'MANUAL_ADJUST'
+    | 'SKIPPED_NO_ELIGIBLE_PACKAGE'
+    | 'SKIPPED_EXPIRED';
+  delta: number;
+  balanceAfter: number | null;
+  reason: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface AppointmentStatusUpdateResponse {
+  item: AdminAppointmentItem;
+  packageAutomation: {
+    previousStatus: string;
+    nextStatus: string;
+    events: Array<{
+      type: string;
+      serviceId: number;
+      customerPackageId?: number;
+      balanceAfter?: number;
+    }>;
+  };
+}
