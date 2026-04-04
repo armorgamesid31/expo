@@ -297,6 +297,8 @@ export interface PushDeliverySummary {
 
 export interface PushTestResponse {
   ok: boolean;
+  scheduled: boolean;
+  delaySeconds: number;
   notificationId: number | null;
   inAppDeliveryCount: number;
   pushDeliveryCount: number;

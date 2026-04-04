@@ -137,6 +137,14 @@ export function NotificationSettingsPage() {
   };
 
   const sendTestNotification = async () => {
+    await sendPushTest(0);
+  };
+
+  const sendDelayedTestNotification = async () => {
+    await sendPushTest(5);
+  };
+
+  const sendPushTest = async (delaySeconds: number) => {
     setTesting(true);
     setTestMessage(null);
     setPushStatusError(null);
@@ -144,10 +152,13 @@ export function NotificationSettingsPage() {
     try {
       const result = await apiFetch<PushTestResponse>('/api/mobile/push/test', {
         method: 'POST',
+        body: JSON.stringify({ delaySeconds }),
       });
 
       setTestMessage(
-        `Test sonucu: SENT ${result.pushDeliverySummary.SENT}, FAILED ${result.pushDeliverySummary.FAILED}, SKIPPED ${result.pushDeliverySummary.SKIPPED}`,
+        result.scheduled
+          ? `${result.delaySeconds} saniyelik gecikmeli test planlandi. Simdi uygulamayi arka plana al.`
+          : `Test sonucu: SENT ${result.pushDeliverySummary.SENT}, FAILED ${result.pushDeliverySummary.FAILED}, SKIPPED ${result.pushDeliverySummary.SKIPPED}`,
       );
       await loadPushStatus();
     } catch (err: any) {
@@ -226,14 +237,24 @@ export function NotificationSettingsPage() {
           ) : null}
         </div>
 
-        <button
-          type="button"
-          disabled={testing}
-          onClick={() => void sendTestNotification()}
-          className="w-full h-10 rounded-lg bg-[var(--deep-indigo)] text-white text-sm font-semibold disabled:opacity-60"
-        >
-          {testing ? 'Test bildirimi gonderiliyor...' : 'Test bildirimi gonder'}
-        </button>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            disabled={testing}
+            onClick={() => void sendTestNotification()}
+            className="h-10 rounded-lg bg-[var(--deep-indigo)] text-white text-sm font-semibold disabled:opacity-60"
+          >
+            {testing ? 'Gonderiliyor...' : 'Anlik test bildirimi'}
+          </button>
+          <button
+            type="button"
+            disabled={testing}
+            onClick={() => void sendDelayedTestNotification()}
+            className="h-10 rounded-lg border border-[var(--deep-indigo)] text-[var(--deep-indigo)] text-sm font-semibold disabled:opacity-60"
+          >
+            {testing ? 'Planlaniyor...' : '5 saniye sonra test'}
+          </button>
+        </div>
 
         {testMessage ? <p className="text-xs text-emerald-600">{testMessage}</p> : null}
       </div>
