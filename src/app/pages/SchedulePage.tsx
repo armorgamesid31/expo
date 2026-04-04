@@ -8,6 +8,7 @@ import type {
   AdminAppointmentRescheduleOptionsResponse,
   AdminAppointmentReschedulePreviewResponse,
   AppointmentStatusUpdateResponse,
+  AdminWaitlistItem,
 } from '../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
@@ -163,9 +164,14 @@ export function SchedulePage() {
   const [appointments, setAppointments] = useState<AdminAppointmentsResponse['items']>(
     () => initialScheduleSnapshot?.appointments || [],
   );
+  const [waitlistItems, setWaitlistItems] = useState<AdminWaitlistItem[]>([]);
 
   const [loading, setLoading] = useState<boolean>(() => !initialScheduleSnapshot);
   const [error, setError] = useState<string | null>(null);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [waitlistError, setWaitlistError] = useState<string | null>(null);
+  const [waitlistBusyId, setWaitlistBusyId] = useState<number | null>(null);
+  const [waitlistMatching, setWaitlistMatching] = useState(false);
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
@@ -176,6 +182,21 @@ export function SchedulePage() {
     mode: 'STATUS_COMPLETE' | 'PAYMENT_ONLY';
   } | null>(null);
   const [rescheduleSelection, setRescheduleSelection] = useState<RescheduleSelectionState | null>(null);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [waitlistSaving, setWaitlistSaving] = useState(false);
+  const [waitlistCreateError, setWaitlistCreateError] = useState<string | null>(null);
+  const [waitlistSelectedServiceIds, setWaitlistSelectedServiceIds] = useState<string[]>([]);
+  const [waitlistSelectedStaffByService, setWaitlistSelectedStaffByService] = useState<Record<string, string>>({});
+  const [waitlistServiceStaffOptions, setWaitlistServiceStaffOptions] = useState<Record<string, ServiceStaffItem[]>>({});
+  const [waitlistLoadingServiceStaff, setWaitlistLoadingServiceStaff] = useState<Record<string, boolean>>({});
+  const [waitlistForm, setWaitlistForm] = useState({
+    customerId: '',
+    customerName: '',
+    customerPhone: '',
+    timeWindowStart: '10:00',
+    timeWindowEnd: '18:00',
+    notes: '',
+  });
 
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -322,19 +343,23 @@ export function SchedulePage() {
       setLoading(true);
     }
     setError(null);
+    setWaitlistError(null);
+    setWaitlistLoading(true);
 
     try {
-      const [appointmentsResponse, staffResponse, servicesResponse] = await Promise.all([
+      const [appointmentsResponse, staffResponse, servicesResponse, waitlistResponse] = await Promise.all([
         apiFetch<AdminAppointmentsResponse>(
           `/api/admin/appointments?from=${encodeURIComponent(window.from)}&to=${encodeURIComponent(window.to)}&limit=500`,
         ),
         apiFetch<{ items: StaffItem[] }>('/api/admin/staff'),
         apiFetch<{ items: ServiceItem[] }>('/api/admin/services'),
+        apiFetch<{ items: AdminWaitlistItem[] }>(`/api/admin/waitlist?date=${encodeURIComponent(dayKey)}`),
       ]);
 
       setAppointments(appointmentsResponse.items);
       setStaff(staffResponse.items);
       setServices(servicesResponse.items);
+      setWaitlistItems(waitlistResponse.items || []);
       writeSnapshot(scheduleCacheKey(dayKey), {
         dayKey,
         appointments: appointmentsResponse.items,
@@ -345,12 +370,27 @@ export function SchedulePage() {
       setError(err?.message || 'Failed to retrieve calendar data.');
     } finally {
       setLoading(false);
+      setWaitlistLoading(false);
     }
   }, [activeDate, apiFetch]);
 
   useEffect(() => {
     void loadSchedule();
   }, [loadSchedule]);
+
+  const loadWaitlist = useCallback(async () => {
+    const dayKey = dayKeyFromDate(activeDate);
+    setWaitlistLoading(true);
+    setWaitlistError(null);
+    try {
+      const response = await apiFetch<{ items: AdminWaitlistItem[] }>(`/api/admin/waitlist?date=${encodeURIComponent(dayKey)}`);
+      setWaitlistItems(response.items || []);
+    } catch (err: any) {
+      setWaitlistError(err?.message || 'Failed to load waitlist.');
+    } finally {
+      setWaitlistLoading(false);
+    }
+  }, [activeDate, apiFetch]);
 
   const loadStaffForService = useCallback(
     async (serviceId: string) => {
@@ -375,6 +415,29 @@ export function SchedulePage() {
     [apiFetch, serviceStaffOptions],
   );
 
+  const loadWaitlistStaffForService = useCallback(
+    async (serviceId: string) => {
+      if (waitlistServiceStaffOptions[serviceId]) {
+        return;
+      }
+
+      setWaitlistLoadingServiceStaff((prev) => ({ ...prev, [serviceId]: true }));
+      try {
+        const response = await apiFetch<{ items: ServiceStaffItem[] }>(`/api/admin/services/${serviceId}/staff`);
+        setWaitlistServiceStaffOptions((prev) => ({ ...prev, [serviceId]: response.items || [] }));
+
+        if (response.items?.length === 1) {
+          setWaitlistSelectedStaffByService((prev) => ({ ...prev, [serviceId]: String(response.items[0].id) }));
+        }
+      } catch {
+        setWaitlistServiceStaffOptions((prev) => ({ ...prev, [serviceId]: [] }));
+      } finally {
+        setWaitlistLoadingServiceStaff((prev) => ({ ...prev, [serviceId]: false }));
+      }
+    },
+    [apiFetch, waitlistServiceStaffOptions],
+  );
+
   const openCreateModal = useCallback(async () => {
     setCreateOpen(true);
     setCreateError(null);
@@ -386,6 +449,33 @@ export function SchedulePage() {
         setCustomers(response.items || []);
       } catch {
         // Optional list for fast selection.
+      } finally {
+        setLoadingCustomers(false);
+      }
+    }
+  }, [apiFetch, customers.length]);
+
+  const openWaitlistModal = useCallback(async () => {
+    setWaitlistOpen(true);
+    setWaitlistCreateError(null);
+    setWaitlistSelectedServiceIds([]);
+    setWaitlistSelectedStaffByService({});
+    setWaitlistForm({
+      customerId: '',
+      customerName: '',
+      customerPhone: '',
+      timeWindowStart: '10:00',
+      timeWindowEnd: '18:00',
+      notes: '',
+    });
+
+    if (customers.length === 0) {
+      setLoadingCustomers(true);
+      try {
+        const response = await apiFetch<{ items: CustomerItem[] }>('/api/admin/customers?limit=30');
+        setCustomers(response.items || []);
+      } catch {
+        // ignore
       } finally {
         setLoadingCustomers(false);
       }
@@ -657,6 +747,140 @@ export function SchedulePage() {
     }
   };
 
+  const submitWaitlistCreate = async () => {
+    if (!waitlistForm.timeWindowStart || !waitlistForm.timeWindowEnd) {
+      setWaitlistCreateError('Time window is required.');
+      return;
+    }
+    if (waitlistForm.timeWindowStart >= waitlistForm.timeWindowEnd) {
+      setWaitlistCreateError('End time must be after start time.');
+      return;
+    }
+    if (waitlistSelectedServiceIds.length === 0) {
+      setWaitlistCreateError('You must select at least one service.');
+      return;
+    }
+    if (!waitlistForm.customerName.trim() || !waitlistForm.customerPhone.trim()) {
+      setWaitlistCreateError('Customer name and phone are required.');
+      return;
+    }
+
+    setWaitlistSaving(true);
+    setWaitlistCreateError(null);
+
+    try {
+      await apiFetch('/api/admin/waitlist', {
+        method: 'POST',
+        body: JSON.stringify({
+          date: dayKeyFromDate(activeDate),
+          timeWindowStart: waitlistForm.timeWindowStart,
+          timeWindowEnd: waitlistForm.timeWindowEnd,
+          customerId: waitlistForm.customerId ? Number(waitlistForm.customerId) : null,
+          customerName: waitlistForm.customerName.trim(),
+          customerPhone: waitlistForm.customerPhone.trim(),
+          notes: waitlistForm.notes.trim() || null,
+          groups: [
+            {
+              personId: 'p1',
+              services: waitlistSelectedServiceIds.map((serviceId) => ({
+                serviceId: Number(serviceId),
+                allowedStaffIds: waitlistSelectedStaffByService[serviceId]
+                  ? [Number(waitlistSelectedStaffByService[serviceId])]
+                  : null,
+              })),
+            },
+          ],
+        }),
+      });
+
+      setWaitlistOpen(false);
+      await loadWaitlist();
+    } catch (err: any) {
+      setWaitlistCreateError(err?.message || 'Waitlist entry could not be created.');
+    } finally {
+      setWaitlistSaving(false);
+    }
+  };
+
+  const triggerWaitlistMatcher = async () => {
+    setWaitlistMatching(true);
+    setWaitlistError(null);
+    try {
+      const response = await apiFetch<{ items: AdminWaitlistItem[] }>('/api/admin/waitlist/match', {
+        method: 'POST',
+        body: JSON.stringify({ date: dayKeyFromDate(activeDate) }),
+      });
+      setWaitlistItems(response.items || []);
+    } catch (err: any) {
+      setWaitlistError(err?.message || 'Waitlist matcher could not be run.');
+    } finally {
+      setWaitlistMatching(false);
+    }
+  };
+
+  const sendManualWaitlistOffer = async (entryId: number) => {
+    setWaitlistBusyId(entryId);
+    try {
+      await apiFetch(`/api/admin/waitlist/${entryId}/offer`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      await loadWaitlist();
+    } catch (err: any) {
+      setWaitlistError(err?.message || 'Offer could not be sent.');
+    } finally {
+      setWaitlistBusyId(null);
+    }
+  };
+
+  const cancelWaitlist = async (entryId: number) => {
+    setWaitlistBusyId(entryId);
+    try {
+      await apiFetch(`/api/admin/waitlist/${entryId}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      await loadWaitlist();
+    } catch (err: any) {
+      setWaitlistError(err?.message || 'Waitlist entry could not be cancelled.');
+    } finally {
+      setWaitlistBusyId(null);
+    }
+  };
+
+  const toggleWaitlistService = (serviceId: string) => {
+    setWaitlistSelectedServiceIds((prev) => {
+      if (prev.includes(serviceId)) {
+        return prev.filter((id) => id !== serviceId);
+      }
+      return [...prev, serviceId];
+    });
+
+    if (!waitlistSelectedServiceIds.includes(serviceId)) {
+      void loadWaitlistStaffForService(serviceId);
+    }
+  };
+
+  const handleWaitlistCustomerSelect = (idValue: string) => {
+    setWaitlistForm((prev) => {
+      if (!idValue) {
+        return { ...prev, customerId: '', customerName: '', customerPhone: '' };
+      }
+
+      const selected = customers.find((item) => String(item.id) === idValue);
+      if (!selected) {
+        return { ...prev, customerId: idValue };
+      }
+
+      return {
+        ...prev,
+        customerId: idValue,
+        customerName: selected.name || '',
+        customerPhone: selected.phone || '',
+      };
+    });
+  };
+
   useEffect(() => {
     if (!rescheduleSelection?.date) return;
 
@@ -903,6 +1127,89 @@ export function SchedulePage() {
 
       {loading ? <p className="text-sm text-muted-foreground">Loading schedule...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold">Waitlist</h2>
+            <p className="text-xs text-muted-foreground">Requests for {format(activeDate, 'dd MMM yyyy')} and latest offer status.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void triggerWaitlistMatcher()}
+              disabled={waitlistMatching}
+              className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground disabled:opacity-50"
+            >
+              {waitlistMatching ? 'Matching...' : 'Run Matcher'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void openWaitlistModal()}
+              className="rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-xs font-semibold text-white"
+            >
+              Add Waitlist
+            </button>
+          </div>
+        </div>
+        {waitlistLoading ? <p className="text-xs text-muted-foreground">Loading waitlist...</p> : null}
+        {waitlistError ? <p className="text-xs text-red-500">{waitlistError}</p> : null}
+        {waitlistItems.length ? (
+          <div className="space-y-2">
+            {waitlistItems.map((item) => (
+              <div key={item.id} className="rounded-xl border border-border bg-background/70 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold">{item.customerName}</p>
+                    <p className="text-xs text-muted-foreground">{item.customerPhone}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {item.timeWindowStart} - {item.timeWindowEnd} • {item.source === 'ADMIN' ? 'Salon added' : 'Customer added'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="rounded-full border border-border px-2 py-1 text-[11px] font-semibold">{item.status}</span>
+                    {item.latestOffer ? (
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Offer: {item.latestOffer.slotStartTime} - {item.latestOffer.slotEndTime} • {item.latestOffer.status}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {item.groups.flatMap((group) => group.services).map((service, index) => {
+                    const serviceMeta = services.find((entry) => entry.id === service.serviceId);
+                    return (
+                      <span key={`${item.id}-${service.serviceId}-${index}`} className="rounded-full border border-border bg-card px-2 py-1 text-[11px]">
+                        {serviceMeta?.name || `Service #${service.serviceId}`}
+                      </span>
+                    );
+                  })}
+                </div>
+                {item.notes ? <p className="mt-2 text-xs text-muted-foreground">{item.notes}</p> : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={waitlistBusyId === item.id || item.status !== 'PENDING'}
+                    onClick={() => void sendManualWaitlistOffer(item.id)}
+                    className="rounded-lg border border-emerald-300/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-700 disabled:opacity-50"
+                  >
+                    {waitlistBusyId === item.id ? 'Working...' : 'Send Offer'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={waitlistBusyId === item.id || item.status === 'CANCELLED' || item.status === 'ACCEPTED'}
+                    onClick={() => void cancelWaitlist(item.id)}
+                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : waitlistLoading ? null : (
+          <p className="text-xs text-muted-foreground">No waitlist request for this day yet.</p>
+        )}
+      </div>
       {statusFeedback ? <p className="text-sm text-[var(--deep-indigo)]">{statusFeedback}</p> : null}
 
       {viewMode === 'calendar' ? (
@@ -1450,6 +1757,153 @@ export function SchedulePage() {
             >
               Cancel
             </button>
+          </div>
+        </div>
+      ) : null}
+
+      {waitlistOpen ? (
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">New Waitlist Entry</h2>
+              <button type="button" onClick={() => setWaitlistOpen(false)} className="text-sm text-muted-foreground">
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Registered Customer (optional)</span>
+                <select
+                  value={waitlistForm.customerId}
+                  onChange={(event) => handleWaitlistCustomerSelect(event.target.value)}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                >
+                  <option value="">New customer / Enter manually</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {(customer.name || 'Anonymous')} • {customer.phone}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {loadingCustomers ? <p className="text-xs text-muted-foreground">Loading customers...</p> : null}
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Customer Name</span>
+                <input
+                  value={waitlistForm.customerName}
+                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerName: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Customer Phone</span>
+                <input
+                  value={waitlistForm.customerPhone}
+                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                />
+              </label>
+
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block text-sm space-y-1">
+                  <span className="text-muted-foreground">From</span>
+                  <input
+                    type="time"
+                    value={waitlistForm.timeWindowStart}
+                    onChange={(event) => setWaitlistForm((prev) => ({ ...prev, timeWindowStart: event.target.value }))}
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                  />
+                </label>
+                <label className="block text-sm space-y-1">
+                  <span className="text-muted-foreground">To</span>
+                  <input
+                    type="time"
+                    value={waitlistForm.timeWindowEnd}
+                    onChange={(event) => setWaitlistForm((prev) => ({ ...prev, timeWindowEnd: event.target.value }))}
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                  />
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Services</p>
+                <div className="space-y-2 max-h-44 overflow-y-auto rounded-lg border border-border p-2">
+                  {services.map((service) => {
+                    const serviceId = String(service.id);
+                    const checked = waitlistSelectedServiceIds.includes(serviceId);
+                    return (
+                      <label key={service.id} className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-muted/30">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleWaitlistService(serviceId)}
+                          className="mt-1"
+                        />
+                        <span className="text-sm flex-1">
+                          <span className="font-medium">{service.name}</span>
+                          <span className="text-muted-foreground"> • {service.duration} min</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {waitlistSelectedServiceIds.map((serviceId) => {
+                const service = servicesById[serviceId];
+                const options = waitlistServiceStaffOptions[serviceId] || [];
+                const loadingOptions = waitlistLoadingServiceStaff[serviceId];
+                const required = Boolean(service?.requiresSpecialist && options.length > 1);
+
+                return (
+                  <div key={serviceId} className="space-y-1 rounded-lg border border-border p-2">
+                    <p className="text-sm font-medium">{service?.name}</p>
+                    {loadingOptions ? <p className="text-xs text-muted-foreground">Loading specialists...</p> : null}
+                    {!loadingOptions && options.length > 1 ? (
+                      <select
+                        value={waitlistSelectedStaffByService[serviceId] || ''}
+                        onChange={(event) =>
+                          setWaitlistSelectedStaffByService((prev) => ({ ...prev, [serviceId]: event.target.value }))
+                        }
+                        className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                      >
+                        <option value="">{required ? 'Choose specialist' : 'Any specialist'}</option>
+                        {options.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                  </div>
+                );
+              })}
+
+              <label className="block text-sm space-y-1">
+                <span className="text-muted-foreground">Note</span>
+                <textarea
+                  value={waitlistForm.notes}
+                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, notes: event.target.value }))}
+                  className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  placeholder="Optional note..."
+                />
+              </label>
+
+              {waitlistCreateError ? <p className="text-sm text-red-500">{waitlistCreateError}</p> : null}
+
+              <button
+                type="button"
+                onClick={() => void submitWaitlistCreate()}
+                disabled={waitlistSaving}
+                className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
+              >
+                {waitlistSaving ? 'Saving...' : 'Create Waitlist Entry'}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

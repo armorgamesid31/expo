@@ -144,6 +144,37 @@ export interface AdminAppointmentRescheduleCommitResponse {
   items: AdminAppointmentItem[];
 }
 
+export interface AdminWaitlistItem {
+  id: number;
+  customerId: number | null;
+  customerName: string;
+  customerPhone: string;
+  source: 'CUSTOMER' | 'ADMIN';
+  status: 'PENDING' | 'OFFERED' | 'ACCEPTED' | 'CANCELLED' | 'EXPIRED';
+  date: string;
+  timeWindowStart: string;
+  timeWindowEnd: string;
+  notes: string | null;
+  createdAt: string;
+  groups: Array<{
+    personId: string;
+    services: Array<{
+      serviceId: number;
+      allowedStaffIds?: number[] | null;
+    }>;
+  }>;
+  latestOffer: null | {
+    id: number;
+    status: 'PENDING' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'FAILED' | 'CANCELLED';
+    channel: 'WHATSAPP' | 'WEB_LINK';
+    slotDate: string;
+    slotStartTime: string;
+    slotEndTime: string;
+    expiresAt: string;
+    offerUrl: string | null;
+  };
+}
+
 export interface AdminCustomerItem {
   id: number;
   name: string | null;

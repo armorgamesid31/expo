@@ -11,6 +11,14 @@ export function inferPushRouteFromEvent(eventType: unknown): PushRouteKey {
   if (eventType === 'SAME_DAY_APPOINTMENT_CHANGE' || eventType === 'END_OF_DAY_MISSING_DATA') {
     return 'schedule';
   }
+  if (
+    eventType === 'WAITLIST_OFFER_CREATED' ||
+    eventType === 'WAITLIST_OFFER_EXPIRED' ||
+    eventType === 'WAITLIST_OFFER_ACCEPTED' ||
+    eventType === 'WAITLIST_MATCH_FOUND'
+  ) {
+    return 'schedule';
+  }
   if (eventType === 'DAILY_MANAGER_REPORT') {
     return 'analytics';
   }
