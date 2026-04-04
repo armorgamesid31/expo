@@ -1,23 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import type { NotificationPreferences } from '../types/mobile-api';
+import {
+  LocalPushPermissionState,
+  PUSH_NOTIFICATION_RECEIVED_EVENT,
+  PUSH_REGISTRATION_CHANGED_EVENT,
+  getLocalPushPermissionState,
+} from '../lib/push-notifications';
+import type {
+  NotificationPreferences,
+  PushStatusResponse,
+  PushTestResponse,
+} from '../types/mobile-api';
 
 const EVENTS = [
   { key: 'HANDOVER_REQUIRED', label: 'Handover gerekli' },
   { key: 'HANDOVER_REMINDER', label: 'Handover tekrar' },
-  { key: 'SAME_DAY_APPOINTMENT_CHANGE', label: 'Aynı gün randevu değişikliği' },
-  { key: 'END_OF_DAY_MISSING_DATA', label: 'Gün sonu eksik veri' },
-  { key: 'DAILY_MANAGER_REPORT', label: 'Günlük rapor' },
+  { key: 'SAME_DAY_APPOINTMENT_CHANGE', label: 'Ayni gun randevu degisikligi' },
+  { key: 'END_OF_DAY_MISSING_DATA', label: 'Gun sonu eksik veri' },
+  { key: 'DAILY_MANAGER_REPORT', label: 'Gunluk rapor' },
 ] as const;
 
+const PERMISSION_LABELS: Record<LocalPushPermissionState, string> = {
+  granted: 'Izin verildi',
+  denied: 'Izin reddedildi',
+  prompt: 'Izin bekleniyor',
+  'prompt-with-rationale': 'Ek aciklama gerekli',
+  unsupported: 'Sadece native cihazda calisir',
+};
+
 type EventKey = (typeof EVENTS)[number]['key'];
+
+function formatDate(value: string | null): string {
+  if (!value) return 'Yok';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Bilinmiyor';
+  return date.toLocaleString('tr-TR');
+}
 
 export function NotificationSettingsPage() {
   const { apiFetch } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [pushStatusLoading, setPushStatusLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pushStatusError, setPushStatusError] = useState<string | null>(null);
+  const [testMessage, setTestMessage] = useState<string | null>(null);
   const [masterEnabled, setMasterEnabled] = useState(true);
+  const [localPermission, setLocalPermission] = useState<LocalPushPermissionState>('unsupported');
+  const [pushStatus, setPushStatus] = useState<PushStatusResponse | null>(null);
   const [events, setEvents] = useState<Record<EventKey, boolean>>({
     HANDOVER_REQUIRED: true,
     HANDOVER_REMINDER: true,
@@ -26,33 +57,63 @@ export function NotificationSettingsPage() {
     DAILY_MANAGER_REPORT: true,
   });
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const response = await apiFetch<{ preferences: NotificationPreferences }>('/api/mobile/notification-preferences');
-        if (!active) return;
-        setMasterEnabled(response.preferences?.masterEnabled !== false);
-        const remote = (response.preferences?.eventConfig?.events || {}) as Record<string, boolean>;
-        setEvents((prev) => ({
-          ...prev,
-          HANDOVER_REQUIRED: remote.HANDOVER_REQUIRED ?? prev.HANDOVER_REQUIRED,
-          HANDOVER_REMINDER: remote.HANDOVER_REMINDER ?? prev.HANDOVER_REMINDER,
-          SAME_DAY_APPOINTMENT_CHANGE: remote.SAME_DAY_APPOINTMENT_CHANGE ?? prev.SAME_DAY_APPOINTMENT_CHANGE,
-          END_OF_DAY_MISSING_DATA: remote.END_OF_DAY_MISSING_DATA ?? prev.END_OF_DAY_MISSING_DATA,
-          DAILY_MANAGER_REPORT: remote.DAILY_MANAGER_REPORT ?? prev.DAILY_MANAGER_REPORT,
-        }));
-      } catch (err: any) {
-        if (!active) return;
-        setError(err?.message || 'Bildirim tercihleri alınamadı.');
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
+  const loadPreferences = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await apiFetch<{ preferences: NotificationPreferences }>('/api/mobile/notification-preferences');
+      setMasterEnabled(response.preferences?.masterEnabled !== false);
+      const remote = (response.preferences?.eventConfig?.events || {}) as Record<string, boolean>;
+      setEvents((prev) => ({
+        ...prev,
+        HANDOVER_REQUIRED: remote.HANDOVER_REQUIRED ?? prev.HANDOVER_REQUIRED,
+        HANDOVER_REMINDER: remote.HANDOVER_REMINDER ?? prev.HANDOVER_REMINDER,
+        SAME_DAY_APPOINTMENT_CHANGE: remote.SAME_DAY_APPOINTMENT_CHANGE ?? prev.SAME_DAY_APPOINTMENT_CHANGE,
+        END_OF_DAY_MISSING_DATA: remote.END_OF_DAY_MISSING_DATA ?? prev.END_OF_DAY_MISSING_DATA,
+        DAILY_MANAGER_REPORT: remote.DAILY_MANAGER_REPORT ?? prev.DAILY_MANAGER_REPORT,
+      }));
+      setError(null);
+    } catch (err: any) {
+      setError(err?.message || 'Bildirim tercihleri alinamadi.');
+    } finally {
+      setLoading(false);
+    }
   }, [apiFetch]);
+
+  const loadPushStatus = useCallback(async () => {
+    setPushStatusLoading(true);
+    try {
+      const [remoteStatus, permission] = await Promise.all([
+        apiFetch<PushStatusResponse>('/api/mobile/push/status'),
+        getLocalPushPermissionState(),
+      ]);
+      setPushStatus(remoteStatus);
+      setLocalPermission(permission);
+      setPushStatusError(null);
+    } catch (err: any) {
+      setPushStatusError(err?.message || 'Push durumu alinamadi.');
+    } finally {
+      setPushStatusLoading(false);
+    }
+  }, [apiFetch]);
+
+  useEffect(() => {
+    void loadPreferences();
+    void loadPushStatus();
+  }, [loadPreferences, loadPushStatus]);
+
+  useEffect(() => {
+    const refreshStatus = () => {
+      void loadPushStatus();
+    };
+
+    window.addEventListener(PUSH_REGISTRATION_CHANGED_EVENT, refreshStatus);
+    window.addEventListener(PUSH_NOTIFICATION_RECEIVED_EVENT, refreshStatus);
+
+    return () => {
+      window.removeEventListener(PUSH_REGISTRATION_CHANGED_EVENT, refreshStatus);
+      window.removeEventListener(PUSH_NOTIFICATION_RECEIVED_EVENT, refreshStatus);
+    };
+  }, [loadPushStatus]);
 
   const save = async () => {
     setSaving(true);
@@ -75,15 +136,111 @@ export function NotificationSettingsPage() {
     }
   };
 
+  const sendTestNotification = async () => {
+    setTesting(true);
+    setTestMessage(null);
+    setPushStatusError(null);
+
+    try {
+      const result = await apiFetch<PushTestResponse>('/api/mobile/push/test', {
+        method: 'POST',
+      });
+
+      setTestMessage(
+        `Test sonucu: SENT ${result.pushDeliverySummary.SENT}, FAILED ${result.pushDeliverySummary.FAILED}, SKIPPED ${result.pushDeliverySummary.SKIPPED}`,
+      );
+      await loadPushStatus();
+    } catch (err: any) {
+      setPushStatusError(err?.message || 'Test bildirimi gonderilemedi.');
+    } finally {
+      setTesting(false);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Notification Settings</h1>
-      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold">Notification Settings</h1>
+        <p className="text-sm text-muted-foreground">
+          Push kurulumu, cihaz kaydi ve bildirim tercihlerini bu ekrandan takip edebilirsin.
+        </p>
+      </div>
+
+      {loading ? <p className="text-sm text-muted-foreground">Tercihler yukleniyor...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium">Push sistem durumu</p>
+            <p className="text-xs text-muted-foreground">Firebase, cihaz kaydi ve izin bilgileri</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadPushStatus()}
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground"
+          >
+            Yenile
+          </button>
+        </div>
+
+        {pushStatusLoading ? <p className="text-sm text-muted-foreground">Push durumu yukleniyor...</p> : null}
+        {pushStatusError ? <p className="text-sm text-red-500">{pushStatusError}</p> : null}
+
+        <div className="grid gap-2 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span>Telefon izin durumu</span>
+            <span className="font-medium">{PERMISSION_LABELS[localPermission]}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span>Backend push provider</span>
+            <span className="font-medium">
+              {pushStatus?.providerConfigured ? `Hazir (${pushStatus.providerSource})` : 'Hazir degil'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span>Aktif cihaz kaydi</span>
+            <span className="font-medium">{pushStatus?.activeDeviceCount ?? 0}</span>
+          </div>
+        </div>
+
+        {pushStatus?.providerError ? (
+          <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600">
+            Provider hatasi: {pushStatus.providerError}
+          </p>
+        ) : null}
+
+        <div className="space-y-2">
+          {(pushStatus?.devices || []).map((device) => (
+            <div key={device.id} className="rounded-lg border border-border/70 px-3 py-2 text-xs">
+              <p className="font-semibold">
+                {device.platform} · {device.tokenMasked}
+              </p>
+              <p className="text-muted-foreground">
+                Versiyon: {device.appVersion || 'bilinmiyor'} · Son gorulme: {formatDate(device.lastSeenAt)}
+              </p>
+            </div>
+          ))}
+          {!pushStatusLoading && (pushStatus?.devices || []).length === 0 ? (
+            <p className="text-xs text-muted-foreground">Bu kullanici icin kayitli push cihazi yok.</p>
+          ) : null}
+        </div>
+
+        <button
+          type="button"
+          disabled={testing}
+          onClick={() => void sendTestNotification()}
+          className="w-full h-10 rounded-lg bg-[var(--deep-indigo)] text-white text-sm font-semibold disabled:opacity-60"
+        >
+          {testing ? 'Test bildirimi gonderiliyor...' : 'Test bildirimi gonder'}
+        </button>
+
+        {testMessage ? <p className="text-xs text-emerald-600">{testMessage}</p> : null}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <label className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium">Tüm bildirimler</span>
+          <span className="text-sm font-medium">Tum bildirimler</span>
           <input
             type="checkbox"
             checked={masterEnabled}

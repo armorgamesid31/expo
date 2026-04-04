@@ -268,6 +268,44 @@ export interface NotificationInboxItem {
   createdAt: string;
 }
 
+export interface PushDeviceStatusItem {
+  id: number;
+  platform: string;
+  tokenMasked: string;
+  appVersion: string | null;
+  deviceMeta: Record<string, unknown> | null;
+  isActive: boolean;
+  lastSeenAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface PushStatusResponse {
+  providerConfigured: boolean;
+  providerSource: 'BASE64' | 'JSON' | 'NONE';
+  providerError: string | null;
+  activeDeviceCount: number;
+  devices: PushDeviceStatusItem[];
+}
+
+export interface PushDeliverySummary {
+  PENDING: number;
+  SENT: number;
+  SKIPPED: number;
+  FAILED: number;
+}
+
+export interface PushTestResponse {
+  ok: boolean;
+  notificationId: number | null;
+  inAppDeliveryCount: number;
+  pushDeliveryCount: number;
+  pushDeliverySummary: PushDeliverySummary;
+  providerConfigured: boolean;
+  providerSource: 'BASE64' | 'JSON' | 'NONE';
+  providerError: string | null;
+}
+
 export interface CampaignItem {
   id: number;
   name: string;

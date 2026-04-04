@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { NotificationInboxItem } from '../types/mobile-api';
+import { resolvePushAppPath } from '../lib/push-routing';
+import { PUSH_NOTIFICATION_RECEIVED_EVENT } from '../lib/push-notifications';
 
 export function NotificationsInboxPage() {
   const { apiFetch } = useAuth();
@@ -10,7 +12,7 @@ export function NotificationsInboxPage() {
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<NotificationInboxItem[]>([]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -21,11 +23,22 @@ export function NotificationsInboxPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiFetch]);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
+
+  useEffect(() => {
+    const handlePushReceived = () => {
+      void load();
+    };
+
+    window.addEventListener(PUSH_NOTIFICATION_RECEIVED_EVENT, handlePushReceived);
+    return () => {
+      window.removeEventListener(PUSH_NOTIFICATION_RECEIVED_EVENT, handlePushReceived);
+    };
+  }, [load]);
 
   const markRead = async (deliveryId: number) => {
     try {
@@ -38,18 +51,13 @@ export function NotificationsInboxPage() {
 
   const openNotification = async (item: NotificationInboxItem) => {
     await markRead(item.deliveryId);
-
-    if (item.eventType === 'HANDOVER_REQUIRED' || item.eventType === 'HANDOVER_REMINDER') {
-      navigate('/app/instagram-inbox', { state: { navDirection: 'forward' } });
-      return;
-    }
-    if (item.eventType === 'SAME_DAY_APPOINTMENT_CHANGE' || item.eventType === 'END_OF_DAY_MISSING_DATA') {
-      navigate('/app/schedule', { state: { navDirection: 'forward' } });
-      return;
-    }
-    if (item.eventType === 'DAILY_MANAGER_REPORT') {
-      navigate('/app/analytics', { state: { navDirection: 'forward' } });
-    }
+    navigate(
+      resolvePushAppPath({
+        route: item.payload?.route,
+        eventType: item.payload?.eventType || item.eventType,
+      }),
+      { state: { navDirection: 'forward' } },
+    );
   };
 
   const markAllRead = async () => {

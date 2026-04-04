@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
+import { toast } from 'sonner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthGuard } from './components/app-shell/AuthGuard';
 import { AppLayout } from './components/app-shell/AppLayout';
+import { Toaster } from './components/ui/sonner';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SchedulePage } from './pages/SchedulePage';
@@ -30,6 +32,8 @@ import { TeamManagementPage } from './pages/TeamManagementPage';
 import { OperationsStudioPage } from './pages/OperationsStudioPage';
 import { BrandGrowthHubPage } from './pages/BrandGrowthHubPage';
 import { LocaleProvider } from './context/LocaleContext';
+import { resolvePushAppPath } from './lib/push-routing';
+import { setPushEventHandlers } from './lib/push-notifications';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
 
@@ -51,6 +55,54 @@ function ThemeBootstrap() {
       mounted = false;
     };
   }, []);
+
+  return null;
+}
+
+function PushNotificationBridge() {
+  const navigate = useNavigate();
+  const { apiFetch, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const openNotification = async (payload: Record<string, unknown> | null | undefined) => {
+      const deliveryId = Number(payload?.deliveryId);
+      if (isAuthenticated && Number.isInteger(deliveryId) && deliveryId > 0) {
+        await apiFetch(`/api/mobile/notifications/${deliveryId}/read`, { method: 'POST' }).catch(() => undefined);
+      }
+
+      navigate(
+        resolvePushAppPath({
+          route: payload?.route,
+          eventType: payload?.eventType,
+        }),
+        { state: { navDirection: 'forward' } },
+      );
+    };
+
+    setPushEventHandlers({
+      onPushReceived: (notification) => {
+        const title = notification.title || 'New notification';
+        const body = notification.body || 'Open the app to review the details.';
+
+        toast(title, {
+          description: body,
+          action: {
+            label: 'Open',
+            onClick: () => {
+              void openNotification(notification.data || null);
+            },
+          },
+        });
+      },
+      onPushAction: (action) => {
+        void openNotification(action.notification.data || null);
+      },
+    });
+
+    return () => {
+      setPushEventHandlers({});
+    };
+  }, [apiFetch, isAuthenticated, navigate]);
 
   return null;
 }
@@ -197,8 +249,10 @@ export default function App() {
       <AuthProvider>
         <ThemeBootstrap />
         <BrowserRouter>
+          <PushNotificationBridge />
           <AppRoutes />
         </BrowserRouter>
+        <Toaster position="top-center" richColors />
       </AuthProvider>
     </LocaleProvider>
   );
