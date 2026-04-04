@@ -17,10 +17,16 @@ function inferApiBaseFromLocation(): string {
 }
 
 const envBase = (import.meta as any).env?.VITE_API_BASE_URL;
+const envPushEnabled = (import.meta as any).env?.VITE_ENABLE_PUSH_NOTIFICATIONS;
 
 export const API_BASE_URL = normalizeBaseUrl(
   typeof envBase === 'string' && envBase.trim() ? envBase.trim() : inferApiBaseFromLocation(),
 );
+
+export const ENABLE_PUSH_NOTIFICATIONS =
+  typeof envPushEnabled === 'string'
+    ? ['1', 'true', 'yes', 'on'].includes(envPushEnabled.trim().toLowerCase())
+    : false;
 
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'kedy.mobile.accessToken',

@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { httpRequest, ApiError } from '../lib/http';
 import { prefetchContentRuntimeBundle } from '../lib/content-runtime';
 import { secureGet, secureRemove, secureSet } from '../lib/secure-storage';
-import { STORAGE_KEYS } from '../lib/config';
+import { ENABLE_PUSH_NOTIFICATIONS, STORAGE_KEYS } from '../lib/config';
 import type { BootstrapResponse } from '../types/mobile-api';
 import { initPushNotifications, unregisterPushToken } from '../lib/push-notifications';
 
@@ -160,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
+    if (!ENABLE_PUSH_NOTIFICATIONS) return;
     if (!accessToken || !bootstrap?.salon?.id) return;
 
     initPushNotifications(apiFetch).catch((error) => {
