@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import type {
   AdminAppointmentItem,
   AdminAppointmentsResponse,
+  AdminAppointmentRescheduleOptionsResponse,
   AdminAppointmentReschedulePreviewResponse,
   AppointmentStatusUpdateResponse,
 } from '../types/mobile-api';
@@ -147,6 +148,8 @@ type RescheduleSelectionState = {
   assignments: Record<number, number>;
   error: string | null;
   loading: boolean;
+  suggestionsLoading: boolean;
+  suggestedSlots: AdminAppointmentRescheduleOptionsResponse['slots'];
 };
 
 export function SchedulePage() {
@@ -654,6 +657,66 @@ export function SchedulePage() {
     }
   };
 
+  useEffect(() => {
+    if (!rescheduleSelection?.date) return;
+
+    const appointmentIds = [...rescheduleSelection.appointmentIds];
+    const date = rescheduleSelection.date;
+    const assignments = toRescheduleAssignmentsPayload(rescheduleSelection.assignments);
+    let active = true;
+
+    setRescheduleSelection((prev) =>
+      prev
+        ? {
+            ...prev,
+            suggestionsLoading: true,
+          }
+        : prev,
+    );
+
+    void apiFetch<AdminAppointmentRescheduleOptionsResponse>('/api/admin/appointments/reschedule-options', {
+      method: 'POST',
+      body: JSON.stringify({
+        appointmentIds,
+        date,
+        assignments,
+      }),
+    })
+      .then((options) => {
+        if (!active) return;
+        setRescheduleSelection((prev) =>
+          prev
+            ? {
+                ...prev,
+                suggestionsLoading: false,
+                suggestedSlots: options.slots || [],
+              }
+            : prev,
+        );
+      })
+      .catch(() => {
+        if (!active) return;
+        setRescheduleSelection((prev) =>
+          prev
+            ? {
+                ...prev,
+                suggestionsLoading: false,
+                suggestedSlots: [],
+              }
+            : prev,
+        );
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    apiFetch,
+    rescheduleSelection?.date,
+    rescheduleSelection?.appointmentIds,
+    JSON.stringify(toRescheduleAssignmentsPayload(rescheduleSelection?.assignments || {})),
+  ]);
+
   const commitRescheduleSelection = async () => {
     if (!rescheduleSelection) return;
     const parsed = new Date(`${rescheduleSelection.date}T${rescheduleSelection.time}:00`);
@@ -746,6 +809,8 @@ export function SchedulePage() {
         assignments: {},
         error: null,
         loading: false,
+        suggestionsLoading: false,
+        suggestedSlots: [],
       });
       return;
     }
@@ -1131,7 +1196,11 @@ export function SchedulePage() {
       {rescheduleSelection ? (
         <div
           className="fixed inset-0 z-[60] bg-black/45 p-4"
-          onClick={() => (!statusBusy && !rescheduleSelection.loading ? setRescheduleSelection(null) : undefined)}
+          onClick={() =>
+            !statusBusy && !rescheduleSelection.loading && !rescheduleSelection.suggestionsLoading
+              ? setRescheduleSelection(null)
+              : undefined
+          }
         >
           <div
             className="mx-auto mt-16 max-w-sm rounded-2xl border border-border bg-background p-4 shadow-xl"
@@ -1149,7 +1218,16 @@ export function SchedulePage() {
                   type="date"
                   value={rescheduleSelection.date}
                   onChange={(event) =>
-                    setRescheduleSelection((prev) => (prev ? { ...prev, date: event.target.value } : prev))
+                    setRescheduleSelection((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            date: event.target.value,
+                            preview: null,
+                            error: null,
+                          }
+                        : prev,
+                    )
                   }
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 />
@@ -1160,16 +1238,74 @@ export function SchedulePage() {
                   type="time"
                   value={rescheduleSelection.time}
                   onChange={(event) =>
-                    setRescheduleSelection((prev) => (prev ? { ...prev, time: event.target.value } : prev))
+                    setRescheduleSelection((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            time: event.target.value,
+                            preview: null,
+                            error: null,
+                          }
+                        : prev,
+                    )
                   }
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 />
               </label>
             </div>
 
+            <div className="mt-3 rounded-lg border border-border bg-card/70 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Suggested Slots</p>
+                {rescheduleSelection.suggestionsLoading ? (
+                  <span className="text-[11px] text-muted-foreground">Loading...</span>
+                ) : null}
+              </div>
+              {rescheduleSelection.suggestedSlots.length ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {rescheduleSelection.suggestedSlots.map((slot) => (
+                    <button
+                      key={slot.startTime}
+                      type="button"
+                      disabled={statusBusy || rescheduleSelection.loading}
+                      onClick={() =>
+                        setRescheduleSelection((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                time: slot.time,
+                                preview: slot.preview,
+                                error:
+                                  slot.preview.hasConflicts && slot.preview.conflicts.length
+                                    ? slot.preview.conflicts[0].reason || 'Selected slot is not available.'
+                                    : null,
+                              }
+                            : prev,
+                        )
+                      }
+                      className={`rounded-lg border px-3 py-2 text-left text-xs ${
+                        rescheduleSelection.time === slot.time
+                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
+                          : 'border-border bg-background'
+                      }`}
+                    >
+                      <div className="font-semibold">{slot.time}</div>
+                      <div className="mt-0.5 text-[11px] text-muted-foreground">
+                        {slot.requiresManualSelection ? 'Specialist choice may be needed' : 'Ready to use'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : rescheduleSelection.suggestionsLoading ? null : (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  No suggested slots found for this date. You can still enter a time manually and check it.
+                </p>
+              )}
+            </div>
+
             <button
               type="button"
-              disabled={statusBusy || rescheduleSelection.loading}
+              disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
               onClick={() => {
                 void runReschedulePreview();
               }}
@@ -1245,7 +1381,7 @@ export function SchedulePage() {
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
-                disabled={statusBusy || rescheduleSelection.loading}
+                disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
                 onClick={() => setRescheduleSelection(null)}
                 className="h-10 flex-1 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50"
               >
@@ -1253,7 +1389,7 @@ export function SchedulePage() {
               </button>
               <button
                 type="button"
-                disabled={statusBusy || rescheduleSelection.loading}
+                disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
                 onClick={() => {
                   void commitRescheduleSelection();
                 }}

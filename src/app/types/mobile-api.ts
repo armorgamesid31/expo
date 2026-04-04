@@ -127,6 +127,17 @@ export interface AdminAppointmentReschedulePreviewResponse {
   }>;
 }
 
+export interface AdminAppointmentRescheduleOptionsResponse {
+  date: string;
+  slots: Array<{
+    time: string;
+    startTime: string;
+    endTime: string;
+    requiresManualSelection: boolean;
+    preview: AdminAppointmentReschedulePreviewResponse;
+  }>;
+}
+
 export interface AdminAppointmentRescheduleCommitResponse {
   batchId: string;
   previousAppointmentIds: number[];
