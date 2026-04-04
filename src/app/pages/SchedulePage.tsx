@@ -195,6 +195,7 @@ export function SchedulePage() {
     customerPhone: '',
     timeWindowStart: '10:00',
     timeWindowEnd: '18:00',
+    allowNearbyMatches: false,
     notes: '',
   });
 
@@ -466,6 +467,7 @@ export function SchedulePage() {
       customerPhone: '',
       timeWindowStart: '10:00',
       timeWindowEnd: '18:00',
+      allowNearbyMatches: false,
       notes: '',
     });
 
@@ -775,6 +777,8 @@ export function SchedulePage() {
           date: dayKeyFromDate(activeDate),
           timeWindowStart: waitlistForm.timeWindowStart,
           timeWindowEnd: waitlistForm.timeWindowEnd,
+          allowNearbyMatches: waitlistForm.allowNearbyMatches,
+          nearbyToleranceMinutes: 60,
           customerId: waitlistForm.customerId ? Number(waitlistForm.customerId) : null,
           customerName: waitlistForm.customerName.trim(),
           customerPhone: waitlistForm.customerPhone.trim(),
@@ -1164,6 +1168,9 @@ export function SchedulePage() {
                     <p className="mt-1 text-xs text-muted-foreground">
                       {item.timeWindowStart} - {item.timeWindowEnd} • {item.source === 'ADMIN' ? 'Salon added' : 'Customer added'}
                     </p>
+                    {item.allowNearbyMatches ? (
+                      <p className="text-[11px] text-muted-foreground">Nearby tolerance: ±{item.nearbyToleranceMinutes} min</p>
+                    ) : null}
                   </div>
                   <div className="text-right">
                     <span className="rounded-full border border-border px-2 py-1 text-[11px] font-semibold">{item.status}</span>
@@ -1828,6 +1835,21 @@ export function SchedulePage() {
                   />
                 </label>
               </div>
+
+              <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/10 p-3">
+                <input
+                  type="checkbox"
+                  checked={waitlistForm.allowNearbyMatches}
+                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, allowNearbyMatches: event.target.checked }))}
+                  className="mt-1"
+                />
+                <span className="text-sm">
+                  <span className="font-medium">Nearby time is okay too</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    If enabled, the matcher can also offer a slot up to 60 minutes earlier or later after trying the exact window first.
+                  </span>
+                </span>
+              </label>
 
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Services</p>

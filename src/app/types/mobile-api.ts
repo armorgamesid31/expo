@@ -155,6 +155,8 @@ export interface AdminWaitlistItem {
   timeWindowStart: string;
   timeWindowEnd: string;
   notes: string | null;
+  allowNearbyMatches: boolean;
+  nearbyToleranceMinutes: number;
   createdAt: string;
   groups: Array<{
     personId: string;
