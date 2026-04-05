@@ -20,6 +20,13 @@ const EVENTS = [
   { key: 'DAILY_MANAGER_REPORT', label: 'Gunluk rapor' },
 ] as const;
 
+const PUSH_SOUND_TESTS = [
+  { scenario: 'APPOINTMENT_NEW', label: 'Yeni randevu sesi' },
+  { scenario: 'BOOKING_CHANGE', label: 'Degisiklik sesi' },
+  { scenario: 'REPORT', label: 'Rapor sesi' },
+  { scenario: 'HANDOVER', label: 'Handover sesi' },
+] as const;
+
 const PERMISSION_LABELS: Record<LocalPushPermissionState, string> = {
   granted: 'Izin verildi',
   denied: 'Izin reddedildi',
@@ -137,14 +144,14 @@ export function NotificationSettingsPage() {
   };
 
   const sendTestNotification = async () => {
-    await sendPushTest(0);
+    await sendPushTest({ delaySeconds: 0, scenario: 'GENERAL' });
   };
 
   const sendDelayedTestNotification = async () => {
-    await sendPushTest(5);
+    await sendPushTest({ delaySeconds: 5, scenario: 'GENERAL' });
   };
 
-  const sendPushTest = async (delaySeconds: number) => {
+  const sendPushTest = async (input: { delaySeconds: number; scenario: string }) => {
     setTesting(true);
     setTestMessage(null);
     setPushStatusError(null);
@@ -152,12 +159,12 @@ export function NotificationSettingsPage() {
     try {
       const result = await apiFetch<PushTestResponse>('/api/mobile/push/test', {
         method: 'POST',
-        body: JSON.stringify({ delaySeconds }),
+        body: JSON.stringify({ delaySeconds: input.delaySeconds, scenario: input.scenario }),
       });
 
       setTestMessage(
         result.scheduled
-          ? `${result.delaySeconds} saniyelik gecikmeli test planlandi. Simdi uygulamayi arka plana al.`
+          ? `${result.delaySeconds} saniyelik gecikmeli ${result.scenario || input.scenario} testi planlandi. Simdi uygulamayi arka plana al.`
           : `Test sonucu: SENT ${result.pushDeliverySummary.SENT}, FAILED ${result.pushDeliverySummary.FAILED}, SKIPPED ${result.pushDeliverySummary.SKIPPED}`,
       );
       await loadPushStatus();
@@ -254,6 +261,23 @@ export function NotificationSettingsPage() {
           >
             {testing ? 'Planlaniyor...' : '5 saniye sonra test'}
           </button>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">5 saniye gecikmeli ozel ses testleri</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {PUSH_SOUND_TESTS.map((testItem) => (
+              <button
+                key={testItem.scenario}
+                type="button"
+                disabled={testing}
+                onClick={() => void sendPushTest({ delaySeconds: 5, scenario: testItem.scenario })}
+                className="h-10 rounded-lg border border-border text-sm font-semibold disabled:opacity-60"
+              >
+                {testing ? 'Planlaniyor...' : `${testItem.label} (5 sn)`}
+              </button>
+            ))}
+          </div>
         </div>
 
         {testMessage ? <p className="text-xs text-emerald-600">{testMessage}</p> : null}

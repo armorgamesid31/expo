@@ -343,6 +343,7 @@ export interface PushTestResponse {
   ok: boolean;
   scheduled: boolean;
   delaySeconds: number;
+  scenario?: string;
   notificationId: number | null;
   inAppDeliveryCount: number;
   pushDeliveryCount: number;
