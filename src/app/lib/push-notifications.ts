@@ -12,6 +12,9 @@ import { secureGet, secureRemove, secureSet } from './secure-storage';
 const PUSH_TOKEN_KEY = 'kedy.mobile.pushToken';
 
 export const ANDROID_PUSH_CHANNEL_ID = 'kedy_general_notifications';
+export const ANDROID_PUSH_CHANNEL_APPOINTMENT_ID = 'kedy_appointment_notifications';
+export const ANDROID_PUSH_CHANNEL_BOOKING_CHANGE_ID = 'kedy_booking_change_notifications';
+export const ANDROID_PUSH_CHANNEL_REPORT_ID = 'kedy_report_notifications';
 export const PUSH_NOTIFICATION_RECEIVED_EVENT = 'kedy:push-notification-received';
 export const PUSH_REGISTRATION_CHANGED_EVENT = 'kedy:push-registration-changed';
 
@@ -46,17 +49,52 @@ async function createDefaultAndroidChannel(): Promise<void> {
   if (Capacitor.getPlatform() !== 'android') return;
 
   try {
-    await PushNotifications.createChannel({
-      id: ANDROID_PUSH_CHANNEL_ID,
-      name: 'Kedy Bildirimleri',
-      description: 'Randevu, handover ve operasyon bildirimleri',
-      importance: 5,
-      visibility: 1,
-      vibration: true,
-      lights: true,
-      lightColor: '#F97316',
-      sound: 'default',
-    });
+    await Promise.all([
+      PushNotifications.createChannel({
+        id: ANDROID_PUSH_CHANNEL_ID,
+        name: 'Kedy Bildirimleri',
+        description: 'Genel operasyon bildirimleri',
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#F97316',
+        sound: 'default',
+      }),
+      PushNotifications.createChannel({
+        id: ANDROID_PUSH_CHANNEL_APPOINTMENT_ID,
+        name: 'Yeni Randevular',
+        description: 'Yeni randevu odakli bildirimler',
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#F97316',
+        sound: 'new_appointment',
+      }),
+      PushNotifications.createChannel({
+        id: ANDROID_PUSH_CHANNEL_BOOKING_CHANGE_ID,
+        name: 'Randevu Degisiklikleri',
+        description: 'Iptal, degisiklik ve waitlist bildirimleri',
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#F97316',
+        sound: 'booking_changed_canceled',
+      }),
+      PushNotifications.createChannel({
+        id: ANDROID_PUSH_CHANNEL_REPORT_ID,
+        name: 'Rapor Bildirimleri',
+        description: 'Gun sonu ve performans raporlari',
+        importance: 4,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#F97316',
+        sound: 'report',
+      }),
+    ]);
   } catch (error) {
     console.warn('Push channel creation failed:', error);
   }

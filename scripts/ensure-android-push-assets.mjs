@@ -12,6 +12,9 @@ const iconName = 'ic_stat_kedy_notification';
 const manifestPath = path.join(projectRoot, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
 const stringsPath = path.join(projectRoot, 'android', 'app', 'src', 'main', 'res', 'values', 'strings.xml');
 const drawablePath = path.join(projectRoot, 'android', 'app', 'src', 'main', 'res', 'drawable', `${iconName}.xml`);
+const rawDirectoryPath = path.join(projectRoot, 'android', 'app', 'src', 'main', 'res', 'raw');
+const soundSourceDirectoryPath = path.join(projectRoot, 'assets', 'notification-sounds');
+const requiredSoundFiles = ['new_appointment.mp3', 'booking_changed_canceled.mp3', 'report.mp3'];
 
 const iconMetaData = [
   '        <meta-data',
@@ -88,10 +91,37 @@ async function ensureDrawable() {
   await fs.writeFile(drawablePath, drawableXml, 'utf8');
 }
 
+async function ensureNotificationSounds() {
+  await fs.mkdir(rawDirectoryPath, { recursive: true });
+
+  for (const fileName of requiredSoundFiles) {
+    const sourcePath = path.join(soundSourceDirectoryPath, fileName);
+    const targetPath = path.join(rawDirectoryPath, fileName);
+
+    const sourceBuffer = await fs.readFile(sourcePath).catch((error) => {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+        throw new Error(`Missing required notification sound: ${sourcePath}`);
+      }
+      throw error;
+    });
+
+    let shouldWrite = true;
+    const targetBuffer = await fs.readFile(targetPath).catch(() => null);
+    if (targetBuffer && Buffer.compare(sourceBuffer, targetBuffer) === 0) {
+      shouldWrite = false;
+    }
+
+    if (shouldWrite) {
+      await fs.writeFile(targetPath, sourceBuffer);
+    }
+  }
+}
+
 async function main() {
   await ensureManifest();
   await ensureStrings();
   await ensureDrawable();
+  await ensureNotificationSounds();
   console.log('Android push assets ensured.');
 }
 
