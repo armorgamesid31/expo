@@ -338,7 +338,7 @@ export function DataImportWizardPage() {
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <h2 className="font-semibold">1) Dosya yükle</h2>
         <p className="text-xs text-muted-foreground">
-          Aynı batch içinde CSV, Excel, PDF ve foto dosyalarını birlikte yükleyebilirsin.
+          Aynı batch içinde CSV, Excel, PDF ve foto dosyalarını birlikte yükleyebilirsin. PDF/foto dosyaları otomatik OCR kuyruğuna gönderilir.
         </p>
         <label className="inline-flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-sm cursor-pointer">
           <UploadCloud className="h-4 w-4" />
