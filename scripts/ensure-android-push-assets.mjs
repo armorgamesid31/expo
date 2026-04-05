@@ -14,7 +14,7 @@ const stringsPath = path.join(projectRoot, 'android', 'app', 'src', 'main', 'res
 const drawablePath = path.join(projectRoot, 'android', 'app', 'src', 'main', 'res', 'drawable', `${iconName}.xml`);
 const rawDirectoryPath = path.join(projectRoot, 'android', 'app', 'src', 'main', 'res', 'raw');
 const soundSourceDirectoryPath = path.join(projectRoot, 'assets', 'notification-sounds');
-const requiredSoundFiles = ['new_appointment.mp3', 'booking_changed_canceled.mp3', 'report.mp3'];
+const requiredSoundFiles = ['new_appointment.mp3', 'booking_changed_canceled.mp3', 'report.mp3', 'handover.mp3'];
 
 const iconMetaData = [
   '        <meta-data',

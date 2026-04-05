@@ -15,6 +15,7 @@ export const ANDROID_PUSH_CHANNEL_ID = 'kedy_general_notifications';
 export const ANDROID_PUSH_CHANNEL_APPOINTMENT_ID = 'kedy_appointment_notifications';
 export const ANDROID_PUSH_CHANNEL_BOOKING_CHANGE_ID = 'kedy_booking_change_notifications';
 export const ANDROID_PUSH_CHANNEL_REPORT_ID = 'kedy_report_notifications';
+export const ANDROID_PUSH_CHANNEL_HANDOVER_ID = 'kedy_handover_notifications';
 export const PUSH_NOTIFICATION_RECEIVED_EVENT = 'kedy:push-notification-received';
 export const PUSH_REGISTRATION_CHANGED_EVENT = 'kedy:push-registration-changed';
 
@@ -93,6 +94,17 @@ async function createDefaultAndroidChannel(): Promise<void> {
         lights: true,
         lightColor: '#F97316',
         sound: 'report',
+      }),
+      PushNotifications.createChannel({
+        id: ANDROID_PUSH_CHANNEL_HANDOVER_ID,
+        name: 'Handover Bildirimleri',
+        description: 'Mudahale ve handover gerektiren durumlar',
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#F97316',
+        sound: 'handover',
       }),
     ]);
   } catch (error) {
