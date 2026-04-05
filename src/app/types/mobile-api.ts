@@ -353,6 +353,92 @@ export interface PushTestResponse {
   providerError: string | null;
 }
 
+export type AdminImportBatchStatus =
+  | 'UPLOADING'
+  | 'PARSING'
+  | 'NEEDS_REVIEW'
+  | 'READY_TO_COMMIT'
+  | 'COMMITTING'
+  | 'COMPLETED'
+  | 'FAILED';
+
+export type AdminImportSourceFileStatus =
+  | 'PENDING_UPLOAD'
+  | 'PARSING'
+  | 'WAITING_OCR'
+  | 'PARSED'
+  | 'FAILED_EXTRACTION';
+
+export interface AdminImportSourceFile {
+  id: number;
+  sourceType: 'CSV' | 'EXCEL' | 'PDF' | 'IMAGE';
+  status: AdminImportSourceFileStatus;
+  originalFileName: string;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  objectKey: string | null;
+  publicUrl: string | null;
+  extractionError: string | null;
+  uploadedAt: string | null;
+  parsedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminImportBatch {
+  id: string;
+  status: AdminImportBatchStatus;
+  summary: Record<string, unknown> | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  files?: AdminImportSourceFile[];
+}
+
+export interface AdminImportConflict {
+  id: number;
+  rowId: number | null;
+  type:
+    | 'MISSING_PHONE'
+    | 'INVALID_PHONE'
+    | 'SERVICE_UNMATCHED'
+    | 'STAFF_UNMATCHED'
+    | 'APPOINTMENT_OVERLAP'
+    | 'OUT_OF_RANGE_DATE'
+    | 'VALIDATION_ERROR';
+  status: 'OPEN' | 'RESOLVED' | 'IGNORED';
+  message: string;
+  payload: Record<string, unknown> | null;
+  resolvedByUserId: number | null;
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
+export interface AdminImportRow {
+  id: number;
+  rowIndex: number;
+  rowStatus: 'EXTRACTED' | 'READY' | 'CONFLICT' | 'SKIPPED' | 'IMPORTED' | 'FAILED';
+  normalizedData: Record<string, unknown>;
+  customerName: string | null;
+  customerPhoneRaw: string | null;
+  customerPhoneNormalized: string | null;
+  appointmentDate: string | null;
+  startMinute: number | null;
+  endMinute: number | null;
+  durationMinutes: number | null;
+  serviceNameRaw: string | null;
+  staffNameRaw: string | null;
+  priceRaw: number | null;
+  notesRaw: string | null;
+  confidence: number | null;
+  matchedCustomerId: number | null;
+  matchedServiceId: number | null;
+  matchedStaffId: number | null;
+  importedAppointmentId: number | null;
+  failureReason: string | null;
+}
+
 export interface CampaignItem {
   id: number;
   name: string;

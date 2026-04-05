@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Layers, Package, Boxes, ChevronRight, Users } from 'lucide-react';
+import { Layers, Package, Boxes, ChevronRight, Users, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export function OperationsStudioPage() {
@@ -10,8 +10,9 @@ export function OperationsStudioPage() {
   const canPackages = hasPermission('packages.manage');
   const canInventory = hasPermission('inventory.manage');
   const canCustomers = hasPermission('customers.manage');
+  const canImports = hasPermission('imports.manage');
 
-  if (!canServices && !canPackages && !canInventory && !canCustomers) {
+  if (!canServices && !canPackages && !canInventory && !canCustomers && !canImports) {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-semibold">Operations Studio</h1>
@@ -107,6 +108,27 @@ export function OperationsStudioPage() {
                 <div>
                   <p className="text-sm font-semibold">Inventory</p>
                   <p className="text-xs text-muted-foreground">Stock items, movements, and adjustments</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </button>
+        ) : null}
+
+        {canImports ? (
+          <button
+            type="button"
+            onClick={() => navigate('/app/data-import', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
+                  <FileSpreadsheet className="h-5 w-5 text-[var(--deep-indigo)]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Veri Aktarımı</p>
+                  <p className="text-xs text-muted-foreground">CSV, Excel, PDF ve foto dosyalarından toplu import</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />

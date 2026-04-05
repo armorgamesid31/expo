@@ -31,6 +31,7 @@ import { TeamAccessPage } from './pages/TeamAccessPage';
 import { TeamManagementPage } from './pages/TeamManagementPage';
 import { OperationsStudioPage } from './pages/OperationsStudioPage';
 import { BrandGrowthHubPage } from './pages/BrandGrowthHubPage';
+import { DataImportWizardPage } from './pages/DataImportWizardPage';
 import { LocaleProvider } from './context/LocaleContext';
 import { resolvePushAppPath } from './lib/push-routing';
 import { setPushEventHandlers } from './lib/push-notifications';
@@ -204,6 +205,14 @@ function AppRoutes() {
               <AnyPermissionGuard permissionKeys={['website.manage', 'campaigns.manage', 'campaigns.publish']}>
                 <BrandGrowthHubPage />
               </AnyPermissionGuard>
+            }
+          />
+          <Route
+            path="data-import"
+            element={
+              <PermissionGuard permissionKey="imports.manage" fallback="/app/operations-studio">
+                <DataImportWizardPage />
+              </PermissionGuard>
             }
           />
           <Route

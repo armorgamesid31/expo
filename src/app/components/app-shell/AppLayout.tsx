@@ -29,6 +29,7 @@ function transitionKindFromPathname(pathname: string): TransitionKind {
     pathname.startsWith('/app/salon-info') ||
     pathname.startsWith('/app/services') ||
     pathname.startsWith('/app/staff') ||
+    pathname.startsWith('/app/data-import') ||
     pathname.startsWith('/app/operations-studio') ||
     pathname.startsWith('/app/brand-growth-hub')
   ) {
@@ -91,6 +92,7 @@ function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/salon-info')) return 'features';
   if (pathname.startsWith('/app/services')) return 'features';
   if (pathname.startsWith('/app/staff')) return 'features';
+  if (pathname.startsWith('/app/data-import')) return 'features';
   if (pathname.startsWith('/app/operations-studio')) return 'features';
   if (pathname.startsWith('/app/brand-growth-hub')) return 'features';
   if (pathname.startsWith('/app/features')) return 'features';
@@ -108,6 +110,7 @@ function backTargetFromPathname(pathname: string): string | null {
   if (pathname.startsWith('/app/notification-role-matrix')) return '/app/features';
   if (pathname.startsWith('/app/team-access')) return '/app/features';
   if (pathname.startsWith('/app/team-management')) return '/app/features';
+  if (pathname.startsWith('/app/data-import')) return '/app/operations-studio';
   if (pathname.startsWith('/app/notification-settings')) return '/app/settings';
   if (pathname.startsWith('/app/notifications')) return '/app/settings';
 
@@ -122,6 +125,7 @@ function backTargetFromPathname(pathname: string): string | null {
     '/app/salon-info',
     '/app/services',
     '/app/staff',
+    '/app/data-import',
     '/app/team-management',
     '/app/operations-studio',
     '/app/brand-growth-hub',
