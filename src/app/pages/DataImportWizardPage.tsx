@@ -104,6 +104,7 @@ export function DataImportWizardPage() {
   const [conflictEdits, setConflictEdits] = useState<Record<number, ConflictEdit>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isBenchmarkUploading, setIsBenchmarkUploading] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false);
   const [pollTick, setPollTick] = useState(0);
 
@@ -130,6 +131,39 @@ export function DataImportWizardPage() {
     const response = await apiFetch<ReportResponse>(`/api/admin/imports/${batchId}/report`);
     setReport(response);
     return response;
+  };
+
+  const uploadSingleFile = async (batchId: string, file: File) => {
+    const presign = await apiFetch<PresignResponse>(`/api/admin/imports/${batchId}/files/presign`, {
+      method: 'POST',
+      body: JSON.stringify({
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        sizeBytes: file.size,
+      }),
+    });
+
+    if (presign.upload.mode !== 'PRESIGNED_PUT' || !presign.upload.uploadUrl) {
+      throw new Error('R2 presign is not configured on backend.');
+    }
+
+    const uploadResponse = await fetch(presign.upload.uploadUrl, {
+      method: presign.upload.method || 'PUT',
+      headers: presign.upload.headers || {},
+      body: file,
+    });
+    if (!uploadResponse.ok) {
+      throw new Error(`Upload failed for ${file.name}`);
+    }
+
+    await apiFetch(`/api/admin/imports/${batchId}/files/complete`, {
+      method: 'POST',
+      body: JSON.stringify({
+        fileId: presign.file.id,
+        objectKey: presign.file.objectKey,
+        publicUrl: presign.file.publicUrl,
+      }),
+    });
   };
 
   const handleCreateBatch = async () => {
@@ -174,36 +208,7 @@ export function DataImportWizardPage() {
     setIsUploading(true);
     try {
       for (const file of Array.from(files)) {
-        const presign = await apiFetch<PresignResponse>(`/api/admin/imports/${batch.id}/files/presign`, {
-          method: 'POST',
-          body: JSON.stringify({
-            fileName: file.name,
-            mimeType: file.type || 'application/octet-stream',
-            sizeBytes: file.size,
-          }),
-        });
-
-        if (presign.upload.mode !== 'PRESIGNED_PUT' || !presign.upload.uploadUrl) {
-          throw new Error('R2 presign is not configured on backend.');
-        }
-
-        const uploadResponse = await fetch(presign.upload.uploadUrl, {
-          method: presign.upload.method || 'PUT',
-          headers: presign.upload.headers || {},
-          body: file,
-        });
-        if (!uploadResponse.ok) {
-          throw new Error(`Upload failed for ${file.name}`);
-        }
-
-        await apiFetch(`/api/admin/imports/${batch.id}/files/complete`, {
-          method: 'POST',
-          body: JSON.stringify({
-            fileId: presign.file.id,
-            objectKey: presign.file.objectKey,
-            publicUrl: presign.file.publicUrl,
-          }),
-        });
+        await uploadSingleFile(batch.id, file);
       }
       toast.success('Files uploaded and queued');
       await handleRefresh();
@@ -211,6 +216,41 @@ export function DataImportWizardPage() {
       toast.error(error?.message || 'Upload failed');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleBenchmarkFilesSelected = async (files: FileList | null) => {
+    if (!batch?.id || !files || files.length === 0) return;
+    const imageFiles = Array.from(files).filter((file) => file.type.startsWith('image/'));
+    if (imageFiles.length < 5) {
+      toast.error('Benchmark modu için en az 5 görsel seçmelisin.');
+      return;
+    }
+
+    const selectedFiles = imageFiles.slice(0, 5);
+    if (imageFiles.length > 5) {
+      toast.message('Benchmark modu ilk 5 görsel ile çalıştırıldı.');
+    }
+
+    setIsBenchmarkUploading(true);
+    try {
+      for (let index = 0; index < selectedFiles.length; index += 1) {
+        const file = selectedFiles[index];
+        await uploadSingleFile(batch.id, file);
+        toast.success(`Benchmark ${index + 1}/5 yüklendi: ${file.name}`);
+        await handleRefresh();
+
+        if (index < selectedFiles.length - 1) {
+          const delayMs = 4000 + Math.floor(Math.random() * 1001);
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+      }
+      toast.success('Benchmark modu tamamlandı (5/5 görsel).');
+      await handleRefresh();
+    } catch (error: any) {
+      toast.error(error?.message || 'Benchmark yükleme başarısız oldu');
+    } finally {
+      setIsBenchmarkUploading(false);
     }
   };
 
@@ -357,6 +397,32 @@ export function DataImportWizardPage() {
         </label>
         {!batch?.id ? <p className="text-xs text-amber-600">Önce Yeni Batch oluştur.</p> : null}
         {isUploading ? <p className="text-xs text-muted-foreground">Dosyalar yükleniyor...</p> : null}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <h2 className="font-semibold">1B) Benchmark modu (5 görsel)</h2>
+        <p className="text-xs text-muted-foreground">
+          Seçtiğin görselleri 5 adet olacak şekilde sırayla yükler. Her yükleme arasında rastgele 4-5 saniye bekler.
+        </p>
+        <label className="inline-flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-sm cursor-pointer">
+          <UploadCloud className="h-4 w-4" />
+          Benchmark Görsel Seç (en az 5)
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            className="hidden"
+            disabled={!batch?.id || isBenchmarkUploading || isUploading || isCommitting}
+            onChange={(event) => {
+              void handleBenchmarkFilesSelected(event.target.files);
+              event.currentTarget.value = '';
+            }}
+          />
+        </label>
+        {!batch?.id ? <p className="text-xs text-amber-600">Benchmark için önce Yeni Batch oluştur.</p> : null}
+        {isBenchmarkUploading ? (
+          <p className="text-xs text-muted-foreground">Benchmark yükleme çalışıyor: 4-5 sn aralıklarla 5 görsel gönderiliyor...</p>
+        ) : null}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
