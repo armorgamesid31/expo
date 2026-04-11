@@ -1,4 +1,4 @@
-import { ChevronRight, Bell, Shield, Smartphone, HelpCircle, LogOut, User, Palette, Sparkles } from 'lucide-react';
+import { ChevronRight, Bell, Shield, Smartphone, HelpCircle, LogOut, User, Palette } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
@@ -7,7 +7,6 @@ interface SettingsScreenProps {
   isDarkMode: boolean;
   onToggleDarkMode: (nextValue: boolean) => void;
   onShowHelpCenter?: () => void;
-  onOpenFeatures?: () => void;
   onOpenNotificationSettings?: () => void;
   onOpenNotificationsInbox?: () => void;
   onLogout?: () => void;
@@ -17,18 +16,11 @@ export function SettingsScreen({
   isDarkMode,
   onToggleDarkMode,
   onShowHelpCenter,
-  onOpenFeatures,
   onOpenNotificationSettings,
   onOpenNotificationsInbox,
   onLogout,
 }: SettingsScreenProps) {
   const settingGroups = [
-    {
-      title: "Workspace",
-      items: [
-        { icon: Sparkles, label: "Features", description: "Open management tools and modules", color: "var(--rose-gold)", onClick: onOpenFeatures },
-      ]
-    },
     {
       title: "Account & Business",
       items: [

@@ -106,7 +106,7 @@ function tabFromPathname(pathname: string) {
 }
 
 function backTargetFromPathname(pathname: string): string | null {
-  if (pathname === '/app/features') return '/app/settings';
+  if (pathname === '/app/settings') return '/app/features';
   if (pathname.startsWith('/app/features/')) return '/app/features';
   if (pathname.startsWith('/app/notification-role-matrix')) return '/app/features';
   if (pathname.startsWith('/app/team-access')) return '/app/features';
@@ -182,7 +182,7 @@ export function AppLayout() {
       return;
     }
     if (tab === 'settings') {
-      navigate('/app/settings', { state: { navDirection: 'forward' } });
+      navigate('/app/features', { state: { navDirection: 'forward' } });
       return;
     }
     navigate('/app/dashboard', { state: { navDirection: 'forward' } });
