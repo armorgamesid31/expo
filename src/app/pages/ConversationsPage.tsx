@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Send, UserRound } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Search, Send, UserRound } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -9,7 +9,8 @@ import { API_BASE_URL } from '../lib/config';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
-const SHOW_WHATSAPP_INBOX = false;
+type QuickFilter = 'all' | 'unread' | 'handover';
+const SHOW_WHATSAPP_INBOX = true;
 
 interface ConversationItem {
   channel: ChannelType;
@@ -75,6 +76,21 @@ function getPreview(item: ConversationItem): string {
   if (item.lastMessageType === 'video') return '[Video]';
   if (item.lastMessageType === 'handover_request') return '[Handover Requested]';
   return `[${item.lastMessageType}]`;
+}
+
+function formatRelativeTime(value: string): string {
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return value;
+  const now = Date.now();
+  const diffMs = now - dt.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'now';
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour}h`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 7) return `${diffDay}d`;
+  return formatTs(value);
 }
 
 function normalizeUsername(value: string | null | undefined): string | null {
@@ -213,6 +229,8 @@ function mergeAndSortMessages(responses: Array<{ items: MessageItem[] } | null |
 export function ConversationsPage() {
   const { apiFetch, accessToken } = useAuth();
   const [channelView, setChannelView] = useState<ChannelType>('INSTAGRAM');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -235,6 +253,27 @@ export function ConversationsPage() {
     return conversations.find((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId) || null;
   }, [conversations, selectedConversationId]);
 
+  const filteredConversations = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return conversations.filter((item) => {
+      const matchesFilter =
+        quickFilter === 'all' ||
+        (quickFilter === 'unread' && item.unreadCount > 0) ||
+        (quickFilter === 'handover' && isHandoverInProgress(normalizeAutomationMode(item.automationMode)));
+      if (!matchesFilter) return false;
+      if (!query) return true;
+      const haystack = [
+        conversationDisplayName(item),
+        item.profileUsername || '',
+        item.lastMessageText || '',
+        item.conversationKey,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [conversations, quickFilter, searchQuery]);
+
   useEffect(() => {
     conversationsRef.current = conversations;
   }, [conversations]);
@@ -242,6 +281,25 @@ export function ConversationsPage() {
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (!filteredConversations.length) {
+      setSelectedConversationId(null);
+      selectedConversationIdRef.current = null;
+      setMessages([]);
+      return;
+    }
+
+    const isSelectedVisible =
+      !!selectedConversationId &&
+      filteredConversations.some((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId);
+
+    if (!isSelectedVisible) {
+      const nextId = `${filteredConversations[0].channel}:${filteredConversations[0].conversationKey}`;
+      setSelectedConversationId(nextId);
+      selectedConversationIdRef.current = nextId;
+    }
+  }, [filteredConversations, selectedConversationId]);
 
   useEffect(() => {
     stickToBottomRef.current = true;
@@ -436,64 +494,113 @@ export function ConversationsPage() {
   const canReply = selectedConversation?.channel === 'INSTAGRAM';
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
   const handoverInProgress = isHandoverInProgress(selectedMode);
+  const unreadTotal = filteredConversations.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
+  const handoverTotal = filteredConversations.filter((item) =>
+    isHandoverInProgress(normalizeAutomationMode(item.automationMode)),
+  ).length;
 
   return (
-    <div className="h-full pb-20 overflow-y-auto p-4 bg-gradient-to-b from-background to-muted/20">
-      <div className="flex items-start justify-between gap-3 mb-4">
+    <div className="h-full pb-20 overflow-y-auto p-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Conversations</h1>
-          <p className="text-xs text-muted-foreground mt-1">Channel-based inbox for Instagram and WhatsApp.</p>
-          <p className="text-xs text-muted-foreground mt-1">For Meta App Review demo, use the dedicated Instagram Inbox screen.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Conversations</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Inbox for Instagram and WhatsApp with handover controls.</p>
         </div>
         <Button type="button" size="sm" variant="outline" onClick={() => void loadConversations()} disabled={loadingConversations}>
+          {loadingConversations ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
           Refresh
         </Button>
       </div>
 
-      <div className="inline-flex rounded-lg border border-border bg-card p-1 mb-4">
-        <button
-          type="button"
-          onClick={() => {
-            setChannelView('INSTAGRAM');
-            setSelectedConversationId(null);
-            setMessages([]);
-          }}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-            channelView === 'INSTAGRAM' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'
-          }`}
-        >
-          Instagram Inbox
-        </button>
-        {SHOW_WHATSAPP_INBOX ? (
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="inline-flex rounded-xl border border-border bg-card p-1">
           <button
             type="button"
             onClick={() => {
-              setChannelView('WHATSAPP');
+              setChannelView('INSTAGRAM');
               setSelectedConversationId(null);
               setMessages([]);
+              setSearchQuery('');
+              setQuickFilter('all');
             }}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-              channelView === 'WHATSAPP' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+              channelView === 'INSTAGRAM' ? 'bg-[var(--deep-indigo)] text-white' : 'text-muted-foreground'
             }`}
           >
-            WhatsApp Inbox
+            Instagram
           </button>
-        ) : null}
+          {SHOW_WHATSAPP_INBOX ? (
+            <button
+              type="button"
+              onClick={() => {
+                setChannelView('WHATSAPP');
+                setSelectedConversationId(null);
+                setMessages([]);
+                setSearchQuery('');
+                setQuickFilter('all');
+              }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                channelView === 'WHATSAPP' ? 'bg-emerald-600 text-white' : 'text-muted-foreground'
+              }`}
+            >
+              WhatsApp
+            </button>
+          ) : null}
+        </div>
+
+        <div className="inline-flex rounded-xl border border-border bg-card p-1">
+          {(['all', 'unread', 'handover'] as QuickFilter[]).map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setQuickFilter(filter)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                quickFilter === filter ? 'bg-muted text-foreground' : 'text-muted-foreground'
+              }`}
+            >
+              {filter === 'all' ? 'All' : filter === 'unread' ? 'Unread' : 'Handover'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[340px,1fr] gap-4">
-        <Card className="border-border/60 shadow-sm backdrop-blur bg-card/85">
-          <CardContent className="p-3 space-y-2">
-              <p className="text-sm font-semibold">{channelView === 'INSTAGRAM' ? 'Instagram Conversations' : 'WhatsApp Conversations'}</p>
-            {loadingConversations ? (
-              <div className="py-6 grid place-items-center text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px,1fr]">
+        <Card className="border-border/70 bg-card">
+          <CardContent className="space-y-3 p-3">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
+                <p className="text-[10px] uppercase text-muted-foreground">Threads</p>
+                <p className="text-base font-semibold leading-tight">{filteredConversations.length}</p>
               </div>
-            ) : conversations.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-3">No conversations yet.</p>
+              <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
+                <p className="text-[10px] uppercase text-muted-foreground">Unread</p>
+                <p className="text-base font-semibold leading-tight">{unreadTotal}</p>
+              </div>
+              <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
+                <p className="text-[10px] uppercase text-muted-foreground">Handover</p>
+                <p className="text-base font-semibold leading-tight">{handoverTotal}</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search name, username, message"
+                className="pl-9"
+              />
+            </div>
+
+            {loadingConversations ? (
+              <div className="grid place-items-center py-10 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">No conversation matches this filter.</p>
             ) : (
-              <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
-                {conversations.map((item) => {
+              <div className="max-h-[66vh] space-y-2 overflow-y-auto pr-1">
+                {filteredConversations.map((item) => {
                   const id = `${item.channel}:${item.conversationKey}`;
                   const active = id === selectedConversationId;
                   const displayName = conversationDisplayName(item);
@@ -502,43 +609,44 @@ export function ConversationsPage() {
                       key={id}
                       type="button"
                       onClick={() => setSelectedConversationId(id)}
-                      className={`w-full text-left rounded-xl border p-3 transition-all ${
-                        active
-                          ? 'border-[var(--deep-indigo)]/60 bg-[var(--deep-indigo)]/10 shadow-sm'
-                          : 'border-border/70 hover:bg-muted/40 hover:border-border'
+                      className={`w-full rounded-xl border p-3 text-left transition ${
+                        active ? 'border-[var(--deep-indigo)]/50 bg-[var(--deep-indigo)]/8' : 'border-border/70 hover:bg-muted/40'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Avatar className="size-8 border border-border/60">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex items-center gap-2">
+                          <Avatar className="size-9 border border-border/60">
                             {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
                             <AvatarFallback className="text-[10px]">{initialsFromLabel(displayName)}</AvatarFallback>
                           </Avatar>
-                          <p className="text-sm font-medium truncate">{displayName}</p>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold">{displayName}</p>
+                            <p className="truncate text-[11px] text-muted-foreground">{item.profileUsername ? `@${normalizeUsername(item.profileUsername)}` : item.conversationKey}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${badgeClass(item.channel)}`}>{item.channel}</span>
+                        <div className="text-right">
+                          <p className="text-[11px] text-muted-foreground">{formatRelativeTime(item.lastEventTimestamp)}</p>
                           {item.unreadCount > 0 ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
+                            <span className="mt-1 inline-flex rounded-full bg-[var(--rose-gold)]/12 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--rose-gold)]">
                               {item.unreadCount}
                             </span>
                           ) : null}
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
-                            {automationLabel(normalizeAutomationMode(item.automationMode))}
-                          </span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded ${
-                              item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'
-                            }`}
-                          >
-                            {item.identityLinked ? 'Linked' : 'Unlinked'}
-                          </span>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <p className="text-[10px] text-muted-foreground">{formatTs(item.lastEventTimestamp)}</p>
-                        <span className="text-[10px] text-muted-foreground">{item.messageCount} msg</span>
+
+                      <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">{getPreview(item)}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-1">
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] ${badgeClass(item.channel)}`}>{item.channel}</span>
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
+                          {automationLabel(normalizeAutomationMode(item.automationMode))}
+                        </span>
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] ${
+                            item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'
+                          }`}
+                        >
+                          {item.identityLinked ? 'Linked' : 'Unlinked'}
+                        </span>
                       </div>
                     </button>
                   );
@@ -548,12 +656,12 @@ export function ConversationsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 shadow-sm backdrop-blur bg-card/85">
-          <CardContent className="p-3 space-y-3">
+        <Card className="border-border/70 bg-card">
+          <CardContent className="space-y-3 p-3">
             {selectedConversation ? (
               <>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3 min-w-0">
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 pb-3">
+                  <div className="min-w-0 flex items-center gap-3">
                     <Avatar className="size-10 border border-border/60">
                       {selectedConversation.profilePicUrl ? (
                         <AvatarImage
@@ -578,9 +686,16 @@ export function ConversationsPage() {
                           <p className="text-[10px] text-muted-foreground truncate">@{username}</p>
                         ) : null;
                       })()}
-                      <div className="mt-1">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(selectedMode)}`}>
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] ${automationBadgeClass(selectedMode)}`}>
                           {automationLabel(selectedMode)}
+                        </span>
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] ${
+                            selectedConversation.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'
+                          }`}
+                        >
+                          {selectedConversation.identityLinked ? 'Linked profile' : 'Not linked'}
                         </span>
                       </div>
                     </div>
@@ -604,7 +719,7 @@ export function ConversationsPage() {
                     const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
                     stickToBottomRef.current = distanceToBottom < 48;
                   }}
-                  className="rounded-xl border border-border/70 bg-muted/20 p-3 max-h-[52vh] overflow-y-auto space-y-2"
+                  className="max-h-[56vh] space-y-2 overflow-y-auto rounded-xl border border-border/70 bg-muted/20 p-3"
                 >
                   {loadingMessages ? (
                     <div className="py-6 grid place-items-center text-muted-foreground">
@@ -645,22 +760,29 @@ export function ConversationsPage() {
                   )}
                 </div>
 
-                <div className="flex gap-2">
-                  <Input
-                    value={replyText}
-                    onChange={(event) => setReplyText(event.target.value)}
-                    placeholder={canReply ? 'Write manual reply to customer' : 'Manual replies are only enabled for Instagram right now'}
-                    disabled={!canReply}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault();
-                        if (canReply) void sendReply();
-                      }
-                    }}
-                  />
-                  <Button type="button" onClick={sendReply} disabled={sendingReply || !replyText.trim() || !canReply}>
-                    {sendingReply ? 'Sending...' : 'Send'}
-                  </Button>
+                <div className="rounded-xl border border-border/70 bg-background p-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={replyText}
+                      onChange={(event) => setReplyText(event.target.value)}
+                      placeholder={canReply ? 'Type a manual reply' : 'Manual reply is available only for Instagram'}
+                      disabled={!canReply}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' && !event.shiftKey) {
+                          event.preventDefault();
+                          if (canReply) void sendReply();
+                        }
+                      }}
+                    />
+                    <Button type="button" onClick={sendReply} disabled={sendingReply || !replyText.trim() || !canReply}>
+                      {sendingReply ? 'Sending...' : 'Send'}
+                    </Button>
+                  </div>
+                  {!canReply ? (
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      WhatsApp icin manuel cevap su an kapali. Handover ile AI akisini kontrol edebilirsin.
+                    </p>
+                  ) : null}
                 </div>
               </>
             ) : (
