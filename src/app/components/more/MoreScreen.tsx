@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Sparkles, AlertTriangle, X, UserCog, CheckCircle2, Circle, ShieldCheck, Layers, Megaphone, Settings } from 'lucide-react';
+import { BarChart3, Sparkles, AlertTriangle, X, UserCog, CheckCircle2, Circle, Layers, Megaphone, Settings } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -71,18 +71,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
   ];
 
   // Advanced Modules — Altta
-  const advancedModules = [
-    {
-      icon: ShieldCheck,
-      label: 'Meta Direct',
-      description: 'Instagram DM connection and management',
-      action: () => onNavigate('meta-direct'),
-      color: 'var(--deep-indigo)',
-      badge: 'Live',
-      badgeColor: 'bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)]',
-    },
-  ];
-
   return (
     <div className="h-full pb-20 relative overflow-y-auto">
       {/* Warning Modal Overlay */}
@@ -207,47 +195,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
                       <div>
                         <p className="font-semibold text-sm leading-tight mb-0.5">{item.label}</p>
                         <p className="text-[10px] text-muted-foreground leading-tight line-clamp-1">{item.description}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Advanced Modules — Altta */}
-        <div>
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Advanced Modules</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {advancedModules.map((mod, idx) => {
-              const Icon = mod.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.34, delay: 0.24 + 0.06 * idx, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <Card
-                    className="border-border/50 cursor-pointer hover:border-[var(--rose-gold)]/40 transition-all active:scale-[0.98] overflow-hidden group shadow-sm"
-                    onClick={mod.action}
-                  >
-                    <CardContent className="p-4 flex flex-col h-full">
-                      <div className="flex justify-between items-start mb-3">
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"
-                          style={{ backgroundColor: `${mod.color}15` }}
-                        >
-                          <Icon className="w-5 h-5" style={{ color: mod.color }} />
-                        </div>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${mod.badgeColor}`}>
-                          {mod.badge}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm mb-1 leading-tight">{mod.label}</p>
-                        <p className="text-[10px] text-muted-foreground leading-tight line-clamp-2">{mod.description}</p>
                       </div>
                     </CardContent>
                   </Card>

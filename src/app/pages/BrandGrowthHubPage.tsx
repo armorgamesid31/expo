@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Building2, Globe, Megaphone, ChevronRight } from 'lucide-react';
+import { Building2, Globe, Megaphone, ChevronRight, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export function BrandGrowthHubPage() {
@@ -29,6 +29,25 @@ export function BrandGrowthHubPage() {
       </p>
 
       <div className="space-y-3">
+        <button
+          type="button"
+          onClick={() => navigate('/app/features/social-channels', { state: { navDirection: 'forward' } })}
+          className="w-full rounded-xl border border-border bg-card p-4 text-left"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
+                <MessageCircle className="h-5 w-5 text-[var(--deep-indigo)]" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Social Channels</p>
+                <p className="text-xs text-muted-foreground">Meta Direct ve WhatsApp baglanti yonetimi</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </button>
+
         {canSalonInfo ? (
           <button
             type="button"
