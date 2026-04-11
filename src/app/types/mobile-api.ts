@@ -65,6 +65,7 @@ export interface AccessUserItem {
 
 export interface AdminAppointmentItem {
   id: number;
+  customerId?: number | null;
   startTime: string;
   endTime: string;
   status: string;
@@ -84,6 +85,28 @@ export interface AdminAppointmentItem {
     name: string;
     title?: string | null;
   };
+  appointmentLines?: Array<{
+    id: number;
+    appointmentId: number;
+    serviceId: number;
+    specialistId?: number | null;
+    status: string;
+    orderIndex?: number;
+    paymentMethod?: 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER' | null;
+    paymentRecordedAt?: string | null;
+    service?: {
+      id: number;
+      name: string;
+      duration: number;
+      price: number;
+      requiresSpecialist?: boolean;
+    } | null;
+    specialist?: {
+      id: number;
+      name: string;
+      title?: string | null;
+    } | null;
+  }>;
 }
 
 export interface AdminAppointmentsResponse {
@@ -282,6 +305,69 @@ export interface AppointmentStatusUpdateResponse {
       customerPackageId?: number;
       balanceAfter?: number;
     }>;
+  };
+}
+
+export type CheckoutMode = 'GROUP' | 'SPLIT';
+export type CheckoutCloseType = 'SINGLE_PAYMENT' | 'USE_EXISTING_PACKAGE' | 'SELL_NEW_PACKAGE';
+export type CheckoutPaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
+
+export interface AppointmentCheckoutRequestLine {
+  appointmentId: number;
+  appointmentLineId?: number | null;
+  closeType: CheckoutCloseType;
+  paymentMethod?: CheckoutPaymentMethod | null;
+  customerPackageId?: number | null;
+}
+
+export interface AppointmentCheckoutRequest {
+  mode: CheckoutMode;
+  lines: AppointmentCheckoutRequestLine[];
+  newPackage?: {
+    name: string;
+    scopeType?: 'SINGLE_SERVICE' | 'POOL';
+    price?: number | null;
+    notes?: string | null;
+    paymentMethod: CheckoutPaymentMethod;
+    startsAt?: string | null;
+    expiresAt?: string | null;
+    services: Array<{
+      serviceId: number;
+      initialQuota: number;
+    }>;
+  };
+}
+
+export interface AppointmentCheckoutResponse {
+  mode: CheckoutMode;
+  lineResults: Array<{
+    appointmentId: number;
+    appointmentLineId: number;
+    previousStatus: string;
+    nextStatus: string;
+    closeType: CheckoutCloseType;
+    paymentMethod: CheckoutPaymentMethod | null;
+    packageAction: {
+      type: string;
+      serviceId?: number;
+      customerPackageId?: number;
+      balanceAfter?: number;
+    } | null;
+  }>;
+  packageCreated: CustomerPackageItem | null;
+  ledgerEvents: Array<{
+    type: string;
+    serviceId?: number;
+    customerPackageId?: number;
+    balanceAfter?: number;
+  }>;
+  summary: {
+    totalLines: number;
+    singlePaymentCount: number;
+    existingPackageUsageCount: number;
+    newPackageUsageCount: number;
+    packageCreated: boolean;
+    message: string;
   };
 }
 

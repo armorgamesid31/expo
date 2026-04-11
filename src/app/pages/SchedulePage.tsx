@@ -9,6 +9,9 @@ import type {
   AdminAppointmentReschedulePreviewResponse,
   AppointmentStatusUpdateResponse,
   AdminWaitlistItem,
+  AppointmentCheckoutRequest,
+  AppointmentCheckoutResponse,
+  CustomerPackageItem,
 } from '../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
@@ -116,17 +119,40 @@ function hourLabel(hour: number) {
   return `${String(hour).padStart(2, '0')}:00`;
 }
 
-type PaymentMethod = 'CASH' | 'CARD' | 'OTHER';
+type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
+type CheckoutCloseType = 'SINGLE_PAYMENT' | 'USE_EXISTING_PACKAGE' | 'SELL_NEW_PACKAGE';
+
+type CheckoutModalState = {
+  appointmentIds: number[];
+  mode: 'GROUP' | 'SPLIT';
+};
+
+type CheckoutTargetLine = {
+  key: string;
+  appointmentId: number;
+  appointmentLineId: number | null;
+  serviceId: number;
+  serviceName: string;
+  startTime: string;
+};
+
+type CheckoutLineDraft = {
+  closeType: CheckoutCloseType;
+  paymentMethod: PaymentMethod;
+  customerPackageId: string;
+};
 
 function paymentMethodLabel(method: PaymentMethod) {
   if (method === 'CASH') return 'Cash';
   if (method === 'CARD') return 'Card';
+  if (method === 'TRANSFER') return 'Transfer';
   return 'Other';
 }
 
-function paymentMethodIcon(method: 'CASH' | 'CARD' | 'OTHER') {
+function paymentMethodIcon(method: PaymentMethod) {
   if (method === 'CASH') return Banknote;
   if (method === 'CARD') return CreditCard;
+  if (method === 'TRANSFER') return CalendarDays;
   return CircleHelp;
 }
 
@@ -177,10 +203,20 @@ export function SchedulePage() {
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
   const [statusOverrides, setStatusOverrides] = useState<Record<number, 'CONFIRMED' | 'UPDATED'>>({});
   const [selectedAppointmentGroup, setSelectedAppointmentGroup] = useState<AppointmentGroup | null>(null);
-  const [paymentSelection, setPaymentSelection] = useState<{
-    appointmentIds: number[];
-    mode: 'STATUS_COMPLETE' | 'PAYMENT_ONLY';
-  } | null>(null);
+  const [checkoutModal, setCheckoutModal] = useState<CheckoutModalState | null>(null);
+  const [checkoutCustomerPackages, setCheckoutCustomerPackages] = useState<CustomerPackageItem[]>([]);
+  const [checkoutPackagesLoading, setCheckoutPackagesLoading] = useState(false);
+  const [checkoutPackageError, setCheckoutPackageError] = useState<string | null>(null);
+  const [checkoutGroupCloseType, setCheckoutGroupCloseType] = useState<CheckoutCloseType>('SINGLE_PAYMENT');
+  const [checkoutGroupPaymentMethod, setCheckoutGroupPaymentMethod] = useState<PaymentMethod>('CASH');
+  const [checkoutGroupPackageId, setCheckoutGroupPackageId] = useState('');
+  const [checkoutLineDrafts, setCheckoutLineDrafts] = useState<Record<string, CheckoutLineDraft>>({});
+  const [checkoutNewPackageName, setCheckoutNewPackageName] = useState('');
+  const [checkoutNewPackagePrice, setCheckoutNewPackagePrice] = useState('');
+  const [checkoutNewPackagePaymentMethod, setCheckoutNewPackagePaymentMethod] = useState<PaymentMethod>('CASH');
+  const [checkoutNewPackageScopeType, setCheckoutNewPackageScopeType] = useState<'SINGLE_SERVICE' | 'POOL'>('SINGLE_SERVICE');
+  const [checkoutNewPackageQuota, setCheckoutNewPackageQuota] = useState('8');
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [rescheduleSelection, setRescheduleSelection] = useState<RescheduleSelectionState | null>(null);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [waitlistSaving, setWaitlistSaving] = useState(false);
@@ -307,6 +343,40 @@ export function SchedulePage() {
     }
     return map;
   }, [appointments]);
+
+  const getCheckoutTargets = useCallback(
+    (appointmentIds: number[]): CheckoutTargetLine[] => {
+      const targets: CheckoutTargetLine[] = [];
+      for (const appointmentId of appointmentIds) {
+        const item = appointmentById[appointmentId];
+        if (!item) continue;
+        const lines = Array.isArray(item.appointmentLines) && item.appointmentLines.length
+          ? item.appointmentLines
+          : [
+              {
+                id: 0,
+                appointmentId: item.id,
+                serviceId: item.service.id,
+                status: item.status,
+                orderIndex: 0,
+                service: item.service,
+              },
+            ];
+        for (const line of lines) {
+          targets.push({
+            key: `${item.id}:${line.id || 0}`,
+            appointmentId: item.id,
+            appointmentLineId: line.id && line.id > 0 ? line.id : null,
+            serviceId: line.serviceId || item.service.id,
+            serviceName: line.service?.name || item.service.name,
+            startTime: item.startTime,
+          });
+        }
+      }
+      return targets;
+    },
+    [appointmentById],
+  );
 
   const getDisplayStatus = useCallback(
     (item: AdminAppointmentItem): UIAppointmentStatus => {
@@ -610,13 +680,6 @@ export function SchedulePage() {
     return parts.join(' • ');
   };
 
-  const updateAppointmentPayment = async (appointmentId: number, paymentMethod: PaymentMethod) => {
-    await apiFetch(`/api/admin/appointments/${appointmentId}/payment`, {
-      method: 'PATCH',
-      body: JSON.stringify({ paymentMethod }),
-    });
-  };
-
   const updateAppointmentStatus = async (
     appointmentId: number,
     status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW',
@@ -697,22 +760,156 @@ export function SchedulePage() {
     }
   };
 
-  const applyPaymentToAppointments = async (appointmentIds: number[], paymentMethod: PaymentMethod) => {
+  const openCheckoutModal = async (appointmentIds: number[]) => {
     if (!appointmentIds.length) return;
+    const selectedItems = appointmentIds
+      .map((id) => appointmentById[id])
+      .filter((item): item is AdminAppointmentItem => Boolean(item));
+    if (!selectedItems.length) return;
 
-    setStatusBusy(true);
-    setStatusUpdatingId(appointmentIds[0] || null);
-    setStatusFeedback(null);
-    try {
-      for (const appointmentId of appointmentIds) {
-        await updateAppointmentPayment(appointmentId, paymentMethod);
+    const customerIdList = Array.from(
+      new Set(
+        selectedItems
+          .map((item) => (item.customerId !== null && item.customerId !== undefined ? Number(item.customerId) : NaN))
+          .filter((value) => Number.isInteger(value) && value > 0),
+      ),
+    );
+
+    setCheckoutModal({
+      appointmentIds,
+      mode: 'GROUP',
+    });
+    setCheckoutGroupCloseType('SINGLE_PAYMENT');
+    setCheckoutGroupPaymentMethod('CASH');
+    setCheckoutGroupPackageId('');
+    setCheckoutPackageError(null);
+    setCheckoutNewPackageName('Yeni Özel Paket');
+    setCheckoutNewPackagePrice('');
+    setCheckoutNewPackagePaymentMethod('CASH');
+    setCheckoutNewPackageScopeType('SINGLE_SERVICE');
+    setCheckoutNewPackageQuota('8');
+
+    const checkoutTargets = getCheckoutTargets(appointmentIds);
+    const nextLineDrafts: Record<string, CheckoutLineDraft> = {};
+    for (const target of checkoutTargets) {
+      nextLineDrafts[target.key] = {
+        closeType: 'SINGLE_PAYMENT',
+        paymentMethod: 'CASH',
+        customerPackageId: '',
+      };
+    }
+    setCheckoutLineDrafts(nextLineDrafts);
+
+    if (customerIdList.length !== 1) {
+      setCheckoutCustomerPackages([]);
+      if (!customerIdList.length) {
+        setCheckoutPackageError('Bu kayıtlar paket için uygun değil (müşteri kaydı yok).');
+      } else {
+        setCheckoutPackageError('Seçilen satırlar tek bir müşteriye ait olmalı.');
       }
-      setStatusFeedback(`Payment set to ${paymentMethodLabel(paymentMethod)} for ${appointmentIds.length} appointment(s).`);
+      return;
+    }
+
+    const customerId = customerIdList[0];
+    setCheckoutPackagesLoading(true);
+    try {
+      const response = await apiFetch<{ items: CustomerPackageItem[] }>(`/api/admin/customers/${customerId}/packages`);
+      setCheckoutCustomerPackages((response.items || []).filter((item) => item.status === 'ACTIVE'));
+    } catch (err: any) {
+      setCheckoutCustomerPackages([]);
+      setCheckoutPackageError(err?.message || 'Aktif paketler yüklenemedi.');
+    } finally {
+      setCheckoutPackagesLoading(false);
+    }
+  };
+
+  const submitCheckout = async () => {
+    if (!checkoutModal) return;
+    const selectedItems = checkoutModal.appointmentIds.map((id) => appointmentById[id]).filter((item): item is AdminAppointmentItem => Boolean(item));
+    const checkoutTargets = getCheckoutTargets(checkoutModal.appointmentIds);
+    if (!selectedItems.length || !checkoutTargets.length) return;
+
+    const usesSellNewInGroup = checkoutModal.mode === 'GROUP' && checkoutGroupCloseType === 'SELL_NEW_PACKAGE';
+    const usesSellNewInSplit = checkoutModal.mode === 'SPLIT' && checkoutTargets.some((target) => checkoutLineDrafts[target.key]?.closeType === 'SELL_NEW_PACKAGE');
+    const usesSellNew = usesSellNewInGroup || usesSellNewInSplit;
+
+    const lines: AppointmentCheckoutRequest['lines'] = checkoutTargets.map((target) => {
+      if (checkoutModal.mode === 'GROUP') {
+        return {
+          appointmentId: target.appointmentId,
+          appointmentLineId: target.appointmentLineId,
+          closeType: checkoutGroupCloseType,
+          paymentMethod: checkoutGroupCloseType === 'SINGLE_PAYMENT' ? checkoutGroupPaymentMethod : null,
+          customerPackageId: checkoutGroupCloseType === 'USE_EXISTING_PACKAGE' ? Number(checkoutGroupPackageId || 0) || null : null,
+        };
+      }
+      const draft = checkoutLineDrafts[target.key] || {
+        closeType: 'SINGLE_PAYMENT',
+        paymentMethod: 'CASH',
+        customerPackageId: '',
+      };
+      return {
+        appointmentId: target.appointmentId,
+        appointmentLineId: target.appointmentLineId,
+        closeType: draft.closeType,
+        paymentMethod: draft.closeType === 'SINGLE_PAYMENT' ? draft.paymentMethod : null,
+        customerPackageId: draft.closeType === 'USE_EXISTING_PACKAGE' ? Number(draft.customerPackageId || 0) || null : null,
+      };
+    });
+
+    if (lines.some((line) => line.closeType === 'USE_EXISTING_PACKAGE' && !line.customerPackageId)) {
+      setCheckoutPackageError('Mevcut paket kullanımında paket seçimi zorunlu.');
+      return;
+    }
+
+    let newPackage: AppointmentCheckoutRequest['newPackage'] | undefined = undefined;
+    if (usesSellNew) {
+      const normalizedName = checkoutNewPackageName.trim();
+      const quota = Number(checkoutNewPackageQuota);
+      if (!normalizedName) {
+        setCheckoutPackageError('Yeni paket adı zorunlu.');
+        return;
+      }
+      if (!Number.isInteger(quota) || quota <= 0) {
+        setCheckoutPackageError('Yeni paket hak adedi pozitif tam sayı olmalı.');
+        return;
+      }
+      const uniqueServiceIds = Array.from(new Set(checkoutTargets.map((target) => Number(target.serviceId)).filter((id) => Number.isInteger(id) && id > 0)));
+      newPackage = {
+        name: normalizedName,
+        scopeType: checkoutNewPackageScopeType,
+        price: checkoutNewPackagePrice.trim() ? Number(checkoutNewPackagePrice) : null,
+        notes: 'checkout_custom_package',
+        paymentMethod: checkoutNewPackagePaymentMethod,
+        services: uniqueServiceIds.map((serviceId) => ({
+          serviceId,
+          initialQuota: quota,
+        })),
+      };
+    }
+
+    setCheckoutSubmitting(true);
+    setStatusBusy(true);
+    setStatusUpdatingId(checkoutTargets[0]?.appointmentId || null);
+    setStatusFeedback(null);
+    setCheckoutPackageError(null);
+    try {
+      const response = await apiFetch<AppointmentCheckoutResponse>('/api/admin/appointments/checkout', {
+        method: 'POST',
+        body: JSON.stringify({
+          mode: checkoutModal.mode,
+          lines,
+          ...(newPackage ? { newPackage } : {}),
+        } satisfies AppointmentCheckoutRequest),
+      });
       await loadSchedule();
       setSelectedAppointmentGroup(null);
+      setCheckoutModal(null);
+      setStatusFeedback(response.summary?.message || `${checkoutTargets.length} line(s) checked out.`);
     } catch (err: any) {
-      setStatusFeedback(err?.message || 'Payment could not be updated.');
+      setCheckoutPackageError(err?.message || 'Checkout tamamlanamadı.');
     } finally {
+      setCheckoutSubmitting(false);
       setStatusUpdatingId(null);
       setStatusBusy(false);
     }
@@ -1019,7 +1216,7 @@ export function SchedulePage() {
   const requestStatusChange = (appointmentIds: number[], nextStatus: UIAppointmentAction) => {
     if (!appointmentIds.length) return;
     if (nextStatus === 'COMPLETED') {
-      setPaymentSelection({ appointmentIds, mode: 'STATUS_COMPLETE' });
+      void openCheckoutModal(appointmentIds);
       return;
     }
     if (nextStatus === 'UPDATED') {
@@ -1047,8 +1244,35 @@ export function SchedulePage() {
 
   const requestPaymentSelection = (appointmentIds: number[]) => {
     if (!appointmentIds.length) return;
-    setPaymentSelection({ appointmentIds, mode: 'PAYMENT_ONLY' });
+    void openCheckoutModal(appointmentIds);
   };
+
+  const checkoutSummary = (() => {
+    if (!checkoutModal) return null;
+    const targets = getCheckoutTargets(checkoutModal.appointmentIds);
+    if (!targets.length) return null;
+
+    let singlePayment = 0;
+    let existingPackage = 0;
+    let sellNewPackage = 0;
+
+    for (const target of targets) {
+      const closeType =
+        checkoutModal.mode === 'GROUP'
+          ? checkoutGroupCloseType
+          : (checkoutLineDrafts[target.key]?.closeType || 'SINGLE_PAYMENT');
+      if (closeType === 'SINGLE_PAYMENT') singlePayment += 1;
+      if (closeType === 'USE_EXISTING_PACKAGE') existingPackage += 1;
+      if (closeType === 'SELL_NEW_PACKAGE') sellNewPackage += 1;
+    }
+
+    return {
+      total: targets.length,
+      singlePayment,
+      existingPackage,
+      sellNewPackage,
+    };
+  })();
 
   const getAppointmentStyle = (startIso: string, endIso: string) => {
     const start = new Date(startIso);
@@ -1716,54 +1940,224 @@ export function SchedulePage() {
         </div>
       ) : null}
 
-      {paymentSelection ? (
-        <div className="fixed inset-0 z-[60] bg-black/45 p-4" onClick={() => (!statusBusy ? setPaymentSelection(null) : undefined)}>
+      {checkoutModal ? (
+        <div className="fixed inset-0 z-[60] bg-black/45 p-4" onClick={() => (!statusBusy ? setCheckoutModal(null) : undefined)}>
           <div
-            className="mx-auto mt-16 max-w-sm rounded-2xl border border-border bg-background p-4 shadow-xl"
+            className="mx-auto mt-8 max-w-xl rounded-2xl border border-border bg-background p-4 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold">Select Payment Method</h3>
+            <h3 className="text-lg font-semibold">Complete & Checkout</h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              {paymentSelection.mode === 'STATUS_COMPLETE'
-                ? 'Choose payment method to mark appointment as completed.'
-                : 'Choose payment method to update the selected appointment(s).'}
+              Varsayılan grup modu tüm satırları aynı yöntemle kapatır. Gerekirse satır bazlı mod açabilirsiniz.
             </p>
 
-            <div className="mt-4 grid grid-cols-1 gap-2">
-              {(['CASH', 'CARD', 'OTHER'] as const).map((method) => {
-                const Icon = paymentMethodIcon(method);
-                return (
-                <button
-                  key={method}
-                  type="button"
-                  disabled={statusBusy}
-                  onClick={async () => {
-                    const ids = paymentSelection.appointmentIds;
-                    const mode = paymentSelection.mode;
-                    setPaymentSelection(null);
-                    if (mode === 'STATUS_COMPLETE') {
-                      await applyStatusToAppointments(ids, 'COMPLETED', method);
-                    } else {
-                      await applyPaymentToAppointments(ids, method);
-                    }
-                  }}
-                  className="h-11 rounded-lg border border-border bg-card text-sm font-medium hover:border-[var(--rose-gold)] disabled:opacity-50 px-3 flex items-center gap-2 justify-start"
+            <div className="mt-3 inline-flex rounded-lg border border-border bg-card p-1">
+              <button
+                type="button"
+                disabled={checkoutSubmitting}
+                onClick={() => setCheckoutModal((prev) => (prev ? { ...prev, mode: 'GROUP' } : prev))}
+                className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'GROUP' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}
+              >
+                Group (Default)
+              </button>
+              <button
+                type="button"
+                disabled={checkoutSubmitting}
+                onClick={() => setCheckoutModal((prev) => (prev ? { ...prev, mode: 'SPLIT' } : prev))}
+                className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'SPLIT' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}
+              >
+                Advanced Split
+              </button>
+            </div>
+
+            {checkoutModal.mode === 'GROUP' ? (
+              <div className="mt-3">
+                <label className="block text-xs text-muted-foreground mb-1">Group close type</label>
+                <select
+                  value={checkoutGroupCloseType}
+                  onChange={(event) => setCheckoutGroupCloseType(event.target.value as CheckoutCloseType)}
+                  className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
                 >
-                  <Icon className="h-4 w-4 text-[var(--rose-gold)]" />
-                  {paymentMethodLabel(method)}
-                </button>
+                  <option value="SINGLE_PAYMENT">Single payment</option>
+                  <option value="USE_EXISTING_PACKAGE">Use existing package</option>
+                  <option value="SELL_NEW_PACKAGE">Sell new package</option>
+                </select>
+              </div>
+            ) : null}
+
+            <div className="mt-4 space-y-2 max-h-[48vh] overflow-y-auto pr-1">
+              {getCheckoutTargets(checkoutModal.appointmentIds).map((target) => {
+                const draft = checkoutLineDrafts[target.key] || { closeType: 'SINGLE_PAYMENT', paymentMethod: 'CASH', customerPackageId: '' };
+                const effectiveCloseType = checkoutModal.mode === 'GROUP' ? checkoutGroupCloseType : draft.closeType;
+                return (
+                  <div key={target.key} className="rounded-lg border border-border p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium">{target.serviceName}</p>
+                      <p className="text-xs text-muted-foreground">{format(new Date(target.startTime), 'HH:mm')}</p>
+                    </div>
+                    {checkoutModal.mode === 'SPLIT' ? (
+                      <select
+                        value={draft.closeType}
+                        onChange={(event) =>
+                          setCheckoutLineDrafts((prev) => ({
+                            ...prev,
+                            [target.key]: {
+                              ...(prev[target.key] || draft),
+                              closeType: event.target.value as CheckoutCloseType,
+                            },
+                          }))
+                        }
+                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                      >
+                        <option value="SINGLE_PAYMENT">Single payment</option>
+                        <option value="USE_EXISTING_PACKAGE">Use existing package</option>
+                        <option value="SELL_NEW_PACKAGE">Sell new package</option>
+                      </select>
+                    ) : null}
+                    {effectiveCloseType === 'SINGLE_PAYMENT' ? (
+                      <select
+                        value={checkoutModal.mode === 'GROUP' ? checkoutGroupPaymentMethod : draft.paymentMethod}
+                        onChange={(event) => {
+                          const method = event.target.value as PaymentMethod;
+                          if (checkoutModal.mode === 'GROUP') {
+                            setCheckoutGroupPaymentMethod(method);
+                          } else {
+                            setCheckoutLineDrafts((prev) => ({
+                              ...prev,
+                              [target.key]: {
+                                ...(prev[target.key] || draft),
+                                paymentMethod: method,
+                              },
+                            }));
+                          }
+                        }}
+                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                      >
+                        {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) => (
+                          <option key={method} value={method}>
+                            {paymentMethodLabel(method)}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                    {effectiveCloseType === 'USE_EXISTING_PACKAGE' ? (
+                      <select
+                        value={checkoutModal.mode === 'GROUP' ? checkoutGroupPackageId : draft.customerPackageId}
+                        onChange={(event) => {
+                          if (checkoutModal.mode === 'GROUP') {
+                            setCheckoutGroupPackageId(event.target.value);
+                          } else {
+                            setCheckoutLineDrafts((prev) => ({
+                              ...prev,
+                              [target.key]: {
+                                ...(prev[target.key] || draft),
+                                customerPackageId: event.target.value,
+                              },
+                            }));
+                          }
+                        }}
+                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                      >
+                        <option value="">Select active package</option>
+                        {checkoutCustomerPackages.map((pkg) => (
+                          <option key={pkg.id} value={String(pkg.id)}>
+                            {pkg.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                  </div>
                 );
               })}
             </div>
 
-            <button
-              type="button"
-              disabled={statusBusy}
-              onClick={() => setPaymentSelection(null)}
-              className="mt-3 w-full h-10 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50"
-            >
-              Cancel
-            </button>
+            {(checkoutModal.mode === 'GROUP' ? checkoutGroupCloseType === 'SELL_NEW_PACKAGE' : getCheckoutTargets(checkoutModal.appointmentIds).some((target) => checkoutLineDrafts[target.key]?.closeType === 'SELL_NEW_PACKAGE')) ? (
+              <div className="mt-3 rounded-lg border border-border p-3 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">New Package Sale</p>
+                <input
+                  value={checkoutNewPackageName}
+                  onChange={(event) => setCheckoutNewPackageName(event.target.value)}
+                  className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                  placeholder="Package name"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    value={checkoutNewPackagePrice}
+                    onChange={(event) => setCheckoutNewPackagePrice(event.target.value)}
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                    placeholder="Price (optional)"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                  />
+                  <input
+                    value={checkoutNewPackageQuota}
+                    onChange={(event) => setCheckoutNewPackageQuota(event.target.value)}
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                    placeholder="Quota per service"
+                    type="number"
+                    min="1"
+                    step="1"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={checkoutNewPackageScopeType}
+                    onChange={(event) => setCheckoutNewPackageScopeType(event.target.value === 'POOL' ? 'POOL' : 'SINGLE_SERVICE')}
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                  >
+                    <option value="SINGLE_SERVICE">Single Service</option>
+                    <option value="POOL">Pool</option>
+                  </select>
+                  <select
+                    value={checkoutNewPackagePaymentMethod}
+                    onChange={(event) => setCheckoutNewPackagePaymentMethod(event.target.value as PaymentMethod)}
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                  >
+                    {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) => (
+                      <option key={method} value={method}>
+                        {paymentMethodLabel(method)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : null}
+
+            {checkoutPackagesLoading ? <p className="mt-2 text-xs text-muted-foreground">Loading active packages...</p> : null}
+            {checkoutPackageError ? (
+              <p className="mt-2 rounded-lg border border-red-300/40 bg-red-500/10 px-3 py-2 text-xs text-red-700">{checkoutPackageError}</p>
+            ) : null}
+            {checkoutSummary ? (
+              <div className="mt-2 rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground">Checkout Summary</p>
+                <p>Total lines: {checkoutSummary.total}</p>
+                <p>Single payment: {checkoutSummary.singlePayment}</p>
+                <p>Use existing package: {checkoutSummary.existingPackage}</p>
+                <p>Sell new package: {checkoutSummary.sellNewPackage}</p>
+              </div>
+            ) : null}
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                disabled={statusBusy}
+                onClick={() => setCheckoutModal(null)}
+                className="h-10 flex-1 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={statusBusy || checkoutSubmitting}
+                onClick={() => {
+                  void submitCheckout();
+                }}
+                className="h-10 flex-1 rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-sm font-medium text-emerald-700 disabled:opacity-50"
+              >
+                {checkoutSubmitting ? 'Processing...' : 'Confirm Checkout'}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
