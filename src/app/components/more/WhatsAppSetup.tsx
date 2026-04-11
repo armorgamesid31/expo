@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, MessageCircle, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { useAuth } from '../../context/AuthContext';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
@@ -406,6 +405,22 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     navigate('/app/features/whatsapp-settings');
   };
 
+  const connectionStage = !pluginId ? 'plugin' : connected ? 'connected' : nativeTriggerReady ? 'ready' : 'preparing';
+  const stageBadgeClass =
+    connectionStage === 'connected'
+      ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+      : connectionStage === 'ready'
+        ? 'bg-blue-500/10 text-blue-700 border-blue-500/20'
+        : 'bg-amber-500/10 text-amber-700 border-amber-500/20';
+  const stageLabel =
+    connectionStage === 'connected'
+      ? 'Connected'
+      : connectionStage === 'ready'
+        ? 'Ready to connect'
+        : connectionStage === 'plugin'
+          ? 'Plugin setup needed'
+          : 'Preparing';
+
   return (
     <div className="h-full pb-20 overflow-y-auto">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
@@ -424,188 +439,162 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       </div>
 
       <div className="p-4 space-y-4">
-        {loadingStatus ? (
-          <Card className="border-border/50">
-            <CardContent className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Loading setup status...
-            </CardContent>
-          </Card>
-        ) : null}
-
-        <Card className="border-[#22C55E]/30 bg-gradient-to-br from-[#22C55E]/5 to-transparent">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#22C55E]/20 flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-[#22C55E]" />
+        <section className="rounded-2xl border border-border bg-background/90 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-[#22C55E]" />
+                <p className="text-sm font-semibold">WhatsApp Connection Health</p>
               </div>
-              <div>
-                <h3 className="font-semibold">WhatsApp Connection</h3>
-                <p className="text-xs text-muted-foreground">{statusText}</p>
-              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{statusText}</p>
             </div>
-          </CardContent>
-        </Card>
+            <Badge className={stageBadgeClass}>{stageLabel}</Badge>
+          </div>
+          {loadingStatus ? (
+            <div className="mt-3 text-xs text-muted-foreground flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading live status...
+            </div>
+          ) : null}
+        </section>
 
-        {!pluginId ? (
-          <Card className="border-border/50">
-            <CardContent className="p-4 space-y-3">
-              <p className="text-sm text-muted-foreground">
-                This step is required only during initial setup.
-              </p>
-              <Button
-                type="button"
-                onClick={() => {
-                  void handleStart();
-                }}
-                disabled={creatingPlugin || loadingStatus}
-                className="w-full"
-                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-              >
-                {creatingPlugin ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Starting...
-                  </>
-                ) : (
-                  'start'
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDevBypass}
-                className="w-full"
-              >
-                {devBypassed ? 'Test Mode: Open AI Agent Screen' : 'Test Mode: Continue as Connected'}
-              </Button>
-            </CardContent>
-          </Card>
-        ) : connected ? (
-          <Card className="border-[#22C55E]/30 bg-[#22C55E]/5">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center gap-2 text-green-700">
-                <div className="relative w-5 h-5">
-                  <span className="absolute inset-0 rounded-full bg-green-500/30 animate-ping" />
-                  <CheckCircle2 className="relative w-5 h-5 text-green-600" />
+        <div className="grid grid-cols-1 xl:grid-cols-[1.2fr,1fr] gap-4">
+          <section className="rounded-2xl border border-border bg-background/90 p-4 space-y-4">
+            {!pluginId ? (
+              <>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">1. Initialize plugin</p>
+                  <p className="text-xs text-muted-foreground">
+                    Required once per salon before opening Facebook secure connect.
+                  </p>
                 </div>
-                <p className="text-sm font-medium">WhatsApp connection completed successfully.</p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Connection is active for this salon. The button will not be shown when you revisit this page.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDevBypass}
-                className="w-full"
-              >
-                {devBypassed ? 'Test Mode: Open AI Agent Screen' : 'Test Mode: Continue as Connected'}
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-border/50">
-            <CardContent className="p-4 space-y-4">
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Enlarged Chakra + Mask</p>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    void handleStart();
+                  }}
+                  disabled={creatingPlugin || loadingStatus}
+                  className="w-full"
+                  style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
+                >
+                  {creatingPlugin ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Initializing...
+                    </>
+                  ) : (
+                    'Initialize and Continue'
+                  )}
+                </Button>
+              </>
+            ) : connected ? (
+              <>
+                <div className="flex items-center gap-2 text-emerald-700">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <p className="text-sm font-semibold">Connection completed</p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  WhatsApp channel is active for this salon. You can return to settings safely.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">{replaceConnection ? '2. Replace phone number' : '2. Secure Facebook connection'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Use the embedded secure flow. Keep this screen open until callback is completed.
+                  </p>
+                </div>
                 <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
                   <div
                     id={CONTAINER_ID}
-                    aria-label="Enlarged Chakra button"
+                    aria-label="Chakra connect button"
                     className="absolute inset-0 h-[58px]"
                   />
                   {nativeTriggerReady ? (
                     isPopupConnecting ? (
-                      <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                      <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Connecting...
+                        Waiting for callback...
                       </div>
                     ) : (
                       <div
                         className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
                         style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
                       >
-                        Secure Connection with Facebook
+                        Connect with Facebook
                       </div>
                     )
                   ) : (
-                    <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium whitespace-nowrap flex items-center justify-center gap-2">
+                    <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Preparing button...
+                      Preparing connect button...
                     </div>
                   )}
                 </div>
+                {error ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      void prepareConnect();
+                    }}
+                    disabled={preparingConnect}
+                  >
+                    Retry
+                  </Button>
+                ) : null}
+              </>
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDevBypass}
+              className="w-full"
+            >
+              {devBypassed ? 'Test Mode: Open AI Agent Screen' : 'Test Mode: Continue as Connected'}
+            </Button>
+          </section>
+
+          <section className="rounded-2xl border border-border bg-background/90 p-4">
+            <p className="text-sm font-semibold mb-2">Operator Notes</p>
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <p>- This screen uses live `/api/app/chakra/*` endpoints.</p>
+              <p>- Replace mode keeps flow same, only intent changes for safe identity switch.</p>
+              <p>- If popup closes early, reopen from this page and complete callback.</p>
+            </div>
+            {error ? (
+              <div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/5 p-3 text-sm text-red-700 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 mt-0.5" />
+                <span>{error}</span>
               </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDevBypass}
-                className="w-full"
-              >
-                {devBypassed ? 'Test Mode: Open AI Agent Screen' : 'Test Mode: Continue as Connected'}
-              </Button>
-
-              {error ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full mt-2"
-                  onClick={() => {
-                    void prepareConnect();
-                  }}
-                  disabled={preparingConnect}
-                >
-                  Tekrar Dene
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-        )}
-
-        {error ? (
-          <Card className="border-red-500/30 bg-red-500/5">
-            <CardContent className="p-3 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
-            </CardContent>
-          </Card>
-        ) : null}
-
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Help</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible>
-              <AccordionItem value="faq-1">
-                <AccordionTrigger>What does the Start button do?</AccordionTrigger>
-                <AccordionContent>
-                  Creates a plugin once for your salon and prepares the connection button.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq-2">
-                <AccordionTrigger>Do I need to press Start every time?</AccordionTrigger>
-                <AccordionContent>
-                  No. After initial setup, the connection button appears automatically.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq-3">
-                <AccordionTrigger>What if the popup is closed?</AccordionTrigger>
-                <AccordionContent>
-                  If setup is incomplete, click reconnect to reopen the popup.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq-4">
-                <AccordionTrigger>How do I know connection is complete?</AccordionTrigger>
-                <AccordionContent>
-                  You will see “WhatsApp connection completed” in the status section above.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
+            ) : null}
+            <div className="mt-4 rounded-xl border border-border/60 bg-muted/10 p-3">
+              <p className="text-sm font-medium">Help</p>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="faq-1">
+                  <AccordionTrigger>What does initialize do?</AccordionTrigger>
+                  <AccordionContent>
+                    It creates plugin context for this salon and prepares the secure connect token.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-2">
+                  <AccordionTrigger>Do I need this every time?</AccordionTrigger>
+                  <AccordionContent>
+                    No. It is only needed if plugin is missing or being recreated.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-3">
+                  <AccordionTrigger>How do I verify completion?</AccordionTrigger>
+                  <AccordionContent>
+                    Status badge turns to Connected and this page redirects to WhatsApp settings.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
+  AlertTriangle,
   CheckCircle2,
   Circle,
-  Link2,
   ListChecks,
+  Loader2,
   MessageCircle,
 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
 import { useAuth } from '../../context/AuthContext';
 
 interface MetaDirectSetupProps {
@@ -161,11 +161,6 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const connectedCount = useMemo(
-    () => Number(state.instagram.status === 'connected'),
-    [state.instagram.status],
-  );
-
   const setInstagram = (next: ChannelState) => {
     setState((prev) => ({ ...prev, instagram: next }));
   };
@@ -268,6 +263,28 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
     { key: 'connected', label: 'Finalize token' },
   ] as const;
   const activeIndex = steps.findIndex((item) => item.key === channel.status);
+  const statusBadgeClass = useMemo(() => {
+    if (channel.status === 'connected') return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
+    if (channel.status === 'degraded') return 'bg-amber-500/10 text-amber-700 border-amber-500/20';
+    if (channel.status === 'failed') return 'bg-red-500/10 text-red-700 border-red-500/20';
+    if (channel.status === 'oauth_opened' || channel.status === 'preparing' || channel.status === 'callback_received') {
+      return 'bg-blue-500/10 text-blue-700 border-blue-500/20';
+    }
+    return 'bg-muted text-muted-foreground border-border';
+  }, [channel.status]);
+  const statusLabel = useMemo(() => {
+    if (channel.status === 'connected') return 'Connected';
+    if (channel.status === 'degraded') return 'Connected with warnings';
+    if (channel.status === 'failed') return 'Connection failed';
+    if (channel.status === 'oauth_opened') return 'OAuth in progress';
+    if (channel.status === 'callback_received') return 'Callback received';
+    if (channel.status === 'preparing') return 'Preparing';
+    return 'Not connected';
+  }, [channel.status]);
+  const updatedAtText = useMemo(() => {
+    if (!channel.updatedAt) return '-';
+    return new Date(channel.updatedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  }, [channel.updatedAt]);
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -294,65 +311,64 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
       </div>
 
       <div className="p-4 space-y-4">
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-4 space-y-2">
-            <p className="text-sm font-semibold">Connection Status</p>
-            <p className="text-xs text-muted-foreground">
-              Live mode is active. All buttons send real requests to `/api/app/meta-direct/*`.
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-green-500/10 text-green-700 border-green-500/20">
-                {connectedCount}/1 Connected
-              </Badge>
-              <Button type="button" size="sm" variant="outline" onClick={refreshStatus} disabled={isLoading}>
-                Refresh Status
-              </Button>
-            </div>
-            {globalError ? <p className="text-xs text-red-600">{globalError}</p> : null}
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between gap-2">
+        <section className="rounded-2xl border border-border bg-background/90 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-4 h-4 text-[var(--deep-indigo)]" />
-                <span className="text-sm font-medium">Instagram DM API</span>
+                <p className="text-sm font-semibold">Instagram DM Connection</p>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">{isConnected ? 'Connected' : 'Not Connected'}</Badge>
-                <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Live</Badge>
-              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{channel.message}</p>
             </div>
+            <div className="flex items-center gap-2">
+              <Badge className={statusBadgeClass}>{statusLabel}</Badge>
+              <Badge variant="outline">Updated {updatedAtText}</Badge>
+            </div>
+          </div>
+          {globalError ? (
+            <div className="mt-3 rounded-xl border border-red-500/25 bg-red-500/5 p-3 text-xs text-red-700 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5" />
+              <span>{globalError}</span>
+            </div>
+          ) : null}
+        </section>
 
-            <p className="text-xs text-muted-foreground">{channel.message}</p>
-
-            <div className="space-y-2 rounded-lg border border-border/60 bg-muted/10 p-3">
+        <div className="grid grid-cols-1 xl:grid-cols-[1.2fr,1fr] gap-4">
+          <section className="rounded-2xl border border-border bg-background/90 p-4 space-y-4">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Connection Flow</p>
+              <p className="text-xs text-muted-foreground">Step-by-step state for production onboarding.</p>
+            </div>
+            <div className="space-y-2">
               {steps.map((step, index) => {
                 const done = activeIndex >= index || isConnected;
+                const inProgress = !done && activeIndex === index - 1 && isLoading;
                 return (
-                  <div key={step.key} className="flex items-center gap-2">
+                  <div
+                    key={step.key}
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
+                      done ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-border bg-muted/20'
+                    }`}
+                  >
                     {done ? (
-                      <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : inProgress ? (
+                      <Loader2 className="w-4 h-4 text-blue-600 shrink-0 animate-spin" />
                     ) : (
                       <Circle className="w-4 h-4 text-muted-foreground shrink-0" />
                     )}
-                    <span className={`text-xs ${done ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {step.label}
-                    </span>
+                    <span className={`text-xs ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{step.label}</span>
                   </div>
                 );
               })}
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" onClick={startConnect} disabled={isLoading}>
-                Start Instagram Login Connection
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <Button type="button" onClick={startConnect} disabled={isLoading}>
+                {isConnected ? 'Reconnect Instagram' : 'Start Connection'}
               </Button>
               {isConnected ? (
                 <Button
                   type="button"
-                  size="sm"
                   variant="outline"
                   onClick={() => {
                     const ok = window.confirm(
@@ -365,24 +381,26 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
                 >
                   Hesabi Degistir
                 </Button>
-              ) : null}
-              <Button type="button" size="sm" variant="outline" onClick={runProbe} disabled={isLoading}>
+              ) : (
+                <Button type="button" variant="outline" onClick={refreshStatus} disabled={isLoading}>
+                  Refresh Status
+                </Button>
+              )}
+              <Button type="button" variant="outline" onClick={runProbe} disabled={isLoading}>
                 Run Probe
               </Button>
-              <Button type="button" size="sm" variant="outline" onClick={disconnect} disabled={isLoading}>
+              <Button type="button" variant="outline" onClick={disconnect} disabled={isLoading}>
                 Disconnect
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </section>
 
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-4">
+          <section className="rounded-2xl border border-border bg-background/90 p-4">
             <div className="flex items-center gap-2 mb-3">
               <ListChecks className="w-4 h-4 text-[var(--rose-gold)]" />
-              <p className="text-sm font-semibold">Production Checklist</p>
+              <p className="text-sm font-semibold">Production Readiness</p>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {productionChecklist.map((item) => (
                 <div key={item.title} className="rounded-lg border border-border/60 bg-muted/10 p-3">
                   <p className="text-sm font-medium">{item.title}</p>
@@ -390,21 +408,14 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-4">
-            <p className="text-sm font-semibold">Current Connector</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Meta Direct is configured for Instagram DM in this app.
-            </p>
-            <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-              <Link2 className="w-3.5 h-3.5" />
-              This screen uses live Meta Direct backend endpoints.
+            <div className="mt-4 rounded-lg border border-border/60 bg-muted/10 p-3">
+              <p className="text-sm font-medium">Connector Scope</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                This screen runs live `/api/app/meta-direct/*` endpoints and affects production inbox connectivity.
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </section>
+        </div>
       </div>
     </div>
   );
