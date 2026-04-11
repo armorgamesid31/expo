@@ -136,6 +136,14 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
     navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward' } });
   };
 
+  const openReplaceFlow = () => {
+    const ok = window.confirm(
+      'WhatsApp numarasini degistirmek istediginize emin misiniz? Yeni numara baglaninca eski kimlik pasiflestirilir.',
+    );
+    if (!ok) return;
+    navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward', replaceConnection: true } });
+  };
+
   const openAgentSettings = () => {
     if (integrationLocked) return;
     navigate('/app/features/whatsapp-agent', { state: { navDirection: 'forward' } });
@@ -295,6 +303,11 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
               <Button type="button" onClick={openConnectionFlow} className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
                 {isConnected ? 'Manage Connection' : 'Start Connection'}
               </Button>
+              {isConnected ? (
+                <Button type="button" variant="outline" onClick={openReplaceFlow}>
+                  Numarayi Degistir
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"

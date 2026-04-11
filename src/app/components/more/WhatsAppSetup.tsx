@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, MessageCircle, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -35,6 +35,7 @@ interface ConnectTokenResponse {
   connectToken: string;
   pluginId: string;
   sdkUrl: string;
+  intent?: 'CONNECT' | 'REPLACE_CONNECTION';
 }
 
 interface ConnectEventResponse {
@@ -43,6 +44,7 @@ interface ConnectEventResponse {
   connected: boolean;
   isActive?: boolean | null;
   event: string | null;
+  intent?: 'CONNECT' | 'REPLACE_CONNECTION';
 }
 
 type ChakraInstance = {
@@ -96,6 +98,8 @@ function isConnectedEvent(event: unknown, data: unknown): boolean {
 export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const replaceConnection = Boolean((location.state as any)?.replaceConnection);
   const instanceRef = useRef<ChakraInstance[]>([]);
   const hasAutoNavigatedRef = useRef(false);
   const cachedStatus = readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10);
@@ -150,7 +154,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     try {
       const response = await apiFetch<ConnectEventResponse>('/api/app/chakra/connect-event', {
         method: 'POST',
-        body: JSON.stringify({ event, data, pluginId: pluginIdValue }),
+        body: JSON.stringify({
+          event,
+          data,
+          pluginId: pluginIdValue,
+          intent: replaceConnection ? 'REPLACE_CONNECTION' : 'CONNECT',
+        }),
       });
 
       if (response.connected || Boolean(response.isActive)) {
@@ -168,7 +177,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         console.warn('Status refresh after connect event failed:', statusError);
       }
     }
-  }, [apiFetch, syncStatusFromBackend]);
+  }, [apiFetch, replaceConnection, syncStatusFromBackend]);
 
   const prepareConnect = useCallback(async () => {
     setPreparingConnect(true);
@@ -176,7 +185,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setStatusText('Facebook connection is being prepared...');
 
     try {
-      const token = await apiFetch<ConnectTokenResponse>('/api/app/chakra/connect-token');
+      const token = await apiFetch<ConnectTokenResponse>(
+        `/api/app/chakra/connect-token?intent=${replaceConnection ? 'REPLACE_CONNECTION' : 'CONNECT'}`,
+      );
       await loadChakraSdk(token.sdkUrl);
 
       for (const instance of instanceRef.current) {
@@ -241,7 +252,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     } finally {
       setPreparingConnect(false);
     }
-  }, [apiFetch, captureEvent, syncStatusFromBackend]);
+  }, [apiFetch, captureEvent, replaceConnection, syncStatusFromBackend]);
 
   useEffect(() => {
     const bypass = window.localStorage.getItem(WHATSAPP_DEV_BYPASS_KEY) === '1';
@@ -403,8 +414,10 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">WhatsApp Setup</h1>
-            <p className="text-sm text-muted-foreground">Connect your WhatsApp account with quick setup</p>
+            <h1 className="text-2xl font-semibold">{replaceConnection ? 'WhatsApp Number Change' : 'WhatsApp Setup'}</h1>
+            <p className="text-sm text-muted-foreground">
+              {replaceConnection ? 'Replace active WhatsApp number securely' : 'Connect your WhatsApp account with quick setup'}
+            </p>
           </div>
           {connected ? <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Connected</Badge> : null}
         </div>

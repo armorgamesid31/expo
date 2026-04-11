@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Search, Send, UserRound } from 'lucide-react';
-import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../lib/config';
+import { useNavigate } from 'react-router-dom';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
@@ -56,6 +56,28 @@ interface ConversationStatePayload {
   humanActiveUntil?: string | null;
   lastHumanMessageAt?: string | null;
   lastCustomerMessageAt?: string | null;
+}
+
+interface InstagramChannelHealth {
+  connected: boolean;
+  status: string;
+  message: string;
+  bindingReady: boolean;
+  missingRequirements?: string[];
+}
+
+interface WhatsAppChannelHealth {
+  connected: boolean;
+  isActive: boolean;
+  hasPlugin: boolean;
+  whatsappPhoneNumberId?: string | null;
+  message: string;
+  missingRequirements?: string[];
+}
+
+interface ChannelHealthPayload {
+  instagram: InstagramChannelHealth;
+  whatsapp: WhatsAppChannelHealth;
 }
 
 function formatTs(value: string): string {
@@ -228,11 +250,13 @@ function mergeAndSortMessages(responses: Array<{ items: MessageItem[] } | null |
 
 export function ConversationsPage() {
   const { apiFetch, accessToken } = useAuth();
+  const navigate = useNavigate();
   const [channelView, setChannelView] = useState<ChannelType>('INSTAGRAM');
   const [searchQuery, setSearchQuery] = useState('');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [channelHealth, setChannelHealth] = useState<ChannelHealthPayload | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -309,10 +333,11 @@ export function ConversationsPage() {
     if (showLoading) setLoadingConversations(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: ConversationItem[] }>(
+      const response = await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload }>(
         `/api/admin/conversations?limit=60&channel=${channelView}`,
       );
       const next = response?.items || [];
+      setChannelHealth(response?.channelHealth || null);
       setConversations(next);
       conversationsRef.current = next;
       if (!selectedConversationIdRef.current && next.length > 0) {
@@ -498,18 +523,25 @@ export function ConversationsPage() {
   const handoverTotal = filteredConversations.filter((item) =>
     isHandoverInProgress(normalizeAutomationMode(item.automationMode)),
   ).length;
+  const selectedChannelHealth = channelView === 'INSTAGRAM' ? channelHealth?.instagram : channelHealth?.whatsapp;
+  const channelBlocked =
+    channelView === 'INSTAGRAM'
+      ? !(channelHealth?.instagram?.connected && channelHealth?.instagram?.bindingReady)
+      : !channelHealth?.whatsapp?.connected;
+
+  useEffect(() => {
+    if (!channelBlocked) return;
+    setSelectedConversationId(null);
+    setMessages([]);
+  }, [channelBlocked]);
 
   return (
     <div className="h-full pb-20 overflow-y-auto p-4">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div className="mb-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Conversations</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Inbox for Instagram and WhatsApp with handover controls.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Unified inbox for Instagram and WhatsApp.</p>
         </div>
-        <Button type="button" size="sm" variant="outline" onClick={() => void loadConversations()} disabled={loadingConversations}>
-          {loadingConversations ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
-          Refresh
-        </Button>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -564,9 +596,34 @@ export function ConversationsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px,1fr]">
-        <Card className="border-border/70 bg-card">
-          <CardContent className="space-y-3 p-3">
+      {channelBlocked ? (
+        <div className="rounded-2xl border border-border bg-background p-6">
+          <p className="text-base font-semibold">
+            {channelView === 'INSTAGRAM' ? 'Instagram baglantisi gerekli' : 'WhatsApp baglantisi gerekli'}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {selectedChannelHealth?.message || 'Bu kanal icin sohbetleri gormek once baglanti kurulmasini gerektirir.'}
+          </p>
+          {selectedChannelHealth?.missingRequirements?.length ? (
+            <div className="mt-3 text-xs text-muted-foreground">
+              Eksikler: {selectedChannelHealth.missingRequirements.join(', ')}
+            </div>
+          ) : null}
+          <Button
+            type="button"
+            className="mt-4"
+            onClick={() =>
+              navigate(channelView === 'INSTAGRAM' ? '/app/features/meta-direct' : '/app/features/whatsapp-settings', {
+                state: { navDirection: 'forward' },
+              })
+            }
+          >
+            {channelView === 'INSTAGRAM' ? 'Instagram Ayarlari' : 'WhatsApp Ayarlari'}
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px,1fr]">
+          <div className="rounded-2xl border border-border bg-background p-3 space-y-3">
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
                 <p className="text-[10px] uppercase text-muted-foreground">Threads</p>
@@ -597,7 +654,9 @@ export function ConversationsPage() {
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div>
             ) : filteredConversations.length === 0 ? (
-              <p className="py-8 text-center text-xs text-muted-foreground">No conversation matches this filter.</p>
+              <p className="py-8 text-center text-xs text-muted-foreground">
+                {selectedChannelHealth ? 'Bagli kanalda henuz konusma yok.' : 'No conversation matches this filter.'}
+              </p>
             ) : (
               <div className="max-h-[66vh] space-y-2 overflow-y-auto pr-1">
                 {filteredConversations.map((item) => {
@@ -653,11 +712,9 @@ export function ConversationsPage() {
                 })}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-border/70 bg-card">
-          <CardContent className="space-y-3 p-3">
+          <div className="rounded-2xl border border-border bg-background p-3 space-y-3">
             {selectedConversation ? (
               <>
                 <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 pb-3">
@@ -802,9 +859,9 @@ export function ConversationsPage() {
             {error ? (
               <div className="rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2 text-xs">{error}</div>
             ) : null}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

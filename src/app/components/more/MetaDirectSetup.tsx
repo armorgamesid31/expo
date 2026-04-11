@@ -40,11 +40,13 @@ interface MetaDirectStatusResponse {
     status?: string;
     message?: string;
     connected?: boolean;
+    activeBindingIds?: string[];
   };
 }
 
 interface ConnectUrlResponse {
   authorizeUrl?: string;
+  intent?: 'CONNECT' | 'REPLACE_CONNECTION';
 }
 
 const initialState: MetaDirectState = {
@@ -168,10 +170,13 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
     setState((prev) => ({ ...prev, instagram: next }));
   };
 
-  const startConnect = async () => {
+  const startConnect = async (intent: 'CONNECT' | 'REPLACE_CONNECTION' = 'CONNECT') => {
     setInstagram({
       status: 'preparing',
-      message: 'Preparing OAuth URL and state token...',
+      message:
+        intent === 'REPLACE_CONNECTION'
+          ? 'Preparing account replacement flow...'
+          : 'Preparing OAuth URL and state token...',
       updatedAt: Date.now(),
     });
 
@@ -179,7 +184,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
     try {
       const data = await apiFetch<ConnectUrlResponse>('/api/app/meta-direct/connect-url', {
         method: 'POST',
-        body: JSON.stringify({ channel: 'INSTAGRAM' }),
+        body: JSON.stringify({ channel: 'INSTAGRAM', intent }),
       });
 
       const url = data?.authorizeUrl || '';
@@ -344,6 +349,23 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
               <Button type="button" size="sm" onClick={startConnect} disabled={isLoading}>
                 Start Instagram Login Connection
               </Button>
+              {isConnected ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const ok = window.confirm(
+                      'Instagram hesabini degistirmek istediginize emin misiniz? Yeni baglanti kurulunca eski kimlik pasif olur.',
+                    );
+                    if (!ok) return;
+                    void startConnect('REPLACE_CONNECTION');
+                  }}
+                  disabled={isLoading}
+                >
+                  Hesabi Degistir
+                </Button>
+              ) : null}
               <Button type="button" size="sm" variant="outline" onClick={runProbe} disabled={isLoading}>
                 Run Probe
               </Button>
