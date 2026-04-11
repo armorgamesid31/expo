@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Sparkles, AlertTriangle, X, UserCog, CheckCircle2, Circle, ShieldCheck, Layers, Megaphone } from 'lucide-react';
+import { BarChart3, Sparkles, AlertTriangle, X, UserCog, CheckCircle2, Circle, ShieldCheck, Layers, Megaphone, Settings } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -8,10 +8,11 @@ interface MoreScreenProps {
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   onNavigate: (tab: string) => void;
+  onOpenSettings?: () => void;
   isFeatureVisible?: (featureKey: string) => boolean;
 }
 
-export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeatureVisible }: MoreScreenProps) {
+export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSettings, isFeatureVisible }: MoreScreenProps) {
   const [warningModal, setWarningModal] = useState<{ 
     title: string; 
     message: string; 
@@ -22,6 +23,19 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, isFeature
 
   // Management Tools — her zaman üstte
   const managementTools = [
+    {
+      icon: Settings,
+      label: 'Settings',
+      description: 'Theme, notifications, and account preferences',
+      action: () => {
+        if (onOpenSettings) {
+          onOpenSettings();
+          return;
+        }
+        onNavigate('settings');
+      },
+      color: 'var(--rose-gold)',
+    },
     {
       featureKey: 'operations.studio',
       icon: Layers,

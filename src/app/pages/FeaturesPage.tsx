@@ -37,6 +37,7 @@ export function FeaturesPage() {
       isDarkMode={false}
       onToggleDarkMode={() => undefined}
       onNavigate={handleNavigate}
+      onOpenSettings={() => navigate('/app/settings', { state: { navDirection: 'back' } })}
       isFeatureVisible={(permissionKey) => {
         if (!permissionKey) return true;
         if (permissionKey === 'operations.studio') {

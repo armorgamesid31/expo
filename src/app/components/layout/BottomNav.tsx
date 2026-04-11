@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, MessagesSquare, Sparkles, Settings } from 'lucide-react';
+import { LayoutDashboard, Calendar, MessagesSquare, Settings } from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: string;
@@ -10,7 +10,6 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
     { id: 'schedule', label: 'Appointments', icon: Calendar },
     { id: 'conversations', label: 'Conversations', icon: MessagesSquare },
-    { id: 'features', label: 'Features', icon: Sparkles },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 

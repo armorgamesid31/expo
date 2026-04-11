@@ -82,30 +82,31 @@ function transitionMotionByKind(kind: TransitionKind, direction: 1 | -1) {
 function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/schedule')) return 'schedule';
   if (pathname.startsWith('/app/conversations')) return 'conversations';
-  if (pathname.startsWith('/app/customers')) return 'features';
-  if (pathname.startsWith('/app/analytics')) return 'features';
-  if (pathname.startsWith('/app/inventory')) return 'features';
-  if (pathname.startsWith('/app/campaigns')) return 'features';
-  if (pathname.startsWith('/app/automations')) return 'features';
-  if (pathname.startsWith('/app/instagram-inbox')) return 'features';
-  if (pathname.startsWith('/app/blacklist')) return 'features';
-  if (pathname.startsWith('/app/salon-info')) return 'features';
-  if (pathname.startsWith('/app/services')) return 'features';
-  if (pathname.startsWith('/app/staff')) return 'features';
-  if (pathname.startsWith('/app/data-import')) return 'features';
-  if (pathname.startsWith('/app/operations-studio')) return 'features';
-  if (pathname.startsWith('/app/brand-growth-hub')) return 'features';
-  if (pathname.startsWith('/app/features')) return 'features';
+  if (pathname.startsWith('/app/customers')) return 'settings';
+  if (pathname.startsWith('/app/analytics')) return 'settings';
+  if (pathname.startsWith('/app/inventory')) return 'settings';
+  if (pathname.startsWith('/app/campaigns')) return 'settings';
+  if (pathname.startsWith('/app/automations')) return 'settings';
+  if (pathname.startsWith('/app/instagram-inbox')) return 'settings';
+  if (pathname.startsWith('/app/blacklist')) return 'settings';
+  if (pathname.startsWith('/app/salon-info')) return 'settings';
+  if (pathname.startsWith('/app/services')) return 'settings';
+  if (pathname.startsWith('/app/staff')) return 'settings';
+  if (pathname.startsWith('/app/data-import')) return 'settings';
+  if (pathname.startsWith('/app/operations-studio')) return 'settings';
+  if (pathname.startsWith('/app/brand-growth-hub')) return 'settings';
+  if (pathname.startsWith('/app/features')) return 'settings';
   if (pathname.startsWith('/app/settings')) return 'settings';
   if (pathname.startsWith('/app/notification-settings')) return 'settings';
   if (pathname.startsWith('/app/notifications')) return 'settings';
-  if (pathname.startsWith('/app/notification-role-matrix')) return 'features';
-  if (pathname.startsWith('/app/team-access')) return 'features';
-  if (pathname.startsWith('/app/team-management')) return 'features';
+  if (pathname.startsWith('/app/notification-role-matrix')) return 'settings';
+  if (pathname.startsWith('/app/team-access')) return 'settings';
+  if (pathname.startsWith('/app/team-management')) return 'settings';
   return 'dashboard';
 }
 
 function backTargetFromPathname(pathname: string): string | null {
+  if (pathname === '/app/features') return '/app/settings';
   if (pathname.startsWith('/app/features/')) return '/app/features';
   if (pathname.startsWith('/app/notification-role-matrix')) return '/app/features';
   if (pathname.startsWith('/app/team-access')) return '/app/features';
@@ -174,10 +175,6 @@ export function AppLayout() {
   const handleTabChange = (tab: string) => {
     if (tab === 'schedule') {
       navigate('/app/schedule', { state: { navDirection: 'forward' } });
-      return;
-    }
-    if (tab === 'features') {
-      navigate('/app/features', { state: { navDirection: 'forward' } });
       return;
     }
     if (tab === 'conversations') {
