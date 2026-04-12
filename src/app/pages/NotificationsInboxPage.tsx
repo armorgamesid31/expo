@@ -73,7 +73,7 @@ export function NotificationsInboxPage() {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Bildirimler</h1>
+        <h1 className="text-2xl font-semibold">Notifications</h1>
         <button type="button" onClick={() => void markAllRead()} className="text-sm text-[var(--rose-gold)] font-semibold">
           Tümünü okundu yap
         </button>

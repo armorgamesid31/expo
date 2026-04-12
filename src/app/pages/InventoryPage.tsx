@@ -23,10 +23,10 @@ export function InventoryPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiFetch<{items: InventoryItem[];}>('/api/admin/inventory/items');
+      const response = await apiFetch<{ items: InventoryItem[]; }>('/api/admin/inventory/items');
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || "Envanter verileri alınamadı.");
+      setError(err?.message || "Envanter could not be retrieved.");
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ export function InventoryPage() {
       setForm({ name: '', category: '', unit: 'adet', currentStock: 0, minStock: 0 });
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Ürün eklenemedi.');
+      setError(err?.message || 'The product could not be added.');
     } finally {
       setSaving(false);
     }
@@ -66,7 +66,7 @@ export function InventoryPage() {
       });
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Stok güncellenemedi.');
+      setError(err?.message || 'Stock could not be updated.');
     }
   };
 
@@ -92,7 +92,7 @@ export function InventoryPage() {
 
       <div className="space-y-2">
         {items.map((item) =>
-        <div key={item.id} className="rounded-lg border border-border p-3">
+          <div key={item.id} className="rounded-lg border border-border p-3">
             <div className="flex items-center justify-between">
               <p className="font-medium">{item.name}</p>
               <span className={`text-xs ${item.lowStock ? 'text-red-500' : 'text-green-600'}`}>{item.lowStock ? 'Düşük stok' : 'Normal'}</span>
@@ -107,8 +107,8 @@ export function InventoryPage() {
       </div>
 
       {!loading && !items.length ?
-      <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Envanter boş.</div> :
-      null}
+        <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Envanter is empty.</div> :
+        null}
     </div>);
 
 }

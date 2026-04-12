@@ -64,7 +64,7 @@ function loadChakraSdk(sdkUrl: string): Promise<void> {
   if (existing) {
     return new Promise((resolve, reject) => {
       existing.addEventListener('load', () => resolve(), { once: true });
-      existing.addEventListener('error', () => reject(new Error('Chakra SDK yüklenemedi.')), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Chakra SDK failed to install.')), { once: true });
     });
   }
 
@@ -74,7 +74,7 @@ function loadChakraSdk(sdkUrl: string): Promise<void> {
     script.src = sdkUrl;
     script.async = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Chakra SDK yüklenemedi.'));
+    script.onerror = () => reject(new Error('Chakra SDK failed to install.'));
     document.head.appendChild(script);
   });
 }
@@ -86,10 +86,10 @@ function isConnectedEvent(event: unknown, data: unknown): boolean {
   const state = typeof dataObj?.state === 'string' ? dataObj.state.toLowerCase() : '';
   const hasAuth = Boolean(dataObj?.auth && typeof dataObj.auth === 'object');
   const hasEnabledNumbers =
-  Array.isArray(dataObj?.serverConfig?.enabledWhatsappPhoneNumbers) &&
-  dataObj.serverConfig.enabledWhatsappPhoneNumbers.some(
-    (value: unknown) => typeof value === 'string' && value.trim().length > 0
-  );
+    Array.isArray(dataObj?.serverConfig?.enabledWhatsappPhoneNumbers) &&
+    dataObj.serverConfig.enabledWhatsappPhoneNumbers.some(
+      (value: unknown) => typeof value === 'string' && value.trim().length > 0
+    );
   const pattern = /(connected|success|complete|completed|linked)/i;
   return pattern.test(eventText) || pattern.test(status) || pattern.test(state) || hasAuth || hasEnabledNumbers;
 }
@@ -120,7 +120,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     if (!cachedStatus.pluginId) {
       return "WhatsApp hesabınızı bağlamak için Başlayın düğmesine dokunun.";
     }
-    return cachedConnected ? "WhatsApp bağlantısı tamamlandı." : 'Facebook ile devam ederek bağlantıyı tamamlayın.';
+    return cachedConnected ? "WhatsApp bağlantısı tamamlandı." : 'Complete the connection by continuing with Facebook.';
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -145,7 +145,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       return { hasPlugin: true, connected: true };
     }
 
-    setStatusText('Facebook ile devam ederek bağlantıyı tamamlayın.');
+    setStatusText('Complete the connection by continuing with Facebook.');
     return { hasPlugin: true, connected: false };
   }, [apiFetch]);
 
@@ -181,7 +181,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const prepareConnect = useCallback(async () => {
     setPreparingConnect(true);
     setError(null);
-    setStatusText('Facebook bağlantısı hazırlanıyor...');
+    setStatusText('Facebook connection is being prepared...');
 
     try {
       const token = await apiFetch<ConnectTokenResponse>(
@@ -198,7 +198,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
       const chakraGlobal = (window as any).ChakraWhatsappConnect;
       if (!chakraGlobal?.init) {
-        throw new Error('Chakra SDK init fonksiyonu bulunamadı.');
+        throw new Error('Chakra SDK init function not found.');
       }
 
       setNativeTriggerReady(false);
@@ -240,14 +240,14 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         },
         onError: (sdkError: any) => {
           console.error('Chakra SDK error:', sdkError);
-          setError(sdkError?.message || 'Chakra popup akışında bir hata oluştu.');
+          setError(sdkError?.message || 'An error occurred in the Chakra popup flow.');
         }
       });
 
       instanceRef.current = [scaledInstance];
     } catch (err: any) {
-      setError(err?.message || "Facebook bağlantısı başlatılamadı.");
-      setStatusText("Facebook bağlantısı başlatılamadı.");
+      setError(err?.message || "Facebook baglantisi baslatilamadi.");
+      setStatusText("Facebook baglantisi baslatilamadi.");
     } finally {
       setPreparingConnect(false);
     }
@@ -276,7 +276,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         }
       } catch (err: any) {
         if (mounted) {
-          setError(err?.message || "WhatsApp kurulum durumu alınamadı.");
+          setError(err?.message || "WhatsApp kurulum durumu alinamadi.");
           setStatusText("Durum alınamadı. Sayfayı yenileyin.");
         }
       } finally {
@@ -381,7 +381,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const handleStart = async () => {
     setCreatingPlugin(true);
     setError(null);
-    setStatusText('Kurulum başlatılıyor...');
+    setStatusText('Starting the installation...');
     try {
       const response = await apiFetch<CreatePluginResponse>('/api/app/chakra/create-plugin', {
         method: 'POST'
@@ -390,8 +390,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       setNativeTriggerReady(false);
       await prepareConnect();
     } catch (err: any) {
-      setError(err?.message || 'Kurulum başlatılamadı.');
-      setStatusText('Kurulum başlatılamadı.');
+      setError(err?.message || 'Installation failed to start.');
+      setStatusText('Installation failed to start.');
     } finally {
       setCreatingPlugin(false);
     }
@@ -401,25 +401,25 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setError(null);
     window.localStorage.setItem(WHATSAPP_DEV_BYPASS_KEY, '1');
     setDevBypassed(true);
-    setStatusText('Test modu aktif: WhatsApp bağlantısı simüle edildi.');
+    setStatusText('Test mode active: WhatsApp connection simulated.');
     navigate('/app/features/whatsapp-settings');
   };
 
   const connectionStage = !pluginId ? 'plugin' : connected ? 'connected' : nativeTriggerReady ? 'ready' : 'preparing';
   const stageBadgeClass =
-  connectionStage === 'connected' ?
-  'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' :
-  connectionStage === 'ready' ?
-  'bg-blue-500/10 text-blue-700 border-blue-500/20' :
-  'bg-amber-500/10 text-amber-700 border-amber-500/20';
+    connectionStage === 'connected' ?
+      'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' :
+      connectionStage === 'ready' ?
+        'bg-blue-500/10 text-blue-700 border-blue-500/20' :
+        'bg-amber-500/10 text-amber-700 border-amber-500/20';
   const stageLabel =
-  connectionStage === 'connected' ?
-  "Bağlı" :
-  connectionStage === 'ready' ?
-  'Bağlanmaya hazır' :
-  connectionStage === 'plugin' ?
-  'Plugin kurulumu gerekli' :
-  'Hazırlanıyor';
+    connectionStage === 'connected' ?
+      "Bağlı" :
+      connectionStage === 'ready' ?
+        'Ready to connect' :
+        connectionStage === 'plugin' ?
+          'Plugin setup needed' :
+          'Preparing';
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -429,9 +429,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">{replaceConnection ? 'WhatsApp Numara Değişikliği' : 'WhatsApp Kurulumu'}</h1>
+            <h1 className="text-2xl font-semibold">{replaceConnection ? 'WhatsApp Number Change' : 'WhatsApp Setup'}</h1>
             <p className="text-sm text-muted-foreground">
-              {replaceConnection ? 'Aktif WhatsApp numarasını güvenli bir şekilde değiştirin' : 'WhatsApp hesabınızı hızlı kurulumla bağlayın'}
+              {replaceConnection ? 'Replace active WhatsApp number securely' : 'Connect your WhatsApp account with quick setup'}
             </p>
           </div>
           {connected ? <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Bağlı</Badge> : null}
@@ -451,100 +451,100 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             <Badge className={stageBadgeClass}>{stageLabel}</Badge>
           </div>
           {loadingStatus ?
-          <div className="mt-3 text-xs text-muted-foreground flex items-center gap-2">
+            <div className="mt-3 text-xs text-muted-foreground flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
               Canlı durum yükleniyor...
             </div> :
-          null}
+            null}
         </section>
 
         <div className="grid grid-cols-1 xl:grid-cols-[1.2fr,1fr] gap-4">
           <section className="rounded-2xl border border-border bg-background/90 p-4 space-y-4">
             {!pluginId ?
-            <>
+              <>
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold">1. Eklentiyi başlat</p>
+                  <p className="text-sm font-semibold">1. Initialize plugin</p>
                   <p className="text-xs text-muted-foreground">
-                    Facebook güvenli bağlantısını açmadan önce her salon için gereklidir.
+                    Required önce per salon before opening Facebook secure connect.
                   </p>
                 </div>
                 <Button
-                type="button"
-                onClick={() => {
-                  void handleStart();
-                }}
-                disabled={creatingPlugin || loadingStatus}
-                className="w-full"
-                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
-                
+                  type="button"
+                  onClick={() => {
+                    void handleStart();
+                  }}
+                  disabled={creatingPlugin || loadingStatus}
+                  className="w-full"
+                  style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
+
                   {creatingPlugin ?
-                <>
+                    <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Başlatılıyor...
+                      Initializing...
                     </> :
 
-                'Başlat ve Devam Et'
-                }
+                    'Initialize and Continue'
+                  }
                 </Button>
               </> :
-            connected ?
-            <>
-                <div className="flex items-center gap-2 text-emerald-700">
-                  <CheckCircle2 className="w-5 h-5" />
-                  <p className="text-sm font-semibold">Bağlantı tamamlandı</p>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Bu salon için WhatsApp kanalı aktif. Ayarlara güvenle dönebilirsiniz.
-                </p>
-              </> :
-
-            <>
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold">{replaceConnection ? '2. Telefon numarasını değiştir' : '2. Güvenli Facebook bağlantısı'}</p>
+              connected ?
+                <>
+                  <div className="flex items-center gap-2 text-emerald-700">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <p className="text-sm font-semibold">Bağlantı tamamlandı</p>
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    Gömülü güvenli akışı kullanın. Geri çağrı tamamlanana kadar bu ekranı açık tutun.
+                    WhatsApp channel is active for this salon. You can return to settings safely.
                   </p>
-                </div>
-                <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
-                  <div
-                  id={CONTAINER_ID}
-                  aria-label="Chakra bağlantı butonu"
-                  className="absolute inset-0 h-[58px]" />
-                
-                  {nativeTriggerReady ?
-                isPopupConnecting ?
-                <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
+                </> :
+
+                <>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold">{replaceConnection ? '2. Replace phone number' : '2. Secure Facebook connection'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Gömülü güvenli akışı kullanın. Geri çağrı tamamlanana kadar bu ekranı açık tutun.
+                    </p>
+                  </div>
+                  <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
+                    <div
+                      id={CONTAINER_ID}
+                      aria-label="Chakra connect button"
+                      className="absolute inset-0 h-[58px]" />
+
+                    {nativeTriggerReady ?
+                      isPopupConnecting ?
+                        <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Waiting for callback...
+                        </div> :
+
+                        <div
+                          className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
+                          style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
+
+                          Connect with Facebook
+                        </div> :
+
+
+                      <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Yanıt bekleniyor...
-                      </div> :
+                        Preparing connect button...
+                      </div>
+                    }
+                  </div>
+                  {error ?
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        void prepareConnect();
+                      }}
+                      disabled={preparingConnect}>
 
-                <div
-                  className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
-                  style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
-                  
-                        Facebook ile Bağlan
-                      </div> :
-
-
-                <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Bağlantı butonu hazırlanıyor...
-                    </div>
-                }
-                </div>
-                {error ?
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  void prepareConnect();
-                }}
-                disabled={preparingConnect}>
-                
-                    Tekrar Dene
-                  </Button> :
-              null}
-              </>
+                      Retry
+                    </Button> :
+                    null}
+                </>
             }
 
             <Button
@@ -552,37 +552,37 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
               variant="outline"
               onClick={handleDevBypass}
               className="w-full">
-              
+
               {devBypassed ? 'Test Mode: Open AI Agent Screen' : "Test Modu: Bağlı Olarak Devam Et"}
             </Button>
           </section>
 
           <section className="rounded-2xl border border-border bg-background/90 p-4">
-            <p className="text-sm font-semibold mb-2">Operatör Notları</p>
+            <p className="text-sm font-semibold mb-2">Operator Notes</p>
             <div className="space-y-2 text-xs text-muted-foreground">
-              <p>- Bu ekran canlı /api/app/chakra/* uç noktalarını kullanır.</p>
-              <p>- Değiştirme modu akışı aynı tutar, sadece güvenli kimlik değişimi için amaç değişir.</p>
-              <p>- Eğer popup erken kapanırsa, bu sayfadan tekrar açın ve yanıtı tamamlayın.</p>
+              <p>- This screen uses live `/api/app/chakra/*` endpoints.</p>
+              <p>- Replace mode keeps flow same, only intent changes for safe identity switch.</p>
+              <p>- If popup closes early, reopen from this page and complete callback.</p>
             </div>
             {error ?
-            <div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/5 p-3 text-sm text-red-700 flex items-start gap-2">
+              <div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/5 p-3 text-sm text-red-700 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5" />
                 <span>{error}</span>
               </div> :
-            null}
+              null}
             <div className="mt-4 rounded-xl border border-border/60 bg-muted/10 p-3">
-              <p className="text-sm font-medium">Yardım</p>
+              <p className="text-sm font-medium">Help</p>
               <Accordion type="single" collapsible>
                 <AccordionItem value="faq-1">
                   <AccordionTrigger>Initialize ne işe yarar?</AccordionTrigger>
                   <AccordionContent>
-                    Bu salon için eklenti bağlamı oluşturur ve güvenli bağlantı jetonunu hazırlar.
+                    It creates plugin context for this salon and prepares the secure connect token.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="faq-2">
-                  <AccordionTrigger>Bunu her seferinde yapmam gerekiyor mu?</AccordionTrigger>
+                  <AccordionTrigger>Do I need this every time?</AccordionTrigger>
                   <AccordionContent>
-                    Hayır. Sadece eklenti eksikse veya yeniden oluşturuluyorsa gereklidir.
+                    No. It is only needed if plugin is missing or being recreated.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="faq-3">

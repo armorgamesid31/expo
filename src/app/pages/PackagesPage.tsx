@@ -54,8 +54,8 @@ export function PackagesPage() {
     setError(null);
     try {
       const [servicesResponse, templatesResponse] = await Promise.all([
-      apiFetch<{items: ServiceItem[];}>('/api/admin/services'),
-      apiFetch<{items: PackageTemplateItem[];}>('/api/admin/package-templates')]
+        apiFetch<{ items: ServiceItem[]; }>('/api/admin/services'),
+        apiFetch<{ items: PackageTemplateItem[]; }>('/api/admin/package-templates')]
       );
       setServices(servicesResponse.items || []);
       setTemplates(templatesResponse.items || []);
@@ -97,11 +97,11 @@ export function PackagesPage() {
     setIsActive(Boolean(item.isActive));
     setRows(
       item.services.length ?
-      item.services.map((row) => ({
-        serviceId: String(row.serviceId),
-        initialQuota: String(row.initialQuota)
-      })) :
-      [{ ...EMPTY_FORM_SERVICE }]
+        item.services.map((row) => ({
+          serviceId: String(row.serviceId),
+          initialQuota: String(row.initialQuota)
+        })) :
+        [{ ...EMPTY_FORM_SERVICE }]
     );
   };
 
@@ -113,17 +113,17 @@ export function PackagesPage() {
     }
 
     const payloadServices = rows.
-    map((row) => ({
-      serviceId: Number(row.serviceId),
-      initialQuota: Number(row.initialQuota)
-    })).
-    filter(
-      (row) =>
-      Number.isInteger(row.serviceId) &&
-      row.serviceId > 0 &&
-      Number.isInteger(row.initialQuota) &&
-      row.initialQuota > 0
-    );
+      map((row) => ({
+        serviceId: Number(row.serviceId),
+        initialQuota: Number(row.initialQuota)
+      })).
+      filter(
+        (row) =>
+          Number.isInteger(row.serviceId) &&
+          row.serviceId > 0 &&
+          Number.isInteger(row.initialQuota) &&
+          row.initialQuota > 0
+      );
 
     const uniqueServiceIds = new Set(payloadServices.map((row) => row.serviceId));
     if (!payloadServices.length || payloadServices.length !== uniqueServiceIds.size) {
@@ -132,7 +132,7 @@ export function PackagesPage() {
     }
 
     if (validityDays && (!Number.isInteger(Number(validityDays)) || Number(validityDays) <= 0)) {
-      setError('Geçerlilik günü pozitif bir tam sayı olmalı.');
+      setError('Geçerlilik günü pozitif bir tam sayı olmalıdır.');
       return;
     }
 
@@ -152,13 +152,13 @@ export function PackagesPage() {
       };
 
       if (editingId) {
-        await apiFetch<{item: PackageTemplateItem;}>(`/api/admin/package-templates/${editingId}`, {
+        await apiFetch<{ item: PackageTemplateItem; }>(`/api/admin/package-templates/${editingId}`, {
           method: 'PUT',
           body: JSON.stringify(payload)
         });
         setSuccess('Şablon güncellendi.');
       } else {
-        await apiFetch<{item: PackageTemplateItem;}>('/api/admin/package-templates', {
+        await apiFetch<{ item: PackageTemplateItem; }>('/api/admin/package-templates', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
@@ -178,17 +178,17 @@ export function PackagesPage() {
     <div className="p-4 space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">Paket Yönetimi</h1>
-        <p className="text-sm text-muted-foreground mt-1">Hizmet bazlı paket şablonlarını (hizmet başına kota) tanımlayın.</p>
+        <p className="text-sm text-muted-foreground mt-1">Hizmet bazlı paket şablonları tanımlayın (hizmet başına kota).</p>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-semibold">{editingId ? "Şablonu Düzenle" : "Yeni Şablon"}</p>
           {editingId ?
-          <button type="button" className="rounded-md border border-border px-3 py-1.5 text-xs" onClick={resetForm}>
+            <button type="button" className="rounded-md border border-border px-3 py-1.5 text-xs" onClick={resetForm}>
               Düzenlemeyi İptal Et
             </button> :
-          null}
+            null}
         </div>
 
         <input
@@ -196,14 +196,14 @@ export function PackagesPage() {
           onChange={(event) => setName(event.target.value)}
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
           placeholder="Şablon adı" />
-        
+
 
         <div className="grid grid-cols-2 gap-2">
           <select
             value={scopeType}
             onChange={(event) => setScopeType(event.target.value === 'POOL' ? 'POOL' : 'SINGLE_SERVICE')}
             className="h-10 rounded-md border border-border px-3 text-sm bg-background">
-            
+
             <option value="SINGLE_SERVICE">Tek Hizmet</option>
             <option value="POOL">Pool</option>
           </select>
@@ -211,7 +211,7 @@ export function PackagesPage() {
             value={isActive ? '1' : '0'}
             onChange={(event) => setIsActive(event.target.value === '1')}
             className="h-10 rounded-md border border-border px-3 text-sm bg-background">
-            
+
             <option value="1">Aktif</option>
             <option value="0">Pasif</option>
           </select>
@@ -226,7 +226,7 @@ export function PackagesPage() {
             onChange={(event) => setPrice(event.target.value)}
             className="w-full rounded-md border border-border px-3 py-2 text-sm"
             placeholder="Fiyat (isteğe bağlı)" />
-          
+
           <input
             value={validityDays}
             type="number"
@@ -235,7 +235,7 @@ export function PackagesPage() {
             onChange={(event) => setValidityDays(event.target.value)}
             className="w-full rounded-md border border-border px-3 py-2 text-sm"
             placeholder="Geçerlilik günü" />
-          
+
         </div>
 
         <textarea
@@ -243,7 +243,7 @@ export function PackagesPage() {
           onChange={(event) => setNotes(event.target.value)}
           className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[80px]"
           placeholder="Notlar (isteğe bağlı)" />
-        
+
 
         <div className="space-y-2 rounded-md border border-border p-2">
           <div className="flex items-center justify-between">
@@ -254,37 +254,37 @@ export function PackagesPage() {
           </div>
 
           {rows.map((row, idx) =>
-          <div key={idx} className="grid grid-cols-[1fr_110px_70px] gap-2">
+            <div key={idx} className="grid grid-cols-[1fr_110px_70px] gap-2">
               <select
-              value={row.serviceId}
-              onChange={(event) => setRowValue(idx, { serviceId: event.target.value })}
-              className="h-10 rounded-md border border-border px-2 text-sm bg-background">
-              
+                value={row.serviceId}
+                onChange={(event) => setRowValue(idx, { serviceId: event.target.value })}
+                className="h-10 rounded-md border border-border px-2 text-sm bg-background">
+
                 <option value="">Hizmet seçin</option>
                 {serviceOptions.map((option) =>
-              <option key={option.value} value={option.value}>
+                  <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
-              )}
+                )}
               </select>
 
               <input
-              value={row.initialQuota}
-              onChange={(event) => setRowValue(idx, { initialQuota: event.target.value })}
-              type="number"
-              min="1"
-              step="1"
-              className="h-10 rounded-md border border-border px-2 text-sm"
-              placeholder="Kota" />
-            
+                value={row.initialQuota}
+                onChange={(event) => setRowValue(idx, { initialQuota: event.target.value })}
+                type="number"
+                min="1"
+                step="1"
+                className="h-10 rounded-md border border-border px-2 text-sm"
+                placeholder="Kota" />
+
 
               <button
-              type="button"
-              onClick={() => removeRow(idx)}
-              className="h-10 rounded-md border border-border text-xs"
-              disabled={rows.length <= 1}>
-              
-                Kaldır
+                type="button"
+                onClick={() => removeRow(idx)}
+                className="h-10 rounded-md border border-border text-xs"
+                disabled={rows.length <= 1}>
+
+                Sil
               </button>
             </div>
           )}
@@ -298,7 +298,7 @@ export function PackagesPage() {
           onClick={() => void submitTemplate()}
           disabled={saving}
           className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60">
-          
+
           {saving ? "Kaydediliyor..." : editingId ? "Şablonu Güncelle" : "Şablon Oluştur"}
         </button>
       </div>
@@ -309,14 +309,14 @@ export function PackagesPage() {
         {!loading && templates.length === 0 ? <p className="text-sm text-muted-foreground">Henüz şablon yok.</p> : null}
 
         {templates.map((template) =>
-        <div key={template.id} className="rounded-lg border border-border p-3 space-y-1.5">
+          <div key={template.id} className="rounded-lg border border-border p-3 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <p className="font-medium text-sm">{template.name}</p>
               <button
-              type="button"
-              className="rounded-md border border-border px-2 py-1 text-xs"
-              onClick={() => hydrateFormFromTemplate(template)}>
-              
+                type="button"
+                className="rounded-md border border-border px-2 py-1 text-xs"
+                onClick={() => hydrateFormFromTemplate(template)}>
+
                 Düzenle
               </button>
             </div>
@@ -326,10 +326,10 @@ export function PackagesPage() {
             </p>
             <div className="flex flex-wrap gap-1">
               {template.services.map((service) =>
-            <span key={service.id} className="text-[11px] rounded-full border border-border px-2 py-0.5">
+                <span key={service.id} className="text-[11px] rounded-full border border-border px-2 py-0.5">
                   {service.service?.name || `#${service.serviceId}`}: {service.initialQuota}
                 </span>
-            )}
+              )}
             </div>
           </div>
         )}

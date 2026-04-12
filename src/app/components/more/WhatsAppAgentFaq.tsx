@@ -12,37 +12,37 @@ const faqItems = [
     id: 'faq-hours',
     tag: 'Mesai',
     question: 'Asistan çalışma saatleri dışında ne yapar?',
-    answer: 'Mesai dışı mesajları nazik bir karşılama metni ile alır, müşteriye uygun saatler sunar ve onları sabah vardiyasına atar.',
+    answer: 'Receives out-of-hours messages with a polite greeting text, offers convenient hours to the customer, and assigns them to the morning shift.',
   },
   {
     id: 'faq-pricing',
     tag: 'Fiyat',
     question: 'Asistan fiyat sorularını nasıl yanıtlar?',
-    answer: 'Sistem, aktif hizmet listenizdeki güncel fiyatları kullanır. Net olmayan bir hizmet adı gelirse, açıklayıcı bir soru sorar.',
+    answer: 'The system uses current prices from your active service list. If an unclear service name comes up, it asks a clarifying question.',
   },
   {
     id: 'faq-cancel',
-    tag: 'Randevu',
+    tag: 'Appointment',
     question: 'Müşteri iptal veya erteleme isterse ne olur?',
-    answer: 'Ajan talebi doğrular, mevcut yeni boşlukları görüntüler ve işlem sonucunu müşteriye tek bir mesajda özetler.',
+    answer: 'The agent verifies the request, displays available new slots, and summarizes the transaction result in a single message to the client.',
   },
   {
     id: 'faq-human',
     tag: 'Operasyon',
-    question: 'Konuşma hangi durumlarda personele devredilir?',
-    answer: 'Bir şikayet, ödeme anlaşmazlığı, agresif dil veya sistem dışı özel bir talep algılanırsa, konuşma otomatik olarak personele yönlendirilir.',
+    question: 'In what situation is the conversation delegated to staff?',
+    answer: 'If a complaint, payment dispute, aggressive language or special request outside the system is detected, the conversation is automatically directed to staff.',
   },
   {
     id: 'faq-language',
     tag: 'Dil',
     question: 'Can the agent respond in multiple languages?',
-    answer: 'Evet. Müşterinin mesaj dilini algılar ve desteklenen diller arasından uygun dilde yanıt verir.',
+    answer: 'Yes. It detects the customer\'s message language and responds in the appropriate language among the supported languages.',
   },
   {
     id: 'faq-training',
     tag: 'Setup',
     question: 'Yanıtlar salonumuza göre nasıl özelleştirilir?',
-    answer: 'Salon bilgileri, hizmetler ve uzman listesi güncel tutulduğunda, ajan sistem komutuna dayanarak bu verileri kullanarak bir yanıt üretir.',
+    answer: 'When the salon information, services and expert list are kept up to date, the agent produces a response using this data based on the system prompt.',
   },
 ];
 
@@ -55,7 +55,7 @@ export function WhatsAppAgentFaq({ onGeri }: WhatsAppAgentFaqProps) {
           <span className="text-sm">Geri</span>
         </button>
         <h1 className="text-xl font-semibold">Standart SSS</h1>
-        <p className="text-xs text-muted-foreground mt-1">Ajan varsayılan bilgi tabanı</p>
+        <p className="text-xs text-muted-foreground mt-1">Agent default knowledge base</p>
       </div>
 
       <div className="p-4">

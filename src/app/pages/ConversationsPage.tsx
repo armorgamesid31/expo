@@ -83,7 +83,7 @@ interface ChannelHealthPayload {
 function formatTs(value: string): string {
   const dt = new Date(value);
   if (Number.isNaN(dt.getTime())) return value;
-  return dt.toLocaleString('tr-TR', {
+  return dt.toLocaleString('en-GB', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -93,10 +93,10 @@ function formatTs(value: string): string {
 
 function getPreview(item: ConversationItem): string {
   if (item.lastMessageText && item.lastMessageText.trim()) return item.lastMessageText.trim();
-  if (item.lastMessageType === 'image') return '[Görsel]';
-  if (item.lastMessageType === 'audio') return '[Ses]';
+  if (item.lastMessageType === 'image') return '[Image]';
+  if (item.lastMessageType === 'audio') return '[Audio]';
   if (item.lastMessageType === 'video') return '[Video]';
-  if (item.lastMessageType === 'handover_request') return '[Temsilci Devri İstendi]';
+  if (item.lastMessageType === 'handover_request') return '[Handover Requested]';
   return `[${item.lastMessageType}]`;
 }
 
@@ -107,11 +107,11 @@ function formatRelativeTime(value: string): string {
   const diffMs = now - dt.getTime();
   const diffMin = Math.floor(diffMs / 60000);
   if (diffMin < 1) return 'şimdi';
-  if (diffMin < 60) return `${diffMin}m`;
+  if (diffMin < 60) return `${diffMin}dk`;
   const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}h`;
+  if (diffHour < 24) return `${diffHour}sa`;
   const diffDay = Math.floor(diffHour / 24);
-  if (diffDay < 7) return `${diffDay}d`;
+  if (diffDay < 7) return `${diffDay}g`;
   return formatTs(value);
 }
 
@@ -131,13 +131,13 @@ function conversationDisplayName(item: Pick<ConversationItem, 'customerName' | '
   if (item.customerName && item.customerName.trim()) return item.customerName.trim();
   const username = normalizeUsername(item.profileUsername);
   if (username) return `@${username}`;
-  return `Kullanıcı ${item.conversationKey}`;
+  return `User ${item.conversationKey}`;
 }
 
 function initialsFromLabel(value: string): string {
   const cleaned = value.
-  replace(/^@/, '').
-  trim();
+    replace(/^@/, '').
+    trim();
   if (!cleaned) return 'U';
   const parts = cleaned.split(/\s+/).filter(Boolean);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
@@ -150,12 +150,11 @@ function badgeClass(channel: ChannelType): string {
 
 function normalizeAutomationMode(value: unknown): AutomationMode {
   if (
-  value === 'AUTO' ||
-  value === 'HUMAN_PENDING' ||
-  value === 'HUMAN_ACTIVE' ||
-  value === 'MANUAL_ALWAYS' ||
-  value === 'AUTO_RESUME_PENDING')
-  {
+    value === 'AUTO' ||
+    value === 'HUMAN_PENDING' ||
+    value === 'HUMAN_ACTIVE' ||
+    value === 'MANUAL_ALWAYS' ||
+    value === 'AUTO_RESUME_PENDING') {
     return value;
   }
   return 'AUTO';
@@ -170,11 +169,11 @@ function automationBadgeClass(mode: AutomationMode): string {
 }
 
 function automationLabel(mode: AutomationMode): string {
-  if (mode === 'HUMAN_PENDING') return 'İnsan Bekleniyor';
-  if (mode === 'HUMAN_ACTIVE') return "Human Aktif";
+  if (mode === 'HUMAN_PENDING') return 'İnsan Beklemede';
+  if (mode === 'HUMAN_ACTIVE') return "İnsan Aktif";
   if (mode === 'MANUAL_ALWAYS') return 'Her Zaman Manuel';
   if (mode === 'AUTO_RESUME_PENDING') return 'Otomatik Devam';
-  return 'Auto';
+  return 'Otomatik';
 }
 
 function isHandoverInProgress(mode: AutomationMode): boolean {
@@ -182,9 +181,9 @@ function isHandoverInProgress(mode: AutomationMode): boolean {
 }
 
 function findRelatedConversationKeys(
-items: ConversationItem[],
-selected: {channel: ChannelType;conversationKey: string;})
-: Array<{channel: ChannelType;conversationKey: string;}> {
+  items: ConversationItem[],
+  selected: { channel: ChannelType; conversationKey: string; })
+  : Array<{ channel: ChannelType; conversationKey: string; }> {
   const selectedItem = items.find(
     (item) => item.channel === selected.channel && item.conversationKey === selected.conversationKey
   );
@@ -195,9 +194,9 @@ selected: {channel: ChannelType;conversationKey: string;})
   const selectedUsername = normalizeUsername(selectedItem.profileUsername);
   const selectedName = normalizeName(selectedItem.customerName);
   const selectedLinkedId =
-  typeof selectedItem.linkedCustomerId === 'number' && selectedItem.linkedCustomerId > 0 ?
-  selectedItem.linkedCustomerId :
-  null;
+    typeof selectedItem.linkedCustomerId === 'number' && selectedItem.linkedCustomerId > 0 ?
+      selectedItem.linkedCustomerId :
+      null;
 
   const related = items.filter((item) => {
     if (item.channel !== 'INSTAGRAM') return false;
@@ -218,25 +217,25 @@ selected: {channel: ChannelType;conversationKey: string;})
   return Array.from(
     new Map(
       related.
-      sort((a, b) => {
-        if (a.conversationKey === selected.conversationKey) return -1;
-        if (b.conversationKey === selected.conversationKey) return 1;
-        return (b.messageCount || 0) - (a.messageCount || 0);
-      }).
-      map((item) => [`${item.channel}:${item.conversationKey}`, { channel: item.channel, conversationKey: item.conversationKey }])
+        sort((a, b) => {
+          if (a.conversationKey === selected.conversationKey) return -1;
+          if (b.conversationKey === selected.conversationKey) return 1;
+          return (b.messageCount || 0) - (a.messageCount || 0);
+        }).
+        map((item) => [`${item.channel}:${item.conversationKey}`, { channel: item.channel, conversationKey: item.conversationKey }])
     ).values()
   );
 }
 
-function mergeAndSortMessages(responses: Array<{items: MessageItem[];} | null | undefined>): MessageItem[] {
+function mergeAndSortMessages(responses: Array<{ items: MessageItem[]; } | null | undefined>): MessageItem[] {
   const merged = new Map<string, MessageItem>();
   for (const response of responses) {
     const items = response?.items || [];
     for (const msg of items) {
       const providerId = typeof msg.providerMessageId === 'string' ? msg.providerMessageId.trim() : '';
       const fingerprint = providerId ?
-      `provider:${providerId}` :
-      `fallback:${msg.direction}|${msg.messageType}|${msg.eventTimestamp}|${msg.text || ''}`;
+        `provider:${providerId}` :
+        `fallback:${msg.direction}|${msg.messageType}|${msg.eventTimestamp}|${msg.text || ''}`;
       if (!merged.has(fingerprint)) merged.set(fingerprint, msg);
     }
   }
@@ -281,19 +280,19 @@ export function ConversationsPage() {
     const query = searchQuery.trim().toLowerCase();
     return conversations.filter((item) => {
       const matchesFilter =
-      quickFilter === 'all' ||
-      quickFilter === 'unread' && item.unreadCount > 0 ||
-      quickFilter === 'handover' && isHandoverInProgress(normalizeAutomationMode(item.automationMode));
+        quickFilter === 'all' ||
+        quickFilter === 'unread' && item.unreadCount > 0 ||
+        quickFilter === 'handover' && isHandoverInProgress(normalizeAutomationMode(item.automationMode));
       if (!matchesFilter) return false;
       if (!query) return true;
       const haystack = [
-      conversationDisplayName(item),
-      item.profileUsername || '',
-      item.lastMessageText || '',
-      item.conversationKey].
+        conversationDisplayName(item),
+        item.profileUsername || '',
+        item.lastMessageText || '',
+        item.conversationKey].
 
-      join(' ').
-      toLowerCase();
+        join(' ').
+        toLowerCase();
       return haystack.includes(query);
     });
   }, [conversations, quickFilter, searchQuery]);
@@ -315,8 +314,8 @@ export function ConversationsPage() {
     }
 
     const isSelectedVisible =
-    !!selectedConversationId &&
-    filteredKonuşmalar.some((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId);
+      !!selectedConversationId &&
+      filteredKonuşmalar.some((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId);
 
     if (!isSelectedVisible) {
       const nextId = `${filteredKonuşmalar[0].channel}:${filteredKonuşmalar[0].conversationKey}`;
@@ -333,7 +332,7 @@ export function ConversationsPage() {
     if (showLoading) setLoadingKonuşmalar(true);
     setError(null);
     try {
-      const response = await apiFetch<{items: ConversationItem[];channelHealth?: ChannelHealthPayload;}>(
+      const response = await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
         `/api/admin/conversations?limit=60&channel=${channelView}`
       );
       const next = response?.items || [];
@@ -359,9 +358,9 @@ export function ConversationsPage() {
       const relatedKeys = findRelatedConversationKeys(conversationsRef.current, { channel, conversationKey }).slice(0, 5);
       const responses = await Promise.all(
         relatedKeys.map((item) =>
-        apiFetch<{items: MessageItem[];conversationState?: ConversationStatePayload;}>(
-          `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`
-        )
+          apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
+            `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`
+          )
         )
       );
       const response = responses[0];
@@ -369,15 +368,15 @@ export function ConversationsPage() {
       if (response?.conversationState) {
         const patch = response.conversationState;
         setKonuşmalar((prev) =>
-        prev.map((item) =>
-        item.channel === channel && item.conversationKey === conversationKey ?
-        {
-          ...item,
-          ...patch,
-          automationMode: normalizeAutomationMode(patch.automationMode || item.automationMode)
-        } :
-        item
-        )
+          prev.map((item) =>
+            item.channel === channel && item.conversationKey === conversationKey ?
+              {
+                ...item,
+                ...patch,
+                automationMode: normalizeAutomationMode(patch.automationMode || item.automationMode)
+              } :
+              item
+          )
         );
       }
     } catch (err: any) {
@@ -416,9 +415,9 @@ export function ConversationsPage() {
     if (!accessToken) return;
 
     const streamUrl =
-    `${API_BASE_URL}/api/admin/conversations/stream` +
-    `?authToken=${encodeURIComponent(accessToken)}` +
-    `&channel=${encodeURIComponent(channelView)}`;
+      `${API_BASE_URL}/api/admin/conversations/stream` +
+      `?authToken=${encodeURIComponent(accessToken)}` +
+      `&channel=${encodeURIComponent(channelView)}`;
     const es = new EventSource(streamUrl);
 
     const scheduleRefresh = () => {
@@ -479,18 +478,18 @@ export function ConversationsPage() {
     setActionInfo(null);
     setError(null);
     try {
-      const response = await apiFetch<{alreadyRequested?: boolean;}>(
+      const response = await apiFetch<{ alreadyRequested?: boolean; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/handover`,
         {
           method: 'POST',
           body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' })
         }
       );
-      setActionInfo(response?.alreadyRequested ? 'Bu konuşma zaten bir temsilci tarafından devralınmış.' : 'Temsilciye devretme talebi oluşturuldu.');
+      setActionInfo(response?.alreadyRequested ? 'Bu konuşma zaten insan devrinde.' : 'Devir isteği oluşturuldu.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
       await loadKonuşmalar();
     } catch (err: any) {
-      setError(err?.message || 'Temsilciye devretme talebi başarısız oldu.');
+      setError(err?.message || 'Devir isteği başarısız oldu.');
     } finally {
       setSendingHandover(false);
     }
@@ -506,11 +505,11 @@ export function ConversationsPage() {
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/resume-auto`,
         { method: 'POST' }
       );
-      setActionInfo('Bu konuşmada yapay zeka otomasyonu yeniden başlatıldı.');
+      setActionInfo('Yapay zeka otomasyonu bu konuşma için devam ettirildi.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
       await loadKonuşmalar();
     } catch (err: any) {
-      setError(err?.message || 'Devralma işlemi başarısız oldu.');
+      setError(err?.message || 'Devam etme işlemi başarısız oldu.');
     } finally {
       setSendingResume(false);
     }
@@ -521,13 +520,13 @@ export function ConversationsPage() {
   const handoverInProgress = isHandoverInProgress(selectedMode);
   const unreadTotal = filteredKonuşmalar.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
   const handoverTotal = filteredKonuşmalar.filter((item) =>
-  isHandoverInProgress(normalizeAutomationMode(item.automationMode))
+    isHandoverInProgress(normalizeAutomationMode(item.automationMode))
   ).length;
   const selectedChannelHealth = channelView === 'INSTAGRAM' ? channelHealth?.instagram : channelHealth?.whatsapp;
   const channelBlocked =
-  channelView === 'INSTAGRAM' ?
-  !(channelHealth?.instagram?.connected && channelHealth?.instagram?.bindingReady) :
-  !channelHealth?.whatsapp?.connected;
+    channelView === 'INSTAGRAM' ?
+      !(channelHealth?.instagram?.connected && channelHealth?.instagram?.bindingReady) :
+      !channelHealth?.whatsapp?.connected;
 
   useEffect(() => {
     if (!channelBlocked) return;
@@ -555,78 +554,75 @@ export function ConversationsPage() {
               setSearchQuery('');
               setQuickFilter('all');
             }}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-            channelView === 'INSTAGRAM' ? 'bg-[var(--deep-indigo)] text-white' : 'text-muted-foreground'}`
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${channelView === 'INSTAGRAM' ? 'bg-[var(--deep-indigo)] text-white' : 'text-muted-foreground'}`
             }>
-            
+
             Instagram
           </button>
           {SHOW_WHATSAPP_INBOX ?
-          <button
-            type="button"
-            onClick={() => {
-              setChannelView('WHATSAPP');
-              setSelectedConversationId(null);
-              setMessages([]);
-              setSearchQuery('');
-              setQuickFilter('all');
-            }}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-            channelView === 'WHATSAPP' ? 'bg-emerald-600 text-white' : 'text-muted-foreground'}`
-            }>
-            
+            <button
+              type="button"
+              onClick={() => {
+                setChannelView('WHATSAPP');
+                setSelectedConversationId(null);
+                setMessages([]);
+                setSearchQuery('');
+                setQuickFilter('all');
+              }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${channelView === 'WHATSAPP' ? 'bg-emerald-600 text-white' : 'text-muted-foreground'}`
+              }>
+
               WhatsApp
             </button> :
-          null}
+            null}
         </div>
 
         <div className="inline-flex rounded-xl border border-border bg-card p-1">
           {(['all', 'unread', 'handover'] as QuickFilter[]).map((filter) =>
-          <button
-            key={filter}
-            type="button"
-            onClick={() => setQuickFilter(filter)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-            quickFilter === filter ? 'bg-muted text-foreground' : 'text-muted-foreground'}`
-            }>
-            
-              {filter === 'all' ? 'Hepsi' : filter === 'unread' ? 'Okunmamış' : 'Temsilci'}
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setQuickFilter(filter)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${quickFilter === filter ? 'bg-muted text-foreground' : 'text-muted-foreground'}`
+              }>
+
+              {filter === 'all' ? 'Hepsi' : filter === 'unread' ? 'Okunmamış' : 'İnsan Devri'}
             </button>
           )}
         </div>
       </div>
 
       {channelBlocked ?
-      <div className="rounded-2xl border border-border bg-background p-6">
+        <div className="rounded-2xl border border-border bg-background p-6">
           <p className="text-base font-semibold">
-            {channelView === 'INSTAGRAM' ? "Instagram bağlantısı gerekli" : "WhatsApp bağlantısı gerekli"}
+            {channelView === 'INSTAGRAM' ? "Instagram bağlantısi gerekli" : "WhatsApp bağlantısi gerekli"}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             {selectedChannelHealth?.message || "Bu kanal için sohbetleri görmek önce bağlantı kurulmasını gerektirir."}
           </p>
           {selectedChannelHealth?.missingRequirements?.length ?
-        <div className="mt-3 text-xs text-muted-foreground">
-              Eksikler: {selectedChannelHealth.missingRequirements.join(', ')}
+            <div className="mt-3 text-xs text-muted-foreground">
+              Eksıkler: {selectedChannelHealth.missingRequirements.join(', ')}
             </div> :
-        null}
+            null}
           <Button
-          type="button"
-          className="mt-4"
-          onClick={() =>
-          navigate(channelView === 'INSTAGRAM' ? '/app/features/meta-direct' : '/app/features/whatsapp-settings', {
-            state: { navDirection: 'forward' }
-          })
-          }>
-          
+            type="button"
+            className="mt-4"
+            onClick={() =>
+              navigate('/app/features/social-channels', {
+                state: { navDirection: 'forward' }
+              })
+            }>
+
             {channelView === 'INSTAGRAM' ? "Instagram Ayarları" : "WhatsApp Ayarları"}
           </Button>
         </div> :
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px,1fr]">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px,1fr]">
           <div className="rounded-2xl border border-border bg-background p-3 space-y-3">
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
-                <p className="text-[10px] uppercase text-muted-foreground">Sohbetler</p>
+                <p className="text-[10px] uppercase text-muted-foreground">Konuşmalar</p>
                 <p className="text-base font-semibold leading-tight">{filteredKonuşmalar.length}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
@@ -634,7 +630,7 @@ export function ConversationsPage() {
                 <p className="text-base font-semibold leading-tight">{unreadTotal}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
-                <p className="text-[10px] uppercase text-muted-foreground">Temsilci</p>
+                <p className="text-[10px] uppercase text-muted-foreground">İnsan Devri</p>
                 <p className="text-base font-semibold leading-tight">{handoverTotal}</p>
               </div>
             </div>
@@ -642,90 +638,88 @@ export function ConversationsPage() {
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Ad, kullanıcı adı, mesaj ara"
-              className="pl-9" />
-            
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Ad, kullanıcı adı, mesaj ara"
+                className="pl-9" />
+
             </div>
 
             {loadingKonuşmalar ?
-          <div className="grid place-items-center py-10 text-muted-foreground">
+              <div className="grid place-items-center py-10 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div> :
-          filteredKonuşmalar.length === 0 ?
-          <p className="py-8 text-center text-xs text-muted-foreground">
-                {selectedChannelHealth ? "Bağlı kanalda henüz konuşma yok." : "Bu filtreye uygun konuşma yok."}
-              </p> :
+              filteredKonuşmalar.length === 0 ?
+                <p className="py-8 text-center text-xs text-muted-foreground">
+                  {selectedChannelHealth ? "Bağlı kanalda henuz konuşma yok." : "Bu filtreye uygun konuşma yok."}
+                </p> :
 
-          <div className="max-h-[66vh] space-y-2 overflow-y-auto pr-1">
-                {filteredKonuşmalar.map((item) => {
-              const id = `${item.channel}:${item.conversationKey}`;
-              const active = id === selectedConversationId;
-              const displayName = conversationDisplayName(item);
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setSelectedConversationId(id)}
-                  className={`w-full rounded-xl border p-3 text-left transition ${
-                  active ? 'border-[var(--deep-indigo)]/50 bg-[var(--deep-indigo)]/8' : 'border-border/70 hover:bg-muted/40'}`
-                  }>
-                  
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex items-center gap-2">
-                          <Avatar className="size-9 border border-border/60">
-                            {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
-                            <AvatarFallback className="text-[10px]">{initialsFromLabel(displayName)}</AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold">{displayName}</p>
-                            <p className="truncate text-[11px] text-muted-foreground">{item.profileUsername ? `@${normalizeUsername(item.profileUsername)}` : item.conversationKey}</p>
+                <div className="max-h-[66vh] space-y-2 overflow-y-auto pr-1">
+                  {filteredKonuşmalar.map((item) => {
+                    const id = `${item.channel}:${item.conversationKey}`;
+                    const active = id === selectedConversationId;
+                    const displayName = conversationDisplayName(item);
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setSelectedConversationId(id)}
+                        className={`w-full rounded-xl border p-3 text-left transition ${active ? 'border-[var(--deep-indigo)]/50 bg-[var(--deep-indigo)]/8' : 'border-border/70 hover:bg-muted/40'}`
+                        }>
+
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex items-center gap-2">
+                            <Avatar className="size-9 border border-border/60">
+                              {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
+                              <AvatarFallback className="text-[10px]">{initialsFromLabel(displayName)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold">{displayName}</p>
+                              <p className="truncate text-[11px] text-muted-foreground">{item.profileUsername ? `@${normalizeUsername(item.profileUsername)}` : item.conversationKey}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[11px] text-muted-foreground">{formatRelativeTime(item.lastEventTimestamp)}</p>
+                            {item.unreadCount > 0 ?
+                              <span className="mt-1 inline-flex rounded-full bg-[var(--rose-gold)]/12 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--rose-gold)]">
+                                {item.unreadCount}
+                              </span> :
+                              null}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-[11px] text-muted-foreground">{formatRelativeTime(item.lastEventTimestamp)}</p>
-                          {item.unreadCount > 0 ?
-                      <span className="mt-1 inline-flex rounded-full bg-[var(--rose-gold)]/12 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--rose-gold)]">
-                              {item.unreadCount}
-                            </span> :
-                      null}
+
+                        <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">{getPreview(item)}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-1">
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] ${badgeClass(item.channel)}`}>{item.channel}</span>
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
+                            {automationLabel(normalizeAutomationMode(item.automationMode))}
+                          </span>
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-[10px] ${item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
+                            }>
+
+                            {item.identityLinked ? 'Bağlı' : 'Bağlı Değil'}
+                          </span>
                         </div>
-                      </div>
+                      </button>);
 
-                      <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">{getPreview(item)}</p>
-                      <div className="mt-2 flex flex-wrap items-center gap-1">
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] ${badgeClass(item.channel)}`}>{item.channel}</span>
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
-                          {automationLabel(normalizeAutomationMode(item.automationMode))}
-                        </span>
-                        <span
-                      className={`rounded px-1.5 py-0.5 text-[10px] ${
-                      item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
-                      }>
-                      
-                          {item.identityLinked ? 'Bağlı' : 'Bağlı Değil'}
-                        </span>
-                      </div>
-                    </button>);
-
-            })}
-              </div>
-          }
+                  })}
+                </div>
+            }
           </div>
 
           <div className="rounded-2xl border border-border bg-background p-3 space-y-3">
             {selectedConversation ?
-          <>
+              <>
                 <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 pb-3">
                   <div className="min-w-0 flex items-center gap-3">
                     <Avatar className="size-10 border border-border/60">
                       {selectedConversation.profilePicUrl ?
-                  <AvatarImage
-                    src={selectedConversation.profilePicUrl}
-                    alt={conversationDisplayName(selectedConversation)} /> :
+                        <AvatarImage
+                          src={selectedConversation.profilePicUrl}
+                          alt={conversationDisplayName(selectedConversation)} /> :
 
-                  null}
+                        null}
                       <AvatarFallback className="text-xs">
                         {initialsFromLabel(conversationDisplayName(selectedConversation))}
                       </AvatarFallback>
@@ -738,127 +732,125 @@ export function ConversationsPage() {
                         {selectedConversation.channel} • {selectedConversation.conversationKey}
                       </p>
                       {(() => {
-                    const username = normalizeUsername(selectedConversation.profileUsername);
-                    return username ?
-                    <p className="text-[10px] text-muted-foreground truncate">@{username}</p> :
-                    null;
-                  })()}
+                        const username = normalizeUsername(selectedConversation.profileUsername);
+                        return username ?
+                          <p className="text-[10px] text-muted-foreground truncate">@{username}</p> :
+                          null;
+                      })()}
                       <div className="mt-1 flex flex-wrap items-center gap-1">
                         <span className={`rounded px-1.5 py-0.5 text-[10px] ${automationBadgeClass(selectedMode)}`}>
                           {automationLabel(selectedMode)}
                         </span>
                         <span
-                      className={`rounded px-1.5 py-0.5 text-[10px] ${
-                      selectedConversation.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
-                      }>
-                      
-                          {selectedConversation.identityLinked ? 'Bağlı profil' : 'Bağlı değil'}
+                          className={`rounded px-1.5 py-0.5 text-[10px] ${selectedConversation.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
+                          }>
+
+                          {selectedConversation.identityLinked ? 'Profil bağlı' : 'Bağlı değil'}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {handoverInProgress ?
-                <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
-                        {sendingResume ? 'Devam ediliyor...' : 'AI\'yı Yeniden Başlat'}
+                      <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
+                        {sendingResume ? 'Devam ettiriliyor...' : "YZ'yi Devam Ettir"}
                       </Button> :
-                null}
+                      null}
                     <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
-                      {sendingHandover ? 'Talep ediliyor...' : handoverInProgress ? "Handover Aktif" : 'Temsilciye Aktar'}
+                      {sendingHandover ? 'İsteniyor...' : handoverInProgress ? "Devir Aktif" : 'İnsan Devri İste'}
                     </Button>
                   </div>
                 </div>
 
                 <div
-              ref={messagesViewportRef}
-              onScroll={(event) => {
-                const el = event.currentTarget;
-                const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-                stickToBottomRef.current = distanceToBottom < 48;
-              }}
-              className="max-h-[56vh] space-y-2 overflow-y-auto rounded-xl border border-border/70 bg-muted/20 p-3">
-              
+                  ref={messagesViewportRef}
+                  onScroll={(event) => {
+                    const el = event.currentTarget;
+                    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+                    stickToBottomRef.current = distanceToBottom < 48;
+                  }}
+                  className="max-h-[56vh] space-y-2 overflow-y-auto rounded-xl border border-border/70 bg-muted/20 p-3">
+
                   {loadingMessages ?
-              <div className="py-6 grid place-items-center text-muted-foreground">
+                    <div className="py-6 grid place-items-center text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
                     </div> :
-              messages.length === 0 ?
-              <p className="text-xs text-muted-foreground">Bu konuşmada mesaj yok.</p> :
+                    messages.length === 0 ?
+                      <p className="text-xs text-muted-foreground">Bu konuşmada mesaj yok.</p> :
 
-              messages.map((msg) => {
-                const isOutbound = msg.direction === 'outbound';
-                const isSystem = msg.direction === 'system';
-                const senderLabel = isSystem ?
-                'Sistem' :
-                isOutbound ?
-                msg.outboundSourceLabel || 'Salon' :
-                "Müşteri";
-                return (
-                  <div
-                    key={msg.id}
-                    className={`max-w-[90%] rounded-lg border px-3 py-2 text-sm ${
-                    isSystem ?
-                    'bg-amber-50 border-amber-200 text-amber-900 mx-auto' :
-                    isOutbound ?
-                    'bg-[var(--deep-indigo)]/8 border-[var(--deep-indigo)]/20 ml-auto' :
-                    'bg-background border-border'}`
-                    }>
-                    
-                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
-                            {isSystem ? <AlertTriangle className="w-3 h-3" /> : isOutbound ? <Send className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
-                            <span>{senderLabel}</span>
-                            <span>•</span>
-                            <span>{formatTs(msg.eventTimestamp)}</span>
-                          </div>
-                          <p className="whitespace-pre-wrap break-words">{msg.text || `[${msg.messageType}]`}</p>
-                        </div>);
+                      messages.map((msg) => {
+                        const isOutbound = msg.direction === 'outbound';
+                        const isSystem = msg.direction === 'system';
+                        const senderLabel = isSystem ?
+                          'Sistem' :
+                          isOutbound ?
+                            msg.outboundSourceLabel || 'Salon' :
+                            "Müşteri";
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`max-w-[90%] rounded-lg border px-3 py-2 text-sm ${isSystem ?
+                                'bg-amber-50 border-amber-200 text-amber-900 mx-auto' :
+                                isOutbound ?
+                                  'bg-[var(--deep-indigo)]/8 border-[var(--deep-indigo)]/20 ml-auto' :
+                                  'bg-background border-border'}`
+                            }>
 
-              })
-              }
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
+                              {isSystem ? <AlertTriangle className="w-3 h-3" /> : isOutbound ? <Send className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
+                              <span>{senderLabel}</span>
+                              <span>•</span>
+                              <span>{formatTs(msg.eventTimestamp)}</span>
+                            </div>
+                            <p className="whitespace-pre-wrap break-words">{msg.text || `[${msg.messageType}]`}</p>
+                          </div>);
+
+                      })
+                  }
                 </div>
 
                 <div className="rounded-xl border border-border/70 bg-background p-2">
                   <div className="flex gap-2">
                     <Input
-                  value={replyText}
-                  onChange={(event) => setReplyText(event.target.value)}
-                  placeholder={canReply ? "Manuel yanıt yaz" : "Manuel yanıt yalnızca Instagram için kullanılabilir"}
-                  disabled={!canReply}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      if (canReply) void sendReply();
-                    }
-                  }} />
-                
+                      value={replyText}
+                      onChange={(event) => setReplyText(event.target.value)}
+                      placeholder={canReply ? "Manuel yanıt yaz" : "Manuel yanıt yalnızca Instagram için kullanılabilir"}
+                      disabled={!canReply}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' && !event.shiftKey) {
+                          event.preventDefault();
+                          if (canReply) void sendReply();
+                        }
+                      }} />
+
                     <Button type="button" onClick={sendReply} disabled={sendingReply || !replyText.trim() || !canReply}>
                       {sendingReply ? "Gönderiliyor..." : "Gönder"}
                     </Button>
                   </div>
                   {!canReply ?
-              <p className="mt-2 text-[11px] text-muted-foreground">
+                    <p className="mt-2 text-[11px] text-muted-foreground">
                       WhatsApp için manuel cevap su an kapalı. Handover ile AI akışını kontrol edebilirsin.
                     </p> :
-              null}
+                    null}
                 </div>
               </> :
 
-          <div className="py-12 text-center text-muted-foreground">
+              <div className="py-12 text-center text-muted-foreground">
                 <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-60" />
                 <p className="text-sm">Mesajları görmek için bir konuşma seçin.</p>
               </div>
-          }
+            }
 
             {actionInfo ?
-          <div className="rounded-lg border border-green-200 bg-green-50 text-green-800 px-3 py-2 text-xs flex items-center gap-2">
+              <div className="rounded-lg border border-green-200 bg-green-50 text-green-800 px-3 py-2 text-xs flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{actionInfo}</span>
               </div> :
-          null}
+              null}
 
             {error ?
-          <div className="rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2 text-xs">{error}</div> :
-          null}
+              <div className="rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2 text-xs">{error}</div> :
+              null}
           </div>
         </div>
       }

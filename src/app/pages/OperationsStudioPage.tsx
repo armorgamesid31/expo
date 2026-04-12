@@ -17,7 +17,7 @@ export function OperationsStudioPage() {
       <div className="p-4">
         <h1 className="text-2xl font-semibold">Operasyon Stüdyosu</h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Operasyon araçlarını açmak için yetkiniz bulunmamaktadır.
+          You do not have permission to open operations tools.
         </p>
       </div>);
 
@@ -32,11 +32,11 @@ export function OperationsStudioPage() {
 
       <div className="space-y-3">
         {canCustomers ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/customers', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/customers', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
@@ -50,14 +50,14 @@ export function OperationsStudioPage() {
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
 
         {canServices ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/services', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/services', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/15 grid place-items-center">
@@ -71,14 +71,14 @@ export function OperationsStudioPage() {
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
 
         {canPackages ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/packages', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/packages', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
@@ -86,20 +86,20 @@ export function OperationsStudioPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Paket Yönetimi</p>
-                  <p className="text-xs text-muted-foreground">Şablonlar, kotalar ve müşteri paket bakiyeleri</p>
+                  <p className="text-xs text-muted-foreground">Templates, quotas, and customer package balances</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
 
         {canInventory ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/inventory', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/inventory', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/15 grid place-items-center">
@@ -107,20 +107,20 @@ export function OperationsStudioPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Envanter</p>
-                  <p className="text-xs text-muted-foreground">Stok kalemleri, hareketler ve düzenlemeler</p>
+                  <p className="text-xs text-muted-foreground">Stock items, movements, and adjustments</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
 
         {canImports ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/data-import', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/data-import', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
@@ -134,7 +134,7 @@ export function OperationsStudioPage() {
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
       </div>
     </div>);
 

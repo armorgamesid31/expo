@@ -34,7 +34,7 @@ interface CategoryItem {
   sequentialRequired: boolean | null;
   bufferMinutes: number | null;
   marketingDescription?: string | null;
-  commonQuestions?: Array<{question: string;answer: string;}> | null;
+  commonQuestions?: Array<{ question: string; answer: string; }> | null;
   serviceCount: number;
   isActive?: boolean | null;
 }
@@ -71,22 +71,20 @@ function ToggleSwitch({
 
 
 
-}: {checked: boolean;onChange: (next: boolean) => void;}) {
+}: { checked: boolean; onChange: (next: boolean) => void; }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors ${
-      checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'}`
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors ${checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'}`
       }>
-      
+
       <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-        checked ? 'translate-x-5' : 'translate-x-0.5'}`
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`
         } />
-      
+
     </button>);
 
 }
@@ -99,7 +97,7 @@ function StatusToggleChip({
 
 
 
-}: {active: boolean;onToggle: (next: boolean) => void;className?: string;}) {
+}: { active: boolean; onToggle: (next: boolean) => void; className?: string; }) {
   return (
     <button
       type="button"
@@ -107,15 +105,12 @@ function StatusToggleChip({
       aria-checked={active}
       aria-label={active ? 'Durumu pasif yap' : 'Durumu aktif yap'}
       onClick={() => onToggle(!active)}
-      className={`relative inline-flex h-7 w-12 items-center rounded-full border p-0.5 transition-colors ${
-      active ? 'border-emerald-500 bg-emerald-300' : 'border-zinc-300 bg-zinc-200'} ${
-      className}`}>
-      
+      className={`relative inline-flex h-7 w-12 items-center rounded-full border p-0.5 transition-colors ${active ? 'border-emerald-500 bg-emerald-300' : 'border-zinc-300 bg-zinc-200'} ${className}`}>
+
       <span
-        className={`inline-block h-6 w-6 rounded-full border border-zinc-300 bg-white shadow-sm transition-transform ${
-        active ? 'translate-x-5' : 'translate-x-0'}`
+        className={`inline-block h-6 w-6 rounded-full border border-zinc-300 bg-white shadow-sm transition-transform ${active ? 'translate-x-5' : 'translate-x-0'}`
         } />
-      
+
     </button>);
 
 }
@@ -127,17 +122,17 @@ function clampInt(value: number, min: number, max: number) {
 function normalizeCommonQuestions(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value.
-  map((item: any) => ({
-    question: typeof item?.question === 'string' ? item.question.trim() : '',
-    answer: typeof item?.answer === 'string' ? item.answer.trim() : ''
-  })).
-  filter((item: any) => item.question || item.answer);
+    map((item: any) => ({
+      question: typeof item?.question === 'string' ? item.question.trim() : '',
+      answer: typeof item?.answer === 'string' ? item.answer.trim() : ''
+    })).
+    filter((item: any) => item.question || item.answer);
 }
 
 function formatGenderLabel(genders?: string[] | null) {
   const normalized = (genders || []).
-  map((item) => String(item).toLowerCase().trim()).
-  filter((item) => item === 'female' || item === 'male' || item === 'other');
+    map((item) => String(item).toLowerCase().trim()).
+    filter((item) => item === 'female' || item === 'male' || item === 'other');
   if (normalized.length === 0) {
     return 'Kadın • Erkek';
   }
@@ -193,7 +188,7 @@ export function ServicesCrudPage() {
     sequentialRequired: false,
     bufferMinutes: '0'
   });
-  const [categoryQuestions, setCategoryQuestions] = useState<Array<{question: string;answer: string;}>>([]);
+  const [categoryQuestions, setCategoryQuestions] = useState<Array<{ question: string; answer: string; }>>([]);
   const [categoryCapacityEnabled, setCategoryCapacityEnabled] = useState(true);
   const [categoryBufferEnabled, setCategoryBufferEnabled] = useState(true);
 
@@ -210,9 +205,9 @@ export function ServicesCrudPage() {
     setError(null);
     try {
       const [servicesRes, categoriesRes, groupsRes] = await Promise.all([
-      apiFetch<{items: ServiceItem[];}>('/api/admin/services'),
-      apiFetch<{items: CategoryItem[];}>('/api/admin/service-categories'),
-      apiFetch<{items: ServiceGroupItem[];}>('/api/admin/service-groups')]
+        apiFetch<{ items: ServiceItem[]; }>('/api/admin/services'),
+        apiFetch<{ items: CategoryItem[]; }>('/api/admin/service-categories'),
+        apiFetch<{ items: ServiceGroupItem[]; }>('/api/admin/service-groups')]
       );
 
       const sortedCategories = [...(categoriesRes.items || [])].sort(
@@ -317,15 +312,15 @@ export function ServicesCrudPage() {
       price: String(item.price || 0),
       requiresSpecialist: Boolean(item.requiresSpecialist),
       genderFemale: item.genders?.length ?
-      item.genders.some((gender) => String(gender).toLowerCase().trim() === 'female') :
-      true,
+        item.genders.some((gender) => String(gender).toLowerCase().trim() === 'female') :
+        true,
       genderMale: item.genders?.length ?
-      item.genders.some((gender) => String(gender).toLowerCase().trim() === 'male') :
-      true,
+        item.genders.some((gender) => String(gender).toLowerCase().trim() === 'male') :
+        true,
       capacityOverride:
-      item.capacityOverride === null || item.capacityOverride === undefined ? '' : String(item.capacityOverride),
+        item.capacityOverride === null || item.capacityOverride === undefined ? '' : String(item.capacityOverride),
       preparationMinutes:
-      item.bufferOverride === null || item.bufferOverride === undefined ? '' : String(item.bufferOverride),
+        item.bufferOverride === null || item.bufferOverride === undefined ? '' : String(item.bufferOverride),
       isActive: item.isActive !== false
     });
     setServiceDialogOpen(true);
@@ -417,13 +412,13 @@ export function ServicesCrudPage() {
 
     try {
       if (editingService) {
-        const response = await apiFetch<{item: ServiceItem;}>(`/api/admin/services/${editingService.id}`, {
+        const response = await apiFetch<{ item: ServiceItem; }>(`/api/admin/services/${editingService.id}`, {
           method: 'PUT',
           body: JSON.stringify(payload)
         });
         setServices((prev) => prev.map((item) => item.id === editingService.id ? response.item : item));
       } else {
-        const response = await apiFetch<{item: ServiceItem;}>('/api/admin/services', {
+        const response = await apiFetch<{ item: ServiceItem; }>('/api/admin/services', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
@@ -433,9 +428,9 @@ export function ServicesCrudPage() {
       // Keep category-level defaults in sync with service-level numeric settings when provided.
       if (category) {
         const nextCategoryCapacity =
-        payload.capacityOverride !== null ? payload.capacityOverride : category.capacity ?? 1;
+          payload.capacityOverride !== null ? payload.capacityOverride : category.capacity ?? 1;
         const nextCategoryBuffer =
-        payload.bufferOverride !== null ? payload.bufferOverride : category.bufferMinutes ?? 0;
+          payload.bufferOverride !== null ? payload.bufferOverride : category.bufferMinutes ?? 0;
 
         await apiFetch(`/api/admin/service-categories/${category.id}`, {
           method: 'PUT',
@@ -447,15 +442,15 @@ export function ServicesCrudPage() {
         });
 
         setCategories((prev) =>
-        prev.map((item) =>
-        item.id === category.id ?
-        {
-          ...item,
-          capacity: nextCategoryCapacity,
-          bufferMinutes: nextCategoryBuffer
-        } :
-        item
-        )
+          prev.map((item) =>
+            item.id === category.id ?
+              {
+                ...item,
+                capacity: nextCategoryCapacity,
+                bufferMinutes: nextCategoryBuffer
+              } :
+              item
+          )
         );
       }
 
@@ -519,11 +514,11 @@ export function ServicesCrudPage() {
     if (!editingCategoryFaq) return;
 
     const cleanedQuestions = categoryQuestions.
-    map((item) => ({
-      question: item.question.trim(),
-      answer: item.answer.trim()
-    })).
-    filter((item) => item.question || item.answer);
+      map((item) => ({
+        question: item.question.trim(),
+        answer: item.answer.trim()
+      })).
+      filter((item) => item.question || item.answer);
 
     setSaving(true);
     setError(null);
@@ -569,7 +564,7 @@ export function ServicesCrudPage() {
 
   const updateCategoryQuestion = (index: number, field: 'question' | 'answer', value: string) => {
     setCategoryQuestions((prev) =>
-    prev.map((item, idx) => idx === index ? { ...item, [field]: value } : item)
+      prev.map((item, idx) => idx === index ? { ...item, [field]: value } : item)
     );
   };
 
@@ -578,7 +573,7 @@ export function ServicesCrudPage() {
   };
 
   const deleteService = async (item: ServiceItem) => {
-    const ok = window.confirm(`${item.name} hizmetini silmek istiyor musunuz?`);
+    const ok = window.confirm(`${item.name} Bu hizmeti silmek istediğinize emin misiniz?`);
     if (!ok) return;
 
     try {
@@ -733,7 +728,7 @@ export function ServicesCrudPage() {
           type="button"
           onClick={() => setCategoryOrderDialogOpen(true)}
           className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
-          
+
           <ListOrdered className="h-4 w-4" />
           Kategori Sırası
         </button>
@@ -742,7 +737,7 @@ export function ServicesCrudPage() {
           type="button"
           onClick={() => setGroupManagerOpen(true)}
           className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
-          
+
           <Layers className="h-4 w-4" />
           Hizmet Grupları
         </button>
@@ -752,19 +747,19 @@ export function ServicesCrudPage() {
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       {!loading ?
-      <div className="space-y-3 pb-20">
+        <div className="space-y-3 pb-20">
           {categories.map((category) => {
-          const categoryItems = groupedServices[category.id] || [];
-          const expanded = Boolean(expandedCategories[category.id]);
+            const categoryItems = groupedServices[category.id] || [];
+            const expanded = Boolean(expandedCategories[category.id]);
 
-          return (
-            <div key={category.id} className="rounded-2xl border border-border bg-card overflow-hidden">
+            return (
+              <div key={category.id} className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2 px-3 py-3">
                   <button
-                  type="button"
-                  onClick={() => toggleCategory(category.id)}
-                  className="h-7 w-7 grid place-items-center rounded-md hover:bg-muted">
-                  
+                    type="button"
+                    onClick={() => toggleCategory(category.id)}
+                    className="h-7 w-7 grid place-items-center rounded-md hover:bg-muted">
+
                     {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
 
@@ -781,33 +776,33 @@ export function ServicesCrudPage() {
 
                   <div className="ml-auto flex items-center gap-1.5 shrink-0">
                     <button
-                    type="button"
-                    onClick={() => openCategoryFaq(category)}
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
-                    title="Kategori Sık Sorular">
-                    
+                      type="button"
+                      onClick={() => openCategoryFaq(category)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                      title="Kategori Sık Sorular">
+
                       <HelpCircle className="h-4 w-4" />
                     </button>
 
                     <StatusToggleChip
-                    active={category.isActive !== false}
-                    onToggle={(next) => void toggleCategoryActive(category, next)} />
-                  
+                      active={category.isActive !== false}
+                      onToggle={(next) => void toggleCategoryActive(category, next)} />
+
 
                     <button
-                    type="button"
-                    onClick={() => openCategorySettings(category)}
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
-                    title="Kategori ayarları">
-                    
+                      type="button"
+                      onClick={() => openCategorySettings(category)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                      title="Kategori ayarları">
+
                       <Settings2 className="h-4 w-4" />
                     </button>
 
                     <button
-                    type="button"
-                    onClick={() => openCreateService(category)}
-                    className="inline-flex h-8 items-center gap-1 rounded-md px-1 text-sm font-medium hover:bg-muted">
-                    
+                      type="button"
+                      onClick={() => openCreateService(category)}
+                      className="inline-flex h-8 items-center gap-1 rounded-md px-1 text-sm font-medium hover:bg-muted">
+
                       <Plus className="h-4 w-4" />
                       <span className="hidden sm:inline">Ekle</span>
                     </button>
@@ -815,17 +810,16 @@ export function ServicesCrudPage() {
                 </div>
 
                 {expanded ?
-              <div className="border-t border-border/50">
+                  <div className="border-t border-border/50">
                     {categoryItems.length === 0 ?
-                <div className="px-4 py-4 text-sm text-muted-foreground">Bu kategoride henüz hizmet yok.</div> :
+                      <div className="px-4 py-4 text-sm text-muted-foreground">Bu kategoride henüz hizmet yok.</div> :
 
-                categoryItems.map((item) =>
-                <div
-                  key={item.id}
-                  className={`grid grid-cols-[32px_minmax(0,1fr)_auto_auto_auto] items-center gap-1.5 px-4 py-3 border-b border-border/40 last:border-b-0 ${
-                  item.isActive === false ? 'opacity-65' : ''}`
-                  }>
-                  
+                      categoryItems.map((item) =>
+                        <div
+                          key={item.id}
+                          className={`grid grid-cols-[32px_minmax(0,1fr)_auto_auto_auto] items-center gap-1.5 px-4 py-3 border-b border-border/40 last:border-b-0 ${item.isActive === false ? 'opacity-65' : ''}`
+                          }>
+
                           <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: colorById(item.id) }} />
 
                           <div className="min-w-0 flex-1">
@@ -836,14 +830,14 @@ export function ServicesCrudPage() {
                               {item.serviceGroupName ? ` • ${item.serviceGroupName}` : ''}
                             </p>
                             {item.description ?
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p> :
-                    null}
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p> :
+                              null}
                           </div>
 
                           <StatusToggleChip
-                    active={item.isActive !== false}
-                    onToggle={(next) => void toggleServiceActive(item, next)} />
-                  
+                            active={item.isActive !== false}
+                            onToggle={(next) => void toggleServiceActive(item, next)} />
+
                           <button type="button" onClick={() => openEditService(item)} className="h-8 w-8 grid place-items-center text-muted-foreground hover:text-foreground">
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -851,18 +845,18 @@ export function ServicesCrudPage() {
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                )
-                }
+                      )
+                    }
                   </div> :
-              null}
+                  null}
               </div>);
 
-        })}
+          })}
         </div> :
-      null}
+        null}
 
       {serviceDialogOpen ?
-      <div className="fixed inset-0 z-40 bg-black/35 p-4">
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{editingService ? "Hizmeti Düzenle" : "New Hizmet Ekle"}</h2>
@@ -873,69 +867,69 @@ export function ServicesCrudPage() {
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Kategori</span>
                 <select
-                value={serviceForm.categoryId}
-                onChange={(event) => setServiceForm((prev) => ({ ...prev, categoryId: event.target.value }))}
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
-                
+                  value={serviceForm.categoryId}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, categoryId: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
+
                   <option value="">Kategori seçin</option>
                   {categories.map((category) =>
-                <option key={category.id} value={category.id}>
+                    <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
-                )}
+                  )}
                 </select>
               </label>
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Hizmet Grubu (isteğe bağlı)</span>
                 <select
-                value={serviceForm.serviceGroupId}
-                onChange={(event) => setServiceForm((prev) => ({ ...prev, serviceGroupId: event.target.value }))}
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
-                
+                  value={serviceForm.serviceGroupId}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, serviceGroupId: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
+
                   <option value="">Grup seçmeden devam et</option>
                   {groups.map((group) =>
-                <option key={group.id} value={group.id}>
+                    <option key={group.id} value={group.id}>
                       {group.name}
                     </option>
-                )}
+                  )}
                 </select>
               </label>
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Hizmet Adı</span>
                 <input
-                value={serviceForm.name}
-                onChange={(event) => setServiceForm((prev) => ({ ...prev, name: event.target.value }))}
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-              
+                  value={serviceForm.name}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, name: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Description (optional)</span>
+                <span className="text-muted-foreground">Açıklama (isteğe bağlı)</span>
                 <textarea
-                value={serviceForm.description}
-                onChange={(event) => setServiceForm((prev) => ({ ...prev, description: event.target.value }))}
-                className="w-full min-h-[90px] rounded-lg border border-border bg-card px-3 py-2 text-sm" />
-              
+                  value={serviceForm.description}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, description: event.target.value }))}
+                  className="w-full min-h-[90px] rounded-lg border border-border bg-card px-3 py-2 text-sm" />
+
               </label>
 
               <div className="rounded-lg border border-border p-3 space-y-2">
                 <p className="text-sm font-medium">Hizmet Cinsiyeti</p>
                 <label className="flex items-center gap-2 text-sm">
                   <input
-                  type="checkbox"
-                  checked={serviceForm.genderFemale}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, genderFemale: event.target.checked }))} />
-                
+                    type="checkbox"
+                    checked={serviceForm.genderFemale}
+                    onChange={(event) => setServiceForm((prev) => ({ ...prev, genderFemale: event.target.checked }))} />
+
                   <span>Kadın</span>
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <input
-                  type="checkbox"
-                  checked={serviceForm.genderMale}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, genderMale: event.target.checked }))} />
-                
+                    type="checkbox"
+                    checked={serviceForm.genderMale}
+                    onChange={(event) => setServiceForm((prev) => ({ ...prev, genderMale: event.target.checked }))} />
+
                   <span>Erkek</span>
                 </label>
                 <p className="text-xs text-muted-foreground">İkisi de seçilirse unisex olarak değerlendirilir.</p>
@@ -945,25 +939,25 @@ export function ServicesCrudPage() {
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Süre (dk)</span>
                   <input
-                  type="number"
-                  min={5}
-                  step={5}
-                  value={serviceForm.duration}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, duration: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-                
+                    type="number"
+                    min={5}
+                    step={5}
+                    value={serviceForm.duration}
+                    onChange={(event) => setServiceForm((prev) => ({ ...prev, duration: event.target.value }))}
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+
                 </label>
 
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Fiyat (₺)</span>
                   <input
-                  type="number"
-                  min={0}
-                  step={10}
-                  value={serviceForm.price}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, price: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-                
+                    type="number"
+                    min={0}
+                    step={10}
+                    value={serviceForm.price}
+                    onChange={(event) => setServiceForm((prev) => ({ ...prev, price: event.target.value }))}
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+
                 </label>
               </div>
 
@@ -976,9 +970,9 @@ export function ServicesCrudPage() {
                     <p className="text-xs text-muted-foreground">Etkinleştirildiğinde rezervasyon akışında uzman seçimi görünür.</p>
                   </div>
                   <ToggleSwitch
-                  checked={serviceForm.requiresSpecialist}
-                  onChange={(next) => setServiceForm((prev) => ({ ...prev, requiresSpecialist: next }))} />
-                
+                    checked={serviceForm.requiresSpecialist}
+                    onChange={(next) => setServiceForm((prev) => ({ ...prev, requiresSpecialist: next }))} />
+
                 </label>
 
                 <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
@@ -990,121 +984,121 @@ export function ServicesCrudPage() {
                       </p>
                     </div>
                     <ToggleSwitch
-                    checked={serviceForm.capacityOverride.trim().length > 0}
-                    onChange={(enabled) =>
-                    setServiceForm((prev) => ({
-                      ...prev,
-                      capacityOverride: enabled ? prev.capacityOverride || '1' : ''
-                    }))
-                    } />
-                  
+                      checked={serviceForm.capacityOverride.trim().length > 0}
+                      onChange={(enabled) =>
+                        setServiceForm((prev) => ({
+                          ...prev,
+                          capacityOverride: enabled ? prev.capacityOverride || '1' : ''
+                        }))
+                      } />
+
                   </div>
 
                   {serviceForm.capacityOverride.trim().length > 0 ?
-                <div className="space-y-2">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <button
-                      type="button"
-                      onClick={() =>
-                      setServiceForm((prev) => {
-                        const current = Number(prev.capacityOverride || '1');
-                        const next = clampInt(current - 1, 1, 20);
-                        return { ...prev, capacityOverride: String(next) };
-                      })
-                      }
-                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
-                      
+                          type="button"
+                          onClick={() =>
+                            setServiceForm((prev) => {
+                              const current = Number(prev.capacityOverride || '1');
+                              const next = clampInt(current - 1, 1, 20);
+                              return { ...prev, capacityOverride: String(next) };
+                            })
+                          }
+                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+
                           -
                         </button>
                         <input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={serviceForm.capacityOverride}
-                      onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
-                      className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
-                      placeholder="1" />
-                    
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={serviceForm.capacityOverride}
+                          onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
+                          className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
+                          placeholder="1" />
+
                         <button
-                      type="button"
-                      onClick={() =>
-                      setServiceForm((prev) => {
-                        const current = Number(prev.capacityOverride || '1');
-                        const next = clampInt(current + 1, 1, 20);
-                        return { ...prev, capacityOverride: String(next) };
-                      })
-                      }
-                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
-                      
+                          type="button"
+                          onClick={() =>
+                            setServiceForm((prev) => {
+                              const current = Number(prev.capacityOverride || '1');
+                              const next = clampInt(current + 1, 1, 20);
+                              return { ...prev, capacityOverride: String(next) };
+                            })
+                          }
+                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+
                           +
                         </button>
                       </div>
                     </div> :
-                null}
+                    null}
                 </div>
 
                 <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium">Buffer duration (minutes)</p>
+                      <p className="text-sm font-medium">Mola süresi (dakika)</p>
                       <p className="text-xs text-muted-foreground">
-                        If disabled, category setting is used; if enabled, custom prep time is set for this service.
+                        Devre dışı bırakılırsa kategori ayarı kullanılır; etkinleştirilirse bu hizmet için özel hazırlık süresi ayarlanır.
                       </p>
                     </div>
                     <ToggleSwitch
-                    checked={serviceForm.preparationMinutes.trim().length > 0}
-                    onChange={(enabled) =>
-                    setServiceForm((prev) => ({
-                      ...prev,
-                      preparationMinutes: enabled ? prev.preparationMinutes || '0' : ''
-                    }))
-                    } />
-                  
+                      checked={serviceForm.preparationMinutes.trim().length > 0}
+                      onChange={(enabled) =>
+                        setServiceForm((prev) => ({
+                          ...prev,
+                          preparationMinutes: enabled ? prev.preparationMinutes || '0' : ''
+                        }))
+                      } />
+
                   </div>
 
                   {serviceForm.preparationMinutes.trim().length > 0 ?
-                <div className="space-y-2">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <button
-                      type="button"
-                      onClick={() =>
-                      setServiceForm((prev) => {
-                        const current = Number(prev.preparationMinutes || '0');
-                        const next = clampInt(current - 5, 0, 180);
-                        return { ...prev, preparationMinutes: String(next) };
-                      })
-                      }
-                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
-                      
+                          type="button"
+                          onClick={() =>
+                            setServiceForm((prev) => {
+                              const current = Number(prev.preparationMinutes || '0');
+                              const next = clampInt(current - 5, 0, 180);
+                              return { ...prev, preparationMinutes: String(next) };
+                            })
+                          }
+                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+
                           -
                         </button>
                         <input
-                      type="number"
-                      min={0}
-                      max={180}
-                      step={5}
-                      value={serviceForm.preparationMinutes}
-                      onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
-                      className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
-                      placeholder="0" />
-                    
+                          type="number"
+                          min={0}
+                          max={180}
+                          step={5}
+                          value={serviceForm.preparationMinutes}
+                          onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
+                          className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
+                          placeholder="0" />
+
                         <button
-                      type="button"
-                      onClick={() =>
-                      setServiceForm((prev) => {
-                        const current = Number(prev.preparationMinutes || '0');
-                        const next = clampInt(current + 5, 0, 180);
-                        return { ...prev, preparationMinutes: String(next) };
-                      })
-                      }
-                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
-                      
+                          type="button"
+                          onClick={() =>
+                            setServiceForm((prev) => {
+                              const current = Number(prev.preparationMinutes || '0');
+                              const next = clampInt(current + 5, 0, 180);
+                              return { ...prev, preparationMinutes: String(next) };
+                            })
+                          }
+                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+
                           +
                         </button>
                       </div>
                       <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p>
                     </div> :
-                null}
+                    null}
                 </div>
               </div>
 
@@ -1114,10 +1108,10 @@ export function ServicesCrudPage() {
             </form>
           </div>
         </div> :
-      null}
+        null}
 
       {categoryDialogOpen && editingCategory ?
-      <div className="fixed inset-0 z-40 bg-black/35 p-4">
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Ayarları · {editingCategory.name}</h2>
@@ -1129,119 +1123,119 @@ export function ServicesCrudPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium">Eşzamanlı randevu kapasitesi</p>
-                    <p className="text-xs text-muted-foreground">Determines concurrent capacity for all services in this category.</p>
+                    <p className="text-xs text-muted-foreground">Bu kategorideki tüm hizmetler için eşzamanlı kapasiteyi belirler.</p>
                   </div>
                   <ToggleSwitch
-                  checked={categoryCapacityEnabled}
-                  onChange={(next) => setCategoryCapacityEnabled(next)} />
-                
+                    checked={categoryCapacityEnabled}
+                    onChange={(next) => setCategoryCapacityEnabled(next)} />
+
                 </div>
                 {categoryCapacityEnabled ?
-              <div className="flex items-center gap-2">
-                  <button
-                  type="button"
-                  onClick={() =>
-                  setCategoryForm((prev) => {
-                    const current = Number(prev.capacity || '1');
-                    const next = clampInt(current - 1, 1, 20);
-                    return { ...prev, capacity: String(next) };
-                  })
-                  }
-                  className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
-                  
-                    -
-                  </button>
-                  <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={categoryForm.capacity}
-                  onChange={(event) => setCategoryForm((prev) => ({ ...prev, capacity: event.target.value }))}
-                  className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium" />
-                
-                  <button
-                  type="button"
-                  onClick={() =>
-                  setCategoryForm((prev) => {
-                    const current = Number(prev.capacity || '1');
-                    const next = clampInt(current + 1, 1, 20);
-                    return { ...prev, capacity: String(next) };
-                  })
-                  }
-                  className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
-                  
-                    +
-                  </button>
-                </div> :
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCategoryForm((prev) => {
+                          const current = Number(prev.capacity || '1');
+                          const next = clampInt(current - 1, 1, 20);
+                          return { ...prev, capacity: String(next) };
+                        })
+                      }
+                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
 
-              <p className="text-xs text-muted-foreground">When disabled, current category capacity is preserved.</p>
-              }
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={categoryForm.capacity}
+                      onChange={(event) => setCategoryForm((prev) => ({ ...prev, capacity: event.target.value }))}
+                      className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium" />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCategoryForm((prev) => {
+                          const current = Number(prev.capacity || '1');
+                          const next = clampInt(current + 1, 1, 20);
+                          return { ...prev, capacity: String(next) };
+                        })
+                      }
+                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+
+                      +
+                    </button>
+                  </div> :
+
+                  <p className="text-xs text-muted-foreground">Devre dışı bırakıldığında, mevcut kategori kapasitesi korunur.</p>
+                }
               </div>
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                 <div>
-                  <p className="font-medium">Sequential scheduling</p>
-                  <p className="text-xs text-muted-foreground">For multi-service selection in a category, services are scheduled sequentially.</p>
+                  <p className="font-medium">Sıralı planlama</p>
+                  <p className="text-xs text-muted-foreground">Bir kategoride çoklu hizmet seçimi yapıldığında, hizmetler sıralı olarak planlanır.</p>
                 </div>
                 <ToggleSwitch
-                checked={categoryForm.sequentialRequired}
-                onChange={(next) => setCategoryForm((prev) => ({ ...prev, sequentialRequired: next }))} />
-              
+                  checked={categoryForm.sequentialRequired}
+                  onChange={(next) => setCategoryForm((prev) => ({ ...prev, sequentialRequired: next }))} />
+
               </label>
 
               <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium">Buffer duration (minutes)</p>
+                    <p className="text-sm font-medium">Mola süresi (dakika)</p>
                     <p className="text-xs text-muted-foreground">Aynı personel için bu kategorideki hizmetler arasına otomatik tampon süre ekler.</p>
                   </div>
                   <ToggleSwitch
-                  checked={categoryBufferEnabled}
-                  onChange={(next) => setCategoryBufferEnabled(next)} />
-                
+                    checked={categoryBufferEnabled}
+                    onChange={(next) => setCategoryBufferEnabled(next)} />
+
                 </div>
                 {categoryBufferEnabled ?
-              <div className="flex items-center gap-2">
-                  <button
-                  type="button"
-                  onClick={() =>
-                  setCategoryForm((prev) => {
-                    const current = Number(prev.bufferMinutes || '0');
-                    const next = clampInt(current - 5, 0, 180);
-                    return { ...prev, bufferMinutes: String(next) };
-                  })
-                  }
-                  className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
-                  
-                    -
-                  </button>
-                  <input
-                  type="number"
-                  min={0}
-                  max={180}
-                  step={5}
-                  value={categoryForm.bufferMinutes}
-                  onChange={(event) => setCategoryForm((prev) => ({ ...prev, bufferMinutes: event.target.value }))}
-                  className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium" />
-                
-                  <button
-                  type="button"
-                  onClick={() =>
-                  setCategoryForm((prev) => {
-                    const current = Number(prev.bufferMinutes || '0');
-                    const next = clampInt(current + 5, 0, 180);
-                    return { ...prev, bufferMinutes: String(next) };
-                  })
-                  }
-                  className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
-                  
-                    +
-                  </button>
-                </div> :
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCategoryForm((prev) => {
+                          const current = Number(prev.bufferMinutes || '0');
+                          const next = clampInt(current - 5, 0, 180);
+                          return { ...prev, bufferMinutes: String(next) };
+                        })
+                      }
+                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
 
-              <p className="text-xs text-muted-foreground">When disabled, current category buffer duration is preserved.</p>
-              }
-                {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p> : null}
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min={0}
+                      max={180}
+                      step={5}
+                      value={categoryForm.bufferMinutes}
+                      onChange={(event) => setCategoryForm((prev) => ({ ...prev, bufferMinutes: event.target.value }))}
+                      className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium" />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCategoryForm((prev) => {
+                          const current = Number(prev.bufferMinutes || '0');
+                          const next = clampInt(current + 5, 0, 180);
+                          return { ...prev, bufferMinutes: String(next) };
+                        })
+                      }
+                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+
+                      +
+                    </button>
+                  </div> :
+
+                  <p className="text-xs text-muted-foreground">Devre dışı bırakıldığında, mevcut kategori hazırlık süresi korunur.</p>
+                }
+                {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">5 dakikalık adımlarla yapılandırılır.</p> : null}
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
@@ -1250,10 +1244,10 @@ export function ServicesCrudPage() {
             </form>
           </div>
         </div> :
-      null}
+        null}
 
       {categoryFaqDialogOpen && editingCategoryFaq ?
-      <div className="fixed inset-0 z-40 bg-black/35 p-4">
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Sık Sorular · {editingCategoryFaq.name}</h2>
@@ -1273,32 +1267,32 @@ export function ServicesCrudPage() {
                 </div>
 
                 {categoryQuestions.length === 0 ?
-              <p className="text-xs text-muted-foreground">Henüz soru eklenmedi.</p> :
+                  <p className="text-xs text-muted-foreground">Henüz soru eklenmedi.</p> :
 
-              <div className="space-y-2">
+                  <div className="space-y-2">
                     {categoryQuestions.map((item, index) =>
-                <div key={`cat-faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
+                      <div key={`cat-faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
                         <input
-                    className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                    placeholder="Soru"
-                    value={item.question}
-                    onChange={(event) => updateCategoryQuestion(index, 'question', event.target.value)} />
-                  
+                          className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                          placeholder="Soru"
+                          value={item.question}
+                          onChange={(event) => updateCategoryQuestion(index, 'question', event.target.value)} />
+
                         <textarea
-                    className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
-                    placeholder="Cevap"
-                    value={item.answer}
-                    onChange={(event) => updateCategoryQuestion(index, 'answer', event.target.value)} />
-                  
+                          className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
+                          placeholder="Cevap"
+                          value={item.answer}
+                          onChange={(event) => updateCategoryQuestion(index, 'answer', event.target.value)} />
+
                         <div className="flex justify-end">
                           <button type="button" onClick={() => removeCategoryQuestion(index)} className="text-xs text-red-600">
                             Sil
                           </button>
                         </div>
                       </div>
-                )}
+                    )}
                   </div>
-              }
+                }
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
@@ -1307,10 +1301,10 @@ export function ServicesCrudPage() {
             </form>
           </div>
         </div> :
-      null}
+        null}
 
       {categoryOrderDialogOpen ?
-      <div className="fixed inset-0 z-40 bg-black/35 p-4">
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Sıralama</h2>
@@ -1323,33 +1317,33 @@ export function ServicesCrudPage() {
 
             <div className="space-y-2">
               {categories.map((category, index) =>
-            <div key={category.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
+                <div key={category.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
                   <span className="flex-1 text-sm font-medium">{category.name}</span>
                   <button
-                type="button"
-                onClick={() => void moveCategory(index, index - 1)}
-                className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                disabled={index === 0}>
-                
+                    type="button"
+                    onClick={() => void moveCategory(index, index - 1)}
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                    disabled={index === 0}>
+
                     <ArrowUp className="h-4 w-4" />
                   </button>
                   <button
-                type="button"
-                onClick={() => void moveCategory(index, index + 1)}
-                className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                disabled={index === categories.length - 1}>
-                
+                    type="button"
+                    onClick={() => void moveCategory(index, index + 1)}
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                    disabled={index === categories.length - 1}>
+
                     <ArrowDown className="h-4 w-4" />
                   </button>
                 </div>
-            )}
+              )}
             </div>
           </div>
         </div> :
-      null}
+        null}
 
       {groupManagerOpen ?
-      <div className="fixed inset-0 z-40 bg-black/35 p-4">
+        <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Hizmet Grupları</h2>
@@ -1361,61 +1355,61 @@ export function ServicesCrudPage() {
             </p>
 
             <button
-            type="button"
-            onClick={openCreateGroup}
-            className="mb-3 w-full h-10 rounded-lg border border-border text-sm inline-flex items-center justify-center gap-2">
-            
+              type="button"
+              onClick={openCreateGroup}
+              className="mb-3 w-full h-10 rounded-lg border border-border text-sm inline-flex items-center justify-center gap-2">
+
               <Plus className="h-4 w-4" />
               Yeni Grup Oluştur
             </button>
 
             <div className="space-y-2">
               {groups.map((group, index) =>
-            <div key={group.id} className={`rounded-lg border border-border px-3 py-2 ${group.isActive === false ? 'opacity-65' : ''}`}>
+                <div key={group.id} className={`rounded-lg border border-border px-3 py-2 ${group.isActive === false ? 'opacity-65' : ''}`}>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{group.name}</p>
                       <p className="text-xs text-muted-foreground">{group.serviceCount} hizmet</p>
                     </div>
                     <button
-                  type="button"
-                  onClick={() => void moveGroup(index, index - 1)}
-                  className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                  disabled={index === 0}>
-                  
+                      type="button"
+                      onClick={() => void moveGroup(index, index - 1)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                      disabled={index === 0}>
+
                       <ArrowUp className="h-4 w-4" />
                     </button>
                     <button
-                  type="button"
-                  onClick={() => void moveGroup(index, index + 1)}
-                  className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                  disabled={index === groups.length - 1}>
-                  
+                      type="button"
+                      onClick={() => void moveGroup(index, index + 1)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                      disabled={index === groups.length - 1}>
+
                       <ArrowDown className="h-4 w-4" />
                     </button>
                     <StatusToggleChip
-                  active={group.isActive !== false}
-                  onToggle={(next) => void toggleGroupActive(group, next)} />
-                
+                      active={group.isActive !== false}
+                      onToggle={(next) => void toggleGroupActive(group, next)} />
+
                     <button
-                  type="button"
-                  onClick={() => openEditGroup(group)}
-                  className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted">
-                  
+                      type="button"
+                      onClick={() => openEditGroup(group)}
+                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted">
+
                       <Pencil className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-            )}
+              )}
 
               {!groups.length ? <p className="text-sm text-muted-foreground">Henüz grup yok.</p> : null}
             </div>
           </div>
         </div> :
-      null}
+        null}
 
       {groupDialogOpen ?
-      <div className="fixed inset-0 z-50 bg-black/35 p-4">
+        <div className="fixed inset-0 z-50 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{editingGroup ? "Grubu Düzenle" : "Yeni Grup Oluştur"}</h2>
@@ -1426,21 +1420,21 @@ export function ServicesCrudPage() {
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Grup adı</span>
                 <input
-                value={groupForm.name}
-                onChange={(event) => setGroupForm((prev) => ({ ...prev, name: event.target.value }))}
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-              
+                  value={groupForm.name}
+                  onChange={(event) => setGroupForm((prev) => ({ ...prev, name: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+
               </label>
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Kabul edilen en yüksek eşzamanlı randevu sayısı</span>
                 <input
-                type="number"
-                min={1}
-                value={groupForm.capacity}
-                onChange={(event) => setGroupForm((prev) => ({ ...prev, capacity: event.target.value }))}
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-              
+                  type="number"
+                  min={1}
+                  value={groupForm.capacity}
+                  onChange={(event) => setGroupForm((prev) => ({ ...prev, capacity: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+
               </label>
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
@@ -1449,26 +1443,26 @@ export function ServicesCrudPage() {
                   <p className="text-xs text-muted-foreground">Bir gruptaki hizmetler seçildiğinde biri bittikten sonra diğeri planlanır.</p>
                 </div>
                 <input
-                type="checkbox"
-                checked={groupForm.sequentialRequired}
-                onChange={(event) =>
-                setGroupForm((prev) => ({ ...prev, sequentialRequired: event.target.checked }))
-                } />
-              
+                  type="checkbox"
+                  checked={groupForm.sequentialRequired}
+                  onChange={(event) =>
+                    setGroupForm((prev) => ({ ...prev, sequentialRequired: event.target.checked }))
+                  } />
+
               </label>
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Randevular arası tampon süre (dk)</span>
                 <input
-                type="number"
-                min={0}
-                step={5}
-                value={groupForm.preparationMinutes}
-                onChange={(event) =>
-                setGroupForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))
-                }
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-              
+                  type="number"
+                  min={0}
+                  step={5}
+                  value={groupForm.preparationMinutes}
+                  onChange={(event) =>
+                    setGroupForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))
+                  }
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+
               </label>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
@@ -1477,7 +1471,7 @@ export function ServicesCrudPage() {
             </form>
           </div>
         </div> :
-      null}
+        null}
     </div>);
 
 }

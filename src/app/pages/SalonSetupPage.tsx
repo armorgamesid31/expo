@@ -2,19 +2,19 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const DAYS = [
-{ key: 'MON', label: 'Pzt' },
-{ key: 'TUE', label: 'Sal' },
-{ key: 'WED', label: 'Çar' },
-{ key: 'THU', label: 'Per' },
-{ key: 'FRI', label: 'Cum' },
-{ key: 'SAT', label: 'Cmt' },
-{ key: 'SUN', label: 'Paz' }];
+  { key: 'MON', label: 'Pzt' },
+  { key: 'TUE', label: 'Sal' },
+  { key: 'WED', label: 'Car' },
+  { key: 'THU', label: 'Per' },
+  { key: 'FRI', label: 'Cum' },
+  { key: 'SAT', label: 'Cmt' },
+  { key: 'SUN', label: 'Paz' }];
 
 
 const PRESET_SALON_QUESTIONS = [
-{ id: 'payment_card', question: 'Kredi kartı geçerli mi?' },
-{ id: 'parking', question: 'Otopark var mı?' },
-{ id: 'pets', question: 'Evcil hayvan kabul ediliyor mu?' }];
+  { id: 'payment_card', question: 'Kredi kartı geçerli mi?' },
+  { id: 'parking', question: 'Otopark var mı?' },
+  { id: 'pets', question: 'Evcil hayvan kabul ediliyor mu?' }];
 
 
 interface SetupResponse {
@@ -30,7 +30,7 @@ interface SetupResponse {
     workEndHour: number;
     slotInterval: number;
     workingDays: string[] | null;
-    commonQuestions?: Array<{question: string;answer: string;}> | null;
+    commonQuestions?: Array<{ question: string; answer: string; }> | null;
   } | null;
   checklist: {
     workingHours: boolean;
@@ -49,7 +49,7 @@ export function SalonSetupPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [presetAnswers, setPresetAnswers] = useState<Record<string, string>>({});
-  const [customQuestions, setCustomQuestions] = useState<Array<{question: string;answer: string;}>>([]);
+  const [customQuestions, setCustomQuestions] = useState<Array<{ question: string; answer: string; }>>([]);
   const [form, setForm] = useState({
     name: '',
     address: '',
@@ -65,18 +65,18 @@ export function SalonSetupPage() {
   const normalizeCommonQuestions = (value: unknown) => {
     if (!Array.isArray(value)) return [];
     return value.
-    map((item: any) => ({
-      question: typeof item?.question === 'string' ? item.question.trim() : '',
-      answer: typeof item?.answer === 'string' ? item.answer.trim() : ''
-    })).
-    filter((item: any) => item.question || item.answer);
+      map((item: any) => ({
+        question: typeof item?.question === 'string' ? item.question.trim() : '',
+        answer: typeof item?.answer === 'string' ? item.answer.trim() : ''
+      })).
+      filter((item: any) => item.question || item.answer);
   };
 
-  const buildPresetAnswerMap = (items: Array<{question: string;answer: string;}>) => {
+  const buildPresetAnswerMap = (items: Array<{ question: string; answer: string; }>) => {
     const map = new Map(
       items.
-      filter((item) => item.question).
-      map((item) => [item.question.toLowerCase(), item.answer || ''])
+        filter((item) => item.question).
+        map((item) => [item.question.toLowerCase(), item.answer || ''])
     );
     const output: Record<string, string> = {};
     for (const preset of PRESET_SALON_QUESTIONS) {
@@ -100,8 +100,8 @@ export function SalonSetupPage() {
         workEndHour: response.settings?.workEndHour ?? 18,
         slotInterval: response.settings?.slotInterval ?? 30,
         workingDays: (response.settings?.workingDays && response.settings.workingDays.length ?
-        response.settings.workingDays :
-        ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']) as string[]
+          response.settings.workingDays :
+          ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']) as string[]
       });
       const normalizedQuestions = normalizeCommonQuestions(response.settings?.commonQuestions);
       const presetMap = buildPresetAnswerMap(normalizedQuestions);
@@ -111,7 +111,7 @@ export function SalonSetupPage() {
         normalizedQuestions.filter((item) => !presetKeys.has(item.question.toLowerCase()))
       );
     } catch (err: any) {
-      setError(err?.message || 'Kurulum bilgileri alınamadı.');
+      setError(err?.message || 'Could not fetch setup information.');
     } finally {
       setLoading(false);
     }
@@ -137,7 +137,7 @@ export function SalonSetupPage() {
 
   const updateCommonQuestion = (index: number, field: 'question' | 'answer', value: string) => {
     setCustomQuestions((prev) =>
-    prev.map((item, idx) => idx === index ? { ...item, [field]: value } : item)
+      prev.map((item, idx) => idx === index ? { ...item, [field]: value } : item)
     );
   };
 
@@ -166,11 +166,11 @@ export function SalonSetupPage() {
     }));
 
     const cleanedQuestions = customQuestions.
-    map((item) => ({
-      question: item.question.trim(),
-      answer: item.answer.trim()
-    })).
-    filter((item) => item.question || item.answer);
+      map((item) => ({
+        question: item.question.trim(),
+        answer: item.answer.trim()
+      })).
+      filter((item) => item.question || item.answer);
 
     const mergedQuestions = [...presetQuestions, ...cleanedQuestions].filter(
       (item) => item.question || item.answer
@@ -209,8 +209,8 @@ export function SalonSetupPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Salon Kurulumu</h1>
-        <p className="text-xs text-muted-foreground">Gerekli adımları buradan tamamlayabilirsiniz.</p>
+        <h1 className="text-xl font-semibold">Salon Setup</h1>
+        <p className="text-xs text-muted-foreground">You can complete required steps here.</p>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -233,7 +233,7 @@ export function SalonSetupPage() {
         </div>
 
         <div className="rounded-md border border-border p-3">
-          <p className="text-xs text-muted-foreground mb-2">Çalışma günleri</p>
+          <p className="text-xs text-muted-foreground mb-2">Working days</p>
           <div className="flex flex-wrap gap-2">
             {DAYS.map((day) => {
               const active = form.workingDays.includes(day.key);
@@ -243,7 +243,7 @@ export function SalonSetupPage() {
                   type="button"
                   onClick={() => toggleDay(day.key)}
                   className={`rounded-full border px-3 py-1 text-xs ${active ? 'border-[var(--rose-gold)] text-[var(--rose-gold)]' : 'border-border text-muted-foreground'}`}>
-                  
+
                   {day.label}
                 </button>);
 
@@ -262,53 +262,53 @@ export function SalonSetupPage() {
               type="button"
               onClick={addCommonQuestion}
               className="rounded-full border border-border px-3 py-1 text-xs">
-              
+
               + Soru Ekle
             </button>
           </div>
 
           <div className="space-y-2">
             {PRESET_SALON_QUESTIONS.map((preset) =>
-            <div key={preset.id} className="rounded-md border border-border/60 p-2 space-y-2 bg-muted/20">
+              <div key={preset.id} className="rounded-md border border-border/60 p-2 space-y-2 bg-muted/20">
                 <p className="text-xs font-medium text-muted-foreground">{preset.question}</p>
                 <textarea
-                className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
-                placeholder="Cevap"
-                value={presetAnswers[preset.question] || ''}
-                onChange={(e) => updatePresetAnswer(preset.question, e.target.value)} />
-              
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
+                  placeholder="Cevap"
+                  value={presetAnswers[preset.question] || ''}
+                  onChange={(e) => updatePresetAnswer(preset.question, e.target.value)} />
+
               </div>
             )}
 
             {customQuestions.length === 0 ?
-            <p className="text-xs text-muted-foreground">Ek soru yok. İstersen + Soru Ekle ile ekleyebilirsin.</p> :
+              <p className="text-xs text-muted-foreground">Ek soru yok. İstersen + Soru Ekle ile ekleyebilirsin.</p> :
 
-            <div className="space-y-2">
+              <div className="space-y-2">
                 {customQuestions.map((item, index) =>
-              <div key={`faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
+                  <div key={`faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
                     <input
-                  className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                  placeholder="Soru"
-                  value={item.question}
-                  onChange={(e) => updateCommonQuestion(index, 'question', e.target.value)} />
-                
+                      className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                      placeholder="Soru"
+                      value={item.question}
+                      onChange={(e) => updateCommonQuestion(index, 'question', e.target.value)} />
+
                     <textarea
-                  className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
-                  placeholder="Cevap"
-                  value={item.answer}
-                  onChange={(e) => updateCommonQuestion(index, 'answer', e.target.value)} />
-                
+                      className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
+                      placeholder="Cevap"
+                      value={item.answer}
+                      onChange={(e) => updateCommonQuestion(index, 'answer', e.target.value)} />
+
                     <div className="flex justify-end">
                       <button
-                    type="button"
-                    onClick={() => removeCommonQuestion(index)}
-                    className="text-xs text-red-600">
-                    
+                        type="button"
+                        onClick={() => removeCommonQuestion(index)}
+                        className="text-xs text-red-600">
+
                         Sil
                       </button>
                     </div>
                   </div>
-              )}
+                )}
               </div>
             }
           </div>
@@ -318,7 +318,7 @@ export function SalonSetupPage() {
           type="submit"
           disabled={saving}
           className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">
-          
+
           {saving ? "Kaydediliyor..." : "Kaydet"}
         </button>
       </form>

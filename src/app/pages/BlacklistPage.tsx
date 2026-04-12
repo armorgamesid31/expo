@@ -26,7 +26,7 @@ export function BlacklistPage() {
       if (search.trim()) {
         query.set('search', search.trim());
       }
-      const response = await apiFetch<{items: BlacklistItem[];}>(
+      const response = await apiFetch<{ items: BlacklistItem[]; }>(
         `/api/admin/blacklist${query.toString() ? `?${query.toString()}` : ''}`
       );
       setItems(response.items);
@@ -50,7 +50,7 @@ export function BlacklistPage() {
     setSaving(true);
     setError(null);
     try {
-      const response = await apiFetch<{item: BlacklistItem;}>('/api/admin/blacklist', {
+      const response = await apiFetch<{ item: BlacklistItem; }>('/api/admin/blacklist', {
         method: 'POST',
         body: JSON.stringify(form)
       });
@@ -65,20 +65,20 @@ export function BlacklistPage() {
 
   const toggle = async (item: BlacklistItem) => {
     try {
-      const response = await apiFetch<{item: BlacklistItem;}>(`/api/admin/blacklist/${item.id}`, {
+      const response = await apiFetch<{ item: BlacklistItem; }>(`/api/admin/blacklist/${item.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ isActive: !item.isActive })
       });
       setItems((prev) => prev.map((current) => current.id === item.id ? response.item : current));
     } catch (err: any) {
-      setError(err?.message || 'Kayıt güncellenemedi.');
+      setError(err?.message || 'Durum güncellenemedi.');
     }
   };
 
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Blacklist</h1>
+        <h1 className="text-xl font-semibold">Kara Liste</h1>
         <p className="text-xs text-muted-foreground">Oluştur/oku + aktif/pasif güncelleme aktif.</p>
       </div>
 
@@ -90,7 +90,7 @@ export function BlacklistPage() {
           placeholder="Ad, telefon veya neden ile ara"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)} />
-        
+
       </div>
 
       <form className="space-y-2 rounded-lg border border-border p-3" onSubmit={createItem}>
@@ -104,7 +104,7 @@ export function BlacklistPage() {
 
       <div className="space-y-2">
         {items.map((item) =>
-        <div key={item.id} className="rounded-lg border border-border p-3">
+          <div key={item.id} className="rounded-lg border border-border p-3">
             <div className="flex items-center justify-between gap-2">
               <div>
                 <p className="font-medium">{item.fullName || item.phone || `#${item.id}`}</p>

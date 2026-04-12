@@ -25,14 +25,14 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
   // Categoryleri sırala
   const sortedCategories = [...categoryOrders].
-  sort((a, b) => a.order - b.order).
-  map((co) => co.category);
+    sort((a, b) => a.order - b.order).
+    map((co) => co.category);
 
   // Categoryye göre hizmetleri grupla
   const getServicesByCategory = (category: ServiceCategory) => {
     return services.
-    filter((s) => s.category === category).
-    sort((a, b) => (a.categoryOrder || 0) - (b.categoryOrder || 0));
+      filter((s) => s.category === category).
+      sort((a, b) => (a.categoryOrder || 0) - (b.categoryOrder || 0));
   };
 
   const toggleCategory = (category: ServiceCategory) => {
@@ -48,8 +48,8 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
   const openAddDialog = (category: ServiceCategory) => {
     const categoryServices = getServicesByCategory(category);
     const maxOrder = categoryServices.length > 0 ?
-    Math.max(...categoryServices.map((s) => s.categoryOrder || 0)) :
-    -1;
+      Math.max(...categoryServices.map((s) => s.categoryOrder || 0)) :
+      -1;
 
     setFormData({
       category,
@@ -147,7 +147,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
               <div
                 className="p-4 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => toggleCategory(category)}>
-                
+
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1">
                     <Button
@@ -159,7 +159,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                         moveCategoryUp(catIndex);
                       }}
                       disabled={catIndex === 0}>
-                      
+
                       <ChevronUp className="w-4 h-4" />
                     </Button>
                     <Button
@@ -171,11 +171,11 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                         moveCategoryDown(catIndex);
                       }}
                       disabled={catIndex === sortedCategories.length - 1}>
-                      
+
                       <ChevronDown className="w-4 h-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-foreground">{SERVICE_CATEGORY_LABELS[category]}</h3>
@@ -193,7 +193,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                       openAddDialog(category);
                     }}
                     className="shrink-0">
-                    
+
                     <Plus className="w-4 h-4 mr-1" />
                     Ekle
                   </Button>
@@ -202,14 +202,14 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
               {/* Services List */}
               {isExpanded && categoryServices.length > 0 &&
-              <div className="divide-y divide-border/30">
+                <div className="divide-y divide-border/30">
                   {categoryServices.map((service) =>
-                <CardContent key={service.id} className="p-4 hover:bg-muted/20 transition-colors">
+                    <CardContent key={service.id} className="p-4 hover:bg-muted/20 transition-colors">
                       <div className="flex items-center gap-3">
                         <div
-                      className="w-10 h-10 rounded-lg shrink-0"
-                      style={{ backgroundColor: service.color }} />
-                    
+                          className="w-10 h-10 rounded-lg shrink-0"
+                          style={{ backgroundColor: service.color }} />
+
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-foreground">{service.name}</p>
                           <div className="flex gap-3 text-xs text-muted-foreground mt-1">
@@ -219,41 +219,41 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                         </div>
                         <div className="flex gap-1">
                           <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => openEditDialog(service)}>
-                        
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => openEditDialog(service)}>
+
                             <Edit2 className="w-4 h-4" />
                           </Button>
                           <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleDelete(service.id)}>
-                        
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDelete(service.id)}>
+
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
                     </CardContent>
-                )}
+                  )}
                 </div>
               }
 
               {isExpanded && categoryServices.length === 0 &&
-              <CardContent className="p-8 text-center">
+                <CardContent className="p-8 text-center">
                   <p className="text-sm text-muted-foreground">
-                    Bu kategoride henüz hizmet yok.
+                    Yok services in this category yet
                   </p>
                   <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={() => openAddDialog(category)}>
-                  
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => openAddDialog(category)}>
+
                     <Plus className="w-4 h-4 mr-1" />
-                    İlk Hizmeti Ekle
+                    Ilk Hizmeti Ekle
                   </Button>
                 </CardContent>
               }
@@ -279,7 +279,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                 value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Örn: Kesim ve Şekillendirme" />
-              
+
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -291,7 +291,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                   value={formData.duration || ''}
                   onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
                   placeholder="60" />
-                
+
               </div>
 
               <div className="space-y-2">
@@ -302,7 +302,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                   value={formData.price || ''}
                   onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
                   placeholder="150" />
-                
+
               </div>
             </div>
 
@@ -315,32 +315,32 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                   value={formData.color || '#B76E79'}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   className="w-16 h-10 p-1" />
-                
+
                 <Input
                   value={formData.color || '#B76E79'}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   placeholder="#B76E79"
                   className="flex-1" />
-                
+
               </div>
             </div>
 
             {!editingService &&
-            <div className="space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="category">Kategori</Label>
                 <Select
-                value={formData.category}
-                onValueChange={(value: ServiceCategory) => setFormData({ ...formData, category: value })}>
-                
+                  value={formData.category}
+                  onValueChange={(value: ServiceCategory) => setFormData({ ...formData, category: value })}>
+
                   <SelectTrigger>
                     <SelectValue placeholder="Kategori seç" />
                   </SelectTrigger>
                   <SelectContent>
                     {sortedCategories.map((cat) =>
-                  <SelectItem key={cat} value={cat}>
+                      <SelectItem key={cat} value={cat}>
                         {SERVICE_CATEGORY_LABELS[cat]}
                       </SelectItem>
-                  )}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -348,15 +348,15 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-              <Label htmlFor="specialist-selection">Uzman Seçimine İzin Ver</Label>
+                <Label htmlFor="specialist-selection">Uzman Seçimine İzin Ver</Label>
                 <Switch
                   id="specialist-selection"
                   checked={formData.allowSpecialistSelection || false}
                   onCheckedChange={(checked) => setFormData({ ...formData, allowSpecialistSelection: checked })} />
-                
+
               </div>
               <p className="text-xs text-muted-foreground">
-                Etkinse müşteriler bu hizmette tercih ettiği uzmanı seçebilir.
+                Etkinse müşteriler bu hizmette tercih ettigi uzmani secebilir.
               </p>
             </div>
           </div>
@@ -369,7 +369,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
               onClick={handleSave}
               disabled={!formData.name || !formData.duration || !formData.price || !formData.category}
               style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
-              
+
               {editingService ? "Güncelle" : "Ekle"}
             </Button>
           </DialogFooter>

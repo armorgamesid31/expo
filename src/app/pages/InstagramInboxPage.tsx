@@ -104,12 +104,11 @@ function initialsFromLabel(value: string): string {
 
 function normalizeAutomationMode(value: unknown): AutomationMode {
   if (
-  value === 'AUTO' ||
-  value === 'HUMAN_PENDING' ||
-  value === 'HUMAN_ACTIVE' ||
-  value === 'MANUAL_ALWAYS' ||
-  value === 'AUTO_RESUME_PENDING')
-  {
+    value === 'AUTO' ||
+    value === 'HUMAN_PENDING' ||
+    value === 'HUMAN_ACTIVE' ||
+    value === 'MANUAL_ALWAYS' ||
+    value === 'AUTO_RESUME_PENDING') {
     return value;
   }
   return 'AUTO';
@@ -142,9 +141,9 @@ function findRelatedConversationKeys(items: ConversationItem[], selectedKey: str
   const selectedUsername = normalizeUsername(selected.profileUsername);
   const selectedName = normalizeName(selected.customerName);
   const selectedLinkedId =
-  typeof selected.linkedCustomerId === 'number' && selected.linkedCustomerId > 0 ?
-  selected.linkedCustomerId :
-  null;
+    typeof selected.linkedCustomerId === 'number' && selected.linkedCustomerId > 0 ?
+      selected.linkedCustomerId :
+      null;
 
   const related = items.filter((item) => {
     if (item.conversationKey === selected.conversationKey) return true;
@@ -163,25 +162,25 @@ function findRelatedConversationKeys(items: ConversationItem[], selectedKey: str
   return Array.from(
     new Set(
       related.
-      sort((a, b) => {
-        if (a.conversationKey === selectedKey) return -1;
-        if (b.conversationKey === selectedKey) return 1;
-        return (b.messageCount || 0) - (a.messageCount || 0);
-      }).
-      map((item) => item.conversationKey)
+        sort((a, b) => {
+          if (a.conversationKey === selectedKey) return -1;
+          if (b.conversationKey === selectedKey) return 1;
+          return (b.messageCount || 0) - (a.messageCount || 0);
+        }).
+        map((item) => item.conversationKey)
     )
   );
 }
 
-function mergeAndSortMessages(responses: Array<{items: MessageItem[];} | null | undefined>): MessageItem[] {
+function mergeAndSortMessages(responses: Array<{ items: MessageItem[]; } | null | undefined>): MessageItem[] {
   const merged = new Map<string, MessageItem>();
   for (const response of responses) {
     const items = response?.items || [];
     for (const msg of items) {
       const providerId = typeof msg.providerMessageId === 'string' ? msg.providerMessageId.trim() : '';
       const fingerprint = providerId ?
-      `provider:${providerId}` :
-      `fallback:${msg.direction}|${msg.messageType}|${msg.eventTimestamp}|${msg.text || ''}`;
+        `provider:${providerId}` :
+        `fallback:${msg.direction}|${msg.messageType}|${msg.eventTimestamp}|${msg.text || ''}`;
       if (!merged.has(fingerprint)) {
         merged.set(fingerprint, msg);
       }
@@ -238,7 +237,7 @@ export function InstagramInboxPage() {
     if (showLoading) setLoadingConversations(true);
     setError(null);
     try {
-      const response = await apiFetch<{items: ConversationItem[];}>('/api/admin/instagram-inbox/conversations?limit=40');
+      const response = await apiFetch<{ items: ConversationItem[]; }>('/api/admin/instagram-inbox/conversations?limit=40');
       const next = response?.items || [];
       setConversations(next);
       conversationsRef.current = next;
@@ -261,9 +260,9 @@ export function InstagramInboxPage() {
       const relatedKeys = findRelatedConversationKeys(conversationsRef.current, conversationKey).slice(0, 5);
       const responses = await Promise.all(
         relatedKeys.map((key) =>
-        apiFetch<{items: MessageItem[];conversationState?: ConversationStatePayload;}>(
-          `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`
-        )
+          apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
+            `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`
+          )
         )
       );
       const response = responses[0];
@@ -271,15 +270,15 @@ export function InstagramInboxPage() {
       if (response?.conversationState) {
         const patch = response.conversationState;
         setConversations((prev) =>
-        prev.map((item) =>
-        item.conversationKey === conversationKey ?
-        {
-          ...item,
-          ...patch,
-          automationMode: normalizeAutomationMode(patch.automationMode || item.automationMode)
-        } :
-        item
-        )
+          prev.map((item) =>
+            item.conversationKey === conversationKey ?
+              {
+                ...item,
+                ...patch,
+                automationMode: normalizeAutomationMode(patch.automationMode || item.automationMode)
+              } :
+              item
+          )
         );
       }
     } catch (err: any) {
@@ -312,9 +311,9 @@ export function InstagramInboxPage() {
     if (!accessToken) return;
 
     const streamUrl =
-    `${API_BASE_URL}/api/admin/conversations/stream` +
-    `?authToken=${encodeURIComponent(accessToken)}` +
-    `&channel=INSTAGRAM`;
+      `${API_BASE_URL}/api/admin/conversations/stream` +
+      `?authToken=${encodeURIComponent(accessToken)}` +
+      `&channel=INSTAGRAM`;
     const es = new EventSource(streamUrl);
 
     const scheduleYenile = () => {
@@ -355,11 +354,11 @@ export function InstagramInboxPage() {
         body: JSON.stringify({ text: replyText.trim() })
       });
       setReplyText('');
-      setActionInfo('Yanıt başarıyla gönderildi.');
+      setActionInfo('Reply sent successfully.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
-      setError(err?.message || 'Yanıt gönderilemedi.');
+      setError(err?.message || 'Reply could not be sent.');
     } finally {
       setSendingReply(false);
     }
@@ -372,18 +371,18 @@ export function InstagramInboxPage() {
     setActionInfo(null);
     setError(null);
     try {
-      const response = await apiFetch<{alreadyRequested?: boolean;}>(
+      const response = await apiFetch<{ alreadyRequested?: boolean; }>(
         `/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/handover`,
         {
           method: 'POST',
           body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' })
         }
       );
-      setActionInfo(response?.alreadyRequested ? 'Bu konuşma zaten bir temsilci tarafından devralınmış.' : 'Temsilciye devretme talebi oluşturuldu.');
+      setActionInfo(response?.alreadyRequested ? 'This conversation is already under human handover.' : 'Handover request created.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
-      setError(err?.message || 'Temsilciye devretme talebi başarısız oldu.');
+      setError(err?.message || 'Handover request failed.');
     } finally {
       setSendingHandover(false);
     }
@@ -419,7 +418,7 @@ export function InstagramInboxPage() {
           type="button"
           onClick={() => navigate('/app/features', { state: { navDirection: 'back' } })}
           className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
-          
+
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Geri</span>
         </button>
@@ -444,64 +443,62 @@ export function InstagramInboxPage() {
           <CardContent className="p-3 space-y-2">
             <p className="text-sm font-semibold">Konuşmalar</p>
             {loadingConversations ?
-            <div className="py-6 grid place-items-center text-muted-foreground">
+              <div className="py-6 grid place-items-center text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
               </div> :
-            conversations.length === 0 ?
-            <p className="text-xs text-muted-foreground py-3">Henüz Instagram konuşması yok.</p> :
+              conversations.length === 0 ?
+                <p className="text-xs text-muted-foreground py-3">Henüz Instagram konuşması yok.</p> :
 
-            <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
-                {conversations.map((item) => {
-                const active = item.conversationKey === selectedKey;
-                const displayName = conversationDisplayName(item);
-                return (
-                  <button
-                    key={item.conversationKey}
-                    type="button"
-                    onClick={() => setSelectedKey(item.conversationKey)}
-                    className={`w-full text-left rounded-xl border p-3 transition-all ${
-                    active ?
-                    'border-[var(--deep-indigo)]/60 bg-[var(--deep-indigo)]/10 shadow-sm' :
-                    'border-border/70 hover:bg-muted/40 hover:border-border'}`
-                    }>
-                    
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Avatar className="size-8 border border-border/60">
-                            {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
-                            <AvatarFallback className="text-[10px]">{initialsFromLabel(displayName)}</AvatarFallback>
-                          </Avatar>
-                          <p className="text-sm font-medium truncate">{displayName}</p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {item.unreadCount > 0 ?
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
-                              {item.unreadCount}
-                            </span> :
-                        null}
-                          <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
-                          
-                            {automationLabel(normalizeAutomationMode(item.automationMode))}
-                          </span>
-                          <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded ${
-                          item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
-                          }>
-                          
-                            {item.identityLinked ? 'Bağlı' : 'Bağlı Değil'}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <p className="text-[10px] text-muted-foreground">{formatTs(item.lastEventTimestamp)}</p>
-                        <span className="text-[10px] text-muted-foreground">{item.messageCount} msj</span>
-                      </div>
-                    </button>);
+                <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
+                  {conversations.map((item) => {
+                    const active = item.conversationKey === selectedKey;
+                    const displayName = conversationDisplayName(item);
+                    return (
+                      <button
+                        key={item.conversationKey}
+                        type="button"
+                        onClick={() => setSelectedKey(item.conversationKey)}
+                        className={`w-full text-left rounded-xl border p-3 transition-all ${active ?
+                            'border-[var(--deep-indigo)]/60 bg-[var(--deep-indigo)]/10 shadow-sm' :
+                            'border-border/70 hover:bg-muted/40 hover:border-border'}`
+                        }>
 
-              })}
-              </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Avatar className="size-8 border border-border/60">
+                              {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
+                              <AvatarFallback className="text-[10px]">{initialsFromLabel(displayName)}</AvatarFallback>
+                            </Avatar>
+                            <p className="text-sm font-medium truncate">{displayName}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {item.unreadCount > 0 ?
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
+                                {item.unreadCount}
+                              </span> :
+                              null}
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
+
+                              {automationLabel(normalizeAutomationMode(item.automationMode))}
+                            </span>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded ${item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
+                              }>
+
+                              {item.identityLinked ? 'Linked' : 'Unlinked'}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <p className="text-[10px] text-muted-foreground">{formatTs(item.lastEventTimestamp)}</p>
+                          <span className="text-[10px] text-muted-foreground">{item.messageCount} msg</span>
+                        </div>
+                      </button>);
+
+                  })}
+                </div>
             }
           </CardContent>
         </Card>
@@ -509,16 +506,16 @@ export function InstagramInboxPage() {
         <Card className="border-border/60 shadow-sm backdrop-blur bg-card/85">
           <CardContent className="p-3 space-y-3">
             {selectedConversation ?
-            <>
+              <>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar className="size-10 border border-border/60">
                       {selectedConversation.profilePicUrl ?
-                    <AvatarImage
-                      src={selectedConversation.profilePicUrl}
-                      alt={conversationDisplayName(selectedConversation)} /> :
+                        <AvatarImage
+                          src={selectedConversation.profilePicUrl}
+                          alt={conversationDisplayName(selectedConversation)} /> :
 
-                    null}
+                        null}
                       <AvatarFallback className="text-xs">
                         {initialsFromLabel(conversationDisplayName(selectedConversation))}
                       </AvatarFallback>
@@ -529,11 +526,11 @@ export function InstagramInboxPage() {
                       </p>
                       <p className="text-xs text-muted-foreground">Key: {selectedConversation.conversationKey}</p>
                       {(() => {
-                      const username = normalizeUsername(selectedConversation.profileUsername);
-                      return username ?
-                      <p className="text-[10px] text-muted-foreground truncate">@{username}</p> :
-                      null;
-                    })()}
+                        const username = normalizeUsername(selectedConversation.profileUsername);
+                        return username ?
+                          <p className="text-[10px] text-muted-foreground truncate">@{username}</p> :
+                          null;
+                      })()}
                       <div className="mt-1">
                         <span className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(selectedMode)}`}>
                           {automationLabel(selectedMode)}
@@ -543,103 +540,102 @@ export function InstagramInboxPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {selectedConversation.hasHandoverRequest ?
-                  <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Devir talep edildi</span> :
-                  null}
+                      <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Handover requested</span> :
+                      null}
                     {handoverInProgress ?
-                  <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
-                        {sendingResume ? 'Devam ediliyor...' : 'AI\'yı Yeniden Başlat'}
+                      <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
+                        {sendingResume ? 'Resuming...' : 'Resume AI'}
                       </Button> :
-                  null}
+                      null}
                     <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
-                      {sendingHandover ? 'Talep ediliyor...' : handoverInProgress ? "Handover Aktif" : 'Temsilciye Aktar'}
+                      {sendingHandover ? 'Requesting...' : handoverInProgress ? "Handover Aktif" : 'Request Handover'}
                     </Button>
                   </div>
                 </div>
 
                 <div
-                ref={messagesViewportRef}
-                onScroll={(event) => {
-                  const el = event.currentTarget;
-                  const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-                  stickToBottomRef.current = distanceToBottom < 48;
-                }}
-                className="rounded-xl border border-border/70 bg-muted/20 p-3 max-h-[52vh] overflow-y-auto space-y-2">
-                
+                  ref={messagesViewportRef}
+                  onScroll={(event) => {
+                    const el = event.currentTarget;
+                    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+                    stickToBottomRef.current = distanceToBottom < 48;
+                  }}
+                  className="rounded-xl border border-border/70 bg-muted/20 p-3 max-h-[52vh] overflow-y-auto space-y-2">
+
                   {loadingMessages ?
-                <div className="py-6 grid place-items-center text-muted-foreground">
+                    <div className="py-6 grid place-items-center text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
                     </div> :
-                messages.length === 0 ?
-                <p className="text-xs text-muted-foreground">Bu konuşmada mesaj yok.</p> :
+                    messages.length === 0 ?
+                      <p className="text-xs text-muted-foreground">Bu konuşmada mesaj yok.</p> :
 
-                messages.map((msg) => {
-                  const isOutbound = msg.direction === 'outbound';
-                  const isSistem = msg.direction === 'system';
-                  const senderLabel = isSistem ?
-                  'Sistem' :
-                  isOutbound ?
-                  msg.outboundSourceLabel || 'Salon' :
-                  "Müşteri";
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`max-w-[90%] rounded-lg border px-3 py-2 text-sm ${
-                      isSistem ?
-                      'bg-amber-50 border-amber-200 text-amber-900 mx-auto' :
-                      isOutbound ?
-                      'bg-[var(--deep-indigo)]/8 border-[var(--deep-indigo)]/20 ml-auto' :
-                      'bg-background border-border'}`
-                      }>
-                      
-                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
-                            {isSistem ? <AlertTriangle className="w-3 h-3" /> : isOutbound ? <Send className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
-                            <span>{senderLabel}</span>
-                            <span>•</span>
-                            <span>{formatTs(msg.eventTimestamp)}</span>
-                          </div>
-                          <p className="whitespace-pre-wrap break-words">{msg.text || `[${msg.messageType}]`}</p>
-                        </div>);
+                      messages.map((msg) => {
+                        const isOutbound = msg.direction === 'outbound';
+                        const isSistem = msg.direction === 'system';
+                        const senderLabel = isSistem ?
+                          'Sistem' :
+                          isOutbound ?
+                            msg.outboundSourceLabel || 'Salon' :
+                            "Müşteri";
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`max-w-[90%] rounded-lg border px-3 py-2 text-sm ${isSistem ?
+                                'bg-amber-50 border-amber-200 text-amber-900 mx-auto' :
+                                isOutbound ?
+                                  'bg-[var(--deep-indigo)]/8 border-[var(--deep-indigo)]/20 ml-auto' :
+                                  'bg-background border-border'}`
+                            }>
 
-                })
-                }
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
+                              {isSistem ? <AlertTriangle className="w-3 h-3" /> : isOutbound ? <Send className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
+                              <span>{senderLabel}</span>
+                              <span>•</span>
+                              <span>{formatTs(msg.eventTimestamp)}</span>
+                            </div>
+                            <p className="whitespace-pre-wrap break-words">{msg.text || `[${msg.messageType}]`}</p>
+                          </div>);
+
+                      })
+                  }
                 </div>
 
                 <div className="flex gap-2">
                   <Input
-                  value={replyText}
-                  onChange={(event) => setReplyText(event.target.value)}
-                  placeholder="Müşteriye manuel yanıt yazın"
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      void sendReply();
-                    }
-                  }} />
-                
+                    value={replyText}
+                    onChange={(event) => setReplyText(event.target.value)}
+                    placeholder="Müşteriye manuel yanıt yazın"
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        void sendReply();
+                      }
+                    }} />
+
                   <Button type="button" onClick={sendReply} disabled={sendingReply || !replyText.trim()}>
                     {sendingReply ? "Gönderiliyor..." : "Gönder"}
                   </Button>
                 </div>
               </> :
 
-            <div className="py-12 text-center text-muted-foreground">
+              <div className="py-12 text-center text-muted-foreground">
                 <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-60" />
                 <p className="text-sm">Mesajları görmek için bir konuşma seçin.</p>
               </div>
             }
 
             {actionInfo ?
-            <div className="rounded-lg border border-green-200 bg-green-50 text-green-800 px-3 py-2 text-xs flex items-center gap-2">
+              <div className="rounded-lg border border-green-200 bg-green-50 text-green-800 px-3 py-2 text-xs flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{actionInfo}</span>
               </div> :
-            null}
+              null}
 
             {error ?
-            <div className="rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2 text-xs">
+              <div className="rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2 text-xs">
                 {error}
               </div> :
-            null}
+              null}
           </CardContent>
         </Card>
       </div>

@@ -151,24 +151,24 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Personel Yönetimi</h1>
+            <h1 className="text-2xl font-semibold">Personel Management</h1>
             <p className="text-sm text-muted-foreground">Personel ve yetkiler</p>
           </div>
           <Button
             onClick={openAddDialog}
             disabled={!hasServices}
             style={{ backgroundColor: hasServices ? 'var(--rose-gold)' : undefined, color: hasServices ? 'white' : undefined }}>
-            
+
             <Plus className="w-4 h-4 mr-1" />
             Ekle
           </Button>
         </div>
 
         {!hasServices &&
-        <Alert className="mt-3 border-amber-500/50 bg-amber-500/10">
+          <Alert className="mt-3 border-amber-500/50 bg-amber-500/10">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-sm text-amber-800">
-              Personel eklemek için önce en az bir hizmet tanımlayın.
+              To add staff, define at least one service first.
             </AlertDescription>
           </Alert>
         }
@@ -177,71 +177,71 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
       {/* Staff List */}
       <div className="p-4 space-y-3">
         {staffList.map((staff) =>
-        <Card key={staff.id} className="border-border/50">
+          <Card key={staff.id} className="border-border/50">
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
                 <div
-                className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 text-white"
-                style={{ backgroundColor: staff.color }}>
-                
-                  {staff.avatar ?
-                <img src={staff.avatar} alt={staff.name} className="w-full h-full rounded-full object-cover" /> :
+                  className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 text-white"
+                  style={{ backgroundColor: staff.color }}>
 
-                <User className="w-7 h-7" />
-                }
+                  {staff.avatar ?
+                    <img src={staff.avatar} alt={staff.name} className="w-full h-full rounded-full object-cover" /> :
+
+                    <User className="w-7 h-7" />
+                  }
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground">{staff.name}</h3>
                   <p className="text-sm text-muted-foreground">{staff.role}</p>
-                  
+
                   <div className="flex flex-wrap gap-1.5 mt-3">
                     {(staff.serviceIds || []).map((serviceId) => {
-                    const service = getServiceById(serviceId);
-                    if (!service) return null;
+                      const service = getServiceById(serviceId);
+                      if (!service) return null;
 
-                    const hasCustomPrice = !!staff.customPricing?.[serviceId];
-                    const hasCustomDuration = !!staff.customDuration?.[serviceId];
+                      const hasCustomPrice = !!staff.customPricing?.[serviceId];
+                      const hasCustomDuration = !!staff.customDuration?.[serviceId];
 
-                    return (
-                      <Badge
-                        key={serviceId}
-                        variant="secondary"
-                        className="text-xs"
-                        style={{
-                          backgroundColor: hasCustomPrice || hasCustomDuration ? `${service.color}20` : undefined,
-                          borderColor: hasCustomPrice || hasCustomDuration ? service.color : undefined
-                        }}>
-                        
+                      return (
+                        <Badge
+                          key={serviceId}
+                          variant="secondary"
+                          className="text-xs"
+                          style={{
+                            backgroundColor: hasCustomPrice || hasCustomDuration ? `${service.color}20` : undefined,
+                            borderColor: hasCustomPrice || hasCustomDuration ? service.color : undefined
+                          }}>
+
                           {service.name}
                           {(hasCustomPrice || hasCustomDuration) &&
-                        <span className="ml-1 text-[10px] opacity-70">
+                            <span className="ml-1 text-[10px] opacity-70">
                               {hasCustomPrice && `₺${staff.customPricing![serviceId]}`}
                               {hasCustomPrice && hasCustomDuration && ' • '}
                               {hasCustomDuration && `${staff.customDuration![serviceId]}dk`}
                             </span>
-                        }
+                          }
                         </Badge>);
 
-                  })}
+                    })}
                   </div>
                 </div>
 
                 <div className="flex gap-1 shrink-0">
                   <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => openEditDialog(staff)}>
-                  
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => openEditDialog(staff)}>
+
                     <Edit2 className="w-4 h-4" />
                   </Button>
                   <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => handleDelete(staff.id)}>
-                  
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDelete(staff.id)}>
+
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -251,15 +251,15 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
         )}
 
         {staffList.length === 0 && hasServices &&
-        <Card className="border-border/50">
+          <Card className="border-border/50">
             <CardContent className="p-12 text-center">
               <div
-              className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-              style={{ backgroundColor: 'var(--rose-gold)15' }}>
-              
+                className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+                style={{ backgroundColor: 'var(--rose-gold)15' }}>
+
                 <User className="w-8 h-8" style={{ color: 'var(--rose-gold)' }} />
               </div>
-              <p className="text-muted-foreground mb-4">Henüz personel eklenmedi</p>
+              <p className="text-muted-foreground mb-4">Yok staff added yet</p>
               <Button onClick={openAddDialog} style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
                 <Plus className="w-4 h-4 mr-1" />
                 İlk Personeli Ekle
@@ -274,7 +274,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>
-              {editingStaff ? "Personeli Düzenle" : "Yeni Personel Ekle"}
+              {editingStaff ? "Düzenle Employee" : "Ekle New Employee"}
             </DialogTitle>
           </DialogHeader>
 
@@ -288,7 +288,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                   value={formData.name || ''}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Örneğin: Ayşe Yılmaz" />
-                
+
               </div>
 
               <div className="space-y-2">
@@ -298,7 +298,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                   value={formData.role || ''}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   placeholder="Örn: Saç Uzmanı" />
-                
+
               </div>
             </div>
 
@@ -311,13 +311,13 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                   value={formData.color || '#B76E79'}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   className="w-16 h-10 p-1" />
-                
+
                 <Input
                   value={formData.color || '#B76E79'}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   placeholder="#B76E79"
                   className="flex-1" />
-                
+
               </div>
             </div>
 
@@ -326,46 +326,46 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
               <div className="flex items-center justify-between">
                 <Label>Hizmetler *</Label>
                 <span className="text-xs text-muted-foreground">
-                  {selectedServices.size} hizmet seçildi
+                  {selectedServices.size} services selected
                 </span>
               </div>
 
               {selectedServices.size === 0 &&
-              <Alert className="border-amber-500/50 bg-amber-500/10">
+                <Alert className="border-amber-500/50 bg-amber-500/10">
                   <AlertCircle className="h-4 w-4 text-amber-600" />
                   <AlertDescription className="text-xs text-amber-800">
-                    En az bir hizmet seçmelisiniz
+                    You must select at least one service
                   </AlertDescription>
                 </Alert>
               }
 
               <div className="space-y-3 max-h-[400px] overflow-y-auto border border-border/50 rounded-lg p-3">
                 {Object.entries(servicesByCategory).map(([category, categoryServices]) =>
-                <div key={category} className="space-y-2">
+                  <div key={category} className="space-y-2">
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       {SERVICE_CATEGORY_LABELS[category as keyof typeof SERVICE_CATEGORY_LABELS]}
                     </h4>
                     <div className="space-y-3 pl-2">
                       {categoryServices.map((service) => {
-                      const isSelected = selectedServices.has(service.id);
-                      const showCustomOptions = isSelected;
+                        const isSelected = selectedServices.has(service.id);
+                        const showCustomOptions = isSelected;
 
-                      return (
-                        <div key={service.id} className="space-y-2">
+                        return (
+                          <div key={service.id} className="space-y-2">
                             <div className="flex items-center gap-3">
                               <Checkbox
-                              id={`service-${service.id}`}
-                              checked={isSelected}
-                              onCheckedChange={() => toggleService(service.id)} />
-                            
+                                id={`service-${service.id}`}
+                                checked={isSelected}
+                                onCheckedChange={() => toggleService(service.id)} />
+
                               <div
-                              className="w-6 h-6 rounded"
-                              style={{ backgroundColor: service.color }} />
-                            
+                                className="w-6 h-6 rounded"
+                                style={{ backgroundColor: service.color }} />
+
                               <label
-                              htmlFor={`service-${service.id}`}
-                              className="flex-1 text-sm font-medium cursor-pointer">
-                              
+                                htmlFor={`service-${service.id}`}
+                                className="flex-1 text-sm font-medium cursor-pointer">
+
                                 {service.name}
                                 <span className="ml-2 text-xs text-muted-foreground">
                                   ({service.duration}dk • ₺{service.price})
@@ -375,71 +375,71 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
 
                             {/* Özel Fiyat ve Süre */}
                             {showCustomOptions &&
-                          <div className="ml-9 space-y-2 p-3 bg-muted/30 rounded-lg">
+                              <div className="ml-9 space-y-2 p-3 bg-muted/30 rounded-lg">
                                 <div className="flex items-center gap-3">
                                   <Switch
-                                id={`custom-price-${service.id}`}
-                                checked={customPricingEnabled[service.id] || false}
-                                onCheckedChange={(checked) => {
-                                  setCustomPricingEnabled({ ...customPricingEnabled, [service.id]: checked });
-                                  if (!checked) {
-                                    const newPricing = { ...customPricing };
-                                    delete newPricing[service.id];
-                                    setCustomPricing(newPricing);
-                                  }
-                                }} />
-                              
+                                    id={`custom-price-${service.id}`}
+                                    checked={customPricingEnabled[service.id] || false}
+                                    onCheckedChange={(checked) => {
+                                      setCustomPricingEnabled({ ...customPricingEnabled, [service.id]: checked });
+                                      if (!checked) {
+                                        const newPricing = { ...customPricing };
+                                        delete newPricing[service.id];
+                                        setCustomPricing(newPricing);
+                                      }
+                                    }} />
+
                                   <Label htmlFor={`custom-price-${service.id}`} className="text-xs flex-1">
                                     Özel Fiyat
                                   </Label>
                                   {customPricingEnabled[service.id] &&
-                              <Input
-                                type="number"
-                                value={customPricing[service.id] || ''}
-                                onChange={(e) => setCustomPricing({
-                                  ...customPricing,
-                                  [service.id]: parseFloat(e.target.value)
-                                })}
-                                placeholder={`${service.price}`}
-                                className="w-24 h-8 text-xs" />
+                                    <Input
+                                      type="number"
+                                      value={customPricing[service.id] || ''}
+                                      onChange={(e) => setCustomPricing({
+                                        ...customPricing,
+                                        [service.id]: parseFloat(e.target.value)
+                                      })}
+                                      placeholder={`${service.price}`}
+                                      className="w-24 h-8 text-xs" />
 
-                              }
+                                  }
                                 </div>
 
                                 <div className="flex items-center gap-3">
                                   <Switch
-                                id={`custom-duration-${service.id}`}
-                                checked={customDurationEnabled[service.id] || false}
-                                onCheckedChange={(checked) => {
-                                  setCustomDurationEnabled({ ...customDurationEnabled, [service.id]: checked });
-                                  if (!checked) {
-                                    const newDuration = { ...customDuration };
-                                    delete newDuration[service.id];
-                                    setCustomDuration(newDuration);
-                                  }
-                                }} />
-                              
+                                    id={`custom-duration-${service.id}`}
+                                    checked={customDurationEnabled[service.id] || false}
+                                    onCheckedChange={(checked) => {
+                                      setCustomDurationEnabled({ ...customDurationEnabled, [service.id]: checked });
+                                      if (!checked) {
+                                        const newDuration = { ...customDuration };
+                                        delete newDuration[service.id];
+                                        setCustomDuration(newDuration);
+                                      }
+                                    }} />
+
                                   <Label htmlFor={`custom-duration-${service.id}`} className="text-xs flex-1">
                                     Özel Süre
                                   </Label>
                                   {customDurationEnabled[service.id] &&
-                              <Input
-                                type="number"
-                                value={customDuration[service.id] || ''}
-                                onChange={(e) => setCustomDuration({
-                                  ...customDuration,
-                                  [service.id]: parseInt(e.target.value)
-                                })}
-                                placeholder={`${service.duration}`}
-                                className="w-24 h-8 text-xs" />
+                                    <Input
+                                      type="number"
+                                      value={customDuration[service.id] || ''}
+                                      onChange={(e) => setCustomDuration({
+                                        ...customDuration,
+                                        [service.id]: parseInt(e.target.value)
+                                      })}
+                                      placeholder={`${service.duration}`}
+                                      className="w-24 h-8 text-xs" />
 
-                              }
+                                  }
                                 </div>
                               </div>
-                          }
+                            }
                           </div>);
 
-                    })}
+                      })}
                     </div>
                   </div>
                 )}
@@ -455,7 +455,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
               onClick={handleSave}
               disabled={!formData.name || !formData.role || selectedServices.size === 0}
               style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
-              
+
               {editingStaff ? "Güncelle" : "Ekle"}
             </Button>
           </DialogFooter>

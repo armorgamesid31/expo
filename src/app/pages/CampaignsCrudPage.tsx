@@ -64,7 +64,7 @@ interface TemplateField {
   valueKind: TemplateFieldValueKind;
   min?: number;
   step?: number;
-  options?: Array<{value: string;label: string;}>;
+  options?: Array<{ value: string; label: string; }>;
 }
 
 interface CampaignTemplate {
@@ -91,312 +91,312 @@ interface CampaignDraft {
   configInputs: Record<string, string>;
 }
 
-const WEEKDAY_OPTIONS: Array<{value: string;label: string;}> = [
-{ value: 'MON', label: 'Pzt' },
-{ value: 'TUE', label: 'Sal' },
-{ value: 'WED', label: 'Çar' },
-{ value: 'THU', label: 'Per' },
-{ value: 'FRI', label: 'Cum' },
-{ value: 'SAT', label: 'Cts' },
-{ value: 'SUN', label: 'Paz' }];
+const WEEKDAY_OPTIONS: Array<{ value: string; label: string; }> = [
+  { value: 'MON', label: 'Pzt' },
+  { value: 'TUE', label: 'Sal' },
+  { value: 'WED', label: 'Wed' },
+  { value: 'THU', label: 'Per' },
+  { value: 'FRI', label: 'Cum' },
+  { value: 'SAT', label: 'Cts' },
+  { value: 'SUN', label: 'Paz' }];
 
 
-const TIME_OPTIONS: Array<{value: string;label: string;}> = [
-{ value: '09:00', label: '09:00' },
-{ value: '10:00', label: '10:00' },
-{ value: '11:00', label: '11:00' },
-{ value: '12:00', label: '12:00' },
-{ value: '13:00', label: '13:00' },
-{ value: '14:00', label: '14:00' },
-{ value: '15:00', label: '15:00' },
-{ value: '16:00', label: '16:00' },
-{ value: '17:00', label: '17:00' },
-{ value: '18:00', label: '18:00' },
-{ value: '19:00', label: '19:00' },
-{ value: '20:00', label: '20:00' },
-{ value: '21:00', label: '21:00' }];
+const TIME_OPTIONS: Array<{ value: string; label: string; }> = [
+  { value: '09:00', label: '09:00' },
+  { value: '10:00', label: '10:00' },
+  { value: '11:00', label: '11:00' },
+  { value: '12:00', label: '12:00' },
+  { value: '13:00', label: '13:00' },
+  { value: '14:00', label: '14:00' },
+  { value: '15:00', label: '15:00' },
+  { value: '16:00', label: '16:00' },
+  { value: '17:00', label: '17:00' },
+  { value: '18:00', label: '18:00' },
+  { value: '19:00', label: '19:00' },
+  { value: '20:00', label: '20:00' },
+  { value: '21:00', label: '21:00' }];
 
 
 const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
-{
-  key: 'loyalty',
-  name: "Sadakat Kampanyası",
-  type: 'LOYALTY',
-  bullets: ['Puan sistemi', 'Yeniden randevu teşviki'],
-  icon: Award,
-  config: {
-    pointsPerVisit: 1,
-    rewardThreshold: 5,
-    rewardType: 'discount_percent',
-    rewardValue: 15
-  },
-  fields: [
-  { key: 'pointsPerVisit', label: 'Her ziyarette puan', type: 'number', valueKind: 'number', min: 1, step: 1 },
-  { key: 'rewardThreshold', label: 'Ödül için ziyaret sayısı', type: 'number', valueKind: 'number', min: 1, step: 1 },
   {
-    key: 'rewardType',
-    label: 'Reward tipi',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'discount_percent', label: 'Yüzdelik indirim' },
-    { value: 'fixed_amount', label: 'Sabit tutar' }]
+    key: 'loyalty',
+    name: "Sadakat Kampanyası",
+    type: 'LOYALTY',
+    bullets: ['Puan sistemi', 'Reappointment incentive'],
+    icon: Award,
+    config: {
+      pointsPerVisit: 1,
+      rewardThreshold: 5,
+      rewardType: 'discount_percent',
+      rewardValue: 15
+    },
+    fields: [
+      { key: 'pointsPerVisit', label: 'Her ziyarette puan', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'rewardThreshold', label: 'Number of visits for rewards', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      {
+        key: 'rewardType',
+        label: 'Reward tipi',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'fixed_amount', label: 'Sabit tutar' }]
 
-  },
-  { key: 'rewardValue', label: 'Ödül değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }]
-
-},
-{
-  key: 'multi-service',
-  name: "Çoklu Hizmet İndirimi",
-  type: 'MULTI_SERVICE_DISCOUNT',
-  bullets: ['2+ hizmette kampanya', 'Sepeti büyütme'],
-  icon: Users,
-  config: {
-    minServiceCount: 2,
-    discountType: 'discount_percent',
-    discountValue: 10,
-    appliesTo: 'same_appointment'
-  },
-  fields: [
-  { key: 'minServiceCount', label: 'Minimum hizmet sayisi', type: 'number', valueKind: 'number', min: 2, step: 1 },
-  {
-    key: 'discountType',
-    label: 'İndirim tipi',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'discount_percent', label: 'percent discount' },
-    { value: 'fixed_amount', label: 'Sabit tutar' }]
-
-  },
-  { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
-  {
-    key: 'appliesTo',
-    label: 'Uygulama tipi',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'same_appointment', label: 'aynı randevu' },
-    { value: 'same_day', label: 'aynı gün' }]
-
-  }]
-
-},
-{
-  key: 'referral',
-  name: "Arkadaşını Getir Kampanyası",
-  type: 'REFERRAL',
-  bullets: ['Sabit/Yüzdelik ödül', 'İlk randevu tetikleme kuralı'],
-  icon: UserPlus,
-  config: {
-    rewardType: 'discount_percent',
-    referrerRewardValue: 10,
-    referredCustomerRewardValue: 10,
-    activationTiming: 'first_appointment',
-    combineWithWelcomeCampaign: false
-  },
-  fields: [
-  {
-    key: 'rewardType',
-    label: 'İndirim tipi',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'discount_percent', label: 'percent discount' },
-    { value: 'fixed_amount', label: 'Sabit tutar' }]
+      },
+      { key: 'rewardValue', label: 'Reward value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
 
   },
   {
-    key: 'referrerRewardValue',
-    label: 'Davet eden ödülü',
-    type: 'number',
-    valueKind: 'number',
-    min: 1,
-    step: 1
-  },
-  {
-    key: "referredMüşteriRewardValue",
-    label: 'Yeni gelen ödülü',
-    type: 'number',
-    valueKind: 'number',
-    min: 1,
-    step: 1
-  },
-  {
-    key: 'activationTiming',
-    label: 'Ne zaman aktif olsun?',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'first_appointment', label: 'İlk randevuda geçerli' },
-    { value: 'after_first_completed', label: "İlk randevu tamamlandıktan sonra" }]
+    key: 'multi-service',
+    name: "Çoklu Hizmet İndirimi",
+    type: 'MULTI_SERVICE_DISCOUNT',
+    bullets: ['2+ servicete campaign', 'Enlarge cart'],
+    icon: Users,
+    config: {
+      minServiceCount: 2,
+      discountType: 'discount_percent',
+      discountValue: 10,
+      appliesTo: 'same_appointment'
+    },
+    fields: [
+      { key: 'minServiceCount', label: 'Minimum hizmet sayisi', type: 'number', valueKind: 'number', min: 2, step: 1 },
+      {
+        key: 'discountType',
+        label: 'Discount type',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'fixed_amount', label: 'Sabit tutar' }]
+
+      },
+      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      {
+        key: 'appliesTo',
+        label: 'Uygulama tipi',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'same_appointment', label: 'aynı randevu' },
+          { value: 'same_day', label: 'same days' }]
+
+      }]
 
   },
   {
-    key: 'combineWithWelcomeCampaign',
-    label: 'İlk müşteri kampanyası ile birleştirilsin mi?',
-    type: 'select',
-    valueKind: 'boolean',
-    options: [
-    { value: 'false', label: 'No' },
-    { value: 'true', label: 'Evet' }]
+    key: 'referral',
+    name: "Arkadaşını Getir Kampanyası",
+    type: 'REFERRAL',
+    bullets: ['Fixed/Percent reward', 'İlk randevu tetikleme kuralı'],
+    icon: UserPlus,
+    config: {
+      rewardType: 'discount_percent',
+      referrerRewardValue: 10,
+      referredCustomerRewardValue: 10,
+      activationTiming: 'first_appointment',
+      combineWithWelcomeCampaign: false
+    },
+    fields: [
+      {
+        key: 'rewardType',
+        label: 'Discount type',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'fixed_amount', label: 'Sabit tutar' }]
 
-  }]
+      },
+      {
+        key: 'referrerRewardValue',
+        label: 'Inviter reward',
+        type: 'number',
+        valueKind: 'number',
+        min: 1,
+        step: 1
+      },
+      {
+        key: "referredMüşteriRewardValue",
+        label: 'newcomer award',
+        type: 'number',
+        valueKind: 'number',
+        min: 1,
+        step: 1
+      },
+      {
+        key: 'activationTiming',
+        label: 'When should it be activated?',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'first_appointment', label: 'İlk randevuda geçerli' },
+          { value: 'after_first_completed', label: "İlk randevu tamamlandıktan sonra" }]
 
-},
-{
-  key: 'birthday',
-  name: "Doğum Günü Kampanyası",
-  type: 'BIRTHDAY',
-  bullets: ['Sabit/Yüzdelik indirim', 'Kısa kullanım süresi'],
-  icon: Gift,
-  config: {
-    discountType: 'discount_percent',
-    discountValue: 20,
-    validDaysAfterBirthday: 7
-  },
-  fields: [
-  {
-    key: 'discountType',
-    label: 'Discount type',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'discount_percent', label: 'percent discount' },
-    { value: 'fixed_amount', label: 'Sabit tutar' }]
+      },
+      {
+        key: 'combineWithWelcomeCampaign',
+        label: 'Combine with first time customer campaign?',
+        type: 'select',
+        valueKind: 'boolean',
+        options: [
+          { value: 'false', label: 'No' },
+          { value: 'true', label: 'Evet' }]
 
-  },
-  { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
-  {
-    key: 'validDaysAfterBirthday',
-    label: 'Doğum gününden sonra geçerlilik (gün)',
-    type: 'number',
-    valueKind: 'number',
-    min: 1,
-    step: 1
-  }]
-
-},
-{
-  key: 'winback',
-  name: "Geri Kazanım Kampanyası",
-  type: 'WINBACK',
-  bullets: ['30-60 gün pasif müşteri hedefi', 'Tek seferlik teklif'],
-  icon: Bell,
-  config: {
-    inactiveDaysThreshold: 30,
-    offerType: 'discount_percent',
-    offerValue: 15
-  },
-  fields: [
-  {
-    key: 'inactiveDaysThreshold',
-    label: 'Pasiflik eşiği',
-    type: 'select',
-    valueKind: 'number',
-    options: [
-    { value: '30', label: '30 days' },
-    { value: '45', label: '45 days' },
-    { value: '60', label: '60 days' }]
+      }]
 
   },
   {
-    key: 'offerType',
-    label: 'Teklif tipi',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'discount_percent', label: 'percent discount' },
-    { value: 'fixed_amount', label: 'Sabit tutar' }]
+    key: 'birthday',
+    name: "Doğum Günü Kampanyası",
+    type: 'BIRTHDAY',
+    bullets: ['Fixed/Percentage discount', 'Short usage duration'],
+    icon: Gift,
+    config: {
+      discountType: 'discount_percent',
+      discountValue: 20,
+      validDaysAfterBirthday: 7
+    },
+    fields: [
+      {
+        key: 'discountType',
+        label: 'Discount type',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'fixed_amount', label: 'Sabit tutar' }]
 
-  },
-  { key: 'offerValue', label: 'bid value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
+      },
+      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      {
+        key: 'validDaysAfterBirthday',
+        label: 'Validity after birthday (days)',
+        type: 'number',
+        valueKind: 'number',
+        min: 1,
+        step: 1
+      }]
 
-},
-{
-  key: 'welcome',
-  name: 'İlk Randevuya Hoş Geldin',
-  type: 'WELCOME_FIRST_VISIT',
-  bullets: ['Sabit/Yüzdelik indirim', 'Arkadaş tavsiyesi ile birleştirme'],
-  icon: Calendar,
-  config: {
-    discountType: 'discount_percent',
-    discountValue: 15,
-    combineWithReferralCampaign: false
-  },
-  fields: [
-  {
-    key: 'discountType',
-    label: 'İndirim tipi',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'discount_percent', label: 'percent discount' },
-    { value: 'fixed_amount', label: 'Sabit tutar' }]
-
-  },
-  { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
-  {
-    key: 'combineWithReferralCampaign',
-    label: 'Arkadaşını Getir kampanyası ile birleştirilsin mi?',
-    type: 'select',
-    valueKind: 'boolean',
-    options: [
-    { value: 'false', label: 'No' },
-    { value: 'true', label: 'Evet' }]
-
-  }]
-
-},
-{
-  key: 'off-peak',
-  name: 'Boş Saatleri Doldurma',
-  type: 'OFF_PEAK_FILL',
-  bullets: ['Gün seçimi', 'Saat seçimi', 'Sabit/Yüzdelik indirim'],
-  icon: Clock3,
-  config: {
-    weekdays: ['MON', 'TUE', 'WED', 'THU'],
-    startHour: '12:00',
-    endHour: '16:00',
-    discountType: 'discount_percent',
-    discountValue: 15
-  },
-  fields: [
-  {
-    key: 'weekdays',
-    label: 'Geçerli günler',
-    type: 'multi-select',
-    valueKind: 'stringArray',
-    options: WEEKDAY_OPTIONS
   },
   {
-    key: 'startHour',
-    label: 'Başlangıç saati',
-    type: 'select',
-    valueKind: 'string',
-    options: TIME_OPTIONS
-  },
-  {
-    key: 'endHour',
-    label: 'Bitiş saati',
-    type: 'select',
-    valueKind: 'string',
-    options: TIME_OPTIONS
-  },
-  {
-    key: 'discountType',
-    label: 'İndirim tipi',
-    type: 'select',
-    valueKind: 'string',
-    options: [
-    { value: 'discount_percent', label: 'percent discount' },
-    { value: 'fixed_amount', label: 'Sabit tutar' }]
+    key: 'winback',
+    name: "Geri Kazanım Kampanyası",
+    type: 'WINBACK',
+    bullets: ['30-60 days pasif customer hedefi', 'Tek seferlik teklif'],
+    icon: Bell,
+    config: {
+      inactiveDaysThreshold: 30,
+      offerType: 'discount_percent',
+      offerValue: 15
+    },
+    fields: [
+      {
+        key: 'inactiveDaysThreshold',
+        label: 'passivity threshold',
+        type: 'select',
+        valueKind: 'number',
+        options: [
+          { value: '30', label: '30 days' },
+          { value: '45', label: '45 days' },
+          { value: '60', label: '60 days' }]
+
+      },
+      {
+        key: 'offerType',
+        label: 'Teklif tipi',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'fixed_amount', label: 'Sabit tutar' }]
+
+      },
+      { key: 'offerValue', label: 'bid value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
 
   },
-  { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
+  {
+    key: 'welcome',
+    name: 'İlk Randevuya Hoş Geldin',
+    type: 'WELCOME_FIRST_VISIT',
+    bullets: ['Fixed/Percentage discount', 'Use with arknamebring'],
+    icon: Calendar,
+    config: {
+      discountType: 'discount_percent',
+      discountValue: 15,
+      combineWithReferralCampaign: false
+    },
+    fields: [
+      {
+        key: 'discountType',
+        label: 'Discount type',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'fixed_amount', label: 'Sabit tutar' }]
 
-}];
+      },
+      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      {
+        key: 'combineWithReferralCampaign',
+        label: 'Should it be combined with the Bring Your Arkname campaign?',
+        type: 'select',
+        valueKind: 'boolean',
+        options: [
+          { value: 'false', label: 'No' },
+          { value: 'true', label: 'Evet' }]
+
+      }]
+
+  },
+  {
+    key: 'off-peak',
+    name: 'Filling Empty Hours',
+    type: 'OFF_PEAK_FILL',
+    bullets: ['Day selection', 'Time selection', 'Fixed/Percentage discount'],
+    icon: Clock3,
+    config: {
+      weekdays: ['MON', 'TUE', 'WED', 'THU'],
+      startHour: '12:00',
+      endHour: '16:00',
+      discountType: 'discount_percent',
+      discountValue: 15
+    },
+    fields: [
+      {
+        key: 'weekdays',
+        label: 'Valid days',
+        type: 'multi-select',
+        valueKind: 'stringArray',
+        options: WEEKDAY_OPTIONS
+      },
+      {
+        key: 'startHour',
+        label: 'start time',
+        type: 'select',
+        valueKind: 'string',
+        options: TIME_OPTIONS
+      },
+      {
+        key: 'endHour',
+        label: 'end time',
+        type: 'select',
+        valueKind: 'string',
+        options: TIME_OPTIONS
+      },
+      {
+        key: 'discountType',
+        label: 'Discount type',
+        type: 'select',
+        valueKind: 'string',
+        options: [
+          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'fixed_amount', label: 'Sabit tutar' }]
+
+      },
+      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
+
+  }];
 
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -513,9 +513,9 @@ function parseConfigFromInputs(template: CampaignTemplate, configInputs: Record<
 
     if (field.valueKind === 'stringArray') {
       config[field.key] = raw.
-      split(',').
-      map((entry) => entry.trim()).
-      filter(Boolean);
+        split(',').
+        map((entry) => entry.trim()).
+        filter(Boolean);
       return;
     }
 
@@ -548,10 +548,10 @@ export function CampaignsCrudPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiFetch<{items: CampaignItem[];}>('/api/admin/campaigns');
+      const response = await apiFetch<{ items: CampaignItem[]; }>('/api/admin/campaigns');
       setItems(response.items || []);
     } catch (err: any) {
-      setError(err?.message || 'Kampanyalar alınamadı.');
+      setError(err?.message || 'Campaigns cannot be received.');
     } finally {
       setLoading(false);
     }
@@ -564,29 +564,29 @@ export function CampaignsCrudPage() {
   const now = new Date();
   const activeItems = useMemo(
     () =>
-    items.filter((item) => {
-      if (!item.isActive) {
-        return false;
-      }
-      if (!item.endsAt) {
-        return true;
-      }
-      return new Date(item.endsAt) >= now;
-    }),
+      items.filter((item) => {
+        if (!item.isActive) {
+          return false;
+        }
+        if (!item.endsAt) {
+          return true;
+        }
+        return new Date(item.endsAt) >= now;
+      }),
     [items]
   );
 
   const previousItems = useMemo(
     () =>
-    items.filter((item) => {
-      if (!item.isActive) {
-        return true;
-      }
-      if (!item.endsAt) {
-        return false;
-      }
-      return new Date(item.endsAt) < now;
-    }),
+      items.filter((item) => {
+        if (!item.isActive) {
+          return true;
+        }
+        if (!item.endsAt) {
+          return false;
+        }
+        return new Date(item.endsAt) < now;
+      }),
     [items]
   );
 
@@ -617,7 +617,7 @@ export function CampaignsCrudPage() {
     setSavingCreate(true);
     setError(null);
     try {
-      const response = await apiFetch<{item: CampaignItem;}>('/api/admin/campaigns', {
+      const response = await apiFetch<{ item: CampaignItem; }>('/api/admin/campaigns', {
         method: 'POST',
         body: JSON.stringify({
           name: template.name,
@@ -683,14 +683,14 @@ export function CampaignsCrudPage() {
     }
     const template = templateByType(detailDraft.type);
     if (!template) {
-      setDetailError('Bu kampanya türü için düzenleme alanı tanımlanmamış.');
+      setDetailError('The editing field is not defined for this campaign type.');
       return;
     }
 
     setSavingDetail(true);
     setDetailError(null);
     try {
-      const response = await apiFetch<{item: CampaignItem;}>(`/api/admin/campaigns/${detailDraft.id}`, {
+      const response = await apiFetch<{ item: CampaignItem; }>(`/api/admin/campaigns/${detailDraft.id}`, {
         method: 'PATCH',
         body: JSON.stringify({
           type: detailDraft.type,
@@ -742,7 +742,7 @@ export function CampaignsCrudPage() {
   const publishDetail = async () => {
     if (!detailDraft?.id) return;
     try {
-      await apiFetch<{item: CampaignItem;}>(`/api/admin/campaigns/${detailDraft.id}/publish`, { method: 'POST' });
+      await apiFetch<{ item: CampaignItem; }>(`/api/admin/campaigns/${detailDraft.id}/publish`, { method: 'POST' });
       await loname();
       await openDetail({ id: detailDraft.id, name: '', type: detailDraft.type, description: null, config: {}, isActive: true });
     } catch (err: any) {
@@ -761,53 +761,53 @@ export function CampaignsCrudPage() {
   };
 
   const renderTemplateFields = (
-  template: CampaignTemplate,
-  configInputs: Record<string, string>,
-  onChange: (key: string, value: string) => void) =>
+    template: CampaignTemplate,
+    configInputs: Record<string, string>,
+    onChange: (key: string, value: string) => void) =>
 
-  <div className="space-y-3">
+    <div className="space-y-3">
       {template.fields.map((field) => {
-      if (field.type === 'multi-select') {
-        const currentValues = (configInputs[field.key] || '').
-        split(',').
-        map((item) => item.trim()).
-        filter(Boolean);
+        if (field.type === 'multi-select') {
+          const currentValues = (configInputs[field.key] || '').
+            split(',').
+            map((item) => item.trim()).
+            filter(Boolean);
 
-        return (
-          <div key={field.key} className="space-y-1.5">
+          return (
+            <div key={field.key} className="space-y-1.5">
               <Label>{field.label}</Label>
               <div className="flex flex-wrap gap-2">
                 {(field.options || []).map((option) => {
-                const isSelected = currentValues.includes(option.value);
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      const nextValues = isSelected ?
-                      currentValues.filter((value) => value !== option.value) :
-                      [...currentValues, option.value];
-                      onChange(field.key, nextValues.join(','));
-                    }}
-                    className={cn(
-                      'rounded-md border px-3 py-1.5 text-sm transition-colors',
-                      isSelected ?
-                      'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
-                      'border-border text-muted-foreground'
-                    )}>
-                    
+                  const isSelected = currentValues.includes(option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        const nextValues = isSelected ?
+                          currentValues.filter((value) => value !== option.value) :
+                          [...currentValues, option.value];
+                        onChange(field.key, nextValues.join(','));
+                      }}
+                      className={cn(
+                        'rounded-md border px-3 py-1.5 text-sm transition-colors',
+                        isSelected ?
+                          'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
+                          'border-border text-muted-foreground'
+                      )}>
+
                       {option.label}
                     </button>);
 
-              })}
+                })}
               </div>
             </div>);
 
-      }
+        }
 
-      if (field.type === 'select') {
-        return (
-          <div key={field.key} className="space-y-1.5">
+        if (field.type === 'select') {
+          return (
+            <div key={field.key} className="space-y-1.5">
               <Label>{field.label}</Label>
               <Select value={configInputs[field.key] || ''} onValueChange={(value) => onChange(field.key, value)}>
                 <SelectTrigger>
@@ -815,29 +815,29 @@ export function CampaignsCrudPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {(field.options || []).map((option) =>
-                <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
-                )}
+                  )}
                 </SelectContent>
               </Select>
             </div>);
 
-      }
+        }
 
-      return (
-        <div key={field.key} className="space-y-1.5">
+        return (
+          <div key={field.key} className="space-y-1.5">
             <Label>{field.label}</Label>
             <Input
-            type="number"
-            min={field.min}
-            step={field.step}
-            value={configInputs[field.key] || ''}
-            onChange={(event) => onChange(field.key, event.target.value)} />
-          
+              type="number"
+              min={field.min}
+              step={field.step}
+              value={configInputs[field.key] || ''}
+              onChange={(event) => onChange(field.key, event.target.value)} />
+
           </div>);
 
-    })}
+      })}
     </div>;
 
 
@@ -850,26 +850,26 @@ export function CampaignsCrudPage() {
 
       <div className="p-4 space-y-4">
         {error ?
-        <Card className="border-red-300 bg-red-50">
+          <Card className="border-red-300 bg-red-50">
             <CardContent className="p-3">
               <p className="text-sm text-red-600">{error}</p>
             </CardContent>
           </Card> :
-        null}
+          null}
 
         <Button
           className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
           onClick={() => setShowTemplatePicker((prev) => !prev)}>
-          
+
           {showTemplatePicker ? "Şablonları Gizle" : "Yeni Kampanya Oluştur"}
         </Button>
 
         {showTemplatePicker ?
-        <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             {CAMPAIGN_TEMPLATES.map((template) => {
-            const Icon = template.icon;
-            return (
-              <Card key={template.key} className="border border-border bg-card shnameow-sm">
+              const Icon = template.icon;
+              return (
+                <Card key={template.key} className="border border-border bg-card shnameow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[var(--rose-gold)] bg-[var(--rose-gold)]/12">
@@ -879,13 +879,13 @@ export function CampaignsCrudPage() {
                         <h3 className="text-base font-semibold lenameing-tight text-foreground">{template.name}</h3>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {template.bullets.map((bullet) =>
-                        <span
-                          key={bullet}
-                          className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                          
+                            <span
+                              key={bullet}
+                              className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+
                               {bullet}
                             </span>
-                        )}
+                          )}
                         </div>
                       </div>
                     </div>
@@ -896,28 +896,28 @@ export function CampaignsCrudPage() {
                   </CardContent>
                 </Card>);
 
-          })}
+            })}
           </div> :
-        null}
+          null}
 
         <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Aktif Campaigns</p>
 
         {loading ?
-        <Card className="border border-border bg-card">
+          <Card className="border border-border bg-card">
             <CardContent className="p-4 text-sm text-muted-foreground">Yükleniyor...</CardContent>
           </Card> :
-        null}
+          null}
 
         {!loading && activeItems.length === 0 ?
-        <Card className="border border-dashed border-border bg-card">
+          <Card className="border border-dashed border-border bg-card">
             <CardContent className="p-4 text-center text-sm text-muted-foreground">Aktif campaign yok.</CardContent>
           </Card> :
-        null}
+          null}
 
         {!loading && activeItems.length > 0 ?
-        <div className="space-y-2">
+          <div className="space-y-2">
             {activeItems.map((item) =>
-          <Card key={item.id} className="border border-border bg-card">
+              <Card key={item.id} className="border border-border bg-card">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-foreground">{displayCampaignName(item)}</p>
@@ -934,22 +934,22 @@ export function CampaignsCrudPage() {
                   </Button>
                 </CardContent>
               </Card>
-          )}
+            )}
           </div> :
-        null}
+          null}
 
         <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Firstki Campaigns</p>
 
         {!loading && previousItems.length === 0 ?
-        <Card className="border border-dashed border-border bg-card">
+          <Card className="border border-dashed border-border bg-card">
             <CardContent className="p-4 text-center text-sm text-muted-foreground">Firstki campaign yok.</CardContent>
           </Card> :
-        null}
+          null}
 
         {!loading && previousItems.length > 0 ?
-        <div className="space-y-2">
+          <div className="space-y-2">
             {previousItems.map((item) =>
-          <Card key={item.id} className="border border-border bg-card">
+              <Card key={item.id} className="border border-border bg-card">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-foreground">{displayCampaignName(item)}</p>
@@ -966,55 +966,55 @@ export function CampaignsCrudPage() {
                   </Button>
                 </CardContent>
               </Card>
-          )}
+            )}
           </div> :
-        null}
+          null}
       </div>
 
       <Dialog open={Boolean(createDraft)} onOpenChange={(open) => !open ? setCreateDraft(null) : null}>
         <DialogContent
           className="max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]"
           aria-describedby={undefined}>
-          
+
           <DialogHeader>
             <DialogTitle>Şablon Ayarları</DialogTitle>
           </DialogHeader>
 
           {createDraft ?
-          <div className="space-y-3">
+            <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1.5">
                   <Label>Başlangıç Tarihi</Label>
                   <Input
-                  type="date"
-                  value={createDraft.startsAt}
-                  onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, startsAt: event.target.value } : prev)} />
-                
+                    type="date"
+                    value={createDraft.startsAt}
+                    onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, startsAt: event.target.value } : prev)} />
+
                 </div>
                 <div className="space-y-1.5">
                   <Label>End date</Label>
                   <Input
-                  type="date"
-                  value={createDraft.endsAt}
-                  onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, endsAt: event.target.value } : prev)} />
-                
+                    type="date"
+                    value={createDraft.endsAt}
+                    onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, endsAt: event.target.value } : prev)} />
+
                 </div>
                 <div className="space-y-1.5">
                   <Label>Öncelik</Label>
                   <Input
-                  type="number"
-                  value={createDraft.priority}
-                  onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, priority: event.target.value } : prev)} />
-                
+                    type="number"
+                    value={createDraft.priority}
+                    onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, priority: event.target.value } : prev)} />
+
                 </div>
                 <div className="space-y-1.5">
                   <Label>Teslimat Modu</Label>
                   <Select
-                  value={createDraft.deliveryMode}
-                  onValueChange={(value: 'AUTO' | 'MANUAL') =>
-                  setCreateDraft((prev) => prev ? { ...prev, deliveryMode: value } : prev)
-                  }>
-                  
+                    value={createDraft.deliveryMode}
+                    onValueChange={(value: 'AUTO' | 'MANUAL') =>
+                      setCreateDraft((prev) => prev ? { ...prev, deliveryMode: value } : prev)
+                    }>
+
                     <SelectTrigger>
                       <SelectValue placeholder="Seçin" />
                     </SelectTrigger>
@@ -1027,46 +1027,46 @@ export function CampaignsCrudPage() {
                 <div className="space-y-1.5">
                   <Label>Maks. Genel Kullanım</Label>
                   <Input
-                  type="number"
-                  value={createDraft.maxGlobalUsage}
-                  onChange={(event) =>
-                  setCreateDraft((prev) => prev ? { ...prev, maxGlobalUsage: event.target.value } : prev)
-                  } />
-                
+                    type="number"
+                    value={createDraft.maxGlobalUsage}
+                    onChange={(event) =>
+                      setCreateDraft((prev) => prev ? { ...prev, maxGlobalUsage: event.target.value } : prev)
+                    } />
+
                 </div>
                 <div className="space-y-1.5">
                   <Label>Müşteri Başına Maks.</Label>
                   <Input
-                  type="number"
-                  value={createDraft.maxPerCustomer}
-                  onChange={(event) =>
-                  setCreateDraft((prev) => prev ? { ...prev, maxPerCustomer: event.target.value } : prev)
-                  } />
-                
+                    type="number"
+                    value={createDraft.maxPerCustomer}
+                    onChange={(event) =>
+                      setCreateDraft((prev) => prev ? { ...prev, maxPerCustomer: event.target.value } : prev)
+                    } />
+
                 </div>
               </div>
 
               {(() => {
-              const template = templateByKey(createDraft.templateKey);
-              if (!template) {
-                return null;
-              }
-              return renderTemplateFields(template, createDraft.configInputs, (key, value) =>
-              setCreateDraft((prev) =>
-              prev ?
-              {
-                ...prev,
-                configInputs: {
-                  ...prev.configInputs,
-                  [key]: value
+                const template = templateByKey(createDraft.templateKey);
+                if (!template) {
+                  return null;
                 }
-              } :
-              prev
-              )
-              );
-            })()}
+                return renderTemplateFields(template, createDraft.configInputs, (key, value) =>
+                  setCreateDraft((prev) =>
+                    prev ?
+                      {
+                        ...prev,
+                        configInputs: {
+                          ...prev.configInputs,
+                          [key]: value
+                        }
+                      } :
+                      prev
+                  )
+                );
+              })()}
             </div> :
-          null}
+            null}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDraft(null)}>
@@ -1076,7 +1076,7 @@ export function CampaignsCrudPage() {
               onClick={() => void handleCreateCampaign()}
               disabled={savingCreate}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
-              
+
               {savingCreate ? "Kaydediliyor..." : "Kampanya Oluştur"}
             </Button>
           </DialogFooter>
@@ -1087,7 +1087,7 @@ export function CampaignsCrudPage() {
         <DialogContent
           className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]"
           aria-describedby={undefined}>
-          
+
           <DialogHeader>
             <DialogTitle>Kampanya Detayları</DialogTitle>
           </DialogHeader>
@@ -1096,9 +1096,9 @@ export function CampaignsCrudPage() {
           {detailError ? <p className="text-sm text-red-600">{detailError}</p> : null}
 
           {detailDraft && !detailLoading ?
-          <div className="space-y-4">
+            <div className="space-y-4">
               {detailMetrics ?
-            <Card className="border border-border bg-card">
+                <Card className="border border-border bg-card">
                   <CardContent className="p-3 space-y-3">
                     <p className="text-sm font-semibold">Performance Summary</p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -1129,7 +1129,7 @@ export function CampaignsCrudPage() {
                     </p>
                   </CardContent>
                 </Card> :
-            null}
+                null}
 
               <p className="text-sm font-medium text-foreground">
                 {templateByType(detailDraft.type)?.name || detailDraft.type}
@@ -1139,35 +1139,35 @@ export function CampaignsCrudPage() {
                 <div className="space-y-1.5">
                   <Label>Başlangıç Tarihi</Label>
                   <Input
-                  type="date"
-                  value={detailDraft.startsAt}
-                  onChange={(event) => setDetailDraft((prev) => prev ? { ...prev, startsAt: event.target.value } : prev)} />
-                
+                    type="date"
+                    value={detailDraft.startsAt}
+                    onChange={(event) => setDetailDraft((prev) => prev ? { ...prev, startsAt: event.target.value } : prev)} />
+
                 </div>
                 <div className="space-y-1.5">
                   <Label>End date</Label>
                   <Input
-                  type="date"
-                  value={detailDraft.endsAt}
-                  onChange={(event) => setDetailDraft((prev) => prev ? { ...prev, endsAt: event.target.value } : prev)} />
-                
+                    type="date"
+                    value={detailDraft.endsAt}
+                    onChange={(event) => setDetailDraft((prev) => prev ? { ...prev, endsAt: event.target.value } : prev)} />
+
                 </div>
                 <div className="space-y-1.5">
                   <Label>Öncelik</Label>
                   <Input
-                  type="number"
-                  value={detailDraft.priority}
-                  onChange={(event) => setDetailDraft((prev) => prev ? { ...prev, priority: event.target.value } : prev)} />
-                
+                    type="number"
+                    value={detailDraft.priority}
+                    onChange={(event) => setDetailDraft((prev) => prev ? { ...prev, priority: event.target.value } : prev)} />
+
                 </div>
                 <div className="space-y-1.5">
                   <Label>Teslimat Modu</Label>
                   <Select
-                  value={detailDraft.deliveryMode}
-                  onValueChange={(value: 'AUTO' | 'MANUAL') =>
-                  setDetailDraft((prev) => prev ? { ...prev, deliveryMode: value } : prev)
-                  }>
-                  
+                    value={detailDraft.deliveryMode}
+                    onValueChange={(value: 'AUTO' | 'MANUAL') =>
+                      setDetailDraft((prev) => prev ? { ...prev, deliveryMode: value } : prev)
+                    }>
+
                     <SelectTrigger>
                       <SelectValue placeholder="Seçin" />
                     </SelectTrigger>
@@ -1180,85 +1180,85 @@ export function CampaignsCrudPage() {
                 <div className="space-y-1.5">
                   <Label>Maks. Genel Kullanım</Label>
                   <Input
-                  type="number"
-                  value={detailDraft.maxGlobalUsage}
-                  onChange={(event) =>
-                  setDetailDraft((prev) => prev ? { ...prev, maxGlobalUsage: event.target.value } : prev)
-                  } />
-                
+                    type="number"
+                    value={detailDraft.maxGlobalUsage}
+                    onChange={(event) =>
+                      setDetailDraft((prev) => prev ? { ...prev, maxGlobalUsage: event.target.value } : prev)
+                    } />
+
                 </div>
                 <div className="space-y-1.5">
                   <Label>Müşteri Başına Maks.</Label>
                   <Input
-                  type="number"
-                  value={detailDraft.maxPerCustomer}
-                  onChange={(event) =>
-                  setDetailDraft((prev) => prev ? { ...prev, maxPerCustomer: event.target.value } : prev)
-                  } />
-                
+                    type="number"
+                    value={detailDraft.maxPerCustomer}
+                    onChange={(event) =>
+                      setDetailDraft((prev) => prev ? { ...prev, maxPerCustomer: event.target.value } : prev)
+                    } />
+
                 </div>
               </div>
 
               <button
-              type="button"
-              onClick={() => setDetailDraft((prev) => prev ? { ...prev, isActive: !prev.isActive } : prev)}
-              className={cn(
-                'w-full rounded-md border px-3 py-2 text-sm text-left transition-colors',
-                detailDraft.isActive ?
-                'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
-                'border-border text-muted-foreground'
-              )}>
-              
+                type="button"
+                onClick={() => setDetailDraft((prev) => prev ? { ...prev, isActive: !prev.isActive } : prev)}
+                className={cn(
+                  'w-full rounded-md border px-3 py-2 text-sm text-left transition-colors',
+                  detailDraft.isActive ?
+                    'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
+                    'border-border text-muted-foreground'
+                )}>
+
                 Durum: {detailDraft.isActive ? 'Aktif' : 'Pasif'}
               </button>
 
               {(() => {
-              const template = templateByType(detailDraft.type);
-              if (!template) {
-                return (
-                  <p className="text-xs text-muted-foreground">
+                const template = templateByType(detailDraft.type);
+                if (!template) {
+                  return (
+                    <p className="text-xs text-muted-foreground">
                       Bu kampanya tipinde düzenleme yapılamaz.
                     </p>);
 
-              }
-
-              return renderTemplateFields(template, detailDraft.configInputs, (key, value) =>
-              setDetailDraft((prev) =>
-              prev ?
-              {
-                ...prev,
-                configInputs: {
-                  ...prev.configInputs,
-                  [key]: value
                 }
-              } :
-              prev
-              )
-              );
-            })()}
+
+                return renderTemplateFields(template, detailDraft.configInputs, (key, value) =>
+                  setDetailDraft((prev) =>
+                    prev ?
+                      {
+                        ...prev,
+                        configInputs: {
+                          ...prev.configInputs,
+                          [key]: value
+                        }
+                      } :
+                      prev
+                  )
+                );
+              })()}
             </div> :
-          null}
+            null}
 
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => void publishDetail()}
               disabled={deletingDetail || savingDetail || !detailDraft?.id}>
-              
+
               Yayinla
             </Button>
             <Button
               variant="outline"
               onClick={() => void sendDetail()}
               disabled={deletingDetail || savingDetail || !detailDraft?.id}>
-              
+
               Gönder
             </Button>
             <Button
               variant="destructive"
               onClick={() => void deleteDetail()}
               disabled={deletingDetail || savingDetail || !detailDraft?.id}>
-              
+
               <Trash2 className="w-4 h-4" />
               {deletingDetail ? "Siliniyor..." : 'Sil'}
             </Button>
@@ -1266,7 +1266,7 @@ export function CampaignsCrudPage() {
               onClick={() => void saveDetail()}
               disabled={savingDetail || deletingDetail || !detailDraft?.id}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
-              
+
               {savingDetail ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
             </Button>
           </DialogFooter>

@@ -15,7 +15,7 @@ export function BrandGrowthHubPage() {
       <div className="p-4">
         <h1 className="text-2xl font-semibold">Marka & Büyüme Merkezi</h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Marka ve büyüme araçlarını açmak için yetkiniz bulunmamaktadır.
+          You do not have permission to open brand and growth tools.
         </p>
       </div>);
 
@@ -25,7 +25,7 @@ export function BrandGrowthHubPage() {
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-semibold">Marka & Büyüme Merkezi</h1>
       <p className="text-sm text-muted-foreground">
-        Salon profilini, web sitesi deneyimini ve kampanya operasyonlarını tek bir merkezden kontrol edin.
+        Control salon profile, website experience, and campaign operations from one hub.
       </p>
 
       <div className="space-y-3">
@@ -33,14 +33,14 @@ export function BrandGrowthHubPage() {
           type="button"
           onClick={() => navigate('/app/features/social-channels', { state: { navDirection: 'forward' } })}
           className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
                 <MessageCircle className="h-5 w-5 text-[var(--deep-indigo)]" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Sosyal Kanallar</p>
+                <p className="text-sm font-semibold">Social Channels</p>
                 <p className="text-xs text-muted-foreground">Meta Direct ve WhatsApp bağlantı yönetimi</p>
               </div>
             </div>
@@ -49,11 +49,11 @@ export function BrandGrowthHubPage() {
         </button>
 
         {canSalonInfo ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/salon-info', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/salon-info', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/15 grid place-items-center">
@@ -61,20 +61,20 @@ export function BrandGrowthHubPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Salon Bilgileri</p>
-                  <p className="text-xs text-muted-foreground">İşletme kimliği, iletişim bilgileri ve çalışma düzeni</p>
+                  <p className="text-xs text-muted-foreground">Business identity, contact details, and working setup</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
 
         {canWebsite ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/features/website-builder', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/features/website-builder', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
@@ -82,34 +82,34 @@ export function BrandGrowthHubPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Web Sitesi Ayarları</p>
-                  <p className="text-xs text-muted-foreground">Online randevu web sitesi içeriği ve sunumu</p>
+                  <p className="text-xs text-muted-foreground">Online booking website content and presentation</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
 
         {canCampaigns ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/campaigns', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/campaigns', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/15 grid place-items-center">
                   <Megaphone className="h-5 w-5 text-[var(--rose-gold)]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Kampanyalar</p>
-                  <p className="text-xs text-muted-foreground">Promosyonlar, hedefleme ve kampanya performansı</p>
+                  <p className="text-sm font-semibold">Campaigns</p>
+                  <p className="text-xs text-muted-foreground">Promotions, targeting, and campaign performance</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
       </div>
     </div>);
 

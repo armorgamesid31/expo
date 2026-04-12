@@ -15,7 +15,7 @@ export function TeamManagementPage() {
       <div className="p-4">
         <h1 className="text-2xl font-semibold">Ekip Yönetimi</h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Ekip yönetimi araçlarını açmak için yetkiniz bulunmamaktadır.
+          You do not have permission to open team management tools.
         </p>
       </div>);
 
@@ -30,32 +30,32 @@ export function TeamManagementPage() {
 
       <div className="space-y-3">
         {canManageEmployees ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/staff', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/staff', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/15 grid place-items-center">
                   <Users className="h-5 w-5 text-[var(--rose-gold)]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Personel Yönetimi</p>
+                  <p className="text-sm font-semibold">Employee Management</p>
                   <p className="text-xs text-muted-foreground">Personel profilleri, atamalar ve hizmet yetkileri</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
 
         {canManageAccess ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/team-access', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/team-access', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
@@ -69,28 +69,28 @@ export function TeamManagementPage() {
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
 
         {canManageNotificationRules ?
-        <button
-          type="button"
-          onClick={() => navigate('/app/notification-role-matrix', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left">
-          
+          <button
+            type="button"
+            onClick={() => navigate('/app/notification-role-matrix', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
                   <Bell className="h-5 w-5 text-[var(--deep-indigo)]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Bildirim Kuralları</p>
-                  <p className="text-xs text-muted-foreground">Rol bazlı bildirim alıcıları ve hatırlatıcı politikası</p>
+                  <p className="text-sm font-semibold">Notification Rules</p>
+                  <p className="text-xs text-muted-foreground">Role-based alert recipients and handover reminder policy</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           </button> :
-        null}
+          null}
       </div>
     </div>);
 

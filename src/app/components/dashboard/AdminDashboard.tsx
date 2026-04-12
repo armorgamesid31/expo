@@ -44,15 +44,15 @@ interface AdminDashboardProps {
 export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist, analytics }: AdminDashboardProps) {
   const analyticsSeries = analytics?.trendRevenue ?? analytics?.weeklyRevenue;
   const weekData = analyticsSeries ?
-  analyticsSeries :
-  [
-  { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
-  { label: 'Sal', revenue: 0, appointments: 0, date: '' },
-  { label: 'Çar', revenue: 0, appointments: 0, date: '' },
-  { label: 'Per', revenue: 0, appointments: 0, date: '' },
-  { label: 'Cum', revenue: 0, appointments: 0, date: '' },
-  { label: 'Cmt', revenue: 0, appointments: 0, date: '' },
-  { label: 'Paz', revenue: 0, appointments: 0, date: '' }];
+    analyticsSeries :
+    [
+      { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
+      { label: 'Sal', revenue: 0, appointments: 0, date: '' },
+      { label: 'Çar', revenue: 0, appointments: 0, date: '' },
+      { label: 'Per', revenue: 0, appointments: 0, date: '' },
+      { label: 'Cum', revenue: 0, appointments: 0, date: '' },
+      { label: 'Cmt', revenue: 0, appointments: 0, date: '' },
+      { label: 'Paz', revenue: 0, appointments: 0, date: '' }];
 
   const todayPoint = weekData[weekData.length - 1];
   const monthlyRevenue = analytics?.metrics?.revenue || 0;
@@ -63,39 +63,39 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
   const totalAppointments = analytics?.metrics?.totalAppointments || 0;
   const checklistReady = checklist !== undefined;
   const setupCompleted =
-  checklistReady && (
-  Boolean(checklist?.completed) ||
-  Boolean(checklist?.workingHours && checklist?.address && checklist?.phone && checklist?.service && checklist?.staff));
+    checklistReady && (
+      Boolean(checklist?.completed) ||
+      Boolean(checklist?.workingHours && checklist?.address && checklist?.phone && checklist?.service && checklist?.staff));
 
   const stats = [
-  {
-    title: 'Seçilen Gün Cirosu',
-    value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
-    subtitle: `Seçilen aralıktaki son gün • ${todayPoint?.appointments || 0} randevu`,
-    icon: DollarSign,
-    color: 'var(--rose-gold)'
-  },
-  {
-    title: 'Aylık Toplam',
-    value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
-    subtitle: `${completedAppointments}/${totalAppointments} randevu tamamlandı`,
-    icon: TrendingUp,
-    color: 'var(--deep-indigo)'
-  },
-  {
-    title: "Yeni Müşteri",
-    value: newCustomers.toString(),
-    subtitle: 'Bu ay',
-    icon: UserPlus,
-    color: 'var(--rose-gold-light)'
-  },
-  {
-    title: "Sadık Müşteriler",
-    value: returningCustomers.toString(),
-    subtitle: "Geri Dönen Müşteriler",
-    icon: UserCheck,
-    color: 'var(--deep-indigo-light)'
-  }];
+    {
+      title: 'Seçilen Gün Cirosu',
+      value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
+      subtitle: `Seçilen aralıktaki son gün • ${todayPoint?.appointments || 0} randevu`,
+      icon: DollarSign,
+      color: 'var(--rose-gold)'
+    },
+    {
+      title: 'Aylık Toplam',
+      value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
+      subtitle: `${completedAppointments}/${totalAppointments} randevu tamamlandı`,
+      icon: TrendingUp,
+      color: 'var(--deep-indigo)'
+    },
+    {
+      title: "Yeni Müşteri",
+      value: newCustomers.toString(),
+      subtitle: 'Bu ay',
+      icon: UserPlus,
+      color: 'var(--rose-gold-light)'
+    },
+    {
+      title: "Sadık Müşteriler",
+      value: returningCustomers.toString(),
+      subtitle: "Geri Dönen Müşteriler",
+      icon: UserCheck,
+      color: 'var(--deep-indigo-light)'
+    }];
 
 
   return (
@@ -111,7 +111,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
 
       {/* Setup Checklist - Displayed only if empty state is true */}
       {onNavigate && checklistReady && !setupCompleted &&
-      <div className="px-4">
+        <div className="px-4">
           <SetupChecklist onNavigate={onNavigate} checklist={checklist} />
         </div>
       }
@@ -127,7 +127,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ backgroundColor: `${stat.color}20` }}>
-                    
+
                     <Icon className="w-5 h-5" style={{ color: stat.color }} />
                   </div>
                 </div>
@@ -166,12 +166,12 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
                   dataKey="label"
                   tick={{ fontSize: 12 }}
                   stroke="var(--muted-foreground)" />
-                
+
                 <YAxis
                   key="yaxis"
                   tick={{ fontSize: 12 }}
                   stroke="var(--muted-foreground)" />
-                
+
                 <Tooltip
                   key="tooltip"
                   contentStyle={{
@@ -180,7 +180,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
                     borderRadius: '8px'
                   }}
                   formatter={(value: any) => [`₺${Number(value || 0).toLocaleString('tr-TR')}`, 'Ciro']} />
-                
+
                 <Area
                   key="area-revenue"
                   type="monotone"
@@ -189,7 +189,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorRevenue)" />
-                
+
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>

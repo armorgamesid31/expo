@@ -34,10 +34,10 @@ interface WebsiteContentResponse {
 }
 
 const defaultGalleryImages: GalleryImageItem[] = [
-{ id: 'seed-1', label: 'Saç Boyama', emoji: '💇‍♀️' },
-{ id: 'seed-2', label: 'Manikür', emoji: '💅' },
-{ id: 'seed-3', label: 'Cilt Bakımı', emoji: '✨' },
-{ id: 'seed-4', label: 'Salon', emoji: '🌸' }];
+  { id: 'seed-1', label: 'Hair Coloring', emoji: '💇‍♀️' },
+  { id: 'seed-2', label: 'Manicure', emoji: '💅' },
+  { id: 'seed-3', label: 'Skin Care', emoji: '✨' },
+  { id: 'seed-4', label: 'Salon', emoji: '🌸' }];
 
 
 function normalizeInstagram(value: string) {
@@ -54,14 +54,14 @@ function normalizeInstagram(value: string) {
 
 function buildLocalWebsiteCopy(name: string, cityHint?: string) {
   const salonName = name.trim() || 'Salonunuz';
-  const city = cityHint?.trim() || 'şehrinizde';
+  const city = cityHint?.trim() || 'in your city';
 
   return {
-    heroText: `${salonName} ile kendinize vakit ayırın`,
-    tagline: `${city} profesyonel güzellik deneyimi`,
+    heroText: `${salonName} take care of yourself with`,
+    tagline: `${city} professional beauty experience`,
     description:
-    `${salonName}, uzman ekibiyle saç, cilt ve bakım hizmetlerinde güvenilir sonuçlar sunar. ` +
-    'Hijyenik salon ortamı, kaliteli ürünler ve kişiye özel dokunuşlarla her ziyareti keyifli bir deneyime dönüştürür.'
+      `${salonName}, with its expert team hair, skin, and care delivers reliable results in its services. ` +
+      'The hygienic salon environment turns every visit into a pleasant experience with quality products and personalized touches.'
   };
 }
 
@@ -71,16 +71,16 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [status, setStatus] = useState<{type: 'success' | 'error';message: string;} | null>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string; } | null>(null);
 
   const [salonName, setSalonName] = useState('Beauté Salon');
-  const [tagline, setTagline] = useState('Güzelliğinizi Keşfedin');
+  const [tagline, setTagline] = useState('Discover Your Beauty');
   const [description, setDescription] = useState(
-    "İstanbul'un kalbinde lüks ve konforun buluştuğu özel bir güzellik deneyimi. Uzman ekibimizle kendinizi özel hissedin."
+    "A special beauty experience where luxury and comfort meet in the heart of Istanbul. Feel special with our expert team."
   );
   const [instagram, setInstagram] = useState('@beautesalon');
   const [whatsapp, setWhatsapp] = useState('+90 532 123 4567');
-  const [heroText, setHeroText] = useState('Profesyonel Bakım, Kişisel Dokunuş');
+  const [heroText, setHeroText] = useState('Professional Care, Personal Touch');
   const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(defaultGalleryImages);
 
   useEffect(() => {
@@ -95,8 +95,8 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
         }
 
         setSalonName(response.salon.name || bootstrap?.salon?.name || salonName);
-        setTagline(response.salon.tagline || 'Güzelliğinizi Keşfedin');
-        setHeroText(response.salon.heroText || response.salon.tagline || 'Profesyonel Bakım, Kişisel Dokunuş');
+        setTagline(response.salon.tagline || 'Discover Your Beauty');
+        setHeroText(response.salon.heroText || response.salon.tagline || 'Professional Care, Personal Touch');
         setDescription(response.salon.about || description);
         setInstagram(response.salon.instagramUrl || '@beautesalon');
         setWhatsapp(response.salon.whatsappPhone || '+90 532 123 4567');
@@ -105,7 +105,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
           setGalleryImages(
             response.gallery.map((image) => ({
               id: `db-${image.id}`,
-              label: image.altText || 'Salon Görseli',
+              label: image.altText || 'Hall Image',
               imageUrl: image.imageUrl
             }))
           );
@@ -115,7 +115,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       } catch (error) {
         console.error('Website content load failed:', error);
         if (mounted) {
-          setStatus({ type: 'error', message: 'Web sitesi içeriği yüklenemedi. Varsayılan içerik kullanılıyor.' });
+          setStatus({ type: 'error', message: 'The website content could not be loaded. Default content is used.' });
         }
       } finally {
         if (mounted) {
@@ -132,12 +132,12 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
 
   const galleryPayload = useMemo(() => {
     return galleryImages.
-    filter((item) => Boolean(item.imageUrl)).
-    map((item, index) => ({
-      imageUrl: item.imageUrl!,
-      altText: item.label,
-      displayOrder: index
-    }));
+      filter((item) => Boolean(item.imageUrl)).
+      map((item, index) => ({
+        imageUrl: item.imageUrl!,
+        altText: item.label,
+        displayOrder: index
+      }));
   }, [galleryImages]);
 
   const handleGenerate = async () => {
@@ -145,7 +145,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
     setIsGenerating(true);
 
     try {
-      const result = await apiFetch<{generated: {heroText: string;tagline: string;description: string;};}>(
+      const result = await apiFetch<{ generated: { heroText: string; tagline: string; description: string; }; }>(
         '/api/admin/website/generate',
         {
           method: 'POST',
@@ -161,14 +161,14 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       setHeroText(result.generated.heroText);
       setTagline(result.generated.tagline);
       setDescription(result.generated.description);
-      setStatus({ type: 'success', message: 'Yeni metin önerileri oluşturuldu.' });
+      setStatus({ type: 'success', message: 'New text suggestions were produced.' });
     } catch (error) {
       console.warn('Website generate endpoint failed, using local fallback:', error);
       const fallback = buildLocalWebsiteCopy(salonName, bootstrap?.salon?.city || undefined);
       setHeroText(fallback.heroText);
       setTagline(fallback.tagline);
       setDescription(fallback.description);
-      setStatus({ type: 'success', message: 'Yerel yedek metin önerileri oluşturuldu.' });
+      setStatus({ type: 'success', message: 'Local replacement text suggestions were generated.' });
     } finally {
       setIsGenerating(false);
     }
@@ -192,10 +192,10 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
         })
       });
 
-      setStatus({ type: 'success', message: 'Web sitesi içeriği kaydedildi ve yayınlandı.' });
+      setStatus({ type: 'success', message: 'Website content has been saved and published.' });
     } catch (error) {
       console.error('Website content save failed:', error);
-      setStatus({ type: 'error', message: 'Kaydetme sırasında bir hata oluştu. Lütfen tekrar deneyin.' });
+      setStatus({ type: 'error', message: 'An error occurred during saveme. Please try again.' });
     } finally {
       setIsSaving(false);
     }
@@ -243,7 +243,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       setStatus({ type: 'success', message: "Fotoğraf eklendi. Kaydet ile yayınlayabilirsiniz." });
     };
     reader.onerror = () => {
-      setStatus({ type: 'error', message: 'Fotoğraf okunamadı.' });
+      setStatus({ type: 'error', message: 'The photo could not be read.' });
     };
 
     reader.readAsDataURL(file);
@@ -279,22 +279,21 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
           className="space-y-4">
-          
+
           {status &&
-          <div
-            className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
-            status.type === 'success' ?
-            'border-green-500/30 bg-green-500/10 text-green-700' :
-            'border-red-500/30 bg-red-500/10 text-red-700'}`
-            }>
-            
+            <div
+              className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${status.type === 'success' ?
+                  'border-green-500/30 bg-green-500/10 text-green-700' :
+                  'border-red-500/30 bg-red-500/10 text-red-700'}`
+              }>
+
               {status.type === 'success' ? <Check className="w-4 h-4 mt-0.5" /> : <AlertCircle className="w-4 h-4 mt-0.5" />}
               <span>{status.message}</span>
             </div>
           }
 
           {isLoading &&
-          <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+            <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
               Web sitesi içeriği yükleniyor...
             </div>
           }
@@ -305,13 +304,13 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Salon Adı</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Salon Name</label>
                 <input
                   value={salonName}
                   onChange={(e) => setSalonName(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
                   placeholder="Salon adınız" />
-                
+
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Slogan</label>
@@ -320,26 +319,26 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   onChange={(e) => setTagline(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
                   placeholder="Salonunuzun sloganı" />
-                
+
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Ana Başlık</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Hero Title</label>
                 <input
                   value={heroText}
                   onChange={(e) => setHeroText(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
                   placeholder="Ana sayfa başlığı" />
-                
+
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Açıklama</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all resize-none"
                   placeholder="Salonunuzun kısa açıklaması" />
-                
+
               </div>
             </CardContent>
           </Card>
@@ -352,26 +351,26 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
                   <Instagram className="w-3.5 h-3.5 text-pink-500" />
-                  Instagram Hesabı
+                  Instagram Account
                 </label>
                 <input
                   value={instagram}
                   onChange={(e) => setInstagram(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
                   placeholder="@kullanıcı_adi" />
-                
+
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
                   <MessageCircle className="w-3.5 h-3.5 text-green-500" />
-                  WhatsApp Numarası
+                  WhatsApp Number
                 </label>
                 <input
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
                   placeholder="+90 5xx xxx xxxx" />
-                
+
               </div>
             </CardContent>
           </Card>
@@ -380,24 +379,24 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Camera className="w-4 h-4" />
-                Galeri Görselleri
+                Gallery Images
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-4 gap-2 mb-3">
                 {galleryImages.map((img) =>
-                <div
-                  key={img.id}
-                  className="aspect-square rounded-lg bg-gradient-to-br from-[var(--rose-gold)]/10 to-[var(--deep-indigo)]/10 flex flex-col items-center justify-center border-2 border-[var(--rose-gold)]/20 overflow-hidden">
-                  
-                    {img.imageUrl ?
-                  <img src={img.imageUrl} alt={img.label} className="h-full w-full object-cover" /> :
+                  <div
+                    key={img.id}
+                    className="aspect-square rounded-lg bg-gradient-to-br from-[var(--rose-gold)]/10 to-[var(--deep-indigo)]/10 flex flex-col items-center justify-center border-2 border-[var(--rose-gold)]/20 overflow-hidden">
 
-                  <>
+                    {img.imageUrl ?
+                      <img src={img.imageUrl} alt={img.label} className="h-full w-full object-cover" /> :
+
+                      <>
                         <span className="text-2xl">{img.emoji || '✨'}</span>
                         <span className="text-[9px] text-muted-foreground mt-1">{img.label}</span>
                       </>
-                  }
+                    }
                   </div>
                 )}
               </div>
@@ -407,12 +406,12 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                 accept="image/*"
                 className="hidden"
                 onChange={handlePhotoSelected} />
-              
+
               <button
                 type="button"
                 onClick={handleAddPhotoClick}
                 className="w-full py-2.5 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                
+
                 <Camera className="w-4 h-4" />
                 Fotoğraf Ekle
               </button>
@@ -426,8 +425,8 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   <Sparkles className="w-5 h-5 text-[var(--rose-gold)]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Yapay Zeka ile İçerik Oluştur</p>
-                  <p className="text-xs text-muted-foreground">Salonunuz için otomatik metin oluşturun</p>
+                  <p className="text-sm font-medium">Generate Content with AI</p>
+                  <p className="text-xs text-muted-foreground">Generate automatic text for your salon</p>
                 </div>
                 <button
                   type="button"
@@ -436,8 +435,8 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   }}
                   disabled={isGenerating}
                   className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed">
-                  
-                  {isGenerating ? 'Oluşturuluyor...' : 'Oluştur'}
+
+                  {isGenerating ? 'Being produced...' : 'produce'}
                 </button>
               </div>
             </CardContent>
@@ -450,7 +449,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
             }}
             disabled={isSaving}
             className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all active:scale-98 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white disabled:opacity-70 disabled:cursor-not-allowed">
-            
+
             {isSaving ? "Kaydediliyor..." : "Değişiklikleri Kaydet ve Yayınla"}
           </button>
         </motion.div>

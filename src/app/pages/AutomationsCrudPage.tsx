@@ -25,11 +25,11 @@ type EditingType = 'reminder' | 'attendance' | null;
 type ValidityWindow = '1m' | '3m' | '6m' | '1y' | 'unlimited';
 type AttendanceRangeKey = '0_3' | '4_5' | '6_7' | '8_9' | '10_plus';
 type AttendancePenaltyAction =
-'normal' |
-'simple_warning' |
-'possible_block' |
-'manual_approval' |
-'full_block';
+  'normal' |
+  'simple_warning' |
+  'possible_block' |
+  'manual_approval' |
+  'full_block';
 
 const REMINDER_KEY = 'appointment_reminder';
 const LEGACY_REMINDER_24H_KEY = 'appointment_reminder_24h';
@@ -61,28 +61,28 @@ interface AttendanceConfig {
   penaltyPolicy: Record<AttendanceRangeKey, AttendancePenaltyAction>;
 }
 
-const ATTENDANCE_RANGES: Array<{key: AttendanceRangeKey;label: string;}> = [
-{ key: '0_3', label: '0-3' },
-{ key: '4_5', label: '4-5' },
-{ key: '6_7', label: '6-7' },
-{ key: '8_9', label: '8-9' },
-{ key: '10_plus', label: '10+' }];
+const ATTENDANCE_RANGES: Array<{ key: AttendanceRangeKey; label: string; }> = [
+  { key: '0_3', label: '0-3' },
+  { key: '4_5', label: '4-5' },
+  { key: '6_7', label: '6-7' },
+  { key: '8_9', label: '8-9' },
+  { key: '10_plus', label: '10+' }];
 
 
-const PENALTY_ACTION_OPTIONS: Array<{value: AttendancePenaltyAction;label: string;}> = [
-{ value: 'normal', label: 'uyarı yok' },
-{ value: 'simple_warning', label: 'Basit uyarı' },
-{ value: 'possible_block', label: 'Engellenebilir uyarı' },
-{ value: 'manual_approval', label: 'Salon ön onayı' },
-{ value: 'full_block', label: 'Tam engel' }];
+const PENALTY_ACTION_OPTIONS: Array<{ value: AttendancePenaltyAction; label: string; }> = [
+  { value: 'normal', label: 'no warning' },
+  { value: 'simple_warning', label: 'Simple warning' },
+  { value: 'possible_block', label: 'Blockable warning' },
+  { value: 'manual_approval', label: 'Salon pre-approval' },
+  { value: 'full_block', label: 'Tam engel' }];
 
 
-const VALIDITY_OPTIONS: Array<{value: ValidityWindow;label: string;}> = [
-{ value: '1m', label: '1 ay' },
-{ value: '3m', label: '3 ay' },
-{ value: '6m', label: '6 ay' },
-{ value: '1y', label: '1 yıl' },
-{ value: 'unlimited', label: 'Sınırsız' }];
+const VALIDITY_OPTIONS: Array<{ value: ValidityWindow; label: string; }> = [
+  { value: '1m', label: '1 ay' },
+  { value: '3m', label: '3 ay' },
+  { value: '6m', label: '6 ay' },
+  { value: '1y', label: '1 year' },
+  { value: 'unlimited', label: 'Unlimited' }];
 
 
 const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
@@ -237,7 +237,7 @@ function validityLabel(value: ValidityWindow): string {
   return VALIDITY_OPTIONS.find((option) => option.value === value)?.label || '6 ay';
 }
 
-function ToggleButton({ checked, onClick, disabled, ariaLabel }: {checked: boolean;onClick: () => void;disabled?: boolean;ariaLabel: string;}) {
+function ToggleButton({ checked, onClick, disabled, ariaLabel }: { checked: boolean; onClick: () => void; disabled?: boolean; ariaLabel: string; }) {
   return (
     <button
       type="button"
@@ -248,13 +248,13 @@ function ToggleButton({ checked, onClick, disabled, ariaLabel }: {checked: boole
         'relative h-6 w-11 rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0 mt-0.5',
         checked ? 'bg-[var(--rose-gold)]' : 'bg-muted'
       )}>
-      
+
       <span
         className={cn(
           'absolute top-0.5 h-5 w-5 rounded-full transition-all duration-200',
           checked ? 'left-[22px] bg-white' : 'left-[2px] bg-white'
         )} />
-      
+
     </button>);
 
 }
@@ -273,7 +273,7 @@ function OptionRow({
 
 
 
-}: {icon: any;title: string;description: string;checked: boolean;onToggle: () => void;children?: React.ReactNode;}) {
+}: { icon: any; title: string; description: string; checked: boolean; onToggle: () => void; children?: React.ReactNode; }) {
   return (
     <div className="rounded-xl border border-border p-3 bg-muted/20">
       <div className="flex items-start justify-between gap-3">
@@ -294,13 +294,13 @@ function OptionRow({
             'relative h-6 w-11 rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0',
             checked ? 'bg-[var(--rose-gold)]' : 'bg-muted'
           )}>
-          
+
           <span
             className={cn(
               'absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all duration-200',
               checked ? 'left-[22px]' : 'left-[2px]'
             )} />
-          
+
         </button>
       </div>
 
@@ -315,7 +315,7 @@ export function AutomationsCrudPage() {
 
   const sectionParam = searchParams.get('section');
   const viewMode: 'all' | 'reminder' | 'attendance' =
-  sectionParam === 'reminder' ? 'reminder' : sectionParam === 'attendance' ? 'attendance' : 'all';
+    sectionParam === 'reminder' ? 'reminder' : sectionParam === 'attendance' ? 'attendance' : 'all';
   const showReminderSection = viewMode !== 'attendance';
   const showAttendanceSection = viewMode !== 'reminder';
 
@@ -333,10 +333,10 @@ export function AutomationsCrudPage() {
     setError(null);
 
     try {
-      const response = await apiFetch<{items: AutomationItem[];}>('/api/admin/automations');
+      const response = await apiFetch<{ items: AutomationItem[]; }>('/api/admin/automations');
       setItems(response.items || []);
     } catch (err: any) {
-      setError(err?.message || 'Otomasyonlar alınamadı.');
+      setError(err?.message || 'Automations could not be retrieved.');
     } finally {
       setLoading(false);
     }
@@ -359,10 +359,10 @@ export function AutomationsCrudPage() {
   );
 
   const reminderEnabled =
-  reminderRule?.isEnabled ??
-  reminderLegacy2hRule?.isEnabled ??
-  reminderLegacy24hRule?.isEnabled ??
-  true;
+    reminderRule?.isEnabled ??
+    reminderLegacy2hRule?.isEnabled ??
+    reminderLegacy24hRule?.isEnabled ??
+    true;
 
   const attendanceRule = getRule(ATTENDANCE_KEY);
   const attendanceConfig = parseAttendanceConfig(attendanceRule?.config);
@@ -370,13 +370,13 @@ export function AutomationsCrudPage() {
 
   const reminderBadges: string[] = [];
   if (reminderConfig.enable2h) {
-    reminderBadges.push(reminderConfig.sendLocationAt2h ? '2 saat önce + konum' : '2 saat önce');
+    reminderBadges.push(reminderConfig.sendLocationAt2h ? '2 hours before + location' : '2 hours before');
   }
   if (reminderConfig.enable24h) {
-    reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 saat önce + katılım onayı' : '24 saat önce');
+    reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 hours before + participation confirmation' : '24 hours before');
   }
   if (reminderConfig.enable72h) {
-    reminderBadges.push('72 saat önce bilgilendirme');
+    reminderBadges.push('72 hours before information');
   }
 
   const enabledNotificationEventCount = Object.values(attendanceConfig.notificationEvents).filter(Boolean).length;
@@ -391,7 +391,7 @@ export function AutomationsCrudPage() {
     const current = getRule(payload.key);
 
     if (current) {
-      const response = await apiFetch<{item: AutomationItem;}>(`/api/admin/automations/${current.id}`, {
+      const response = await apiFetch<{ item: AutomationItem; }>(`/api/admin/automations/${current.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ isEnabled: payload.isEnabled, config: payload.config })
       });
@@ -400,7 +400,7 @@ export function AutomationsCrudPage() {
       return;
     }
 
-    const response = await apiFetch<{item: AutomationItem;}>('/api/admin/automations', {
+    const response = await apiFetch<{ item: AutomationItem; }>('/api/admin/automations', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
@@ -415,12 +415,12 @@ export function AutomationsCrudPage() {
       await upsertRule({
         key: REMINDER_KEY,
         name: "Randevu Hatırlatması",
-        description: 'Randevudan 2 saat, 24 saat ve 72 saat önce hatırlatma otomasyonu',
+        description: 'Appointment reminder automation at 2 hours, 24 hours and 72 hours before',
         isEnabled: !reminderEnabled,
         config: reminderConfig
       });
     } catch (err: any) {
-      setError(err?.message || 'Randevu hatırlatması güncellenemedi.');
+      setError(err?.message || 'Appointment reminder could not be updated.');
     } finally {
       setSavingKey(null);
     }
@@ -433,13 +433,13 @@ export function AutomationsCrudPage() {
     try {
       await upsertRule({
         key: ATTENDANCE_KEY,
-        name: 'Randevu Gelmeme Takibi',
-        description: 'Randevu ihlallerini takip eder ve yaptırım kurallarını uygular',
+        name: 'Appointment No-show Tracking',
+        description: 'Tracks appointment violations and enforces sanction rules',
         isEnabled: !attendanceEnabled,
         config: attendanceConfig
       });
     } catch (err: any) {
-      setError(err?.message || 'No-show takibi güncellenemedi.');
+      setError(err?.message || 'No-show tracking could not be updated.');
     } finally {
       setSavingKey(null);
     }
@@ -473,13 +473,13 @@ export function AutomationsCrudPage() {
       await upsertRule({
         key: REMINDER_KEY,
         name: "Randevu Hatırlatması",
-        description: 'Randevudan 2 saat, 24 saat ve 72 saat önce hatırlatma otomasyonu',
+        description: 'Appointment reminder automation at 2 hours, 24 hours and 72 hours before',
         isEnabled: reminderEnabled,
         config: editReminderConfig
       });
       closeDialog();
     } catch (err: any) {
-      setError(err?.message || 'Randevu hatırlatma ayarları kaydedilemedi.');
+      setError(err?.message || 'Appointment reminder settings could not be saved.');
     } finally {
       setSavingKey(null);
     }
@@ -520,34 +520,34 @@ export function AutomationsCrudPage() {
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
         <h1 className="text-2xl font-semibold mb-1">
           {viewMode === 'reminder' ?
-          "WhatsApp Hatırlatma Ayarları" :
-          viewMode === 'attendance' ?
-          'Randevu No-show Takibi' :
-          'Otomasyonlar'}
+            "WhatsApp Hatırlatma Ayarları" :
+            viewMode === 'attendance' ?
+              'Randevu No-show Takibi' :
+              'Otomasyonlar'}
         </h1>
         <p className="text-sm text-muted-foreground">
           {viewMode === 'reminder' ?
-          'Randevu hatırlatma adımlarını tek yerden yönetin' :
-          viewMode === 'attendance' ?
-          'İhlal kurallarını ve yaptırım seviyelerini yönetin' :
-          'Randevu iletişimlerini otomatik yönetin'}
+            'Randevu hatırlatma adımlarını tek yerden yönetin' :
+            viewMode === 'attendance' ?
+              'İhlal kurallarını ve yaptırım seviyelerini yönetin' :
+              'Randevu iletişimlerini otomatik yönetin'}
         </p>
       </div>
 
       <div className="p-4 space-y-4">
         {error ?
-        <Card className="border-red-300 bg-red-50">
+          <Card className="border-red-300 bg-red-50">
             <CardContent className="p-3">
               <p className="text-sm text-red-600">{error}</p>
             </CardContent>
           </Card> :
-        null}
+          null}
 
         {showReminderSection ?
-        <>
+          <>
             {viewMode === 'all' ?
-          <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Hatırlatmalar</p> :
-          null}
+              <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Hatırlatmalar</p> :
+              null}
 
             <Card className="border border-border bg-card shadow-sm">
               <CardContent className="p-4">
@@ -565,26 +565,26 @@ export function AutomationsCrudPage() {
 
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {reminderBadges.length ?
-                      reminderBadges.map((badge) =>
-                      <span
-                        key={badge}
-                        className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                        
+                          reminderBadges.map((badge) =>
+                            <span
+                              key={badge}
+                              className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+
                               {badge}
                             </span>
-                      ) :
+                          ) :
 
-                      <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+                          <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
                             Aktif hatırlatma yok
                           </span>
-                      }
+                        }
                       </div>
 
                       <button
-                      type="button"
-                      onClick={openReminderSettings}
-                      className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors">
-                      
+                        type="button"
+                        onClick={openReminderSettings}
+                        className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors">
+
                         Ayarları Düzenle
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
@@ -592,19 +592,19 @@ export function AutomationsCrudPage() {
                   </div>
 
                   <ToggleButton
-                  checked={reminderEnabled}
-                  onClick={() => void handleReminderToggle()}
-                  disabled={savingKey === 'reminder' || loading}
-                  ariaLabel={`Randevu hatırlatmasını ${reminderEnabled ? 'kapat' : 'aç'}`} />
-                
+                    checked={reminderEnabled}
+                    onClick={() => void handleReminderToggle()}
+                    disabled={savingKey === 'reminder' || loading}
+                    ariaLabel={`Randevu hatırlatmasını ${reminderEnabled ? 'kapat' : 'aç'}`} />
+
                 </div>
               </CardContent>
             </Card>
           </> :
-        null}
+          null}
 
         {showAttendanceSection ?
-        <Card className="border border-border bg-card shadow-sm">
+          <Card className="border border-border bg-card shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
@@ -620,18 +620,18 @@ export function AutomationsCrudPage() {
 
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                        Geçerlilik: {validityLabel(attendanceConfig.validityWindow)}
+                        Validity: {validityLabel(attendanceConfig.validityWindow)}
                       </span>
                       <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                        Bildirim: {enabledNotificationEventCount} durum
+                        Notification: {enabledNotificationEventCount} statuses
                       </span>
                     </div>
 
                     <button
-                    type="button"
-                    onClick={openAttendanceSettings}
-                    className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors">
-                    
+                      type="button"
+                      onClick={openAttendanceSettings}
+                      className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors">
+
                       Ayarları Düzenle
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
@@ -639,75 +639,75 @@ export function AutomationsCrudPage() {
                 </div>
 
                 <ToggleButton
-                checked={attendanceEnabled}
-                onClick={() => void handleAttendanceToggle()}
-                disabled={savingKey === 'attendance' || loading}
-                ariaLabel={`No-show takibini ${attendanceEnabled ? 'kapat' : 'aç'}`} />
-              
+                  checked={attendanceEnabled}
+                  onClick={() => void handleAttendanceToggle()}
+                  disabled={savingKey === 'attendance' || loading}
+                  ariaLabel={`No-show takibini ${attendanceEnabled ? 'kapat' : 'aç'}`} />
+
               </div>
             </CardContent>
           </Card> :
-        null}
+          null}
       </div>
 
       <Dialog open={editingType === 'reminder'} onOpenChange={(open) => !open ? closeDialog() : null}>
         <DialogContent
           className="max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]"
           aria-describedby={undefined}>
-          
+
           <DialogHeader>
             <DialogTitle>Randevu Hatırlatma Ayarları</DialogTitle>
           </DialogHeader>
 
           {editReminderConfig ?
-          <div className="space-y-3 py-2">
+            <div className="space-y-3 py-2">
               <OptionRow
-              icon={Clock3}
-              title="2 saatlik hatırlatma"
-              description="Kısa bir hatırlatma mesajı gönderilir."
-              checked={editReminderConfig.enable2h}
-              onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable2h: !prev.enable2h } : prev)}>
-              
+                icon={Clock3}
+                title="2 saatlik hatırlatma"
+                description="Kısa bir hatırlatma mesajı gönderilir."
+                checked={editReminderConfig.enable2h}
+                onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable2h: !prev.enable2h } : prev)}>
+
                 <OptionRow
-                icon={MapPin}
-                title="Konum gönderimi"
-                description="Salon konumu mesaja eklenir."
-                checked={editReminderConfig.sendLocationAt2h}
-                onToggle={() =>
-                setEditReminderConfig((prev) => prev ? { ...prev, sendLocationAt2h: !prev.sendLocationAt2h } : prev)
-                } />
-              
+                  icon={MapPin}
+                  title="Konum gönderimi"
+                  description="Salon konumu mesaja eklenir."
+                  checked={editReminderConfig.sendLocationAt2h}
+                  onToggle={() =>
+                    setEditReminderConfig((prev) => prev ? { ...prev, sendLocationAt2h: !prev.sendLocationAt2h } : prev)
+                  } />
+
               </OptionRow>
 
               <OptionRow
-              icon={ShieldCheck}
-              title="24 saatlik hatırlatma"
-              description="Müşteriye bir gün önce hatırlatma gönderilir."
-              checked={editReminderConfig.enable24h}
-              onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable24h: !prev.enable24h } : prev)}>
-              
-                <OptionRow
                 icon={ShieldCheck}
-                title="Katılım onayı"
-                description="Mesaja katılım onayı adımı eklenir."
-                checked={editReminderConfig.requestConfirmationAt24h}
-                onToggle={() =>
-                setEditReminderConfig((prev) =>
-                prev ? { ...prev, requestConfirmationAt24h: !prev.requestConfirmationAt24h } : prev
-                )
-                } />
-              
+                title="24 saatlik hatırlatma"
+                description="Müşteriye bir gün önce hatırlatma gönderilir."
+                checked={editReminderConfig.enable24h}
+                onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable24h: !prev.enable24h } : prev)}>
+
+                <OptionRow
+                  icon={ShieldCheck}
+                  title="Katılım onayı"
+                  description="Mesaja katılım onayı adımı eklenir."
+                  checked={editReminderConfig.requestConfirmationAt24h}
+                  onToggle={() =>
+                    setEditReminderConfig((prev) =>
+                      prev ? { ...prev, requestConfirmationAt24h: !prev.requestConfirmationAt24h } : prev
+                    )
+                  } />
+
               </OptionRow>
 
               <OptionRow
-              icon={TriangleAlert}
-              title="72 saatlik hatırlatma"
-              description="Randevudan 3 gün önce genel bilgilendirme mesajı gönderilir."
-              checked={editReminderConfig.enable72h}
-              onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable72h: !prev.enable72h } : prev)} />
-            
+                icon={TriangleAlert}
+                title="72 saatlik hatırlatma"
+                description="Randevudan 3 gün önce genel bilgilendirme mesajı gönderilir."
+                checked={editReminderConfig.enable72h}
+                onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable72h: !prev.enable72h } : prev)} />
+
             </div> :
-          null}
+            null}
 
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>İptal</Button>
@@ -715,7 +715,7 @@ export function AutomationsCrudPage() {
               onClick={() => void saveReminderSettings()}
               disabled={savingKey === 'reminder'}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
-              
+
               Kaydet
             </Button>
           </DialogFooter>
@@ -726,79 +726,79 @@ export function AutomationsCrudPage() {
         <DialogContent
           className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]"
           aria-describedby={undefined}>
-          
+
           <DialogHeader>
             <DialogTitle>No-show Takip Ayarları</DialogTitle>
           </DialogHeader>
 
           {editAttendanceConfig ?
-          <div className="space-y-4 py-2">
+            <div className="space-y-4 py-2">
               <div className="space-y-3">
                 <Label>Hangi durumlar ihlal sayılmalı?</Label>
 
                 <OptionRow
-                icon={UserRoundX}
-                title="Randevuya gelmeme"
-                description="Müşteri randevu saatine gelmezse ihlal kaydı oluşur."
-                checked={editAttendanceConfig.countMissedAppointments}
-                onToggle={() =>
-                setEditAttendanceConfig((prev) =>
-                prev ? { ...prev, countMissedAppointments: !prev.countMissedAppointments } : prev
-                )
-                } />
-              
+                  icon={UserRoundX}
+                  title="Randevuya gelmeme"
+                  description="Müşteri randevu saatine gelmezse ihlal kaydı oluşur."
+                  checked={editAttendanceConfig.countMissedAppointments}
+                  onToggle={() =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, countMissedAppointments: !prev.countMissedAppointments } : prev
+                    )
+                  } />
+
 
                 <OptionRow
-                icon={CalendarX2}
-                title="geç iptaller"
-                description="Randevuya çok kısa süre kala yapılan iptaller ihlal sayılır."
-                checked={editAttendanceConfig.countLateCancellations}
-                onToggle={() =>
-                setEditAttendanceConfig((prev) =>
-                prev ? { ...prev, countLateCancellations: !prev.countLateCancellations } : prev
-                )
-                }>
-                
+                  icon={CalendarX2}
+                  title="late cancellations"
+                  description="Randevuya çok kısa süre kala yapılan iptaller ihlal sayılır."
+                  checked={editAttendanceConfig.countLateCancellations}
+                  onToggle={() =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, countLateCancellations: !prev.countLateCancellations } : prev
+                    )
+                  }>
+
                   <div className="space-y-2">
                     <Label className="text-xs text-muted-foreground">İptalin geç sayılması için kaç saat kala yapılmış olması gerekir?</Label>
                     <div className="flex items-center gap-2">
                       <Input
-                      type="number"
-                      min={1}
-                      value={editAttendanceConfig.lateCancellationHours}
-                      onChange={(event) => {
-                        const value = Math.max(1, Number(event.target.value || 1));
-                        setEditAttendanceConfig((prev) => prev ? { ...prev, lateCancellationHours: value } : prev);
-                      }} />
-                    
+                        type="number"
+                        min={1}
+                        value={editAttendanceConfig.lateCancellationHours}
+                        onChange={(event) => {
+                          const value = Math.max(1, Number(event.target.value || 1));
+                          setEditAttendanceConfig((prev) => prev ? { ...prev, lateCancellationHours: value } : prev);
+                        }} />
+
                       <span className="text-sm text-muted-foreground">saat</span>
                     </div>
                   </div>
                 </OptionRow>
 
                 <OptionRow
-                icon={TriangleAlert}
-                title="geç değişiklikler"
-                description="Randevuya kısa süre kala yapılan saat/tarih değişiklikleri ihlal sayılır."
-                checked={editAttendanceConfig.countLateReschedules}
-                onToggle={() =>
-                setEditAttendanceConfig((prev) =>
-                prev ? { ...prev, countLateReschedules: !prev.countLateReschedules } : prev
-                )
-                }>
-                
+                  icon={TriangleAlert}
+                  title="late changes"
+                  description="Randevuya kısa süre kala yapılan saat/tarih değişiklikleri ihlal sayılır."
+                  checked={editAttendanceConfig.countLateReschedules}
+                  onToggle={() =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, countLateReschedules: !prev.countLateReschedules } : prev
+                    )
+                  }>
+
                   <div className="space-y-2">
                     <Label className="text-xs text-muted-foreground">Yeniden planlama kaç saat kala yapılırsa geç sayılsın?</Label>
                     <div className="flex items-center gap-2">
                       <Input
-                      type="number"
-                      min={1}
-                      value={editAttendanceConfig.lateRescheduleHours}
-                      onChange={(event) => {
-                        const value = Math.max(1, Number(event.target.value || 1));
-                        setEditAttendanceConfig((prev) => prev ? { ...prev, lateRescheduleHours: value } : prev);
-                      }} />
-                    
+                        type="number"
+                        min={1}
+                        value={editAttendanceConfig.lateRescheduleHours}
+                        onChange={(event) => {
+                          const value = Math.max(1, Number(event.target.value || 1));
+                          setEditAttendanceConfig((prev) => prev ? { ...prev, lateRescheduleHours: value } : prev);
+                        }} />
+
                       <span className="text-sm text-muted-foreground">saat</span>
                     </div>
                   </div>
@@ -808,22 +808,22 @@ export function AutomationsCrudPage() {
               <div className="space-y-2">
                 <Label>İhlal kayıtları ne kadar süre geçerli kalsın?</Label>
                 <Select
-                value={editAttendanceConfig.validityWindow}
-                onValueChange={(value) =>
-                setEditAttendanceConfig((prev) =>
-                prev ? { ...prev, validityWindow: value as ValidityWindow } : prev
-                )
-                }>
-                
+                  value={editAttendanceConfig.validityWindow}
+                  onValueChange={(value) =>
+                    setEditAttendanceConfig((prev) =>
+                      prev ? { ...prev, validityWindow: value as ValidityWindow } : prev
+                    )
+                  }>
+
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {VALIDITY_OPTIONS.map((option) =>
-                  <SelectItem key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
-                  )}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -832,40 +832,40 @@ export function AutomationsCrudPage() {
                 <Label>Yaptırımlar nasıl uygulansın?</Label>
                 <div className="space-y-2">
                   {ATTENDANCE_RANGES.map((range) =>
-                <div
-                  key={range.key}
-                  className="flex flex-col gap-2 sm:grid sm:grid-cols-[80px_1fr] sm:items-center">
-                  
+                    <div
+                      key={range.key}
+                      className="flex flex-col gap-2 sm:grid sm:grid-cols-[80px_1fr] sm:items-center">
+
                       <p className="text-sm font-medium leading-none sm:leading-normal">{range.label}</p>
                       <Select
-                    value={editAttendanceConfig.penaltyPolicy[range.key]}
-                    onValueChange={(value) =>
-                    setEditAttendanceConfig((prev) =>
-                    prev ?
-                    {
-                      ...prev,
-                      penaltyPolicy: {
-                        ...prev.penaltyPolicy,
-                        [range.key]: value as AttendancePenaltyAction
-                      }
-                    } :
-                    prev
-                    )
-                    }>
-                    
+                        value={editAttendanceConfig.penaltyPolicy[range.key]}
+                        onValueChange={(value) =>
+                          setEditAttendanceConfig((prev) =>
+                            prev ?
+                              {
+                                ...prev,
+                                penaltyPolicy: {
+                                  ...prev.penaltyPolicy,
+                                  [range.key]: value as AttendancePenaltyAction
+                                }
+                              } :
+                              prev
+                          )
+                        }>
+
                         <SelectTrigger size="sm" className="w-full min-w-0">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {PENALTY_ACTION_OPTIONS.map((option) =>
-                      <SelectItem key={option.value} value={option.value}>
+                            <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
-                      )}
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
-                )}
+                  )}
                 </div>
               </div>
 
@@ -873,83 +873,83 @@ export function AutomationsCrudPage() {
                 <Label>İhlal sonrası bildirimler ne zaman gönderilmeli?</Label>
                 <div className="grid grid-cols-1 gap-2">
                   <button
-                  type="button"
-                  onClick={() =>
-                  setEditAttendanceConfig((prev) =>
-                  prev ?
-                  {
-                    ...prev,
-                    notificationEvents: {
-                      ...prev.notificationEvents,
-                      lateCancellations: !prev.notificationEvents.lateCancellations
+                    type="button"
+                    onClick={() =>
+                      setEditAttendanceConfig((prev) =>
+                        prev ?
+                          {
+                            ...prev,
+                            notificationEvents: {
+                              ...prev.notificationEvents,
+                              lateCancellations: !prev.notificationEvents.lateCancellations
+                            }
+                          } :
+                          prev
+                      )
                     }
-                  } :
-                  prev
-                  )
-                  }
-                  className={cn(
-                    'rounded-lg border px-3 py-2 text-sm text-left transition-colors',
-                    editAttendanceConfig.notificationEvents.lateCancellations ?
-                    'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
-                    'border-border text-muted-foreground hover:border-border/80'
-                  )}>
-                  
+                    className={cn(
+                      'rounded-lg border px-3 py-2 text-sm text-left transition-colors',
+                      editAttendanceConfig.notificationEvents.lateCancellations ?
+                        'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
+                        'border-border text-muted-foreground hover:border-border/80'
+                    )}>
+
                     Gec iptallerde gönder
                   </button>
 
                   <button
-                  type="button"
-                  onClick={() =>
-                  setEditAttendanceConfig((prev) =>
-                  prev ?
-                  {
-                    ...prev,
-                    notificationEvents: {
-                      ...prev.notificationEvents,
-                      lateReschedules: !prev.notificationEvents.lateReschedules
+                    type="button"
+                    onClick={() =>
+                      setEditAttendanceConfig((prev) =>
+                        prev ?
+                          {
+                            ...prev,
+                            notificationEvents: {
+                              ...prev.notificationEvents,
+                              lateReschedules: !prev.notificationEvents.lateReschedules
+                            }
+                          } :
+                          prev
+                      )
                     }
-                  } :
-                  prev
-                  )
-                  }
-                  className={cn(
-                    'rounded-lg border px-3 py-2 text-sm text-left transition-colors',
-                    editAttendanceConfig.notificationEvents.lateReschedules ?
-                    'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
-                    'border-border text-muted-foreground hover:border-border/80'
-                  )}>
-                  
+                    className={cn(
+                      'rounded-lg border px-3 py-2 text-sm text-left transition-colors',
+                      editAttendanceConfig.notificationEvents.lateReschedules ?
+                        'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
+                        'border-border text-muted-foreground hover:border-border/80'
+                    )}>
+
                     Gec değişikliklerde gönder
                   </button>
 
                   <button
-                  type="button"
-                  onClick={() =>
-                  setEditAttendanceConfig((prev) =>
-                  prev ?
-                  {
-                    ...prev,
-                    notificationEvents: {
-                      ...prev.notificationEvents,
-                      missedAppointments: !prev.notificationEvents.missedAppointments
+                    type="button"
+                    onClick={() =>
+                      setEditAttendanceConfig((prev) =>
+                        prev ?
+                          {
+                            ...prev,
+                            notificationEvents: {
+                              ...prev.notificationEvents,
+                              missedAppointments: !prev.notificationEvents.missedAppointments
+                            }
+                          } :
+                          prev
+                      )
                     }
-                  } :
-                  prev
-                  )
-                  }
-                  className={cn(
-                    'rounded-lg border px-3 py-2 text-sm text-left transition-colors',
-                    editAttendanceConfig.notificationEvents.missedAppointments ?
-                    'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
-                    'border-border text-muted-foreground hover:border-border/80'
-                  )}>
-                  
+                    className={cn(
+                      'rounded-lg border px-3 py-2 text-sm text-left transition-colors',
+                      editAttendanceConfig.notificationEvents.missedAppointments ?
+                        'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
+                        'border-border text-muted-foreground hover:border-border/80'
+                    )}>
+
                     Gelmedigi randevularda gönder
                   </button>
                 </div>
               </div>
             </div> :
-          null}
+            null}
 
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>İptal</Button>
@@ -957,7 +957,7 @@ export function AutomationsCrudPage() {
               onClick={() => void saveAttendanceSettings()}
               disabled={savingKey === 'attendance'}
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
-              
+
               Kaydet
             </Button>
           </DialogFooter>

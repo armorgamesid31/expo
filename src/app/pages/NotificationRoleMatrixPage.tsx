@@ -2,40 +2,40 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const EVENTS = [
-{
-  key: 'HANDOVER_REQUIRED',
-  title: "Müşteri salon desteğine ihtiyaç duyuyor",
-  description: "Yapay zeka konuşmayı ekibinize devrettiğinde bir uyarı gönderir."
-},
-{
-  key: 'HANDOVER_REMINDER',
-  title: "Devir hatırlatması",
-  description: 'Devir işlemi beklerken hatırlatmaları tekrarlar.'
-},
-{
-  key: 'SAME_DAY_APPOINTMENT_CHANGE',
-  title: 'Aynı Gün Randevu Değişiklikleri',
-  description: 'Bugün için yeni rezervasyonları, güncellemeleri ve iptalleri bildirir.'
-},
-{
-  key: 'END_OF_DAY_MISSING_DATA',
-  title: 'Gün Sonu Eksik Veri',
-  description: 'Giriş veya ödeme bilgileri eksik olduğunda ekibe hatırlatır.'
-},
-{
-  key: 'DAILY_MANAGER_REPORT',
-  title: "Günlük Yönetici Raporu",
-  description: "Kapanıştan sonra günlük özeti gönderir."
-}] as
-const;
+  {
+    key: 'HANDOVER_REQUIRED',
+    title: "Müşteri salon desteğine ihtiyaç duyuyor",
+    description: "Yapay zeka konuşmayı ekibinize devrettiğinde bir uyarı gönderir."
+  },
+  {
+    key: 'HANDOVER_REMINDER',
+    title: "Devir hatırlatması",
+    description: 'Devir hala beklerken hatırlatıcıları tekrarlar.'
+  },
+  {
+    key: 'SAME_DAY_APPOINTMENT_CHANGE',
+    title: 'Aynı Gün Randevu Değişiklikleri',
+    description: 'Bugün için yeni rezervasyonları, güncellemeleri ve iptalleri bildirir.'
+  },
+  {
+    key: 'END_OF_DAY_MISSING_DATA',
+    title: 'Gün Sonu Eksik Veriler',
+    description: 'Giriş veya ödeme bilgileri eksik olduğunda ekibe hatırlatır.'
+  },
+  {
+    key: 'DAILY_MANAGER_REPORT',
+    title: "Günlük Yönetici Raporu",
+    description: "Kapanıştan sonra günlük özeti gönderir."
+  }] as
+  const;
 
 const ROLES = [
-{ key: 'OWNER', label: "Sahip" },
-{ key: 'MANAGER', label: "Yönetici" },
-{ key: 'RECEPTION', label: "Resepsiyon" },
-{ key: 'STAFF', label: "Personel" },
-{ key: 'FINANCE', label: "Finans" }] as
-const;
+  { key: 'OWNER', label: "Sahip" },
+  { key: 'MANAGER', label: "Yönetici" },
+  { key: 'RECEPTION', label: "Resepsiyon" },
+  { key: 'STAFF', label: "Personel" },
+  { key: 'FINANCE', label: "Finans" }] as
+  const;
 
 type EventType = (typeof EVENTS)[number];
 type EventKey = EventType['key'];
@@ -63,7 +63,7 @@ export function NotificationRoleMatrixPage() {
     let active = true;
     (async () => {
       try {
-        const response = await apiFetch<{policy: NotificationPolicy;}>('/api/admin/notification-settings');
+        const response = await apiFetch<{ policy: NotificationPolicy; }>('/api/admin/notification-settings');
         if (!active) return;
         setPolicy({
           recipients: response.policy?.recipients || {},
@@ -123,18 +123,18 @@ export function NotificationRoleMatrixPage() {
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-semibold">Bildirim Kuralları</h1>
       <p className="text-sm text-muted-foreground">
-        Her bildirim türünü hangi ekip rollerinin alacağını seçin.
+        Hangi ekip rollerinin her bir bildirim türünü alacağını seçin.
       </p>
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {savedMessage ? <p className="text-sm text-emerald-600">{savedMessage}</p> : null}
 
       {!loading ?
-      <div className="space-y-3">
+        <div className="space-y-3">
           {EVENTS.map((eventItem) => {
-          const selected = (policy?.recipients?.[eventItem.key] || []) as string[];
-          return (
-            <div key={eventItem.key} className="rounded-xl border border-border bg-card p-3 space-y-3">
+            const selected = (policy?.recipients?.[eventItem.key] || []) as string[];
+            return (
+              <div key={eventItem.key} className="rounded-xl border border-border bg-card p-3 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">{eventItem.title}</p>
@@ -142,90 +142,89 @@ export function NotificationRoleMatrixPage() {
                   </div>
                   <div className="shrink-0 flex gap-1">
                     <button
-                    type="button"
-                    onClick={() => setAllForEvent(eventItem.key, true)}
-                    className="h-7 px-2 rounded-md border border-border text-[11px]">
-                    
+                      type="button"
+                      onClick={() => setAllForEvent(eventItem.key, true)}
+                      className="h-7 px-2 rounded-md border border-border text-[11px]">
+
                       Hepsini aç
                     </button>
                     <button
-                    type="button"
-                    onClick={() => setAllForEvent(eventItem.key, false)}
-                    className="h-7 px-2 rounded-md border border-border text-[11px]">
-                    
+                      type="button"
+                      onClick={() => setAllForEvent(eventItem.key, false)}
+                      className="h-7 px-2 rounded-md border border-border text-[11px]">
+
                       Hepsini kapat
                     </button>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {ROLES.map((role) =>
-                <button
-                  key={role.key}
-                  type="button"
-                  onClick={() => toggle(eventItem.key, role.key)}
-                  className={`px-2.5 h-8 rounded-full border text-xs ${
-                  selected.includes(role.key) ?
-                  'border-[var(--rose-gold)] bg-[var(--rose-gold)]/15 text-[var(--deep-indigo)]' :
-                  'border-border text-muted-foreground'}`
-                  }>
-                  
+                    <button
+                      key={role.key}
+                      type="button"
+                      onClick={() => toggle(eventItem.key, role.key)}
+                      className={`px-2.5 h-8 rounded-full border text-xs ${selected.includes(role.key) ?
+                          'border-[var(--rose-gold)] bg-[var(--rose-gold)]/15 text-[var(--deep-indigo)]' :
+                          'border-border text-muted-foreground'}`
+                      }>
+
                       {role.label}
                     </button>
-                )}
+                  )}
                 </div>
               </div>);
 
-        })}
+          })}
 
           <div className="rounded-xl border border-border bg-card p-3 space-y-3">
             <p className="text-sm font-semibold">Devir hatırlatma kuralları</p>
             <p className="text-xs text-muted-foreground">
-              Devir işlemi aktif kalırsa hatırlatmalar bu limitlerle tekrarlanır.
+              Devir aktif kalırsa, hatırlatıcılar bu limitlerle tekrarlanır.
             </p>
             <label className="flex items-center justify-between text-sm">
               <span>Hatırlatma aralığı (dk)</span>
               <input
-              type="number"
-              min={5}
-              max={180}
-              value={policy?.handoverReminderIntervalMinutes || 30}
-              onChange={(e) =>
-              setPolicy((prev) => ({
-                ...prev,
-                handoverReminderIntervalMinutes: Math.min(180, Math.max(5, Number(e.target.value) || 30))
-              }))
-              }
-              className="w-20 h-8 rounded border border-border px-2" />
-            
+                type="number"
+                min={5}
+                max={180}
+                value={policy?.handoverReminderIntervalMinutes || 30}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    handoverReminderIntervalMinutes: Math.min(180, Math.max(5, Number(e.target.value) || 30))
+                  }))
+                }
+                className="w-20 h-8 rounded border border-border px-2" />
+
             </label>
             <label className="flex items-center justify-between text-sm">
               <span>Maks. hatırlatma</span>
               <input
-              type="number"
-              min={1}
-              max={12}
-              value={policy?.handoverReminderMaxCount || 6}
-              onChange={(e) =>
-              setPolicy((prev) => ({
-                ...prev,
-                handoverReminderMaxCount: Math.min(12, Math.max(1, Number(e.target.value) || 6))
-              }))
-              }
-              className="w-20 h-8 rounded border border-border px-2" />
-            
+                type="number"
+                min={1}
+                max={12}
+                value={policy?.handoverReminderMaxCount || 6}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    handoverReminderMaxCount: Math.min(12, Math.max(1, Number(e.target.value) || 6))
+                  }))
+                }
+                className="w-20 h-8 rounded border border-border px-2" />
+
             </label>
           </div>
 
           <button
-          type="button"
-          disabled={saving}
-          onClick={() => void save()}
-          className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60">
-          
+            type="button"
+            disabled={saving}
+            onClick={() => void save()}
+            className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60">
+
             {saving ? 'Kaydediliyor...' : 'Kaydet'}
           </button>
         </div> :
-      null}
+        null}
     </div>);
 
 }

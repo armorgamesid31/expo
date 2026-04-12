@@ -11,13 +11,13 @@ interface SalonInfoProps {
   onBack: () => void;
 }
 
-const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const COUNTRIES = [
-{ code: 'TR', name: 'Turkey', flag: '🇹🇷', format: '(XXX) XXX XX XX', example: '(5XX) XXX XX XX' },
-{ code: 'US', name: 'Amerika', flag: '🇺🇸', format: '(XXX) XXX-XXXX', example: '(XXX) XXX-XXXX' },
-{ code: 'GB', name: 'United Kingdom', flag: '🇬🇧', format: 'XXXX XXX XXXX', example: '07XX XXX XXXX' },
-{ code: 'DE', name: 'Almanya', flag: '🇩🇪', format: 'XXX XXXXXXXX', example: '1XX XXXXXXXX' }];
+  { code: 'TR', name: 'Turkey', flag: '🇹🇷', format: '(XXX) XXX XX XX', example: '(5XX) XXX XX XX' },
+  { code: 'US', name: 'Amerika', flag: '🇺🇸', format: '(XXX) XXX-XXXX', example: '(XXX) XXX-XXXX' },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', format: 'XXXX XXX XXXX', example: '07XX XXX XXXX' },
+  { code: 'DE', name: 'Almanya', flag: '🇩🇪', format: 'XXX XXXXXXXX', example: '1XX XXXXXXXX' }];
 
 
 interface WorkingHour {
@@ -35,7 +35,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
     name: 'Beauty Workshop',
     phone: '(538) 111 22 33',
     address: 'Nisantasi Mah. Valikonagi Cad. No:42/A, Sisli/Istanbul',
-    description: 'Nişantaşı\'nın kalbinde, 15 yıllık tecrübemizle profesyonel güzellik hizmetleri sunuyoruz.',
+    description: 'In the heart of Nisantasi, we offer professional beauty services with 15 years of experience.',
     mapUrl: 'https://maps.google.com/?q=Nisantasi+Istanbul',
     logoUrl: ''
   });
@@ -89,7 +89,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
 
   const handleAIEnhance = async () => {
     // Simulate AI enhancement
-    const enhanced = salonData.description + ' Uzman ekibimiz, en son teknoloji ekipmanlar ve premium ürünlerle size özel bir bakım deneyimi sunuyor.';
+    const enhanced = salonData.description + 'Our expert team offers you a special care experience with state-of-the-art equipment and premium products.';
     setSalonData({ ...salonData, description: enhanced });
   };
 
@@ -105,7 +105,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold">Salon Bilgileri</h1>
-            <p className="text-sm text-muted-foreground">İşletme detayları ve çalışma saatleri</p>
+            <p className="text-sm text-muted-foreground">Business details and working hours</p>
           </div>
         </div>
       </div>
@@ -118,18 +118,18 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[var(--rose-gold)]/20 to-[var(--deep-indigo)]/10 flex items-center justify-center border-2 border-dashed border-border">
                 {salonData.logoUrl ?
-                <img src={salonData.logoUrl} alt="Logo" className="w-full h-full object-cover rounded-xl" /> :
+                  <img src={salonData.logoUrl} alt="Logo" className="w-full h-full object-cover rounded-xl" /> :
 
-                <Upload className="w-6 h-6 text-muted-foreground" />
+                  <Upload className="w-6 h-6 text-muted-foreground" />
                 }
               </div>
               <div className="flex-1">
                 <Button variant="outline" size="sm" className="w-full">
                   <Upload className="w-4 h-4 mr-2" />
-                  Logo Yükle
+                  Upload Logo
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Önerilen boyut: 512x512 piksel
+                  Recommended size: 512x512px
                 </p>
               </div>
             </div>
@@ -147,7 +147,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                   id="salon-name"
                   value={salonData.name}
                   onChange={(e) => setSalonData({ ...salonData, name: e.target.value })} />
-                
+
               </div>
 
               <div className="space-y-2">
@@ -156,7 +156,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                   <button
                     onClick={() => setShowCountrySelect(!showCountrySelect)}
                     className="h-10 px-3 rounded-lg border border-input bg-background flex items-center gap-2 text-sm hover:bg-accent transition-colors">
-                    
+
                     <span className="text-lg">{currentCountry.flag}</span>
                     <span className="text-xs text-muted-foreground">+{currentCountry.code === 'TR' ? '90' : currentCountry.code === 'US' ? '1' : currentCountry.code === 'GB' ? '44' : '49'}</span>
                   </button>
@@ -168,31 +168,31 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                       onChange={(e) => handlePhoneChange(e.target.value)}
                       className="pl-10"
                       placeholder={currentCountry.example} />
-                    
+
                   </div>
                 </div>
-                
+
                 {/* Country Selector Dropdown */}
                 {showCountrySelect &&
-                <Card className="border-border/50 mt-2">
+                  <Card className="border-border/50 mt-2">
                     <CardContent className="p-2">
                       {COUNTRIES.map((country) =>
-                    <button
-                      key={country.code}
-                      onClick={() => {
-                        setSelectedCountry(country.code);
-                        setShowCountrySelect(false);
-                        setSalonData({ ...salonData, phone: '' });
-                      }}
-                      className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors text-left">
-                      
+                        <button
+                          key={country.code}
+                          onClick={() => {
+                            setSelectedCountry(country.code);
+                            setShowCountrySelect(false);
+                            setSalonData({ ...salonData, phone: '' });
+                          }}
+                          className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors text-left">
+
                           <span className="text-xl">{country.flag}</span>
                           <div className="flex-1">
                             <p className="text-sm font-medium">{country.name}</p>
                             <p className="text-xs text-muted-foreground">{country.format}</p>
                           </div>
                         </button>
-                    )}
+                      )}
                     </CardContent>
                   </Card>
                 }
@@ -208,7 +208,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                     onChange={(e) => setSalonData({ ...salonData, address: e.target.value })}
                     rows={2}
                     className="w-full bg-transparent rounded-lg px-3 py-2 pl-10 text-sm outline-none border border-input focus:ring-2 focus:ring-[var(--rose-gold)]/30 resize-none" />
-                  
+
                 </div>
               </div>
 
@@ -219,7 +219,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                   value={salonData.mapUrl}
                   onChange={(e) => setSalonData({ ...salonData, mapUrl: e.target.value })}
                   placeholder="https://maps.google.com/..." />
-                
+
                 <p className="text-xs text-muted-foreground">
                   Randevu hatırlatmalarında müşterilere yol tarifi olarak gönderilir
                 </p>
@@ -233,13 +233,13 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                   onChange={(e) => setSalonData({ ...salonData, description: e.target.value })}
                   rows={3}
                   className="w-full bg-transparent rounded-lg px-3 py-2 text-sm outline-none border border-input focus:ring-2 focus:ring-[var(--rose-gold)]/30 resize-none" />
-                
+
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleAIEnhance}
                   className="w-full">
-                  
+
                   <Sparkles className="w-3 h-3 mr-2" />
                   Yapay zeka ile iyileştir
                 </Button>
@@ -254,38 +254,38 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-2">
               {workingHours.map((wh, index) =>
-              <div key={wh.day} className="flex items-center gap-3 py-1">
+                <div key={wh.day} className="flex items-center gap-3 py-1">
                   <Switch
-                  checked={wh.isOpen}
-                  onCheckedChange={() => toggleDay(index)}
-                  className="shrink-0" />
-                
+                    checked={wh.isOpen}
+                    onCheckedChange={() => toggleDay(index)}
+                    className="shrink-0" />
+
                   <div className="w-24 shrink-0">
                     <span className={`text-sm ${wh.isOpen ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
                       {wh.day}
                     </span>
                   </div>
                   {wh.isOpen ?
-                <div className="flex items-center gap-2 flex-1">
+                    <div className="flex items-center gap-2 flex-1">
                       <Input
-                    type="time"
-                    value={wh.open}
-                    onChange={(e) => updateHour(index, 'open', e.target.value)}
-                    className="h-9 text-sm" />
-                  
+                        type="time"
+                        value={wh.open}
+                        onChange={(e) => updateHour(index, 'open', e.target.value)}
+                        className="h-9 text-sm" />
+
                       <span className="text-xs text-muted-foreground shrink-0">—</span>
                       <Input
-                    type="time"
-                    value={wh.close}
-                    onChange={(e) => updateHour(index, 'close', e.target.value)}
-                    className="h-9 text-sm" />
-                  
+                        type="time"
+                        value={wh.close}
+                        onChange={(e) => updateHour(index, 'close', e.target.value)}
+                        className="h-9 text-sm" />
+
                     </div> :
 
-                <div className="flex-1">
+                    <div className="flex-1">
                       <Badge variant="secondary" className="text-xs text-muted-foreground">Kapalı</Badge>
                     </div>
-                }
+                  }
                 </div>
               )}
             </CardContent>
@@ -297,7 +297,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
           onClick={handleSave}
           className="w-full py-6 rounded-xl shadow-lg"
           style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
-          
+
           <Save className="w-4 h-4 mr-2" />
           {saved ? "Kaydedildi!" : "Değişiklikleri Kaydet"}
         </Button>
