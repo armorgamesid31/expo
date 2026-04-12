@@ -12,7 +12,7 @@ interface StaffTimelineProps {
 
 export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
   const [showModal, setShowModal] = useState(false);
-  
+
   // Generate time slots from 9 AM to 8 PM
   const timeSlots = Array.from({ length: 12 }, (_, i) => {
     const hour = 9 + i;
@@ -20,7 +20,7 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
   });
 
   const getAppointmentsForStaffAtTime = (staffId: string, time: string) => {
-    return appointments.filter(apt => {
+    return appointments.filter((apt) => {
       if (apt.staffId !== staffId || apt.status === 'cancelled') return false;
       const [aptHour] = apt.startTime.split(':').map(Number);
       const [slotHour] = time.split(':').map(Number);
@@ -32,15 +32,15 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
   const calculateBlockHeight = (startTime: string, endTime: string) => {
     const [startHour, startMin] = startTime.split(':').map(Number);
     const [endHour, endMin] = endTime.split(':').map(Number);
-    const durationInMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
-    return (durationInMinutes / 60) * 80; // 80px per hour
+    const durationInMinutes = endHour * 60 + endMin - (startHour * 60 + startMin);
+    return durationInMinutes / 60 * 80; // 80px per hour
   };
 
   const calculateTopOffset = (startTime: string, slotTime: string) => {
     const [startHour, startMin] = startTime.split(':').map(Number);
     const [slotHour] = slotTime.split(':').map(Number);
-    const offsetMinutes = (startHour * 60 + startMin) - (slotHour * 60);
-    return (offsetMinutes / 60) * 80;
+    const offsetMinutes = startHour * 60 + startMin - slotHour * 60;
+    return offsetMinutes / 60 * 80;
   };
 
   return (
@@ -50,11 +50,11 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-semibold">Appointment Calendar</h1>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)]"
-              onClick={() => setShowModal(true)}
-            >
+              onClick={() => setShowModal(true)}>
+              
               <Plus className="w-4 h-4 mr-2" />
               New Appointment
             </Button>
@@ -82,24 +82,24 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
           {/* Time Column */}
           <div className="sticky left-0 bg-background z-10 w-16 border-r border-border">
             <div className="h-12" /> {/* Header spacer */}
-            {timeSlots.map((time) => (
-              <div key={time} className="h-20 border-b border-border/50 flex items-center justify-center">
+            {timeSlots.map((time) =>
+            <div key={time} className="h-20 border-b border-border/50 flex items-center justify-center">
                 <span className="text-xs text-muted-foreground">{time}</span>
               </div>
-            ))}
+            )}
           </div>
 
           {/* Staff Columns */}
           <div className="flex flex-1 overflow-x-auto">
-            {staff.map((member) => (
-              <div key={member.id} className="min-w-[140px] flex-1 border-r border-border">
+            {staff.map((member) =>
+            <div key={member.id} className="min-w-[140px] flex-1 border-r border-border">
                 {/* Staff Header */}
                 <div className="h-12 border-b border-border p-2 bg-card/50 sticky top-0">
                   <div className="flex items-center gap-2">
-                    <div 
-                      className="w-2 h-2 rounded-full" 
-                      style={{ backgroundColor: member.color }}
-                    />
+                    <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: member.color }} />
+                  
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-xs truncate">{member.name}</p>
                       <p className="text-[10px] text-muted-foreground truncate">{member.role}</p>
@@ -110,50 +110,50 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
                 {/* Time Slots */}
                 <div className="relative">
                   {timeSlots.map((time, idx) => {
-                    const aptsAtTime = getAppointmentsForStaffAtTime(member.id, time);
-                    const firstSlotApt = aptsAtTime.find(apt => apt.startTime === time);
+                  const aptsAtTime = getAppointmentsForStaffAtTime(member.id, time);
+                  const firstSlotApt = aptsAtTime.find((apt) => apt.startTime === time);
 
-                    return (
-                      <div 
-                        key={time}
-                        className="h-20 border-b border-border/50 p-1 hover:bg-muted/30 transition-colors cursor-pointer"
-                      >
-                        {firstSlotApt && (
-                          <div
-                            className="absolute left-1 right-1 rounded-lg p-2 shadow-sm overflow-hidden"
-                            style={{
-                              backgroundColor: `${firstSlotApt.services[0].color}20`,
-                              borderLeft: `3px solid ${firstSlotApt.services[0].color}`,
-                              height: `${calculateBlockHeight(firstSlotApt.startTime, firstSlotApt.endTime) - 4}px`,
-                              top: `${48 + (idx * 80) + calculateTopOffset(firstSlotApt.startTime, time)}px`,
-                            }}
-                          >
+                  return (
+                    <div
+                      key={time}
+                      className="h-20 border-b border-border/50 p-1 hover:bg-muted/30 transition-colors cursor-pointer">
+                      
+                        {firstSlotApt &&
+                      <div
+                        className="absolute left-1 right-1 rounded-lg p-2 shadow-sm overflow-hidden"
+                        style={{
+                          backgroundColor: `${firstSlotApt.services[0].color}20`,
+                          borderLeft: `3px solid ${firstSlotApt.services[0].color}`,
+                          height: `${calculateBlockHeight(firstSlotApt.startTime, firstSlotApt.endTime) - 4}px`,
+                          top: `${48 + idx * 80 + calculateTopOffset(firstSlotApt.startTime, time)}px`
+                        }}>
+                        
                             <p className="text-xs font-medium truncate">{firstSlotApt.customerName}</p>
                             <p className="text-[10px] text-muted-foreground truncate">
                               {firstSlotApt.services[0].name}
                             </p>
-                            {firstSlotApt.services.length > 1 && (
-                              <div className="mt-1 flex items-center gap-1">
-                                <div 
-                                  className="w-1.5 h-1.5 rounded-full" 
-                                  style={{ backgroundColor: firstSlotApt.services[1].color }}
-                                />
+                            {firstSlotApt.services.length > 1 &&
+                        <div className="mt-1 flex items-center gap-1">
+                                <div
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: firstSlotApt.services[1].color }} />
+                          
                                 <p className="text-[9px] text-muted-foreground truncate">
                                   +{firstSlotApt.services[1].name}
                                 </p>
                               </div>
-                            )}
+                        }
                             <p className="text-[10px] text-muted-foreground mt-1">
                               {firstSlotApt.startTime} - {firstSlotApt.endTime}
                             </p>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                      }
+                      </div>);
+
+                })}
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </ScrollArea>
@@ -171,12 +171,12 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-sm bg-amber-500/20 border-l-2 border-amber-500" />
-            <span className="text-xs text-muted-foreground">Sequential Service</span>
+            <span className="text-xs text-muted-foreground">Sıralı Hizmet</span>
           </div>
         </div>
       </div>
 
       <AppointmentModal open={showModal} onClose={() => setShowModal(false)} />
-    </div>
-  );
+    </div>);
+
 }

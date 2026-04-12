@@ -11,10 +11,10 @@ export function CustomerList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-  const filteredCustomers = customers.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.phone.includes(searchTerm) ||
-    c.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCustomers = customers.filter((c) =>
+  c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  c.phone.includes(searchTerm) ||
+  c.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getRiskBadgeStyle = (level: string) => {
@@ -43,17 +43,17 @@ export function CustomerList() {
     <div className="h-full pb-20">
       {/* Header */}
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <h1 className="text-2xl font-semibold mb-4">Customer Management</h1>
+        <h1 className="text-2xl font-semibold mb-4">Müşteri Yönetimi</h1>
         
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search for customers..."
+            placeholder="Müşteri ara..."
             className="pl-10"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+            onChange={(e) => setSearchTerm(e.target.value)} />
+          
         </div>
 
         {/* Stats */}
@@ -64,13 +64,13 @@ export function CustomerList() {
           </div>
           <div className="text-center p-3 bg-card rounded-lg border border-border">
             <p className="text-2xl font-bold text-green-600">
-              {customers.filter(c => c.riskLevel === 'low').length}
+              {customers.filter((c) => c.riskLevel === 'low').length}
             </p>
             <p className="text-xs text-muted-foreground">Low Risk</p>
           </div>
           <div className="text-center p-3 bg-card rounded-lg border border-border">
             <p className="text-2xl font-bold text-red-600">
-              {customers.filter(c => c.riskLevel === 'high').length}
+              {customers.filter((c) => c.riskLevel === 'high').length}
             </p>
             <p className="text-xs text-muted-foreground">High Risk</p>
           </div>
@@ -79,21 +79,21 @@ export function CustomerList() {
 
       {/* Customer List */}
       <div className="p-4 space-y-3">
-        {filteredCustomers.map(customer => (
-          <Card 
-            key={customer.id}
-            className="border-border/50 cursor-pointer hover:border-[var(--rose-gold)]/50 transition-all active:scale-98"
-            onClick={() => setSelectedCustomer(customer)}
-          >
+        {filteredCustomers.map((customer) =>
+        <Card
+          key={customer.id}
+          className="border-border/50 cursor-pointer hover:border-[var(--rose-gold)]/50 transition-all active:scale-98"
+          onClick={() => setSelectedCustomer(customer)}>
+          
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold">{customer.name}</h3>
-                    <Badge 
-                      variant="outline"
-                      className={`text-xs ${getRiskBadgeStyle(customer.riskLevel)}`}
-                    >
+                    <Badge
+                    variant="outline"
+                    className={`text-xs ${getRiskBadgeStyle(customer.riskLevel)}`}>
+                    
                       {getRiskIcon(customer.riskLevel)}
                       <span className="ml-1 capitalize">{customer.riskLevel === 'low' ? 'low' : customer.riskLevel === 'medium' ? 'orta' : 'high'}</span>
                     </Badge>
@@ -121,18 +121,18 @@ export function CustomerList() {
                 </div>
               </div>
 
-              {customer.riskLevel === 'high' && (
-                <div className="mt-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+              {customer.riskLevel === 'high' &&
+            <div className="mt-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
                   <p className="text-xs text-red-700 dark:text-red-300 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
                     High risk - Deposit required for booking
                   </p>
                 </div>
-              )}
+            }
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
-    </div>
-  );
+    </div>);
+
 }

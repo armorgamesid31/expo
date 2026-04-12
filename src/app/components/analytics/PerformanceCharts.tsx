@@ -17,7 +17,7 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
     week: 'Last 7 Days',
     month: 'February 2026',
     quarter: 'Q1 2026',
-    year: '2026',
+    year: '2026'
   };
 
   return (
@@ -36,22 +36,22 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
 
         {/* Period Selector */}
         <div className="flex gap-2">
-          {(['week', 'month', 'quarter', 'year'] as const).map((period) => (
-            <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
-                selectedPeriod === period
-                  ? 'bg-[var(--rose-gold)] text-white'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
+          {(['week', 'month', 'quarter', 'year'] as const).map((period) =>
+          <button
+            key={period}
+            onClick={() => setSelectedPeriod(period)}
+            className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
+            selectedPeriod === period ?
+            'bg-[var(--rose-gold)] text-white' :
+            'bg-muted text-muted-foreground'}`
+            }>
+            
               {period === 'week' && 'Hafta'}
               {period === 'month' && 'Ay'}
               {period === 'quarter' && 'Quarter'}
               {period === 'year' && 'Year'}
             </button>
-          ))}
+          )}
         </div>
       </div>
 
@@ -61,18 +61,18 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Award className="w-5 h-5 text-[var(--rose-gold)]" />
-              Staff Performance
+              Personel Performansı
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {staffPerformance.map((staff, idx) => (
-              <div key={staff.staffId} className="space-y-2">
+            {staffPerformance.map((staff, idx) =>
+            <div key={staff.staffId} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                      style={{ backgroundColor: COLORS[idx] }}
-                    >
+                    <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                    style={{ backgroundColor: COLORS[idx] }}>
+                    
                       {staff.staffName.charAt(0)}
                     </div>
                     <div>
@@ -89,16 +89,16 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
                   </div>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full transition-all duration-500"
-                    style={{ 
-                      width: `${(staff.revenue / 10000) * 100}%`,
-                      backgroundColor: COLORS[idx]
-                    }}
-                  />
+                  <div
+                  className="h-full transition-all duration-500"
+                  style={{
+                    width: `${staff.revenue / 10000 * 100}%`,
+                    backgroundColor: COLORS[idx]
+                  }} />
+                
                 </div>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -107,32 +107,32 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-[var(--rose-gold)]" />
-              Top Revenue-Generating Services
+              En Çok Gelir Getiren Hizmetler
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={servicePerformanceData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   tick={{ fontSize: 10 }}
                   angle={-45}
                   textAnchor="end"
                   height={80}
-                  stroke="var(--muted-foreground)"
-                />
-                <YAxis 
+                  stroke="var(--muted-foreground)" />
+                
+                <YAxis
                   tick={{ fontSize: 12 }}
-                  stroke="var(--muted-foreground)"
-                />
-                <Tooltip 
-                  contentStyle={{ 
+                  stroke="var(--muted-foreground)" />
+                
+                <Tooltip
+                  contentStyle={{
                     backgroundColor: 'var(--card)',
                     border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                  }}
-                />
+                    borderRadius: '8px'
+                  }} />
+                
                 <Bar dataKey="value" fill="var(--rose-gold)" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -144,7 +144,7 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-[var(--rose-gold)]" />
-              Service Revenue Distribution
+              Hizmet Gelir Dağılımı
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -158,19 +158,19 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
-                  dataKey="value"
-                >
-                  {servicePerformanceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
+                  dataKey="value">
+                  
+                  {servicePerformanceData.map((entry, index) =>
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  )}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ 
+                <Tooltip
+                  contentStyle={{
                     backgroundColor: 'var(--card)',
                     border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                  }}
-                />
+                    borderRadius: '8px'
+                  }} />
+                
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -206,6 +206,6 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -7,11 +7,11 @@ interface BottomNavProps {
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
-    { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-    { id: 'schedule', label: 'Appointments', icon: Calendar },
-    { id: 'conversations', label: 'Conversations', icon: MessagesSquare },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
+  { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+  { id: 'schedule', label: 'Appointments', icon: Calendar },
+  { id: 'conversations', label: 'Conversations', icon: MessagesSquare },
+  { id: 'settings', label: "Ayarlar", icon: Settings }];
+
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 safe-bottom">
@@ -19,21 +19,21 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
-          
+
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors min-w-[60px] ${
-                isActive ? 'text-[var(--rose-gold)]' : 'text-muted-foreground'
-              }`}
-            >
+              isActive ? 'text-[var(--rose-gold)]' : 'text-muted-foreground'}`
+              }>
+              
               <Icon className={`w-5 h-5 ${isActive ? 'fill-[var(--rose-gold)]/10' : ''}`} />
               <span className="text-xs">{tab.label}</span>
-            </button>
-          );
+            </button>);
+
         })}
       </div>
-    </nav>
-  );
+    </nav>);
+
 }

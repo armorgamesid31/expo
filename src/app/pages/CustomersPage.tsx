@@ -6,8 +6,8 @@ import type {
   AdminCustomersResponse,
   CustomerPackageItem,
   PackageLedgerItem,
-  PackageTemplateItem,
-} from '../types/mobile-api';
+  PackageTemplateItem } from
+'../types/mobile-api';
 import { useNavigate } from 'react-router-dom';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
@@ -50,7 +50,7 @@ interface CustomerDetailResponse {
   summary: {
     totalAppointmentDays: number;
     totalRevenue: number;
-    favoriteStaff: { id: number; name: string; count: number } | null;
+    favoriteStaff: {id: number;name: string;count: number;} | null;
     noShowRiskScore: number;
     noShowRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
     noShowCount: number;
@@ -115,7 +115,7 @@ export function CustomersPage() {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
   const [initialListSnapshot] = useState<CustomersListSnapshot | null>(
-    () => readSnapshot<CustomersListSnapshot>(CUSTOMERS_LIST_CACHE_KEY, 1000 * 60 * 10),
+    () => readSnapshot<CustomersListSnapshot>(CUSTOMERS_LIST_CACHE_KEY, 1000 * 60 * 10)
   );
   const [items, setItems] = useState<AdminCustomerItem[]>(() => initialListSnapshot?.items || []);
   const [cursor, setCursor] = useState<string | null>(() => initialListSnapshot?.nextCursor || null);
@@ -161,9 +161,9 @@ export function CustomersPage() {
   const [packageTemplateIdToAssign, setPackageTemplateIdToAssign] = useState('');
   const [packageAssigning, setPackageAssigning] = useState(false);
   const [packageAssignSuccess, setPackageAssignSuccess] = useState<string | null>(null);
-  const [packageAdjustTarget, setPackageAdjustTarget] = useState<{ packageId: string; serviceId: string }>({
+  const [packageAdjustTarget, setPackageAdjustTarget] = useState<{packageId: string;serviceId: string;}>({
     packageId: '',
-    serviceId: '',
+    serviceId: ''
   });
   const [packageAdjustDelta, setPackageAdjustDelta] = useState('');
   const [packageAdjustReason, setPackageAdjustReason] = useState('');
@@ -203,12 +203,12 @@ export function CustomersPage() {
           writeSnapshot(CUSTOMERS_LIST_CACHE_KEY, {
             items: response.items,
             nextCursor: response.nextCursor,
-            hasMore: response.hasMore,
+            hasMore: response.hasMore
           });
         }
       } catch (err: any) {
         if (mounted) {
-          setError(err?.message || 'Customers could not be received.');
+          setError(err?.message || "Müşteriler alınamadı.");
         }
       } finally {
         if (mounted) {
@@ -238,7 +238,7 @@ export function CustomersPage() {
           writeSnapshot(CUSTOMERS_LIST_CACHE_KEY, {
             items: nextItems,
             nextCursor: response.nextCursor,
-            hasMore: response.hasMore,
+            hasMore: response.hasMore
           });
         }
         return nextItems;
@@ -258,7 +258,7 @@ export function CustomersPage() {
       return;
     }
     if (!phone.trim()) {
-      setError('Phone is required.');
+      setError("Telefon zorunludur.");
       return;
     }
 
@@ -266,20 +266,20 @@ export function CustomersPage() {
     setError(null);
 
     try {
-      const response = await apiFetch<{ customer: AdminCustomerItem }>('/api/admin/customers', {
+      const response = await apiFetch<{customer: AdminCustomerItem;}>('/api/admin/customers', {
         method: 'POST',
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim(),
           instagram: instagram.trim() || null,
           birthDate: birthDate || null,
-          acceptMarketing,
-        }),
+          acceptMarketing
+        })
       });
 
       const nextItem: AdminCustomerItem = {
         ...response.customer,
-        appointmentCount: 0,
+        appointmentCount: 0
       };
       setItems((prev) => {
         const nextItems = [nextItem, ...prev];
@@ -287,7 +287,7 @@ export function CustomersPage() {
           writeSnapshot(CUSTOMERS_LIST_CACHE_KEY, {
             items: nextItems,
             nextCursor: cursor,
-            hasMore,
+            hasMore
           });
         }
         return nextItems;
@@ -299,7 +299,7 @@ export function CustomersPage() {
       setAcceptMarketing(false);
       setShowCreateForm(false);
     } catch (err: any) {
-      setError(err?.message || 'Failed to create customer.');
+      setError(err?.message || "Müşteri oluşturulamadi.");
     } finally {
       setCreating(false);
     }
@@ -311,15 +311,15 @@ export function CustomersPage() {
     setPackageAssignSuccess(null);
     try {
       const [packagesResponse, templatesResponse, ledgerResponse] = await Promise.all([
-        apiFetch<CustomerPackagesResponse>(`/api/admin/customers/${customerId}/packages`),
-        apiFetch<PackageTemplatesResponse>('/api/admin/package-templates'),
-        apiFetch<PackageLedgerResponse>(`/api/admin/customers/${customerId}/package-ledger?limit=60`),
-      ]);
+      apiFetch<CustomerPackagesResponse>(`/api/admin/customers/${customerId}/packages`),
+      apiFetch<PackageTemplatesResponse>('/api/admin/package-templates'),
+      apiFetch<PackageLedgerResponse>(`/api/admin/customers/${customerId}/package-ledger?limit=60`)]
+      );
       setCustomerPackages(packagesResponse.items || []);
       setPackageTemplates(templatesResponse.items || []);
       setPackageLedger(ledgerResponse.items || []);
     } catch (err: any) {
-      setPackageError(err?.message || 'Package data could not be loaded.');
+      setPackageError(err?.message || "Paket verileri yüklenemedi.");
     } finally {
       setPackageLoading(false);
     }
@@ -342,14 +342,14 @@ export function CustomersPage() {
       await apiFetch(`/api/admin/customers/${selectedCustomer.customer.id}/packages`, {
         method: 'POST',
         body: JSON.stringify({
-          templateId: parsedTemplateId,
-        }),
+          templateId: parsedTemplateId
+        })
       });
       setPackageTemplateIdToAssign('');
       await loadCustomerPackageData(selectedCustomer.customer.id);
-      setPackageAssignSuccess('Package assigned to customer.');
+      setPackageAssignSuccess("Paket müşteriye atandı.");
     } catch (err: any) {
-      setPackageError(err?.message || 'Package could not be assigned.');
+      setPackageError(err?.message || "Paket atanamadı.");
     } finally {
       setPackageAssigning(false);
     }
@@ -377,7 +377,7 @@ export function CustomersPage() {
       return;
     }
     if (!reason) {
-      setPackageError('Reason is required.');
+      setPackageError("Neden is required.");
       return;
     }
 
@@ -390,8 +390,8 @@ export function CustomersPage() {
         body: JSON.stringify({
           serviceId,
           delta,
-          reason,
-        }),
+          reason
+        })
       });
       setPackageAdjustDelta('');
       setPackageAdjustReason('');
@@ -469,17 +469,17 @@ export function CustomersPage() {
           value: parsedValue,
           note: discountNote.trim() || null,
           notifyCustomer: discountNotify,
-          messageTemplate: discountMessage.trim() || null,
-        }),
+          messageTemplate: discountMessage.trim() || null
+        })
       });
 
       setSelectedCustomer((prev) =>
-        prev
-          ? {
-              ...prev,
-              discount: response.discount,
-            }
-          : prev,
+      prev ?
+      {
+        ...prev,
+        discount: response.discount
+      } :
+      prev
       );
       setDiscountSuccess('Discount saved.');
     } catch (err: any) {
@@ -496,7 +496,7 @@ export function CustomersPage() {
 
     const trimmedPhone = editPhone.trim();
     if (!trimmedPhone) {
-      setProfileError('Phone is required.');
+      setProfileError("Telefon zorunludur.");
       return;
     }
 
@@ -512,37 +512,37 @@ export function CustomersPage() {
           phone: trimmedPhone,
           instagram: editInstagram.trim() ? editInstagram.trim().replace(/^@/, '') : null,
           birthDate: editBirthDate || null,
-          acceptMarketing: editAcceptMarketing,
-        }),
+          acceptMarketing: editAcceptMarketing
+        })
       });
 
       setSelectedCustomer((prev) =>
-        prev
-          ? {
-              ...prev,
-              customer: response.customer,
-            }
-          : prev,
+      prev ?
+      {
+        ...prev,
+        customer: response.customer
+      } :
+      prev
       );
       setItems((prev) =>
-        prev.map((item) =>
-          item.id === response.customer.id
-            ? {
-                ...item,
-                name: response.customer.name,
-                phone: response.customer.phone,
-                instagram: response.customer.instagram,
-                birthDate: response.customer.birthDate,
-                acceptMarketing: response.customer.acceptMarketing,
-                updatedAt: response.customer.updatedAt,
-              }
-            : item,
-        ),
+      prev.map((item) =>
+      item.id === response.customer.id ?
+      {
+        ...item,
+        name: response.customer.name,
+        phone: response.customer.phone,
+        instagram: response.customer.instagram,
+        birthDate: response.customer.birthDate,
+        acceptMarketing: response.customer.acceptMarketing,
+        updatedAt: response.customer.updatedAt
+      } :
+      item
+      )
       );
       setProfileEditMode(false);
-      setProfileSuccess('Customer information has been updated.');
+      setProfileSuccess("Müşteri bilgileri güncellendi.");
     } catch (err: any) {
-      setProfileError(err?.message || 'Customer information could not be updated.');
+      setProfileError(err?.message || "Müşteri bilgileri güncellenemedi.");
     } finally {
       setProfileSaving(false);
     }
@@ -561,20 +561,20 @@ export function CustomersPage() {
         `/api/admin/customers/${selectedCustomer.customer.id}/no-show-risk`,
         {
           method: 'PATCH',
-          body: JSON.stringify({ delta }),
-        },
+          body: JSON.stringify({ delta })
+        }
       );
 
       setSelectedCustomer((prev) =>
-        prev
-          ? {
-              ...prev,
-              summary: {
-                ...prev.summary,
-                ...response.summary,
-              },
-            }
-          : prev,
+      prev ?
+      {
+        ...prev,
+        summary: {
+          ...prev.summary,
+          ...response.summary
+        }
+      } :
+      prev
       );
     } catch (err: any) {
       setRiskError(err?.message || 'Participation rate could not be updated.');
@@ -587,7 +587,7 @@ export function CustomersPage() {
     return new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: 'TRY',
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value || 0);
   };
 
@@ -612,7 +612,7 @@ export function CustomersPage() {
       return 0;
     }
     const attended = Math.max(totalBookings - noShowCount, 0);
-    return Math.max(0, Math.min(100, (attended / totalBookings) * 100));
+    return Math.max(0, Math.min(100, attended / totalBookings * 100));
   };
 
   const appointmentStatusLabel = (status: string) => {
@@ -622,7 +622,7 @@ export function CustomersPage() {
       case 'COMPLETED':
         return 'completed';
       case 'CANCELLED':
-        return 'Cancel';
+        return "İptal";
       case 'NO_SHOW':
         return 'No-show';
       default:
@@ -644,37 +644,37 @@ export function CustomersPage() {
   };
 
   const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+  new Date(date).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
 
   const formatTime = (date: string) =>
-    new Date(date).toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  new Date(date).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
   const selectedPackageForAdjust = customerPackages.find((item) => String(item.id) === packageAdjustTarget.packageId) || null;
 
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Customers</h1>
+        <h1 className="text-xl font-semibold">Müşteriler</h1>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => navigate('/app/automations?section=attendance')}
-            className="rounded-md border border-border px-3 py-1.5 text-xs"
-          >
+            className="rounded-md border border-border px-3 py-1.5 text-xs">
+            
             No-show Tracking
           </button>
           <button
             type="button"
             onClick={() => navigate('/app/blacklist')}
-            className="rounded-md border border-border px-3 py-1.5 text-xs"
-          >
+            className="rounded-md border border-border px-3 py-1.5 text-xs">
+            
             Blacklist
           </button>
         </div>
@@ -683,242 +683,242 @@ export function CustomersPage() {
       <div className="rounded-xl border border-border bg-card p-3">
         <input
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Search by name, phone, or Instagram"
+          placeholder="Ad, telefon veya Instagram ile ara"
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-        />
+          onChange={(event) => setSearchQuery(event.target.value)} />
+        
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">New Customer</p>
+          <p className="text-sm font-medium">Yeni Müşteri</p>
           <button
             type="button"
             onClick={() => setShowCreateForm((prev) => !prev)}
-            className="rounded-md border border-border px-3 py-1.5 text-xs"
-          >
-            {showCreateForm ? 'Close' : 'Add Customer'}
+            className="rounded-md border border-border px-3 py-1.5 text-xs">
+            
+            {showCreateForm ? 'Close' : "Müşteri Ekle"}
           </button>
         </div>
 
-        {showCreateForm ? (
-          <div className="space-y-2">
+        {showCreateForm ?
+        <div className="space-y-2">
             <input
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Full Name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
+            className="w-full rounded-md border border-border px-3 py-2 text-sm"
+            placeholder="Ad Soyad"
+            value={name}
+            onChange={(event) => setName(event.target.value)} />
+          
             <input
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Phone"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-            />
+            className="w-full rounded-md border border-border px-3 py-2 text-sm"
+            placeholder="Telefon"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)} />
+          
             <input
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Instagram (optional)"
-              value={instagram}
-              onChange={(event) => setInstagram(event.target.value)}
-            />
+            className="w-full rounded-md border border-border px-3 py-2 text-sm"
+            placeholder="Instagram (isteğe bağlı)"
+            value={instagram}
+            onChange={(event) => setInstagram(event.target.value)} />
+          
             <input
-              type="date"
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              value={birthDate}
-              onChange={(event) => setBirthDate(event.target.value)}
-            />
+            type="date"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm"
+            value={birthDate}
+            onChange={(event) => setBirthDate(event.target.value)} />
+          
             <label className="flex items-center gap-2 text-sm rounded-md border border-border px-3 py-2">
               <input
-                type="checkbox"
-                checked={acceptMarketing}
-                onChange={(event) => setAcceptMarketing(event.target.checked)}
-              />
-              Campaign contact permission
+              type="checkbox"
+              checked={acceptMarketing}
+              onChange={(event) => setAcceptMarketing(event.target.checked)} />
+            
+              Kampanya iletişim izni
             </label>
             <button
-              type="button"
-              onClick={() => void handleCreate()}
-              disabled={creating}
-              className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60"
-            >
-              {creating ? 'Adding...' : 'Save'}
+            type="button"
+            onClick={() => void handleCreate()}
+            disabled={creating}
+            className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">
+            
+              {creating ? "Ekleniyor..." : "Kaydet"}
             </button>
-          </div>
-        ) : null}
+          </div> :
+        null}
       </div>
 
-      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
       <div className="space-y-3">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className="w-full text-left rounded-xl border border-border bg-card p-4 hover:border-[var(--rose-gold)]/40 transition-colors"
-            onClick={() => {
-              void handleOpenCustomer(item.id);
-            }}
-          >
+        {items.map((item) =>
+        <button
+          key={item.id}
+          type="button"
+          className="w-full text-left rounded-xl border border-border bg-card p-4 hover:border-[var(--rose-gold)]/40 transition-colors"
+          onClick={() => {
+            void handleOpenCustomer(item.id);
+          }}>
+          
             <div className="flex items-center justify-between">
-              <p className="font-medium">{item.name || 'Anonymous Customer'}</p>
+              <p className="font-medium">{item.name || "Adsız Müşteri"}</p>
               <p className="text-xs text-muted-foreground">#{item.id}</p>
             </div>
             <p className="text-sm mt-1">{item.phone}</p>
             {item.instagram ? <p className="text-xs text-muted-foreground mt-1">@{item.instagram.replace(/^@/, '')}</p> : null}
             <p className="text-xs text-muted-foreground mt-1">Appointment count: {item.appointmentCount}</p>
           </button>
-        ))}
+        )}
       </div>
 
-      {!loading && !items.length ? (
-        <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          No registered customer found.
-        </div>
-      ) : null}
+      {!loading && !items.length ?
+      <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          Kayıtlı müşteri bulunamadı.
+        </div> :
+      null}
 
-      {hasMore ? (
-        <button
-          type="button"
-          onClick={() => void handleLoadMore()}
-          disabled={loadingMore}
-          className="w-full rounded-md border border-border bg-background px-4 py-2 text-sm disabled:opacity-60"
-        >
-          {loadingMore ? 'Loading...' : 'Load More'}
-        </button>
-      ) : null}
+      {hasMore ?
+      <button
+        type="button"
+        onClick={() => void handleLoadMore()}
+        disabled={loadingMore}
+        className="w-full rounded-md border border-border bg-background px-4 py-2 text-sm disabled:opacity-60">
+        
+          {loadingMore ? "Yükleniyor..." : 'Load More'}
+        </button> :
+      null}
 
-      {(detailLoading || detailError || selectedCustomer) ? (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[1px] flex items-end">
+      {detailLoading || detailError || selectedCustomer ?
+      <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[1px] flex items-end">
           <div className="w-full max-h-[88vh] overflow-y-auto rounded-t-2xl bg-background border-t border-border p-4 pb-24 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Customer Profile</h2>
+              <h2 className="text-lg font-semibold">Müşteri Profili</h2>
               <button
-                type="button"
-                className="h-8 w-8 grid place-items-center rounded-md border border-border"
-                onClick={() => {
-                  setSelectedCustomer(null);
-                  setDetailError(null);
-                  setDetailLoading(false);
-                  setProfileEditMode(false);
-                  setProfileError(null);
-                  setProfileSuccess(null);
-                  setRiskError(null);
-                  setCustomerPackages([]);
-                  setPackageLedger([]);
-                  setPackageError(null);
-                  setPackageAssignSuccess(null);
-                }}
-              >
+              type="button"
+              className="h-8 w-8 grid place-items-center rounded-md border border-border"
+              onClick={() => {
+                setSelectedCustomer(null);
+                setDetailError(null);
+                setDetailLoading(false);
+                setProfileEditMode(false);
+                setProfileError(null);
+                setProfileSuccess(null);
+                setRiskError(null);
+                setCustomerPackages([]);
+                setPackageLedger([]);
+                setPackageError(null);
+                setPackageAssignSuccess(null);
+              }}>
+              
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {detailLoading ? <p className="text-sm text-muted-foreground">Loading profile...</p> : null}
+            {detailLoading ? <p className="text-sm text-muted-foreground">Profil yükleniyor...</p> : null}
             {detailError ? <p className="text-sm text-red-500">{detailError}</p> : null}
 
-            {selectedCustomer ? (
-              <>
+            {selectedCustomer ?
+          <>
                 <div className="rounded-lg border border-border p-3 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
-                      <p className="font-medium">{selectedCustomer.customer.name || 'Anonymous Customer'}</p>
+                      <p className="font-medium">{selectedCustomer.customer.name || "Adsız Müşteri"}</p>
                       <p className="text-sm">{selectedCustomer.customer.phone}</p>
-                      {selectedCustomer.customer.instagram ? (
-                        <p className="text-sm text-muted-foreground">@{selectedCustomer.customer.instagram.replace(/^@/, '')}</p>
-                      ) : null}
+                      {selectedCustomer.customer.instagram ?
+                  <p className="text-sm text-muted-foreground">@{selectedCustomer.customer.instagram.replace(/^@/, '')}</p> :
+                  null}
                       <p className="text-xs text-muted-foreground">
-                        Created at: {new Date(selectedCustomer.customer.createdAt).toLocaleString('en-GB')}
+                        Oluşturulma: {new Date(selectedCustomer.customer.createdAt).toLocaleString('en-GB')}
                       </p>
                     </div>
                     <button
-                      type="button"
-                      onClick={() => {
-                        if (profileEditMode) {
-                          setEditName(selectedCustomer.customer.name || '');
-                          setEditPhone(selectedCustomer.customer.phone || '');
-                          setEditInstagram(selectedCustomer.customer.instagram || '');
-                          setEditBirthDate(toInputDateValue(selectedCustomer.customer.birthDate));
-                          setEditAcceptMarketing(Boolean(selectedCustomer.customer.acceptMarketing));
-                          setProfileError(null);
-                        }
-                        setProfileEditMode((prev) => !prev);
-                      }}
-                      className="shrink-0 rounded-md border border-border px-3 py-1.5 text-xs"
-                    >
-                      {profileEditMode ? 'Cancel' : 'Edit Information'}
+                  type="button"
+                  onClick={() => {
+                    if (profileEditMode) {
+                      setEditName(selectedCustomer.customer.name || '');
+                      setEditPhone(selectedCustomer.customer.phone || '');
+                      setEditInstagram(selectedCustomer.customer.instagram || '');
+                      setEditBirthDate(toInputDateValue(selectedCustomer.customer.birthDate));
+                      setEditAcceptMarketing(Boolean(selectedCustomer.customer.acceptMarketing));
+                      setProfileError(null);
+                    }
+                    setProfileEditMode((prev) => !prev);
+                  }}
+                  className="shrink-0 rounded-md border border-border px-3 py-1.5 text-xs">
+                  
+                      {profileEditMode ? "İptal" : "Bilgileri Düzenle"}
                     </button>
                   </div>
 
-                  {profileEditMode ? (
-                    <div className="space-y-2 rounded-md border border-border p-2.5">
+                  {profileEditMode ?
+              <div className="space-y-2 rounded-md border border-border p-2.5">
                       <input
-                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                        placeholder="Full Name"
-                        value={editName}
-                        onChange={(event) => setEditName(event.target.value)}
-                      />
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                  placeholder="Ad Soyad"
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)} />
+                
                       <input
-                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                        placeholder="Phone"
-                        value={editPhone}
-                        onChange={(event) => setEditPhone(event.target.value)}
-                      />
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                  placeholder="Telefon"
+                  value={editPhone}
+                  onChange={(event) => setEditPhone(event.target.value)} />
+                
                       <input
-                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                        placeholder="Instagram (optional)"
-                        value={editInstagram}
-                        onChange={(event) => setEditInstagram(event.target.value)}
-                      />
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                  placeholder="Instagram (isteğe bağlı)"
+                  value={editInstagram}
+                  onChange={(event) => setEditInstagram(event.target.value)} />
+                
                       <input
-                        type="date"
-                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                        value={editBirthDate}
-                        onChange={(event) => setEditBirthDate(event.target.value)}
-                      />
+                  type="date"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                  value={editBirthDate}
+                  onChange={(event) => setEditBirthDate(event.target.value)} />
+                
                       <label className="flex items-center gap-2 text-sm rounded-md border border-border px-3 py-2">
                         <input
-                          type="checkbox"
-                          checked={editAcceptMarketing}
-                          onChange={(event) => setEditAcceptMarketing(event.target.checked)}
-                        />
-                        Campaign contact permission
+                    type="checkbox"
+                    checked={editAcceptMarketing}
+                    onChange={(event) => setEditAcceptMarketing(event.target.checked)} />
+                  
+                        Kampanya iletişim izni
                       </label>
                       {profileError ? <p className="text-sm text-red-500">{profileError}</p> : null}
                       <button
-                        type="button"
-                        onClick={() => void handleSaveProfile()}
-                        disabled={profileSaving}
-                        className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
-                      >
-                        {profileSaving ? 'Saving...' : 'Save Details'}
+                  type="button"
+                  onClick={() => void handleSaveProfile()}
+                  disabled={profileSaving}
+                  className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60">
+                  
+                        {profileSaving ? "Kaydediliyor..." : "Detayları Kaydet"}
                       </button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                    </div> :
+
+              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                       <p>
                         Date of Birth:{' '}
                         <span className="text-foreground">
-                          {selectedCustomer.customer.birthDate
-                            ? new Date(selectedCustomer.customer.birthDate).toLocaleDateString('en-GB')
-                            : 'Belirtilmedi'}
+                          {selectedCustomer.customer.birthDate ?
+                    new Date(selectedCustomer.customer.birthDate).toLocaleDateString('en-GB') :
+                    'Belirtilmedi'}
                         </span>
                       </p>
                       <p>
-                        Campaign Permission:{' '}
+                        Kampanya izni:{' '}
                         <span className="text-foreground">
                           {selectedCustomer.customer.acceptMarketing ? 'Open' : 'Closed'}
                         </span>
                       </p>
                     </div>
-                  )}
+              }
 
                   {profileSuccess ? <p className="text-sm text-green-600">{profileSuccess}</p> : null}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">Total Appointments (day)</p>
+                    <p className="text-xs text-muted-foreground">Toplam Randevu (gün)</p>
                     <p className="text-lg font-semibold">{selectedCustomer.summary.totalAppointmentDays}</p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
@@ -926,42 +926,42 @@ export function CustomersPage() {
                     <p className="text-lg font-semibold">{formatCurrency(selectedCustomer.summary.totalRevenue)}</p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">Favorite Staff</p>
+                    <p className="text-xs text-muted-foreground">Favori Personel</p>
                     <p className="text-sm font-medium">
-                      {selectedCustomer.summary.favoriteStaff
-                        ? `${selectedCustomer.summary.favoriteStaff.name} (${selectedCustomer.summary.favoriteStaff.count})`
-                        : 'not yet'}
+                      {selectedCustomer.summary.favoriteStaff ?
+                  `${selectedCustomer.summary.favoriteStaff.name} (${selectedCustomer.summary.favoriteStaff.count})` :
+                  "henüz yok"}
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">No-show Score</p>
+                    <p className="text-xs text-muted-foreground">No-show Skoru</p>
                     <div className="flex items-center justify-between gap-2 mt-1">
                       <span className="text-lg font-semibold">{selectedCustomer.summary.noShowRiskScore}</span>
                       <div className="flex items-center gap-2">
                         <button
-                          type="button"
-                          disabled={riskSaving}
-                          onClick={() => void handleAdjustNoShowRisk(-1)}
-                          className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50"
-                        >
+                      type="button"
+                      disabled={riskSaving}
+                      onClick={() => void handleAdjustNoShowRisk(-1)}
+                      className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50">
+                      
                           -
                         </button>
                         <button
-                          type="button"
-                          disabled={riskSaving}
-                          onClick={() => void handleAdjustNoShowRisk(1)}
-                          className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50"
-                        >
+                      type="button"
+                      disabled={riskSaving}
+                      onClick={() => void handleAdjustNoShowRisk(1)}
+                      className="h-7 w-7 rounded-md border border-border text-sm font-semibold disabled:opacity-50">
+                      
                           +
                         </button>
                       </div>
                     </div>
                     <div className="mt-1">
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded border ${riskBadgeClass(
-                          selectedCustomer.summary.noShowRiskLevel,
-                        )}`}
-                      >
+                    className={`text-[11px] px-2 py-0.5 rounded border ${riskBadgeClass(
+                      selectedCustomer.summary.noShowRiskLevel
+                    )}`}>
+                    
                         {riskLabelTr(selectedCustomer.summary.noShowRiskLevel)}
                       </span>
                     </div>
@@ -975,215 +975,215 @@ export function CustomersPage() {
                 </div>
 
                 <div className="rounded-lg border border-border p-3 space-y-3">
-                  <p className="text-sm font-medium">Define Discount</p>
+                  <p className="text-sm font-medium">İndirim Tanımla</p>
 
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      type="button"
-                      onClick={() => setDiscountKind('PERCENT')}
-                      className={`rounded-md border px-3 py-2 text-sm ${
-                        discountKind === 'PERCENT'
-                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
-                          : 'border-border'
-                      }`}
-                    >
+                  type="button"
+                  onClick={() => setDiscountKind('PERCENT')}
+                  className={`rounded-md border px-3 py-2 text-sm ${
+                  discountKind === 'PERCENT' ?
+                  'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+                  'border-border'}`
+                  }>
+                  
                       Percentage (%)
                     </button>
                     <button
-                      type="button"
-                      onClick={() => setDiscountKind('FIXED')}
-                      className={`rounded-md border px-3 py-2 text-sm ${
-                        discountKind === 'FIXED'
-                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
-                          : 'border-border'
-                      }`}
-                    >
+                  type="button"
+                  onClick={() => setDiscountKind('FIXED')}
+                  className={`rounded-md border px-3 py-2 text-sm ${
+                  discountKind === 'FIXED' ?
+                  'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+                  'border-border'}`
+                  }>
+                  
                       Tutar (TL)
                     </button>
                   </div>
 
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                    placeholder={discountKind === 'PERCENT' ? 'Ex: 15' : 'Ex: 250'}
-                    value={discountValue}
-                    onChange={(event) => setDiscountValue(event.target.value)}
-                  />
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                placeholder={discountKind === 'PERCENT' ? 'Ex: 15' : 'Ex: 250'}
+                value={discountValue}
+                onChange={(event) => setDiscountValue(event.target.value)} />
+              
 
                   <textarea
-                    className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
-                    rows={2}
-                    placeholder="Discount note (optional)"
-                    value={discountNote}
-                    onChange={(event) => setDiscountNote(event.target.value)}
-                  />
+                className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
+                rows={2}
+                placeholder="İndirim notu (isteğe bağlı)"
+                value={discountNote}
+                onChange={(event) => setDiscountNote(event.target.value)} />
+              
 
                   <div className="rounded-md border border-border p-2">
                     <label className="flex items-center gap-2 text-sm">
                       <input
-                        type="checkbox"
-                        checked={discountNotify}
-                        onChange={(event) => setDiscountNotify(event.target.checked)}
-                      />
-                      Send message notification
+                    type="checkbox"
+                    checked={discountNotify}
+                    onChange={(event) => setDiscountNotify(event.target.checked)} />
+                  
+                      Gönder message notification
                     </label>
-                    {discountNotify ? (
-                      <textarea
-                        className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
-                        rows={2}
-                        placeholder="Message to the customer (optional)"
-                        value={discountMessage}
-                        onChange={(event) => setDiscountMessage(event.target.value)}
-                      />
-                    ) : null}
+                    {discountNotify ?
+                <textarea
+                  className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm resize-none"
+                  rows={2}
+                  placeholder="Müşteriye mesaj (isteğe bağlı)"
+                  value={discountMessage}
+                  onChange={(event) => setDiscountMessage(event.target.value)} /> :
+
+                null}
                   </div>
 
-                  {selectedCustomer.discount ? (
-                    <p className="text-xs text-muted-foreground">
+                  {selectedCustomer.discount ?
+              <p className="text-xs text-muted-foreground">
                       Aktif indirim: {selectedCustomer.discount.kind === 'PERCENT' ? `%${selectedCustomer.discount.value}` : `${selectedCustomer.discount.value} TL`}
                       {' • '}
-                      Son statuses: {selectedCustomer.discount.lastNotificationStatus || 'bilinmiyor'}
-                    </p>
-                  ) : null}
+                      Son durum: {selectedCustomer.discount.lastNotificationStatus || 'bilinmiyor'}
+                    </p> :
+              null}
 
                   {discountError ? <p className="text-sm text-red-500">{discountError}</p> : null}
                   {discountSuccess ? <p className="text-sm text-green-600">{discountSuccess}</p> : null}
 
                   <button
-                    type="button"
-                    onClick={() => void handleSaveDiscount()}
-                    disabled={discountSaving}
-                    className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
-                  >
-                    {discountSaving ? 'Saving...' : 'Save Discount'}
+                type="button"
+                onClick={() => void handleSaveDiscount()}
+                disabled={discountSaving}
+                className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60">
+                
+                    {discountSaving ? "Kaydediliyor..." : "İndirimi Kaydet"}
                   </button>
                 </div>
 
                 <div className="rounded-lg border border-border p-3 space-y-3">
-                  <p className="text-sm font-medium">Package Management</p>
+                  <p className="text-sm font-medium">Paket Yönetimi</p>
 
                   <div className="rounded-md border border-border p-2.5 space-y-2">
-                    <p className="text-xs font-medium">Assign Package Template</p>
+                    <p className="text-xs font-medium">Paket Şablonu Ata</p>
                     <div className="flex gap-2">
                       <select
-                        value={packageTemplateIdToAssign}
-                        onChange={(event) => setPackageTemplateIdToAssign(event.target.value)}
-                        className="h-10 flex-1 rounded-md border border-border px-3 text-sm bg-background"
-                      >
+                    value={packageTemplateIdToAssign}
+                    onChange={(event) => setPackageTemplateIdToAssign(event.target.value)}
+                    className="h-10 flex-1 rounded-md border border-border px-3 text-sm bg-background">
+                    
                         <option value="">Select template</option>
-                        {packageTemplates
-                          .filter((template) => template.isActive)
-                          .map((template) => (
-                            <option key={template.id} value={template.id}>
+                        {packageTemplates.
+                    filter((template) => template.isActive).
+                    map((template) =>
+                    <option key={template.id} value={template.id}>
                               {template.name}
                             </option>
-                          ))}
+                    )}
                       </select>
                       <button
-                        type="button"
-                        onClick={() => void handleAssignTemplatePackage()}
-                        disabled={packageAssigning}
-                        className="rounded-md border border-border px-3 text-xs disabled:opacity-60"
-                      >
-                        {packageAssigning ? 'Assigning...' : 'Assign'}
+                    type="button"
+                    onClick={() => void handleAssignTemplatePackage()}
+                    disabled={packageAssigning}
+                    className="rounded-md border border-border px-3 text-xs disabled:opacity-60">
+                    
+                        {packageAssigning ? "Atanıyor..." : "Ata"}
                       </button>
                     </div>
                   </div>
 
                   <div className="rounded-md border border-border p-2.5 space-y-2">
-                    <p className="text-xs font-medium">Manual Service Adjustment</p>
+                    <p className="text-xs font-medium">Manuel Hizmet Düzenleme</p>
                     <div className="grid grid-cols-2 gap-2">
                       <select
-                        value={packageAdjustTarget.packageId}
-                        onChange={(event) =>
-                          setPackageAdjustTarget({ packageId: event.target.value, serviceId: '' })
-                        }
-                        className="h-10 rounded-md border border-border px-3 text-sm bg-background"
-                      >
+                    value={packageAdjustTarget.packageId}
+                    onChange={(event) =>
+                    setPackageAdjustTarget({ packageId: event.target.value, serviceId: '' })
+                    }
+                    className="h-10 rounded-md border border-border px-3 text-sm bg-background">
+                    
                         <option value="">Select package</option>
-                        {customerPackages.map((item) => (
-                          <option key={item.id} value={item.id}>
+                        {customerPackages.map((item) =>
+                    <option key={item.id} value={item.id}>
                             {item.name} ({item.status})
                           </option>
-                        ))}
+                    )}
                       </select>
                       <select
-                        value={packageAdjustTarget.serviceId}
-                        onChange={(event) =>
-                          setPackageAdjustTarget((prev) => ({ ...prev, serviceId: event.target.value }))
-                        }
-                        className="h-10 rounded-md border border-border px-3 text-sm bg-background"
-                        disabled={!selectedPackageForAdjust}
-                      >
+                    value={packageAdjustTarget.serviceId}
+                    onChange={(event) =>
+                    setPackageAdjustTarget((prev) => ({ ...prev, serviceId: event.target.value }))
+                    }
+                    className="h-10 rounded-md border border-border px-3 text-sm bg-background"
+                    disabled={!selectedPackageForAdjust}>
+                    
                         <option value="">Select service</option>
-                        {(selectedPackageForAdjust?.serviceBalances || []).map((balance) => (
-                          <option key={balance.id} value={balance.serviceId}>
+                        {(selectedPackageForAdjust?.serviceBalances || []).map((balance) =>
+                    <option key={balance.id} value={balance.serviceId}>
                             {balance.service?.name || `#${balance.serviceId}`} ({balance.remainingQuota}/{balance.initialQuota})
                           </option>
-                        ))}
+                    )}
                       </select>
                     </div>
                     <div className="grid grid-cols-[140px_1fr] gap-2">
                       <input
-                        type="number"
-                        step="1"
-                        value={packageAdjustDelta}
-                        onChange={(event) => setPackageAdjustDelta(event.target.value)}
-                        className="h-10 rounded-md border border-border px-3 text-sm"
-                        placeholder="+1 / -1"
-                      />
+                    type="number"
+                    step="1"
+                    value={packageAdjustDelta}
+                    onChange={(event) => setPackageAdjustDelta(event.target.value)}
+                    className="h-10 rounded-md border border-border px-3 text-sm"
+                    placeholder="+1 / -1" />
+                  
                       <input
-                        value={packageAdjustReason}
-                        onChange={(event) => setPackageAdjustReason(event.target.value)}
-                        className="h-10 rounded-md border border-border px-3 text-sm"
-                        placeholder="Reason"
-                      />
+                    value={packageAdjustReason}
+                    onChange={(event) => setPackageAdjustReason(event.target.value)}
+                    className="h-10 rounded-md border border-border px-3 text-sm"
+                    placeholder="Neden" />
+                  
                     </div>
                     <button
-                      type="button"
-                      onClick={() => void handleAdjustPackage()}
-                      disabled={packageAdjusting}
-                      className="w-full rounded-md border border-border px-3 py-2 text-xs disabled:opacity-60"
-                    >
-                      {packageAdjusting ? 'Applying...' : 'Apply Adjustment'}
+                  type="button"
+                  onClick={() => void handleAdjustPackage()}
+                  disabled={packageAdjusting}
+                  className="w-full rounded-md border border-border px-3 py-2 text-xs disabled:opacity-60">
+                  
+                      {packageAdjusting ? "Uygulanıyor..." : "Düzeltmeyi Uygula"}
                     </button>
                   </div>
 
-                  {packageLoading ? <p className="text-sm text-muted-foreground">Loading package data...</p> : null}
+                  {packageLoading ? <p className="text-sm text-muted-foreground">Paket verileri yükleniyor...</p> : null}
                   {packageError ? <p className="text-sm text-red-500">{packageError}</p> : null}
                   {packageAssignSuccess ? <p className="text-sm text-green-600">{packageAssignSuccess}</p> : null}
 
                   <div className="space-y-2">
-                    {customerPackages.length ? (
-                      customerPackages.map((item) => (
-                        <div key={item.id} className="rounded-md border border-border p-2.5 space-y-1.5">
+                    {customerPackages.length ?
+                customerPackages.map((item) =>
+                <div key={item.id} className="rounded-md border border-border p-2.5 space-y-1.5">
                           <p className="text-sm font-medium">
                             {item.name} <span className="text-xs text-muted-foreground">({item.status})</span>
                           </p>
                           <p className="text-[11px] text-muted-foreground">
-                            {item.expiresAt ? `Expires: ${new Date(item.expiresAt).toLocaleDateString('en-GB')}` : 'No expiry'}
+                            {item.expiresAt ? `Bitiş: ${new Date(item.expiresAt).toLocaleDateString('en-GB')}` : "Bitiş yok"}
                           </p>
                           <div className="flex flex-wrap gap-1">
-                            {item.serviceBalances.map((balance) => (
-                              <span key={balance.id} className="text-[11px] rounded-full border border-border px-2 py-0.5">
+                            {item.serviceBalances.map((balance) =>
+                    <span key={balance.id} className="text-[11px] rounded-full border border-border px-2 py-0.5">
                                 {balance.service?.name || `#${balance.serviceId}`}: {balance.remainingQuota}/{balance.initialQuota}
                               </span>
-                            ))}
+                    )}
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No package assigned yet.</p>
-                    )}
+                ) :
+
+                <p className="text-sm text-muted-foreground">Henüz paket atanmadı.</p>
+                }
                   </div>
 
                   <div className="rounded-md border border-border p-2.5 space-y-2">
-                    <p className="text-xs font-medium">Package Ledger (Recent)</p>
-                    {packageLedger.length ? (
-                      packageLedger.slice(0, 12).map((entry) => (
-                        <div key={entry.id} className="text-[11px] border-b border-border/60 pb-1 last:border-b-0">
+                    <p className="text-xs font-medium">Paket Hareketleri (Son)</p>
+                    {packageLedger.length ?
+                packageLedger.slice(0, 12).map((entry) =>
+                <div key={entry.id} className="text-[11px] border-b border-border/60 pb-1 last:border-b-0">
                           <p className="font-medium">
                             {entry.actionType} • {entry.serviceName || '-'} • {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
                           </p>
@@ -1191,18 +1191,18 @@ export function CustomersPage() {
                             Bakiye: {entry.balanceAfter ?? '-'} • {new Date(entry.createdAt).toLocaleString('en-GB')}
                           </p>
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No package ledger record.</p>
-                    )}
+                ) :
+
+                <p className="text-sm text-muted-foreground">Paket hareket kaydı yok.</p>
+                }
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-sm font-medium">Appointment History</p>
-                  {selectedCustomer.appointments.length ? (
-                    selectedCustomer.appointments.map((appointment) => (
-                      <div key={appointment.id} className="rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+                  <p className="text-sm font-medium">Randevu Geçmişi</p>
+                  {selectedCustomer.appointments.length ?
+              selectedCustomer.appointments.map((appointment) =>
+              <div key={appointment.id} className="rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
                         <div className="flex items-start justify-between gap-2">
                           <p className="font-semibold leading-tight text-[15px]">{appointment.service.name}</p>
                           <span className={`text-[11px] px-2 py-0.5 rounded border whitespace-nowrap ${appointmentStatusClass(appointment.status)}`}>
@@ -1216,43 +1216,43 @@ export function CustomersPage() {
                           <span>{appointment.staff.name}</span>
                         </div>
 
-                        {appointment.customerRating || appointment.customerReview ? (
-                          <div className="mt-3 rounded-lg border border-border bg-muted/20 p-2.5">
+                        {appointment.customerRating || appointment.customerReview ?
+                <div className="mt-3 rounded-lg border border-border bg-muted/20 p-2.5">
                             <div className="flex items-center justify-between gap-2">
-                              <p className="text-xs font-medium">Customer review</p>
+                              <p className="text-xs font-medium">Müşteri değerlendirmesi</p>
                               <p className="text-xs font-semibold">
                                 {appointment.customerRating ? `${appointment.customerRating}/5` : 'Puan yok'}
                               </p>
                             </div>
-                            {appointment.customerRating ? (
-                              <p className="mt-1 text-xs tracking-wide text-amber-500">
+                            {appointment.customerRating ?
+                  <p className="mt-1 text-xs tracking-wide text-amber-500">
                                 {'★'.repeat(appointment.customerRating)}
                                 <span className="text-zinc-300">{'★'.repeat(Math.max(0, 5 - appointment.customerRating))}</span>
-                              </p>
-                            ) : null}
-                            {appointment.customerReview ? (
-                              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{appointment.customerReview}</p>
-                            ) : null}
-                            {appointment.customerReviewedAt ? (
-                              <p className="text-[11px] text-muted-foreground mt-1">
+                              </p> :
+                  null}
+                            {appointment.customerReview ?
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{appointment.customerReview}</p> :
+                  null}
+                            {appointment.customerReviewedAt ?
+                  <p className="text-[11px] text-muted-foreground mt-1">
                                 {new Date(appointment.customerReviewedAt).toLocaleString('en-GB')}
-                              </p>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <p className="mt-3 text-[11px] text-muted-foreground">No review for this appointment.</p>
-                        )}
+                              </p> :
+                  null}
+                          </div> :
+
+                <p className="mt-3 text-[11px] text-muted-foreground">Bu randevu için değerlendirme yok.</p>
+                }
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No appointment record yet.</p>
-                  )}
+              ) :
+
+              <p className="text-sm text-muted-foreground">Henüz randevu kaydı yok.</p>
+              }
                 </div>
-              </>
-            ) : null}
+              </> :
+          null}
           </div>
-        </div>
-      ) : null}
-    </div>
-  );
+        </div> :
+      null}
+    </div>);
+
 }

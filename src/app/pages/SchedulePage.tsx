@@ -11,8 +11,8 @@ import type {
   AdminWaitlistItem,
   AppointmentCheckoutRequest,
   AppointmentCheckoutResponse,
-  CustomerPackageItem,
-} from '../types/mobile-api';
+  CustomerPackageItem } from
+'../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
 interface StaffItem {
@@ -72,7 +72,7 @@ const APPOINTMENT_STATUS_ACTIONS: UIAppointmentAction[] = ['BOOKED', 'CONFIRMED'
 function toWindowQuery(date: Date) {
   return {
     from: formatISO(startOfDay(date)),
-    to: formatISO(endOfDay(date)),
+    to: formatISO(endOfDay(date))
   };
 }
 
@@ -90,10 +90,10 @@ function readScheduleSnapshot(date: Date): ScheduleSnapshot | null {
 
 function statusLabel(status: UIAppointmentStatus | string) {
   if (status === 'COMPLETED') return 'Completed';
-  if (status === 'CANCELLED') return 'Cancelled';
+  if (status === 'CANCELLED') return "İptal Edildi";
   if (status === 'NO_SHOW') return 'No-show';
   if (status === 'CONFIRMED') return 'Confirmed';
-  if (status === 'UPDATED') return 'Updated';
+  if (status === 'UPDATED') return "Güncellendi";
   if (status === 'MIXED') return 'Mixed statuses';
   return 'Booked';
 }
@@ -188,7 +188,7 @@ export function SchedulePage() {
   const [staff, setStaff] = useState<StaffItem[]>(() => initialScheduleSnapshot?.staff || []);
   const [services, setServices] = useState<ServiceItem[]>(() => initialScheduleSnapshot?.services || []);
   const [appointments, setAppointments] = useState<AdminAppointmentsResponse['items']>(
-    () => initialScheduleSnapshot?.appointments || [],
+    () => initialScheduleSnapshot?.appointments || []
   );
   const [waitlistItems, setWaitlistItems] = useState<AdminWaitlistItem[]>([]);
 
@@ -232,7 +232,7 @@ export function SchedulePage() {
     timeWindowStart: '10:00',
     timeWindowEnd: '18:00',
     allowNearbyMatches: false,
-    notes: '',
+    notes: ''
   });
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -252,7 +252,7 @@ export function SchedulePage() {
     customerName: '',
     customerPhone: '',
     time: '10:00',
-    notes: '',
+    notes: ''
   });
 
   const timeSlots = useMemo(() => {
@@ -274,7 +274,7 @@ export function SchedulePage() {
 
   const sortedAppointments = useMemo(() => {
     return [...appointments].sort(
-      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
     );
   }, [appointments]);
 
@@ -296,7 +296,7 @@ export function SchedulePage() {
           startTime: appointment.startTime,
           endTime: appointment.endTime,
           items: [appointment],
-          totalPrice: appointment.service?.price || 0,
+          totalPrice: appointment.service?.price || 0
         });
         continue;
       }
@@ -318,7 +318,7 @@ export function SchedulePage() {
           startTime: appointment.startTime,
           endTime: appointment.endTime,
           items: [appointment],
-          totalPrice: appointment.service?.price || 0,
+          totalPrice: appointment.service?.price || 0
         });
       }
     }
@@ -350,18 +350,18 @@ export function SchedulePage() {
       for (const appointmentId of appointmentIds) {
         const item = appointmentById[appointmentId];
         if (!item) continue;
-        const lines = Array.isArray(item.appointmentLines) && item.appointmentLines.length
-          ? item.appointmentLines
-          : [
-              {
-                id: 0,
-                appointmentId: item.id,
-                serviceId: item.service.id,
-                status: item.status,
-                orderIndex: 0,
-                service: item.service,
-              },
-            ];
+        const lines = Array.isArray(item.appointmentLines) && item.appointmentLines.length ?
+        item.appointmentLines :
+        [
+        {
+          id: 0,
+          appointmentId: item.id,
+          serviceId: item.service.id,
+          status: item.status,
+          orderIndex: 0,
+          service: item.service
+        }];
+
         for (const line of lines) {
           targets.push({
             key: `${item.id}:${line.id || 0}`,
@@ -369,13 +369,13 @@ export function SchedulePage() {
             appointmentLineId: line.id && line.id > 0 ? line.id : null,
             serviceId: line.serviceId || item.service.id,
             serviceName: line.service?.name || item.service.name,
-            startTime: item.startTime,
+            startTime: item.startTime
           });
         }
       }
       return targets;
     },
-    [appointmentById],
+    [appointmentById]
   );
 
   const getDisplayStatus = useCallback(
@@ -385,7 +385,7 @@ export function SchedulePage() {
       if (item.status === 'NO_SHOW') return 'NO_SHOW';
       return statusOverrides[item.id] || 'BOOKED';
     },
-    [statusOverrides],
+    [statusOverrides]
   );
 
   useEffect(() => {
@@ -419,13 +419,13 @@ export function SchedulePage() {
 
     try {
       const [appointmentsResponse, staffResponse, servicesResponse, waitlistResponse] = await Promise.all([
-        apiFetch<AdminAppointmentsResponse>(
-          `/api/admin/appointments?from=${encodeURIComponent(window.from)}&to=${encodeURIComponent(window.to)}&limit=500`,
-        ),
-        apiFetch<{ items: StaffItem[] }>('/api/admin/staff'),
-        apiFetch<{ items: ServiceItem[] }>('/api/admin/services'),
-        apiFetch<{ items: AdminWaitlistItem[] }>(`/api/admin/waitlist?date=${encodeURIComponent(dayKey)}`),
-      ]);
+      apiFetch<AdminAppointmentsResponse>(
+        `/api/admin/appointments?from=${encodeURIComponent(window.from)}&to=${encodeURIComponent(window.to)}&limit=500`
+      ),
+      apiFetch<{items: StaffItem[];}>('/api/admin/staff'),
+      apiFetch<{items: ServiceItem[];}>('/api/admin/services'),
+      apiFetch<{items: AdminWaitlistItem[];}>(`/api/admin/waitlist?date=${encodeURIComponent(dayKey)}`)]
+      );
 
       setAppointments(appointmentsResponse.items);
       setStaff(staffResponse.items);
@@ -435,10 +435,10 @@ export function SchedulePage() {
         dayKey,
         appointments: appointmentsResponse.items,
         staff: staffResponse.items,
-        services: servicesResponse.items,
+        services: servicesResponse.items
       });
     } catch (err: any) {
-      setError(err?.message || 'Failed to retrieve calendar data.');
+      setError(err?.message || "Takvim verileri alinamadi.");
     } finally {
       setLoading(false);
       setWaitlistLoading(false);
@@ -454,10 +454,10 @@ export function SchedulePage() {
     setWaitlistLoading(true);
     setWaitlistError(null);
     try {
-      const response = await apiFetch<{ items: AdminWaitlistItem[] }>(`/api/admin/waitlist?date=${encodeURIComponent(dayKey)}`);
+      const response = await apiFetch<{items: AdminWaitlistItem[];}>(`/api/admin/waitlist?date=${encodeURIComponent(dayKey)}`);
       setWaitlistItems(response.items || []);
     } catch (err: any) {
-      setWaitlistError(err?.message || 'Failed to load waitlist.');
+      setWaitlistError(err?.message || "Bekleme listesi yuklenemedi.");
     } finally {
       setWaitlistLoading(false);
     }
@@ -471,7 +471,7 @@ export function SchedulePage() {
 
       setLoadingServiceStaff((prev) => ({ ...prev, [serviceId]: true }));
       try {
-        const response = await apiFetch<{ items: ServiceStaffItem[] }>(`/api/admin/services/${serviceId}/staff`);
+        const response = await apiFetch<{items: ServiceStaffItem[];}>(`/api/admin/services/${serviceId}/staff`);
         setServiceStaffOptions((prev) => ({ ...prev, [serviceId]: response.items || [] }));
 
         if (response.items?.length === 1) {
@@ -483,7 +483,7 @@ export function SchedulePage() {
         setLoadingServiceStaff((prev) => ({ ...prev, [serviceId]: false }));
       }
     },
-    [apiFetch, serviceStaffOptions],
+    [apiFetch, serviceStaffOptions]
   );
 
   const loadWaitlistStaffForService = useCallback(
@@ -494,7 +494,7 @@ export function SchedulePage() {
 
       setWaitlistLoadingServiceStaff((prev) => ({ ...prev, [serviceId]: true }));
       try {
-        const response = await apiFetch<{ items: ServiceStaffItem[] }>(`/api/admin/services/${serviceId}/staff`);
+        const response = await apiFetch<{items: ServiceStaffItem[];}>(`/api/admin/services/${serviceId}/staff`);
         setWaitlistServiceStaffOptions((prev) => ({ ...prev, [serviceId]: response.items || [] }));
 
         if (response.items?.length === 1) {
@@ -506,7 +506,7 @@ export function SchedulePage() {
         setWaitlistLoadingServiceStaff((prev) => ({ ...prev, [serviceId]: false }));
       }
     },
-    [apiFetch, waitlistServiceStaffOptions],
+    [apiFetch, waitlistServiceStaffOptions]
   );
 
   const openCreateModal = useCallback(async () => {
@@ -516,14 +516,14 @@ export function SchedulePage() {
     if (customers.length === 0) {
       setLoadingCustomers(true);
       try {
-        const response = await apiFetch<{ items: CustomerItem[] }>('/api/admin/customers?limit=30');
+        const response = await apiFetch<{items: CustomerItem[];}>('/api/admin/customers?limit=30');
         setCustomers(response.items || []);
       } catch {
+
+
+
         // Optional list for fast selection.
-      } finally {
-        setLoadingCustomers(false);
-      }
-    }
+      } finally {setLoadingCustomers(false);}}
   }, [apiFetch, customers.length]);
 
   const openWaitlistModal = useCallback(async () => {
@@ -538,20 +538,20 @@ export function SchedulePage() {
       timeWindowStart: '10:00',
       timeWindowEnd: '18:00',
       allowNearbyMatches: false,
-      notes: '',
+      notes: ''
     });
 
     if (customers.length === 0) {
       setLoadingCustomers(true);
       try {
-        const response = await apiFetch<{ items: CustomerItem[] }>('/api/admin/customers?limit=30');
+        const response = await apiFetch<{items: CustomerItem[];}>('/api/admin/customers?limit=30');
         setCustomers(response.items || []);
       } catch {
+
+
+
         // ignore
-      } finally {
-        setLoadingCustomers(false);
-      }
-    }
+      } finally {setLoadingCustomers(false);}}
   }, [apiFetch, customers.length]);
 
   const closeCreateModal = () => {
@@ -577,7 +577,7 @@ export function SchedulePage() {
         ...prev,
         customerId: idValue,
         customerName: selected.name || '',
-        customerPhone: selected.phone || '',
+        customerPhone: selected.phone || ''
       };
     });
   };
@@ -608,7 +608,7 @@ export function SchedulePage() {
     }
 
     if (!form.customerId && !form.customerPhone.trim()) {
-      setCreateError('Customer phone number is mandatory.');
+      setCreateError("Müşteri telefon numarası zorunludur.");
       return;
     }
 
@@ -620,7 +620,7 @@ export function SchedulePage() {
 
       const options = serviceStaffOptions[serviceId] || [];
       if (options.length === 0) {
-        setCreateError(`${service.name} No suitable specialist found for`);
+        setCreateError(`${service.name} Yok suitable specialist found for`);
         return;
       }
 
@@ -644,9 +644,9 @@ export function SchedulePage() {
           notes: form.notes.trim() || null,
           services: selectedServiceIds.map((serviceId) => ({
             serviceId: Number(serviceId),
-            staffId: selectedStaffByService[serviceId] ? Number(selectedStaffByService[serviceId]) : null,
-          })),
-        }),
+            staffId: selectedStaffByService[serviceId] ? Number(selectedStaffByService[serviceId]) : null
+          }))
+        })
       });
 
       setCreateOpen(false);
@@ -663,7 +663,7 @@ export function SchedulePage() {
 
   const summarizePackageAutomation = (events: AppointmentStatusUpdateResponse['packageAutomation']['events']) => {
     if (!events.length) {
-      return 'No package action.';
+      return "Paket işlemi yok.";
     }
     const consumed = events.filter((item) => item.type === 'AUTO_CONSUME').length;
     const restored = events.filter((item) => item.type === 'AUTO_RESTORE').length;
@@ -681,27 +681,27 @@ export function SchedulePage() {
   };
 
   const updateAppointmentStatus = async (
-    appointmentId: number,
-    status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW',
-    paymentMethod?: PaymentMethod,
-  ) => {
-    const payload: { status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'; paymentMethod?: PaymentMethod } = { status };
+  appointmentId: number,
+  status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW',
+  paymentMethod?: PaymentMethod) =>
+  {
+    const payload: {status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';paymentMethod?: PaymentMethod;} = { status };
     if (status === 'COMPLETED' && paymentMethod) {
       payload.paymentMethod = paymentMethod;
     }
     return apiFetch<AppointmentStatusUpdateResponse>(`/api/admin/appointments/${appointmentId}/status`, {
       method: 'PATCH',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
   };
 
   const toRescheduleAssignmentsPayload = (assignments: Record<number, number>) => {
-    return Object.entries(assignments)
-      .map(([appointmentId, staffId]) => ({
-        appointmentId: Number(appointmentId),
-        staffId: Number(staffId),
-      }))
-      .filter((item) => Number.isInteger(item.appointmentId) && item.appointmentId > 0 && Number.isInteger(item.staffId) && item.staffId > 0);
+    return Object.entries(assignments).
+    map(([appointmentId, staffId]) => ({
+      appointmentId: Number(appointmentId),
+      staffId: Number(staffId)
+    })).
+    filter((item) => Number.isInteger(item.appointmentId) && item.appointmentId > 0 && Number.isInteger(item.staffId) && item.staffId > 0);
   };
 
   const mapUiActionToBackendStatus = (action: UIAppointmentAction): 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' => {
@@ -712,10 +712,10 @@ export function SchedulePage() {
   };
 
   const applyStatusToAppointments = async (
-    appointmentIds: number[],
-    action: UIAppointmentAction,
-    paymentMethod?: PaymentMethod,
-  ) => {
+  appointmentIds: number[],
+  action: UIAppointmentAction,
+  paymentMethod?: PaymentMethod) =>
+  {
     if (!appointmentIds.length) return;
     const status = mapUiActionToBackendStatus(action);
 
@@ -753,7 +753,7 @@ export function SchedulePage() {
       });
       setSelectedAppointmentGroup(null);
     } catch (err: any) {
-      setStatusFeedback(err?.message || 'Status could not be updated.');
+      setStatusFeedback(err?.message || "Durum güncellenemedi.");
     } finally {
       setStatusUpdatingId(null);
       setStatusBusy(false);
@@ -762,22 +762,22 @@ export function SchedulePage() {
 
   const openCheckoutModal = async (appointmentIds: number[]) => {
     if (!appointmentIds.length) return;
-    const selectedItems = appointmentIds
-      .map((id) => appointmentById[id])
-      .filter((item): item is AdminAppointmentItem => Boolean(item));
+    const selectedItems = appointmentIds.
+    map((id) => appointmentById[id]).
+    filter((item): item is AdminAppointmentItem => Boolean(item));
     if (!selectedItems.length) return;
 
     const customerIdList = Array.from(
       new Set(
-        selectedItems
-          .map((item) => (item.customerId !== null && item.customerId !== undefined ? Number(item.customerId) : NaN))
-          .filter((value) => Number.isInteger(value) && value > 0),
-      ),
+        selectedItems.
+        map((item) => item.customerId !== null && item.customerId !== undefined ? Number(item.customerId) : NaN).
+        filter((value) => Number.isInteger(value) && value > 0)
+      )
     );
 
     setCheckoutModal({
       appointmentIds,
-      mode: 'GROUP',
+      mode: 'GROUP'
     });
     setCheckoutGroupCloseType('SINGLE_PAYMENT');
     setCheckoutGroupPaymentMethod('CASH');
@@ -795,7 +795,7 @@ export function SchedulePage() {
       nextLineDrafts[target.key] = {
         closeType: 'SINGLE_PAYMENT',
         paymentMethod: 'CASH',
-        customerPackageId: '',
+        customerPackageId: ''
       };
     }
     setCheckoutLineDrafts(nextLineDrafts);
@@ -813,7 +813,7 @@ export function SchedulePage() {
     const customerId = customerIdList[0];
     setCheckoutPackagesLoading(true);
     try {
-      const response = await apiFetch<{ items: CustomerPackageItem[] }>(`/api/admin/customers/${customerId}/packages`);
+      const response = await apiFetch<{items: CustomerPackageItem[];}>(`/api/admin/customers/${customerId}/packages`);
       setCheckoutCustomerPackages((response.items || []).filter((item) => item.status === 'ACTIVE'));
     } catch (err: any) {
       setCheckoutCustomerPackages([]);
@@ -840,20 +840,20 @@ export function SchedulePage() {
           appointmentLineId: target.appointmentLineId,
           closeType: checkoutGroupCloseType,
           paymentMethod: checkoutGroupCloseType === 'SINGLE_PAYMENT' ? checkoutGroupPaymentMethod : null,
-          customerPackageId: checkoutGroupCloseType === 'USE_EXISTING_PACKAGE' ? Number(checkoutGroupPackageId || 0) || null : null,
+          customerPackageId: checkoutGroupCloseType === 'USE_EXISTING_PACKAGE' ? Number(checkoutGroupPackageId || 0) || null : null
         };
       }
       const draft = checkoutLineDrafts[target.key] || {
         closeType: 'SINGLE_PAYMENT',
         paymentMethod: 'CASH',
-        customerPackageId: '',
+        customerPackageId: ''
       };
       return {
         appointmentId: target.appointmentId,
         appointmentLineId: target.appointmentLineId,
         closeType: draft.closeType,
         paymentMethod: draft.closeType === 'SINGLE_PAYMENT' ? draft.paymentMethod : null,
-        customerPackageId: draft.closeType === 'USE_EXISTING_PACKAGE' ? Number(draft.customerPackageId || 0) || null : null,
+        customerPackageId: draft.closeType === 'USE_EXISTING_PACKAGE' ? Number(draft.customerPackageId || 0) || null : null
       };
     });
 
@@ -883,8 +883,8 @@ export function SchedulePage() {
         paymentMethod: checkoutNewPackagePaymentMethod,
         services: uniqueServiceIds.map((serviceId) => ({
           serviceId,
-          initialQuota: quota,
-        })),
+          initialQuota: quota
+        }))
       };
     }
 
@@ -899,15 +899,15 @@ export function SchedulePage() {
         body: JSON.stringify({
           mode: checkoutModal.mode,
           lines,
-          ...(newPackage ? { newPackage } : {}),
-        } satisfies AppointmentCheckoutRequest),
+          ...(newPackage ? { newPackage } : {})
+        } satisfies AppointmentCheckoutRequest)
       });
       await loadSchedule();
       setSelectedAppointmentGroup(null);
       setCheckoutModal(null);
       setStatusFeedback(response.summary?.message || `${checkoutTargets.length} line(s) checked out.`);
     } catch (err: any) {
-      setCheckoutPackageError(err?.message || 'Checkout tamamlanamadı.');
+      setCheckoutPackageError(err?.message || "Ödeme işlemi tamamlanamadı.");
     } finally {
       setCheckoutSubmitting(false);
       setStatusUpdatingId(null);
@@ -919,29 +919,29 @@ export function SchedulePage() {
     if (!rescheduleSelection) return;
     const parsed = new Date(`${rescheduleSelection.date}T${rescheduleSelection.time}:00`);
     if (Number.isNaN(parsed.getTime())) {
-      setRescheduleSelection((prev) => (prev ? { ...prev, error: 'Please choose a valid date and time.' } : prev));
+      setRescheduleSelection((prev) => prev ? { ...prev, error: 'Please choose a valid date and time.' } : prev);
       return;
     }
 
-    setRescheduleSelection((prev) => (prev ? { ...prev, loading: true, error: null } : prev));
+    setRescheduleSelection((prev) => prev ? { ...prev, loading: true, error: null } : prev);
     try {
       const preview = await apiFetch<AdminAppointmentReschedulePreviewResponse>('/api/admin/appointments/reschedule-preview', {
         method: 'POST',
         body: JSON.stringify({
           appointmentIds: rescheduleSelection.appointmentIds,
           newStartTime: parsed.toISOString(),
-          assignments: toRescheduleAssignmentsPayload(rescheduleSelection.assignments),
-        }),
+          assignments: toRescheduleAssignmentsPayload(rescheduleSelection.assignments)
+        })
       });
 
       const error =
-        preview.hasConflicts && preview.conflicts.length
-          ? preview.conflicts[0].reason || 'Selected slot is not available.'
-          : null;
-      setRescheduleSelection((prev) => (prev ? { ...prev, preview, loading: false, error } : prev));
+      preview.hasConflicts && preview.conflicts.length ?
+      preview.conflicts[0].reason || 'Selected slot is not available.' :
+      null;
+      setRescheduleSelection((prev) => prev ? { ...prev, preview, loading: false, error } : prev);
     } catch (err: any) {
       setRescheduleSelection((prev) =>
-        prev ? { ...prev, loading: false, error: err?.message || 'Reschedule preview failed.' } : prev,
+      prev ? { ...prev, loading: false, error: err?.message || 'Reschedule preview failed.' } : prev
       );
     }
   };
@@ -960,7 +960,7 @@ export function SchedulePage() {
       return;
     }
     if (!waitlistForm.customerName.trim() || !waitlistForm.customerPhone.trim()) {
-      setWaitlistCreateError('Customer name and phone are required.');
+      setWaitlistCreateError("Müşteri adı ve telefon zorunludur.");
       return;
     }
 
@@ -981,17 +981,17 @@ export function SchedulePage() {
           customerPhone: waitlistForm.customerPhone.trim(),
           notes: waitlistForm.notes.trim() || null,
           groups: [
-            {
-              personId: 'p1',
-              services: waitlistSelectedServiceIds.map((serviceId) => ({
-                serviceId: Number(serviceId),
-                allowedStaffIds: waitlistSelectedStaffByService[serviceId]
-                  ? [Number(waitlistSelectedStaffByService[serviceId])]
-                  : null,
-              })),
-            },
-          ],
-        }),
+          {
+            personId: 'p1',
+            services: waitlistSelectedServiceIds.map((serviceId) => ({
+              serviceId: Number(serviceId),
+              allowedStaffIds: waitlistSelectedStaffByService[serviceId] ?
+              [Number(waitlistSelectedStaffByService[serviceId])] :
+              null
+            }))
+          }]
+
+        })
       });
 
       setWaitlistOpen(false);
@@ -1007,9 +1007,9 @@ export function SchedulePage() {
     setWaitlistMatching(true);
     setWaitlistError(null);
     try {
-      const response = await apiFetch<{ items: AdminWaitlistItem[] }>('/api/admin/waitlist/match', {
+      const response = await apiFetch<{items: AdminWaitlistItem[];}>('/api/admin/waitlist/match', {
         method: 'POST',
-        body: JSON.stringify({ date: dayKeyFromDate(activeDate) }),
+        body: JSON.stringify({ date: dayKeyFromDate(activeDate) })
       });
       setWaitlistItems(response.items || []);
     } catch (err: any) {
@@ -1024,7 +1024,7 @@ export function SchedulePage() {
     try {
       await apiFetch(`/api/admin/waitlist/${entryId}/offer`, {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({})
       });
       await loadWaitlist();
     } catch (err: any) {
@@ -1039,7 +1039,7 @@ export function SchedulePage() {
     try {
       await apiFetch(`/api/admin/waitlist/${entryId}/cancel`, {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({})
       });
       await loadWaitlist();
     } catch (err: any) {
@@ -1077,7 +1077,7 @@ export function SchedulePage() {
         ...prev,
         customerId: idValue,
         customerName: selected.name || '',
-        customerPhone: selected.phone || '',
+        customerPhone: selected.phone || ''
       };
     });
   };
@@ -1091,12 +1091,12 @@ export function SchedulePage() {
     let active = true;
 
     setRescheduleSelection((prev) =>
-      prev
-        ? {
-            ...prev,
-            suggestionsLoading: true,
-          }
-        : prev,
+    prev ?
+    {
+      ...prev,
+      suggestionsLoading: true
+    } :
+    prev
     );
 
     void apiFetch<AdminAppointmentRescheduleOptionsResponse>('/api/admin/appointments/reschedule-options', {
@@ -1104,49 +1104,49 @@ export function SchedulePage() {
       body: JSON.stringify({
         appointmentIds,
         date,
-        assignments,
-      }),
-    })
-      .then((options) => {
-        if (!active) return;
-        setRescheduleSelection((prev) =>
-          prev
-            ? {
-                ...prev,
-                suggestionsLoading: false,
-                suggestedSlots: options.slots || [],
-              }
-            : prev,
-        );
+        assignments
       })
-      .catch(() => {
-        if (!active) return;
-        setRescheduleSelection((prev) =>
-          prev
-            ? {
-                ...prev,
-                suggestionsLoading: false,
-                suggestedSlots: [],
-              }
-            : prev,
-        );
-      });
+    }).
+    then((options) => {
+      if (!active) return;
+      setRescheduleSelection((prev) =>
+      prev ?
+      {
+        ...prev,
+        suggestionsLoading: false,
+        suggestedSlots: options.slots || []
+      } :
+      prev
+      );
+    }).
+    catch(() => {
+      if (!active) return;
+      setRescheduleSelection((prev) =>
+      prev ?
+      {
+        ...prev,
+        suggestionsLoading: false,
+        suggestedSlots: []
+      } :
+      prev
+      );
+    });
 
     return () => {
       active = false;
     };
   }, [
-    apiFetch,
-    rescheduleSelection?.date,
-    rescheduleSelection?.appointmentIds,
-    JSON.stringify(toRescheduleAssignmentsPayload(rescheduleSelection?.assignments || {})),
-  ]);
+  apiFetch,
+  rescheduleSelection?.date,
+  rescheduleSelection?.appointmentIds,
+  JSON.stringify(toRescheduleAssignmentsPayload(rescheduleSelection?.assignments || {}))]
+  );
 
   const commitRescheduleSelection = async () => {
     if (!rescheduleSelection) return;
     const parsed = new Date(`${rescheduleSelection.date}T${rescheduleSelection.time}:00`);
     if (Number.isNaN(parsed.getTime())) {
-      setRescheduleSelection((prev) => (prev ? { ...prev, error: 'Please choose a valid date and time.' } : prev));
+      setRescheduleSelection((prev) => prev ? { ...prev, error: 'Please choose a valid date and time.' } : prev);
       return;
     }
 
@@ -1156,7 +1156,7 @@ export function SchedulePage() {
     }
     if (rescheduleSelection.preview.hasConflicts) {
       setRescheduleSelection((prev) =>
-        prev ? { ...prev, error: prev.preview?.conflicts?.[0]?.reason || 'Selected slot has conflicts.' } : prev,
+      prev ? { ...prev, error: prev.preview?.conflicts?.[0]?.reason || 'Selected slot has conflicts.' } : prev
       );
       return;
     }
@@ -1165,7 +1165,7 @@ export function SchedulePage() {
     for (const item of needsManualItems) {
       if (!rescheduleSelection.assignments[item.appointmentId]) {
         setRescheduleSelection((prev) =>
-          prev ? { ...prev, error: `Please select a specialist for ${item.serviceName}.` } : prev,
+        prev ? { ...prev, error: `Please select a specialist for ${item.serviceName}.` } : prev
         );
         return;
       }
@@ -1174,9 +1174,9 @@ export function SchedulePage() {
     setStatusBusy(true);
     setStatusUpdatingId(rescheduleSelection.appointmentIds[0] || null);
     setStatusFeedback(null);
-    setRescheduleSelection((prev) => (prev ? { ...prev, loading: true, error: null } : prev));
+    setRescheduleSelection((prev) => prev ? { ...prev, loading: true, error: null } : prev);
     try {
-      const committed = await apiFetch<{ batchId: string; previousAppointmentIds: number[]; items: AdminAppointmentItem[] }>(
+      const committed = await apiFetch<{batchId: string;previousAppointmentIds: number[];items: AdminAppointmentItem[];}>(
         '/api/admin/appointments/reschedule-commit',
         {
           method: 'POST',
@@ -1184,9 +1184,9 @@ export function SchedulePage() {
             appointmentIds: rescheduleSelection.appointmentIds,
             newStartTime: parsed.toISOString(),
             assignments: toRescheduleAssignmentsPayload(rescheduleSelection.assignments),
-            idempotencyKey: `admin-${Date.now()}`,
-          }),
-        },
+            idempotencyKey: `admin-${Date.now()}`
+          })
+        }
       );
 
       await loadSchedule();
@@ -1206,7 +1206,7 @@ export function SchedulePage() {
     } catch (err: any) {
       const message = err?.message || 'Reschedule failed.';
       setStatusFeedback(message);
-      setRescheduleSelection((prev) => (prev ? { ...prev, loading: false, error: message } : prev));
+      setRescheduleSelection((prev) => prev ? { ...prev, loading: false, error: message } : prev);
     } finally {
       setStatusUpdatingId(null);
       setStatusBusy(false);
@@ -1220,10 +1220,10 @@ export function SchedulePage() {
       return;
     }
     if (nextStatus === 'UPDATED') {
-      const selectedItems = appointmentIds
-        .map((id) => appointmentById[id])
-        .filter((item): item is AdminAppointmentItem => Boolean(item))
-        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      const selectedItems = appointmentIds.
+      map((id) => appointmentById[id]).
+      filter((item): item is AdminAppointmentItem => Boolean(item)).
+      sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
       if (!selectedItems.length) return;
       const firstStart = new Date(selectedItems[0].startTime);
       setRescheduleSelection({
@@ -1235,7 +1235,7 @@ export function SchedulePage() {
         error: null,
         loading: false,
         suggestionsLoading: false,
-        suggestedSlots: [],
+        suggestedSlots: []
       });
       return;
     }
@@ -1258,9 +1258,9 @@ export function SchedulePage() {
 
     for (const target of targets) {
       const closeType =
-        checkoutModal.mode === 'GROUP'
-          ? checkoutGroupCloseType
-          : (checkoutLineDrafts[target.key]?.closeType || 'SINGLE_PAYMENT');
+      checkoutModal.mode === 'GROUP' ?
+      checkoutGroupCloseType :
+      checkoutLineDrafts[target.key]?.closeType || 'SINGLE_PAYMENT';
       if (closeType === 'SINGLE_PAYMENT') singlePayment += 1;
       if (closeType === 'USE_EXISTING_PACKAGE') existingPackage += 1;
       if (closeType === 'SELL_NEW_PACKAGE') sellNewPackage += 1;
@@ -1270,7 +1270,7 @@ export function SchedulePage() {
       total: targets.length,
       singlePayment,
       existingPackage,
-      sellNewPackage,
+      sellNewPackage
     };
   })();
 
@@ -1289,7 +1289,7 @@ export function SchedulePage() {
 
     return {
       top: topMinutes * pixelsPerMinute,
-      height: Math.max(36, durationMinutes * pixelsPerMinute),
+      height: Math.max(36, durationMinutes * pixelsPerMinute)
     };
   };
 
@@ -1300,8 +1300,8 @@ export function SchedulePage() {
         <button
           type="button"
           onClick={() => void openCreateModal()}
-          className="inline-flex items-center gap-2 rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-sm font-semibold text-white"
-        >
+          className="inline-flex items-center gap-2 rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-sm font-semibold text-white">
+          
           <Plus className="h-4 w-4" />
           New Appointment
         </button>
@@ -1312,9 +1312,9 @@ export function SchedulePage() {
           type="button"
           onClick={() => setViewMode('calendar')}
           className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium ${
-            viewMode === 'calendar' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'
-          }`}
-        >
+          viewMode === 'calendar' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'}`
+          }>
+          
           <CalendarDays className="h-3.5 w-3.5" />
           Calendar
         </button>
@@ -1322,9 +1322,9 @@ export function SchedulePage() {
           type="button"
           onClick={() => setViewMode('list')}
           className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium ${
-            viewMode === 'list' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'
-          }`}
-        >
+          viewMode === 'list' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'}`
+          }>
+          
           <List className="h-3.5 w-3.5" />
           List
         </button>
@@ -1334,8 +1334,8 @@ export function SchedulePage() {
         <button
           type="button"
           onClick={() => setActiveDate((prev) => addDays(prev, -1))}
-          className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground"
-        >
+          className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground">
+          
           <ChevronLeft className="h-4 w-4" />
         </button>
 
@@ -1347,13 +1347,13 @@ export function SchedulePage() {
         <button
           type="button"
           onClick={() => setActiveDate((prev) => addDays(prev, 1))}
-          className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground"
-        >
+          className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground">
+          
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
-      {loading ? <p className="text-sm text-muted-foreground">Loading schedule...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Takvim yükleniyor...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1366,177 +1366,177 @@ export function SchedulePage() {
               type="button"
               onClick={() => void triggerWaitlistMatcher()}
               disabled={waitlistMatching}
-              className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground disabled:opacity-50"
-            >
+              className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground disabled:opacity-50">
+              
               {waitlistMatching ? 'Matching...' : 'Run Matcher'}
             </button>
             <button
               type="button"
               onClick={() => void openWaitlistModal()}
-              className="rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-xs font-semibold text-white"
-            >
-              Add Waitlist
+              className="rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-xs font-semibold text-white">
+              
+              Bekleme Listesi Ekle
             </button>
           </div>
         </div>
-        {waitlistLoading ? <p className="text-xs text-muted-foreground">Loading waitlist...</p> : null}
+        {waitlistLoading ? <p className="text-xs text-muted-foreground">Bekleme listesi yükleniyor...</p> : null}
         {waitlistError ? <p className="text-xs text-red-500">{waitlistError}</p> : null}
-        {waitlistItems.length ? (
-          <div className="space-y-2">
-            {waitlistItems.map((item) => (
-              <div key={item.id} className="rounded-xl border border-border bg-background/70 p-3">
+        {waitlistItems.length ?
+        <div className="space-y-2">
+            {waitlistItems.map((item) =>
+          <div key={item.id} className="rounded-xl border border-border bg-background/70 p-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-semibold">{item.customerName}</p>
                     <p className="text-xs text-muted-foreground">{item.customerPhone}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {item.timeWindowStart} - {item.timeWindowEnd} • {item.source === 'ADMIN' ? 'Salon added' : 'Customer added'}
+                      {item.timeWindowStart} - {item.timeWindowEnd} • {item.source === 'ADMIN' ? "Salon ekledi" : "Müşteri ekledi"}
                     </p>
-                    {item.allowNearbyMatches ? (
-                      <p className="text-[11px] text-muted-foreground">Nearby tolerance: ±{item.nearbyToleranceMinutes} min</p>
-                    ) : null}
+                    {item.allowNearbyMatches ?
+                <p className="text-[11px] text-muted-foreground">Nearby tolerance: ±{item.nearbyToleranceMinutes} min</p> :
+                null}
                   </div>
                   <div className="text-right">
                     <span className="rounded-full border border-border px-2 py-1 text-[11px] font-semibold">{item.status}</span>
-                    {item.latestOffer ? (
-                      <p className="mt-1 text-[11px] text-muted-foreground">
+                    {item.latestOffer ?
+                <p className="mt-1 text-[11px] text-muted-foreground">
                         Offer: {item.latestOffer.slotStartTime} - {item.latestOffer.slotEndTime} • {item.latestOffer.status}
-                      </p>
-                    ) : null}
+                      </p> :
+                null}
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {item.groups.flatMap((group) => group.services).map((service, index) => {
-                    const serviceMeta = services.find((entry) => entry.id === service.serviceId);
-                    return (
-                      <span key={`${item.id}-${service.serviceId}-${index}`} className="rounded-full border border-border bg-card px-2 py-1 text-[11px]">
+                const serviceMeta = services.find((entry) => entry.id === service.serviceId);
+                return (
+                  <span key={`${item.id}-${service.serviceId}-${index}`} className="rounded-full border border-border bg-card px-2 py-1 text-[11px]">
                         {serviceMeta?.name || `Service #${service.serviceId}`}
-                      </span>
-                    );
-                  })}
+                      </span>);
+
+              })}
                 </div>
                 {item.notes ? <p className="mt-2 text-xs text-muted-foreground">{item.notes}</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
-                    type="button"
-                    disabled={waitlistBusyId === item.id || item.status !== 'PENDING'}
-                    onClick={() => void sendManualWaitlistOffer(item.id)}
-                    className="rounded-lg border border-emerald-300/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-700 disabled:opacity-50"
-                  >
-                    {waitlistBusyId === item.id ? 'Working...' : 'Send Offer'}
+                type="button"
+                disabled={waitlistBusyId === item.id || item.status !== 'PENDING'}
+                onClick={() => void sendManualWaitlistOffer(item.id)}
+                className="rounded-lg border border-emerald-300/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-700 disabled:opacity-50">
+                
+                    {waitlistBusyId === item.id ? 'Working...' : "Gönder Offer"}
                   </button>
                   <button
-                    type="button"
-                    disabled={waitlistBusyId === item.id || item.status === 'CANCELLED' || item.status === 'ACCEPTED'}
-                    onClick={() => void cancelWaitlist(item.id)}
-                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground disabled:opacity-50"
-                  >
-                    Cancel
+                type="button"
+                disabled={waitlistBusyId === item.id || item.status === 'CANCELLED' || item.status === 'ACCEPTED'}
+                onClick={() => void cancelWaitlist(item.id)}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground disabled:opacity-50">
+                
+                    İptal
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : waitlistLoading ? null : (
-          <p className="text-xs text-muted-foreground">No waitlist request for this day yet.</p>
-        )}
+          )}
+          </div> :
+        waitlistLoading ? null :
+        <p className="text-xs text-muted-foreground">Bu gün için henüz bekleme listesi talebi yok.</p>
+        }
       </div>
       {statusFeedback ? <p className="text-sm text-[var(--deep-indigo)]">{statusFeedback}</p> : null}
 
-      {viewMode === 'calendar' ? (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      {viewMode === 'calendar' ?
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
             <div className="min-w-[760px]">
               <div className="flex border-b border-border sticky top-0 bg-card z-10">
                 <div className="w-16 shrink-0 border-r border-border" />
                 <div className="flex flex-1">
-                  {staff.map((member) => (
-                    <div key={member.id} className="border-r border-border px-2 py-2" style={{ width: COLUMN_WIDTH }}>
+                  {staff.map((member) =>
+                <div key={member.id} className="border-r border-border px-2 py-2" style={{ width: COLUMN_WIDTH }}>
                       <p className="text-xs font-semibold truncate">{member.name}</p>
                       <p className="text-[11px] text-muted-foreground truncate">{member.title || 'Specialist'}</p>
                     </div>
-                  ))}
-                  {!staff.length ? (
-                    <div className="px-3 py-3 text-xs text-muted-foreground">No staff found for the calendar.</div>
-                  ) : null}
+                )}
+                  {!staff.length ?
+                <div className="px-3 py-3 text-xs text-muted-foreground">Takvim için personel bulunamadı.</div> :
+                null}
                 </div>
               </div>
 
               <div className="flex">
                 <div className="w-16 shrink-0 border-r border-border bg-card/95 sticky left-0 z-10">
-                  {timeSlots.map((hour) => (
-                    <div
-                      key={hour}
-                      className="border-b border-border/70 px-1 text-[11px] text-muted-foreground"
-                      style={{ height: SLOT_HEIGHT }}
-                    >
+                  {timeSlots.map((hour) =>
+                <div
+                  key={hour}
+                  className="border-b border-border/70 px-1 text-[11px] text-muted-foreground"
+                  style={{ height: SLOT_HEIGHT }}>
+                  
                       <span className="-translate-y-2 inline-block">{hourLabel(hour)}</span>
                     </div>
-                  ))}
+                )}
                 </div>
 
                 <div className="flex flex-1">
                   {staff.map((member) => {
-                    const rows = appointments.filter((item) => item.staff.id === member.id);
-                    return (
-                      <div key={member.id} className="relative border-r border-border" style={{ width: COLUMN_WIDTH, height: timelineHeight }}>
-                        {timeSlots.map((hour) => (
-                          <div key={`${member.id}-${hour}`} className="border-b border-border/70" style={{ height: SLOT_HEIGHT }} />
-                        ))}
+                  const rows = appointments.filter((item) => item.staff.id === member.id);
+                  return (
+                    <div key={member.id} className="relative border-r border-border" style={{ width: COLUMN_WIDTH, height: timelineHeight }}>
+                        {timeSlots.map((hour) =>
+                      <div key={`${member.id}-${hour}`} className="border-b border-border/70" style={{ height: SLOT_HEIGHT }} />
+                      )}
 
                         {rows.map((appointment) => {
-                          const block = getAppointmentStyle(appointment.startTime, appointment.endTime);
-                          const appointmentDisplayStatus = getDisplayStatus(appointment);
-                          const timeRange = `${format(new Date(appointment.startTime), 'HH:mm')} - ${format(
-                            new Date(appointment.endTime),
-                            'HH:mm',
-                          )}`;
+                        const block = getAppointmentStyle(appointment.startTime, appointment.endTime);
+                        const appointmentDisplayStatus = getDisplayStatus(appointment);
+                        const timeRange = `${format(new Date(appointment.startTime), 'HH:mm')} - ${format(
+                          new Date(appointment.endTime),
+                          'HH:mm'
+                        )}`;
 
-                          return (
-                            <div
-                              key={appointment.id}
-                              className={`absolute left-1 right-1 rounded-lg px-2 py-2 text-[11px] shadow-sm cursor-pointer ${statusClass(
-                                appointmentDisplayStatus,
-                              )}`}
-                              style={{ top: block.top, height: block.height }}
-                              title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointmentDisplayStatus)}`}
-                              onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}
-                            >
+                        return (
+                          <div
+                            key={appointment.id}
+                            className={`absolute left-1 right-1 rounded-lg px-2 py-2 text-[11px] shadow-sm cursor-pointer ${statusClass(
+                              appointmentDisplayStatus
+                            )}`}
+                            style={{ top: block.top, height: block.height }}
+                            title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointmentDisplayStatus)}`}
+                            onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}>
+                            
                               <p className="font-semibold truncate">{appointment.customerName}</p>
                               <p className="truncate text-muted-foreground">{appointment.service.name}</p>
                               <p className="text-[10px] text-muted-foreground mt-1">{timeRange}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
+                            </div>);
+
+                      })}
+                      </div>);
+
+                })}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-border bg-card p-3 space-y-2">
-          {groupedAppointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No appointments for this day.</p>
-          ) : (
-            groupedAppointments.map((group) => {
-              const start = format(new Date(group.startTime), 'HH:mm');
-              const end = format(new Date(group.endTime), 'HH:mm');
-              const groupStatus = deriveGroupStatus(group.items, getDisplayStatus);
-              const serviceNames = Array.from(new Set(group.items.map((item) => item.service.name)));
-              const staffNames = Array.from(new Set(group.items.map((item) => item.staff.name)));
-              const groupPayment = group.items.every((item) => item.paymentMethod === group.items[0].paymentMethod)
-                ? (group.items[0].paymentMethod as PaymentMethod | null | undefined)
-                : null;
+        </div> :
 
-              return (
-                <div
-                  key={group.key}
-                  className={`rounded-lg border p-3 cursor-pointer ${statusClass(groupStatus)}`}
-                  onClick={() => setSelectedAppointmentGroup(group)}
-                >
+      <div className="rounded-2xl border border-border bg-card p-3 space-y-2">
+          {groupedAppointments.length === 0 ?
+        <p className="text-sm text-muted-foreground">Bu gün için randevu yok.</p> :
+
+        groupedAppointments.map((group) => {
+          const start = format(new Date(group.startTime), 'HH:mm');
+          const end = format(new Date(group.endTime), 'HH:mm');
+          const groupStatus = deriveGroupStatus(group.items, getDisplayStatus);
+          const serviceNames = Array.from(new Set(group.items.map((item) => item.service.name)));
+          const staffNames = Array.from(new Set(group.items.map((item) => item.staff.name)));
+          const groupPayment = group.items.every((item) => item.paymentMethod === group.items[0].paymentMethod) ?
+          group.items[0].paymentMethod as PaymentMethod | null | undefined :
+          null;
+
+          return (
+            <div
+              key={group.key}
+              className={`rounded-lg border p-3 cursor-pointer ${statusClass(groupStatus)}`}
+              onClick={() => setSelectedAppointmentGroup(group)}>
+              
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold">{group.customerName}</p>
@@ -1545,11 +1545,11 @@ export function SchedulePage() {
                     <div className="text-right">
                       <p className="text-xs font-semibold">{start} - {end}</p>
                       <p className="text-[11px] text-muted-foreground">{statusLabel(groupStatus)}</p>
-                      {groupStatus === 'COMPLETED' ? (
-                        <p className="text-[11px] text-muted-foreground mt-1">
+                      {groupStatus === 'COMPLETED' ?
+                  <p className="text-[11px] text-muted-foreground mt-1">
                           Payment: {groupPayment ? paymentMethodLabel(groupPayment) : 'Not recorded'}
-                        </p>
-                      ) : null}
+                        </p> :
+                  null}
                     </div>
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
@@ -1558,74 +1558,74 @@ export function SchedulePage() {
                     <p className="mt-1 text-foreground font-medium">Total: {formatPrice(group.totalPrice)}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {APPOINTMENT_STATUS_ACTIONS.map((status) => (
-                      <button
-                        key={status}
-                        type="button"
-                        disabled={
-                          statusBusy ||
-                          (groupStatus !== 'MIXED' && groupStatus === status) ||
-                          statusUpdatingId === group.items[0]?.id
-                        }
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          requestStatusChange(group.items.map((item) => item.id), status);
-                        }}
-                        className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
-                          groupStatus !== 'MIXED' && groupStatus === status
-                            ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
-                            : 'border-border'
-                        }`}
-                      >
+                    {APPOINTMENT_STATUS_ACTIONS.map((status) =>
+                <button
+                  key={status}
+                  type="button"
+                  disabled={
+                  statusBusy ||
+                  groupStatus !== 'MIXED' && groupStatus === status ||
+                  statusUpdatingId === group.items[0]?.id
+                  }
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    requestStatusChange(group.items.map((item) => item.id), status);
+                  }}
+                  className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
+                  groupStatus !== 'MIXED' && groupStatus === status ?
+                  'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+                  'border-border'}`
+                  }>
+                  
                         {statusLabel(status)}
                       </button>
-                    ))}
-                    {(groupStatus === 'BOOKED' || groupStatus === 'CONFIRMED' || groupStatus === 'UPDATED') ? (
-                      <button
-                        type="button"
-                        disabled={statusBusy || statusUpdatingId === group.items[0]?.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          requestStatusChange(group.items.map((item) => item.id), 'COMPLETED');
-                        }}
-                        className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] disabled:opacity-50"
-                      >
-                        Complete & Payment
-                      </button>
-                    ) : null}
-                    {(groupStatus === 'COMPLETED' || groupStatus === 'MIXED') ? (
-                      <button
-                        type="button"
-                        disabled={statusBusy || statusUpdatingId === group.items[0]?.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          requestPaymentSelection(group.items.map((item) => item.id));
-                        }}
-                        className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
-                      >
-                        Update Payment
-                      </button>
-                    ) : null}
+                )}
+                    {groupStatus === 'BOOKED' || groupStatus === 'CONFIRMED' || groupStatus === 'UPDATED' ?
+                <button
+                  type="button"
+                  disabled={statusBusy || statusUpdatingId === group.items[0]?.id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    requestStatusChange(group.items.map((item) => item.id), 'COMPLETED');
+                  }}
+                  className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] disabled:opacity-50">
+                  
+                        Tamamla ve Ödeme Al
+                      </button> :
+                null}
+                    {groupStatus === 'COMPLETED' || groupStatus === 'MIXED' ?
+                <button
+                  type="button"
+                  disabled={statusBusy || statusUpdatingId === group.items[0]?.id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    requestPaymentSelection(group.items.map((item) => item.id));
+                  }}
+                  className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50">
+                  
+                        Ödemeyi Güncelle
+                      </button> :
+                null}
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
+                </div>);
 
-      {!loading && !appointments.length && viewMode === 'calendar' ? (
-        <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-          No appointments for this day.
+        })
+        }
         </div>
-      ) : null}
+      }
 
-      {selectedAppointmentGroup ? (
-        <div className="fixed inset-0 z-50 bg-black/35 p-4" onClick={() => setSelectedAppointmentGroup(null)}>
+      {!loading && !appointments.length && viewMode === 'calendar' ?
+      <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+          Bu gün için randevu yok.
+        </div> :
+      null}
+
+      {selectedAppointmentGroup ?
+      <div className="fixed inset-0 z-50 bg-black/35 p-4" onClick={() => setSelectedAppointmentGroup(null)}>
           <div
-            className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-          >
+          className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl"
+          onClick={(event) => event.stopPropagation()}>
+          
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Appointment Details</h2>
               <button type="button" onClick={() => setSelectedAppointmentGroup(null)} className="text-sm text-muted-foreground">
@@ -1645,7 +1645,7 @@ export function SchedulePage() {
                   {format(new Date(selectedAppointmentGroup.endTime), 'HH:mm')}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Status:</span>{' '}
+                  <span className="text-muted-foreground">Durum:</span>{' '}
                   {statusLabel(deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus))}
                 </p>
                 <p>
@@ -1655,8 +1655,8 @@ export function SchedulePage() {
 
               <div className="rounded-lg border border-border p-3 space-y-2">
                 <p className="text-xs text-muted-foreground font-medium">Included appointments</p>
-                {selectedAppointmentGroup.items.map((item) => (
-                  <div key={item.id} className="rounded-md border border-border/70 p-2">
+                {selectedAppointmentGroup.items.map((item) =>
+              <div key={item.id} className="rounded-md border border-border/70 p-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-medium">{item.service.name}</p>
                       <p className="text-xs text-muted-foreground">{formatPrice(item.service.price || 0)}</p>
@@ -1669,81 +1669,81 @@ export function SchedulePage() {
                       {item.status === 'COMPLETED' && item.paymentMethod ? ` • ${paymentMethodLabel(item.paymentMethod as PaymentMethod)}` : ''}
                     </p>
                   </div>
-                ))}
+              )}
               </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {APPOINTMENT_STATUS_ACTIONS.map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  disabled={
-                    statusBusy ||
-                    (deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) !== 'MIXED' &&
-                      deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === status)
-                  }
-                  onClick={() => {
-                    requestStatusChange(
-                      selectedAppointmentGroup.items.map((item) => item.id),
-                      status,
-                    );
-                  }}
-                  className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
-                    deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) !== 'MIXED' &&
-                    deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === status
-                      ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
-                      : 'border-border'
-                  }`}
-                >
+              {APPOINTMENT_STATUS_ACTIONS.map((status) =>
+            <button
+              key={status}
+              type="button"
+              disabled={
+              statusBusy ||
+              deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) !== 'MIXED' &&
+              deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === status
+              }
+              onClick={() => {
+                requestStatusChange(
+                  selectedAppointmentGroup.items.map((item) => item.id),
+                  status
+                );
+              }}
+              className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${
+              deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) !== 'MIXED' &&
+              deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === status ?
+              'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+              'border-border'}`
+              }>
+              
                   {statusLabel(status)}
                 </button>
-              ))}
-              {(deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'BOOKED' ||
-                deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'CONFIRMED' ||
-                deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'UPDATED') ? (
-                <button
-                  type="button"
-                  disabled={statusBusy}
-                  onClick={() => {
-                    requestStatusChange(selectedAppointmentGroup.items.map((item) => item.id), 'COMPLETED');
-                  }}
-                  className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] disabled:opacity-50"
-                >
-                  Complete & Payment
-                </button>
-              ) : null}
-              {(deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'COMPLETED' ||
-                deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'MIXED') ? (
-                <button
-                  type="button"
-                  disabled={statusBusy}
-                  onClick={() => {
-                    requestPaymentSelection(selectedAppointmentGroup.items.map((item) => item.id));
-                  }}
-                  className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50"
-                >
-                  Update Payment
-                </button>
-              ) : null}
+            )}
+              {deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'BOOKED' ||
+            deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'CONFIRMED' ||
+            deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'UPDATED' ?
+            <button
+              type="button"
+              disabled={statusBusy}
+              onClick={() => {
+                requestStatusChange(selectedAppointmentGroup.items.map((item) => item.id), 'COMPLETED');
+              }}
+              className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] disabled:opacity-50">
+              
+                  Tamamla ve Ödeme Al
+                </button> :
+            null}
+              {deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'COMPLETED' ||
+            deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === 'MIXED' ?
+            <button
+              type="button"
+              disabled={statusBusy}
+              onClick={() => {
+                requestPaymentSelection(selectedAppointmentGroup.items.map((item) => item.id));
+              }}
+              className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50">
+              
+                  Ödemeyi Güncelle
+                </button> :
+            null}
             </div>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {rescheduleSelection ? (
-        <div
-          className="fixed inset-0 z-[60] bg-black/45 p-4"
-          onClick={() =>
-            !statusBusy && !rescheduleSelection.loading && !rescheduleSelection.suggestionsLoading
-              ? setRescheduleSelection(null)
-              : undefined
-          }
-        >
+      {rescheduleSelection ?
+      <div
+        className="fixed inset-0 z-[60] bg-black/45 p-4"
+        onClick={() =>
+        !statusBusy && !rescheduleSelection.loading && !rescheduleSelection.suggestionsLoading ?
+        setRescheduleSelection(null) :
+        undefined
+        }>
+        
           <div
-            className="mx-auto mt-16 max-w-sm rounded-2xl border border-border bg-background p-4 shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-          >
+          className="mx-auto mt-16 max-w-sm rounded-2xl border border-border bg-background p-4 shadow-xl"
+          onClick={(event) => event.stopPropagation()}>
+          
             <h3 className="text-lg font-semibold">Reschedule Appointment</h3>
             <p className="mt-1 text-xs text-muted-foreground">
               Select a new start date/time. Related services will move together.
@@ -1753,417 +1753,417 @@ export function SchedulePage() {
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Date</span>
                 <input
-                  type="date"
-                  value={rescheduleSelection.date}
-                  onChange={(event) =>
-                    setRescheduleSelection((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            date: event.target.value,
-                            preview: null,
-                            error: null,
-                          }
-                        : prev,
-                    )
-                  }
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                type="date"
+                value={rescheduleSelection.date}
+                onChange={(event) =>
+                setRescheduleSelection((prev) =>
+                prev ?
+                {
+                  ...prev,
+                  date: event.target.value,
+                  preview: null,
+                  error: null
+                } :
+                prev
+                )
+                }
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Time</span>
                 <input
-                  type="time"
-                  value={rescheduleSelection.time}
-                  onChange={(event) =>
-                    setRescheduleSelection((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            time: event.target.value,
-                            preview: null,
-                            error: null,
-                          }
-                        : prev,
-                    )
-                  }
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                type="time"
+                value={rescheduleSelection.time}
+                onChange={(event) =>
+                setRescheduleSelection((prev) =>
+                prev ?
+                {
+                  ...prev,
+                  time: event.target.value,
+                  preview: null,
+                  error: null
+                } :
+                prev
+                )
+                }
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
             </div>
 
             <div className="mt-3 rounded-lg border border-border bg-card/70 p-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Suggested Slots</p>
-                {rescheduleSelection.suggestionsLoading ? (
-                  <span className="text-[11px] text-muted-foreground">Loading...</span>
-                ) : null}
+                {rescheduleSelection.suggestionsLoading ?
+              <span className="text-[11px] text-muted-foreground">Yükleniyor...</span> :
+              null}
               </div>
-              {rescheduleSelection.suggestedSlots.length ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {rescheduleSelection.suggestedSlots.map((slot) => (
-                    <button
-                      key={slot.startTime}
-                      type="button"
-                      disabled={statusBusy || rescheduleSelection.loading}
-                      onClick={() =>
-                        setRescheduleSelection((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                time: slot.time,
-                                preview: slot.preview,
-                                error:
-                                  slot.preview.hasConflicts && slot.preview.conflicts.length
-                                    ? slot.preview.conflicts[0].reason || 'Selected slot is not available.'
-                                    : null,
-                              }
-                            : prev,
-                        )
-                      }
-                      className={`rounded-lg border px-3 py-2 text-left text-xs ${
-                        rescheduleSelection.time === slot.time
-                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
-                          : 'border-border bg-background'
-                      }`}
-                    >
+              {rescheduleSelection.suggestedSlots.length ?
+            <div className="mt-2 flex flex-wrap gap-2">
+                  {rescheduleSelection.suggestedSlots.map((slot) =>
+              <button
+                key={slot.startTime}
+                type="button"
+                disabled={statusBusy || rescheduleSelection.loading}
+                onClick={() =>
+                setRescheduleSelection((prev) =>
+                prev ?
+                {
+                  ...prev,
+                  time: slot.time,
+                  preview: slot.preview,
+                  error:
+                  slot.preview.hasConflicts && slot.preview.conflicts.length ?
+                  slot.preview.conflicts[0].reason || 'Selected slot is not available.' :
+                  null
+                } :
+                prev
+                )
+                }
+                className={`rounded-lg border px-3 py-2 text-left text-xs ${
+                rescheduleSelection.time === slot.time ?
+                'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+                'border-border bg-background'}`
+                }>
+                
                       <div className="font-semibold">{slot.time}</div>
                       <div className="mt-0.5 text-[11px] text-muted-foreground">
                         {slot.requiresManualSelection ? 'Specialist choice may be needed' : 'Ready to use'}
                       </div>
                     </button>
-                  ))}
-                </div>
-              ) : rescheduleSelection.suggestionsLoading ? null : (
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  No suggested slots found for this date. You can still enter a time manually and check it.
-                </p>
               )}
+                </div> :
+            rescheduleSelection.suggestionsLoading ? null :
+            <p className="mt-2 text-[11px] text-muted-foreground">
+                  Bu tarih için önerilen saat bulunamadı. Yine de saati manuel girip kontrol edebilirsiniz.
+                </p>
+            }
             </div>
 
             <button
-              type="button"
-              disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
-              onClick={() => {
-                void runReschedulePreview();
-              }}
-              className="mt-3 h-10 w-full rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50"
-            >
+            type="button"
+            disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
+            onClick={() => {
+              void runReschedulePreview();
+            }}
+            className="mt-3 h-10 w-full rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50">
+            
               {rescheduleSelection.loading ? 'Checking...' : 'Check Availability'}
             </button>
 
-            {rescheduleSelection.error ? (
-              <p className="mt-3 rounded-lg border border-red-300/40 bg-red-500/10 px-3 py-2 text-xs text-red-700">
+            {rescheduleSelection.error ?
+          <p className="mt-3 rounded-lg border border-red-300/40 bg-red-500/10 px-3 py-2 text-xs text-red-700">
                 {rescheduleSelection.error}
-              </p>
-            ) : null}
+              </p> :
+          null}
 
-            {rescheduleSelection.preview ? (
-              <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
+            {rescheduleSelection.preview ?
+          <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
                 {rescheduleSelection.preview.items.map((item) => {
-                  const selectedStaffId =
-                    rescheduleSelection.assignments[item.appointmentId] || item.selectedStaffId || null;
-                  const availableCandidates = item.candidates.filter((candidate) => candidate.available);
-                  return (
-                    <div key={item.appointmentId} className="rounded-lg border border-border bg-card px-3 py-2">
+              const selectedStaffId =
+              rescheduleSelection.assignments[item.appointmentId] || item.selectedStaffId || null;
+              const availableCandidates = item.candidates.filter((candidate) => candidate.available);
+              return (
+                <div key={item.appointmentId} className="rounded-lg border border-border bg-card px-3 py-2">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium">{item.serviceName}</p>
                         <p className="text-[11px] text-muted-foreground">
                           {format(new Date(item.newStartTime), 'HH:mm')} - {format(new Date(item.newEndTime), 'HH:mm')}
                         </p>
                       </div>
-                      {item.needsManualChoice ? (
-                        <div className="mt-1">
+                      {item.needsManualChoice ?
+                  <div className="mt-1">
                           <p className="text-[11px] text-muted-foreground">Preferred specialist is unavailable. Choose one:</p>
                           <div className="mt-1 flex flex-wrap gap-1.5">
-                            {availableCandidates.map((candidate) => (
-                              <button
-                                key={`${item.appointmentId}-${candidate.staffId}`}
-                                type="button"
-                                onClick={() =>
-                                  setRescheduleSelection((prev) =>
-                                    prev
-                                      ? {
-                                          ...prev,
-                                          assignments: {
-                                            ...prev.assignments,
-                                            [item.appointmentId]: candidate.staffId,
-                                          },
-                                          error: null,
-                                        }
-                                      : prev,
-                                  )
-                                }
-                                className={`rounded-md border px-2 py-1 text-[11px] ${
-                                  selectedStaffId === candidate.staffId
-                                    ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10'
-                                    : 'border-border'
-                                }`}
-                              >
+                            {availableCandidates.map((candidate) =>
+                      <button
+                        key={`${item.appointmentId}-${candidate.staffId}`}
+                        type="button"
+                        onClick={() =>
+                        setRescheduleSelection((prev) =>
+                        prev ?
+                        {
+                          ...prev,
+                          assignments: {
+                            ...prev.assignments,
+                            [item.appointmentId]: candidate.staffId
+                          },
+                          error: null
+                        } :
+                        prev
+                        )
+                        }
+                        className={`rounded-md border px-2 py-1 text-[11px] ${
+                        selectedStaffId === candidate.staffId ?
+                        'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+                        'border-border'}`
+                        }>
+                        
                                 {candidate.name}
                               </button>
-                            ))}
+                      )}
                           </div>
-                        </div>
-                      ) : selectedStaffId ? (
-                        <p className="mt-1 text-[11px] text-muted-foreground">
+                        </div> :
+                  selectedStaffId ?
+                  <p className="mt-1 text-[11px] text-muted-foreground">
                           Specialist: {item.candidates.find((candidate) => candidate.staffId === selectedStaffId)?.name || `#${selectedStaffId}`}
-                        </p>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : null}
+                        </p> :
+                  null}
+                    </div>);
+
+            })}
+              </div> :
+          null}
 
             <div className="mt-4 flex gap-2">
               <button
-                type="button"
-                disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
-                onClick={() => setRescheduleSelection(null)}
-                className="h-10 flex-1 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50"
-              >
-                Cancel
+              type="button"
+              disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
+              onClick={() => setRescheduleSelection(null)}
+              className="h-10 flex-1 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50">
+              
+                İptal
               </button>
               <button
-                type="button"
-                disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
-                onClick={() => {
-                  void commitRescheduleSelection();
-                }}
-                className="h-10 flex-1 rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50"
-              >
-                {rescheduleSelection.loading ? 'Saving...' : 'Confirm Reschedule'}
+              type="button"
+              disabled={statusBusy || rescheduleSelection.loading || rescheduleSelection.suggestionsLoading}
+              onClick={() => {
+                void commitRescheduleSelection();
+              }}
+              className="h-10 flex-1 rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50">
+              
+                {rescheduleSelection.loading ? "Kaydediliyor..." : 'Confirm Reschedule'}
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {checkoutModal ? (
-        <div className="fixed inset-0 z-[60] bg-black/45 p-4" onClick={() => (!statusBusy ? setCheckoutModal(null) : undefined)}>
+      {checkoutModal ?
+      <div className="fixed inset-0 z-[60] bg-black/45 p-4" onClick={() => !statusBusy ? setCheckoutModal(null) : undefined}>
           <div
-            className="mx-auto mt-8 max-w-xl rounded-2xl border border-border bg-background p-4 shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold">Complete & Checkout</h3>
+          className="mx-auto mt-8 max-w-xl rounded-2xl border border-border bg-background p-4 shadow-xl"
+          onClick={(event) => event.stopPropagation()}>
+          
+            <h3 className="text-lg font-semibold">Tamamla ve Ödeme Al</h3>
             <p className="mt-1 text-xs text-muted-foreground">
               Varsayılan grup modu tüm satırları aynı yöntemle kapatır. Gerekirse satır bazlı mod açabilirsiniz.
             </p>
 
             <div className="mt-3 inline-flex rounded-lg border border-border bg-card p-1">
               <button
-                type="button"
-                disabled={checkoutSubmitting}
-                onClick={() => setCheckoutModal((prev) => (prev ? { ...prev, mode: 'GROUP' } : prev))}
-                className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'GROUP' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}
-              >
+              type="button"
+              disabled={checkoutSubmitting}
+              onClick={() => setCheckoutModal((prev) => prev ? { ...prev, mode: 'GROUP' } : prev)}
+              className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'GROUP' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}>
+              
                 Group (Default)
               </button>
               <button
-                type="button"
-                disabled={checkoutSubmitting}
-                onClick={() => setCheckoutModal((prev) => (prev ? { ...prev, mode: 'SPLIT' } : prev))}
-                className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'SPLIT' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}
-              >
+              type="button"
+              disabled={checkoutSubmitting}
+              onClick={() => setCheckoutModal((prev) => prev ? { ...prev, mode: 'SPLIT' } : prev)}
+              className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'SPLIT' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}>
+              
                 Advanced Split
               </button>
             </div>
 
-            {checkoutModal.mode === 'GROUP' ? (
-              <div className="mt-3">
+            {checkoutModal.mode === 'GROUP' ?
+          <div className="mt-3">
                 <label className="block text-xs text-muted-foreground mb-1">Group close type</label>
                 <select
-                  value={checkoutGroupCloseType}
-                  onChange={(event) => setCheckoutGroupCloseType(event.target.value as CheckoutCloseType)}
-                  className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                >
+              value={checkoutGroupCloseType}
+              onChange={(event) => setCheckoutGroupCloseType(event.target.value as CheckoutCloseType)}
+              className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
+              
                   <option value="SINGLE_PAYMENT">Single payment</option>
                   <option value="USE_EXISTING_PACKAGE">Use existing package</option>
                   <option value="SELL_NEW_PACKAGE">Sell new package</option>
                 </select>
-              </div>
-            ) : null}
+              </div> :
+          null}
 
             <div className="mt-4 space-y-2 max-h-[48vh] overflow-y-auto pr-1">
               {getCheckoutTargets(checkoutModal.appointmentIds).map((target) => {
-                const draft = checkoutLineDrafts[target.key] || { closeType: 'SINGLE_PAYMENT', paymentMethod: 'CASH', customerPackageId: '' };
-                const effectiveCloseType = checkoutModal.mode === 'GROUP' ? checkoutGroupCloseType : draft.closeType;
-                return (
-                  <div key={target.key} className="rounded-lg border border-border p-3 space-y-2">
+              const draft = checkoutLineDrafts[target.key] || { closeType: 'SINGLE_PAYMENT', paymentMethod: 'CASH', customerPackageId: '' };
+              const effectiveCloseType = checkoutModal.mode === 'GROUP' ? checkoutGroupCloseType : draft.closeType;
+              return (
+                <div key={target.key} className="rounded-lg border border-border p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-medium">{target.serviceName}</p>
                       <p className="text-xs text-muted-foreground">{format(new Date(target.startTime), 'HH:mm')}</p>
                     </div>
-                    {checkoutModal.mode === 'SPLIT' ? (
-                      <select
-                        value={draft.closeType}
-                        onChange={(event) =>
-                          setCheckoutLineDrafts((prev) => ({
-                            ...prev,
-                            [target.key]: {
-                              ...(prev[target.key] || draft),
-                              closeType: event.target.value as CheckoutCloseType,
-                            },
-                          }))
-                        }
-                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                      >
+                    {checkoutModal.mode === 'SPLIT' ?
+                  <select
+                    value={draft.closeType}
+                    onChange={(event) =>
+                    setCheckoutLineDrafts((prev) => ({
+                      ...prev,
+                      [target.key]: {
+                        ...(prev[target.key] || draft),
+                        closeType: event.target.value as CheckoutCloseType
+                      }
+                    }))
+                    }
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
+                    
                         <option value="SINGLE_PAYMENT">Single payment</option>
                         <option value="USE_EXISTING_PACKAGE">Use existing package</option>
                         <option value="SELL_NEW_PACKAGE">Sell new package</option>
-                      </select>
-                    ) : null}
-                    {effectiveCloseType === 'SINGLE_PAYMENT' ? (
-                      <select
-                        value={checkoutModal.mode === 'GROUP' ? checkoutGroupPaymentMethod : draft.paymentMethod}
-                        onChange={(event) => {
-                          const method = event.target.value as PaymentMethod;
-                          if (checkoutModal.mode === 'GROUP') {
-                            setCheckoutGroupPaymentMethod(method);
-                          } else {
-                            setCheckoutLineDrafts((prev) => ({
-                              ...prev,
-                              [target.key]: {
-                                ...(prev[target.key] || draft),
-                                paymentMethod: method,
-                              },
-                            }));
+                      </select> :
+                  null}
+                    {effectiveCloseType === 'SINGLE_PAYMENT' ?
+                  <select
+                    value={checkoutModal.mode === 'GROUP' ? checkoutGroupPaymentMethod : draft.paymentMethod}
+                    onChange={(event) => {
+                      const method = event.target.value as PaymentMethod;
+                      if (checkoutModal.mode === 'GROUP') {
+                        setCheckoutGroupPaymentMethod(method);
+                      } else {
+                        setCheckoutLineDrafts((prev) => ({
+                          ...prev,
+                          [target.key]: {
+                            ...(prev[target.key] || draft),
+                            paymentMethod: method
                           }
-                        }}
-                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                      >
-                        {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) => (
-                          <option key={method} value={method}>
+                        }));
+                      }
+                    }}
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
+                    
+                        {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) =>
+                    <option key={method} value={method}>
                             {paymentMethodLabel(method)}
                           </option>
-                        ))}
-                      </select>
-                    ) : null}
-                    {effectiveCloseType === 'USE_EXISTING_PACKAGE' ? (
-                      <select
-                        value={checkoutModal.mode === 'GROUP' ? checkoutGroupPackageId : draft.customerPackageId}
-                        onChange={(event) => {
-                          if (checkoutModal.mode === 'GROUP') {
-                            setCheckoutGroupPackageId(event.target.value);
-                          } else {
-                            setCheckoutLineDrafts((prev) => ({
-                              ...prev,
-                              [target.key]: {
-                                ...(prev[target.key] || draft),
-                                customerPackageId: event.target.value,
-                              },
-                            }));
+                    )}
+                      </select> :
+                  null}
+                    {effectiveCloseType === 'USE_EXISTING_PACKAGE' ?
+                  <select
+                    value={checkoutModal.mode === 'GROUP' ? checkoutGroupPackageId : draft.customerPackageId}
+                    onChange={(event) => {
+                      if (checkoutModal.mode === 'GROUP') {
+                        setCheckoutGroupPackageId(event.target.value);
+                      } else {
+                        setCheckoutLineDrafts((prev) => ({
+                          ...prev,
+                          [target.key]: {
+                            ...(prev[target.key] || draft),
+                            customerPackageId: event.target.value
                           }
-                        }}
-                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                      >
+                        }));
+                      }
+                    }}
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
+                    
                         <option value="">Select active package</option>
-                        {checkoutCustomerPackages.map((pkg) => (
-                          <option key={pkg.id} value={String(pkg.id)}>
+                        {checkoutCustomerPackages.map((pkg) =>
+                    <option key={pkg.id} value={String(pkg.id)}>
                             {pkg.name}
                           </option>
-                        ))}
-                      </select>
-                    ) : null}
-                  </div>
-                );
-              })}
+                    )}
+                      </select> :
+                  null}
+                  </div>);
+
+            })}
             </div>
 
-            {(checkoutModal.mode === 'GROUP' ? checkoutGroupCloseType === 'SELL_NEW_PACKAGE' : getCheckoutTargets(checkoutModal.appointmentIds).some((target) => checkoutLineDrafts[target.key]?.closeType === 'SELL_NEW_PACKAGE')) ? (
-              <div className="mt-3 rounded-lg border border-border p-3 space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">New Package Sale</p>
+            {(checkoutModal.mode === 'GROUP' ? checkoutGroupCloseType === 'SELL_NEW_PACKAGE' : getCheckoutTargets(checkoutModal.appointmentIds).some((target) => checkoutLineDrafts[target.key]?.closeType === 'SELL_NEW_PACKAGE')) ?
+          <div className="mt-3 rounded-lg border border-border p-3 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Yeni Paket Satışı</p>
                 <input
-                  value={checkoutNewPackageName}
-                  onChange={(event) => setCheckoutNewPackageName(event.target.value)}
-                  className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                  placeholder="Package name"
-                />
+              value={checkoutNewPackageName}
+              onChange={(event) => setCheckoutNewPackageName(event.target.value)}
+              className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+              placeholder="Paket adı" />
+            
                 <div className="grid grid-cols-2 gap-2">
                   <input
-                    value={checkoutNewPackagePrice}
-                    onChange={(event) => setCheckoutNewPackagePrice(event.target.value)}
-                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                    placeholder="Price (optional)"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                  />
+                value={checkoutNewPackagePrice}
+                onChange={(event) => setCheckoutNewPackagePrice(event.target.value)}
+                className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                placeholder="Price (optional)"
+                type="number"
+                min="0"
+                step="0.01" />
+              
                   <input
-                    value={checkoutNewPackageQuota}
-                    onChange={(event) => setCheckoutNewPackageQuota(event.target.value)}
-                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                    placeholder="Quota per service"
-                    type="number"
-                    min="1"
-                    step="1"
-                  />
+                value={checkoutNewPackageQuota}
+                onChange={(event) => setCheckoutNewPackageQuota(event.target.value)}
+                className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                placeholder="Quota per service"
+                type="number"
+                min="1"
+                step="1" />
+              
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <select
-                    value={checkoutNewPackageScopeType}
-                    onChange={(event) => setCheckoutNewPackageScopeType(event.target.value === 'POOL' ? 'POOL' : 'SINGLE_SERVICE')}
-                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                  >
-                    <option value="SINGLE_SERVICE">Single Service</option>
+                value={checkoutNewPackageScopeType}
+                onChange={(event) => setCheckoutNewPackageScopeType(event.target.value === 'POOL' ? 'POOL' : 'SINGLE_SERVICE')}
+                className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
+                
+                    <option value="SINGLE_SERVICE">Tek Hizmet</option>
                     <option value="POOL">Pool</option>
                   </select>
                   <select
-                    value={checkoutNewPackagePaymentMethod}
-                    onChange={(event) => setCheckoutNewPackagePaymentMethod(event.target.value as PaymentMethod)}
-                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                  >
-                    {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) => (
-                      <option key={method} value={method}>
+                value={checkoutNewPackagePaymentMethod}
+                onChange={(event) => setCheckoutNewPackagePaymentMethod(event.target.value as PaymentMethod)}
+                className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
+                
+                    {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) =>
+                <option key={method} value={method}>
                         {paymentMethodLabel(method)}
                       </option>
-                    ))}
+                )}
                   </select>
                 </div>
-              </div>
-            ) : null}
+              </div> :
+          null}
 
-            {checkoutPackagesLoading ? <p className="mt-2 text-xs text-muted-foreground">Loading active packages...</p> : null}
-            {checkoutPackageError ? (
-              <p className="mt-2 rounded-lg border border-red-300/40 bg-red-500/10 px-3 py-2 text-xs text-red-700">{checkoutPackageError}</p>
-            ) : null}
-            {checkoutSummary ? (
-              <div className="mt-2 rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground">Checkout Summary</p>
+            {checkoutPackagesLoading ? <p className="mt-2 text-xs text-muted-foreground">Aktif paketler yükleniyor...</p> : null}
+            {checkoutPackageError ?
+          <p className="mt-2 rounded-lg border border-red-300/40 bg-red-500/10 px-3 py-2 text-xs text-red-700">{checkoutPackageError}</p> :
+          null}
+            {checkoutSummary ?
+          <div className="mt-2 rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground">Ödeme Özeti</p>
                 <p>Total lines: {checkoutSummary.total}</p>
                 <p>Single payment: {checkoutSummary.singlePayment}</p>
                 <p>Use existing package: {checkoutSummary.existingPackage}</p>
                 <p>Sell new package: {checkoutSummary.sellNewPackage}</p>
-              </div>
-            ) : null}
+              </div> :
+          null}
 
             <div className="mt-4 flex gap-2">
               <button
-                type="button"
-                disabled={statusBusy}
-                onClick={() => setCheckoutModal(null)}
-                className="h-10 flex-1 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50"
-              >
-                Cancel
+              type="button"
+              disabled={statusBusy}
+              onClick={() => setCheckoutModal(null)}
+              className="h-10 flex-1 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50">
+              
+                İptal
               </button>
               <button
-                type="button"
-                disabled={statusBusy || checkoutSubmitting}
-                onClick={() => {
-                  void submitCheckout();
-                }}
-                className="h-10 flex-1 rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-sm font-medium text-emerald-700 disabled:opacity-50"
-              >
-                {checkoutSubmitting ? 'Processing...' : 'Confirm Checkout'}
+              type="button"
+              disabled={statusBusy || checkoutSubmitting}
+              onClick={() => {
+                void submitCheckout();
+              }}
+              className="h-10 flex-1 rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-sm font-medium text-emerald-700 disabled:opacity-50">
+              
+                {checkoutSubmitting ? "İşleniyor..." : "Ödemeyi Onayla"}
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {waitlistOpen ? (
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+      {waitlistOpen ?
+      <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">New Waitlist Entry</h2>
@@ -2174,69 +2174,69 @@ export function SchedulePage() {
 
             <div className="space-y-3">
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Registered Customer (optional)</span>
+                <span className="text-muted-foreground">Kayıtlı Müşteri (isteğe bağlı)</span>
                 <select
-                  value={waitlistForm.customerId}
-                  onChange={(event) => handleWaitlistCustomerSelect(event.target.value)}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                >
+                value={waitlistForm.customerId}
+                onChange={(event) => handleWaitlistCustomerSelect(event.target.value)}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
+                
                   <option value="">New customer / Enter manually</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {(customer.name || 'Anonymous')} • {customer.phone}
+                  {customers.map((customer) =>
+                <option key={customer.id} value={customer.id}>
+                      {customer.name || 'Anonymous'} • {customer.phone}
                     </option>
-                  ))}
+                )}
                 </select>
               </label>
 
-              {loadingCustomers ? <p className="text-xs text-muted-foreground">Loading customers...</p> : null}
+              {loadingCustomers ? <p className="text-xs text-muted-foreground">Müşteriler yükleniyor...</p> : null}
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Customer Name</span>
+                <span className="text-muted-foreground">Müşteri Adı</span>
                 <input
-                  value={waitlistForm.customerName}
-                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerName: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                value={waitlistForm.customerName}
+                onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerName: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Customer Phone</span>
+                <span className="text-muted-foreground">Müşteri Telefonu</span>
                 <input
-                  value={waitlistForm.customerPhone}
-                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                value={waitlistForm.customerPhone}
+                onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">From</span>
                   <input
-                    type="time"
-                    value={waitlistForm.timeWindowStart}
-                    onChange={(event) => setWaitlistForm((prev) => ({ ...prev, timeWindowStart: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  />
+                  type="time"
+                  value={waitlistForm.timeWindowStart}
+                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, timeWindowStart: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+                
                 </label>
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">To</span>
                   <input
-                    type="time"
-                    value={waitlistForm.timeWindowEnd}
-                    onChange={(event) => setWaitlistForm((prev) => ({ ...prev, timeWindowEnd: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  />
+                  type="time"
+                  value={waitlistForm.timeWindowEnd}
+                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, timeWindowEnd: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+                
                 </label>
               </div>
 
               <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/10 p-3">
                 <input
-                  type="checkbox"
-                  checked={waitlistForm.allowNearbyMatches}
-                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, allowNearbyMatches: event.target.checked }))}
-                  className="mt-1"
-                />
+                type="checkbox"
+                checked={waitlistForm.allowNearbyMatches}
+                onChange={(event) => setWaitlistForm((prev) => ({ ...prev, allowNearbyMatches: event.target.checked }))}
+                className="mt-1" />
+              
                 <span className="text-sm">
                   <span className="font-medium">Nearby time is okay too</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -2246,86 +2246,86 @@ export function SchedulePage() {
               </label>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Services</p>
+                <p className="text-sm text-muted-foreground">Hizmetler</p>
                 <div className="space-y-2 max-h-44 overflow-y-auto rounded-lg border border-border p-2">
                   {services.map((service) => {
-                    const serviceId = String(service.id);
-                    const checked = waitlistSelectedServiceIds.includes(serviceId);
-                    return (
-                      <label key={service.id} className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-muted/30">
+                  const serviceId = String(service.id);
+                  const checked = waitlistSelectedServiceIds.includes(serviceId);
+                  return (
+                    <label key={service.id} className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-muted/30">
                         <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleWaitlistService(serviceId)}
-                          className="mt-1"
-                        />
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleWaitlistService(serviceId)}
+                        className="mt-1" />
+                      
                         <span className="text-sm flex-1">
                           <span className="font-medium">{service.name}</span>
                           <span className="text-muted-foreground"> • {service.duration} min</span>
                         </span>
-                      </label>
-                    );
-                  })}
+                      </label>);
+
+                })}
                 </div>
               </div>
 
               {waitlistSelectedServiceIds.map((serviceId) => {
-                const service = servicesById[serviceId];
-                const options = waitlistServiceStaffOptions[serviceId] || [];
-                const loadingOptions = waitlistLoadingServiceStaff[serviceId];
-                const required = Boolean(service?.requiresSpecialist && options.length > 1);
+              const service = servicesById[serviceId];
+              const options = waitlistServiceStaffOptions[serviceId] || [];
+              const loadingOptions = waitlistLoadingServiceStaff[serviceId];
+              const required = Boolean(service?.requiresSpecialist && options.length > 1);
 
-                return (
-                  <div key={serviceId} className="space-y-1 rounded-lg border border-border p-2">
+              return (
+                <div key={serviceId} className="space-y-1 rounded-lg border border-border p-2">
                     <p className="text-sm font-medium">{service?.name}</p>
-                    {loadingOptions ? <p className="text-xs text-muted-foreground">Loading specialists...</p> : null}
-                    {!loadingOptions && options.length > 1 ? (
-                      <select
-                        value={waitlistSelectedStaffByService[serviceId] || ''}
-                        onChange={(event) =>
-                          setWaitlistSelectedStaffByService((prev) => ({ ...prev, [serviceId]: event.target.value }))
-                        }
-                        className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                      >
+                    {loadingOptions ? <p className="text-xs text-muted-foreground">Uzmanlar yükleniyor...</p> : null}
+                    {!loadingOptions && options.length > 1 ?
+                  <select
+                    value={waitlistSelectedStaffByService[serviceId] || ''}
+                    onChange={(event) =>
+                    setWaitlistSelectedStaffByService((prev) => ({ ...prev, [serviceId]: event.target.value }))
+                    }
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
+                    
                         <option value="">{required ? 'Choose specialist' : 'Any specialist'}</option>
-                        {options.map((item) => (
-                          <option key={item.id} value={item.id}>
+                        {options.map((item) =>
+                    <option key={item.id} value={item.id}>
                             {item.name}
                           </option>
-                        ))}
-                      </select>
-                    ) : null}
-                  </div>
-                );
-              })}
+                    )}
+                      </select> :
+                  null}
+                  </div>);
+
+            })}
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Note</span>
                 <textarea
-                  value={waitlistForm.notes}
-                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, notes: event.target.value }))}
-                  className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                  placeholder="Optional note..."
-                />
+                value={waitlistForm.notes}
+                onChange={(event) => setWaitlistForm((prev) => ({ ...prev, notes: event.target.value }))}
+                className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                placeholder="Optional note..." />
+              
               </label>
 
               {waitlistCreateError ? <p className="text-sm text-red-500">{waitlistCreateError}</p> : null}
 
               <button
-                type="button"
-                onClick={() => void submitWaitlistCreate()}
-                disabled={waitlistSaving}
-                className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
-              >
-                {waitlistSaving ? 'Saving...' : 'Create Waitlist Entry'}
+              type="button"
+              onClick={() => void submitWaitlistCreate()}
+              disabled={waitlistSaving}
+              className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
+              
+                {waitlistSaving ? "Kaydediliyor..." : "Bekleme Listesi Kaydı Oluştur"}
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {createOpen ? (
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+      {createOpen ?
+      <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">New Appointment</h2>
@@ -2336,136 +2336,136 @@ export function SchedulePage() {
 
             <div className="space-y-3">
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Registered Customer (optional)</span>
+                <span className="text-muted-foreground">Kayıtlı Müşteri (isteğe bağlı)</span>
                 <select
-                  value={form.customerId}
-                  onChange={(event) => handleCustomerSelect(event.target.value)}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                >
+                value={form.customerId}
+                onChange={(event) => handleCustomerSelect(event.target.value)}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
+                
                     <option value="">New customer / Enter manually</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {(customer.name || 'Anonymous')} • {customer.phone}
+                  {customers.map((customer) =>
+                <option key={customer.id} value={customer.id}>
+                      {customer.name || 'Anonymous'} • {customer.phone}
                     </option>
-                  ))}
+                )}
                 </select>
               </label>
 
-              {loadingCustomers ? <p className="text-xs text-muted-foreground">Loading customers...</p> : null}
+              {loadingCustomers ? <p className="text-xs text-muted-foreground">Müşteriler yükleniyor...</p> : null}
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Customer Name</span>
+                <span className="text-muted-foreground">Müşteri Adı</span>
                 <input
-                  value={form.customerName}
-                  onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  placeholder="For example: Ayse Yilmaz"
-                />
+                value={form.customerName}
+                onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                placeholder="For example: Ayse Yilmaz" />
+              
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Customer Phone</span>
+                <span className="text-muted-foreground">Müşteri Telefonu</span>
                 <input
-                  value={form.customerPhone}
-                  onChange={(event) => setForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  placeholder="05xx xxx xx xx"
-                />
+                value={form.customerPhone}
+                onChange={(event) => setForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
+                placeholder="05xx xxx xx xx" />
+              
               </label>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Services (you can select multiple)</p>
+                <p className="text-sm text-muted-foreground">Hizmetler (birden fazla seçebilirsiniz)</p>
                 <div className="space-y-2 max-h-44 overflow-y-auto rounded-lg border border-border p-2">
                   {services.map((service) => {
-                    const serviceId = String(service.id);
-                    const checked = selectedServiceIds.includes(serviceId);
-                    return (
-                      <label key={service.id} className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-muted/30">
+                  const serviceId = String(service.id);
+                  const checked = selectedServiceIds.includes(serviceId);
+                  return (
+                    <label key={service.id} className="flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-muted/30">
                         <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleService(serviceId)}
-                          className="mt-1"
-                        />
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleService(serviceId)}
+                        className="mt-1" />
+                      
                         <span className="text-sm flex-1">
                           <span className="font-medium">{service.name}</span>
                           <span className="text-muted-foreground"> • {service.duration} min</span>
                           {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Specialist required</span> : null}
                         </span>
-                      </label>
-                    );
-                  })}
+                      </label>);
+
+                })}
                 </div>
               </div>
 
               {selectedServiceIds.map((serviceId) => {
-                const service = servicesById[serviceId];
-                const options = serviceStaffOptions[serviceId] || [];
-                const loadingOptions = loadingServiceStaff[serviceId];
-                const required = Boolean(service?.requiresSpecialist && options.length > 1);
+              const service = servicesById[serviceId];
+              const options = serviceStaffOptions[serviceId] || [];
+              const loadingOptions = loadingServiceStaff[serviceId];
+              const required = Boolean(service?.requiresSpecialist && options.length > 1);
 
-                return (
-                  <div key={serviceId} className="space-y-1 rounded-lg border border-border p-2">
+              return (
+                <div key={serviceId} className="space-y-1 rounded-lg border border-border p-2">
                     <p className="text-sm font-medium">{service?.name}</p>
-                    {loadingOptions ? <p className="text-xs text-muted-foreground">Loading specialists...</p> : null}
+                    {loadingOptions ? <p className="text-xs text-muted-foreground">Uzmanlar yükleniyor...</p> : null}
 
-                    {!loadingOptions && options.length === 0 ? (
-                      <p className="text-xs text-red-500">No suitable specialist found for this service.</p>
-                    ) : null}
+                    {!loadingOptions && options.length === 0 ?
+                  <p className="text-xs text-red-500">Bu hizmet için uygun uzman bulunamadı.</p> :
+                  null}
 
-                    {!loadingOptions && options.length === 1 ? (
-                      <p className="text-xs text-muted-foreground">Assigned specialist: {options[0].name}</p>
-                    ) : null}
+                    {!loadingOptions && options.length === 1 ?
+                  <p className="text-xs text-muted-foreground">Ataed specialist: {options[0].name}</p> :
+                  null}
 
-                    {!loadingOptions && options.length > 1 ? (
-                      <select
-                        value={selectedStaffByService[serviceId] || ''}
-                        onChange={(event) =>
-                          setSelectedStaffByService((prev) => ({ ...prev, [serviceId]: event.target.value }))
-                        }
-                        className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                      >
+                    {!loadingOptions && options.length > 1 ?
+                  <select
+                    value={selectedStaffByService[serviceId] || ''}
+                    onChange={(event) =>
+                    setSelectedStaffByService((prev) => ({ ...prev, [serviceId]: event.target.value }))
+                    }
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
+                    
                         <option value="">{required ? 'Choose an expert' : 'Auto-assign'}</option>
-                        {options.map((item) => (
-                          <option key={item.id} value={item.id}>
+                        {options.map((item) =>
+                    <option key={item.id} value={item.id}>
                             {item.name}
                           </option>
-                        ))}
-                      </select>
-                    ) : null}
-                  </div>
-                );
-              })}
+                    )}
+                      </select> :
+                  null}
+                  </div>);
+
+            })}
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Start Time</span>
                 <input
-                  type="time"
-                  value={form.time}
-                  onChange={(event) => setForm((prev) => ({ ...prev, time: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                type="time"
+                value={form.time}
+                onChange={(event) => setForm((prev) => ({ ...prev, time: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Note (optional)</span>
                 <textarea
-                  value={form.notes}
-                  onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
-                  className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                  placeholder="Optional note..."
-                />
+                value={form.notes}
+                onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
+                className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                placeholder="Optional note..." />
+              
               </label>
 
               {createError ? <p className="text-sm text-red-500">{createError}</p> : null}
 
               <button
-                type="button"
-                onClick={() => void submitCreate()}
-                disabled={saving}
-                className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
-              >
-                {saving ? 'Saving...' : 'Create an Appointment'}
+              type="button"
+              onClick={() => void submitCreate()}
+              disabled={saving}
+              className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
+              
+                {saving ? "Kaydediliyor..." : "Randevu Oluştur"}
               </button>
 
               <p className="text-[11px] text-muted-foreground">
@@ -2473,8 +2473,8 @@ export function SchedulePage() {
               </p>
             </div>
           </div>
-        </div>
-      ) : null}
-    </div>
-  );
+        </div> :
+      null}
+    </div>);
+
 }

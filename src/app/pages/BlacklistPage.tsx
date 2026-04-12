@@ -26,8 +26,8 @@ export function BlacklistPage() {
       if (search.trim()) {
         query.set('search', search.trim());
       }
-      const response = await apiFetch<{ items: BlacklistItem[] }>(
-        `/api/admin/blacklist${query.toString() ? `?${query.toString()}` : ''}`,
+      const response = await apiFetch<{items: BlacklistItem[];}>(
+        `/api/admin/blacklist${query.toString() ? `?${query.toString()}` : ''}`
       );
       setItems(response.items);
     } catch (err: any) {
@@ -50,9 +50,9 @@ export function BlacklistPage() {
     setSaving(true);
     setError(null);
     try {
-      const response = await apiFetch<{ item: BlacklistItem }>('/api/admin/blacklist', {
+      const response = await apiFetch<{item: BlacklistItem;}>('/api/admin/blacklist', {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify(form)
       });
       setItems((prev) => [response.item, ...prev]);
       setForm({ fullName: '', phone: '', reason: '' });
@@ -65,11 +65,11 @@ export function BlacklistPage() {
 
   const toggle = async (item: BlacklistItem) => {
     try {
-      const response = await apiFetch<{ item: BlacklistItem }>(`/api/admin/blacklist/${item.id}`, {
+      const response = await apiFetch<{item: BlacklistItem;}>(`/api/admin/blacklist/${item.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ isActive: !item.isActive }),
+        body: JSON.stringify({ isActive: !item.isActive })
       });
-      setItems((prev) => prev.map((current) => (current.id === item.id ? response.item : current)));
+      setItems((prev) => prev.map((current) => current.id === item.id ? response.item : current));
     } catch (err: any) {
       setError(err?.message || 'Register could not be updated.');
     }
@@ -79,7 +79,7 @@ export function BlacklistPage() {
     <div className="p-4 space-y-4">
       <div>
         <h1 className="text-xl font-semibold">Blacklist</h1>
-        <p className="text-xs text-muted-foreground">Create/read + aktif/pasif dayscelleme aktif.</p>
+        <p className="text-xs text-muted-foreground">Oluştur/oku + aktif/pasif güncelleme aktif.</p>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -87,38 +87,38 @@ export function BlacklistPage() {
       <div className="rounded-lg border border-border bg-card p-3">
         <input
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Search by name, phone or reason"
+          placeholder="Ad, telefon veya neden ile ara"
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-        />
+          onChange={(event) => setSearchQuery(event.target.value)} />
+        
       </div>
 
       <form className="space-y-2 rounded-lg border border-border p-3" onSubmit={createItem}>
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} />
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Phone" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
+        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Telefon" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Neden" value={form.reason} onChange={(e) => setForm((prev) => ({ ...prev, reason: e.target.value }))} />
-        <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? 'Adding...' : 'Blacklistye Add'}</button>
+        <button type="submit" disabled={saving} className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? "Ekleniyor..." : "Kara Listeye Ekle"}</button>
       </form>
 
-      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       <div className="space-y-2">
-        {items.map((item) => (
-          <div key={item.id} className="rounded-lg border border-border p-3">
+        {items.map((item) =>
+        <div key={item.id} className="rounded-lg border border-border p-3">
             <div className="flex items-center justify-between gap-2">
               <div>
                 <p className="font-medium">{item.fullName || item.phone || `#${item.id}`}</p>
-                <p className="text-xs text-muted-foreground">{item.phone || 'Phone yok'} • {item.reason || 'No reason'}</p>
+                <p className="text-xs text-muted-foreground">{item.phone || "Telefon yok"} • {item.reason || "Sebep yok"}</p>
               </div>
               <button type="button" onClick={() => void toggle(item)} className={`rounded-md border px-2 py-1 text-xs ${item.isActive ? 'border-red-500 text-red-500' : 'border-border text-muted-foreground'}`}>
                 {item.isActive ? 'Aktif' : 'Pasif'}
               </button>
             </div>
           </div>
-        ))}
+        )}
       </div>
 
       {!loading && !items.length ? <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Blacklist is empty.</div> : null}
-    </div>
-  );
+    </div>);
+
 }

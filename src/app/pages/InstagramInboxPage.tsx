@@ -62,7 +62,7 @@ function formatTs(value: string): string {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   });
 }
 
@@ -104,12 +104,12 @@ function initialsFromLabel(value: string): string {
 
 function normalizeAutomationMode(value: unknown): AutomationMode {
   if (
-    value === 'AUTO' ||
-    value === 'HUMAN_PENDING' ||
-    value === 'HUMAN_ACTIVE' ||
-    value === 'MANUAL_ALWAYS' ||
-    value === 'AUTO_RESUME_PENDING'
-  ) {
+  value === 'AUTO' ||
+  value === 'HUMAN_PENDING' ||
+  value === 'HUMAN_ACTIVE' ||
+  value === 'MANUAL_ALWAYS' ||
+  value === 'AUTO_RESUME_PENDING')
+  {
     return value;
   }
   return 'AUTO';
@@ -125,7 +125,7 @@ function automationBadgeClass(mode: AutomationMode): string {
 
 function automationLabel(mode: AutomationMode): string {
   if (mode === 'HUMAN_PENDING') return 'Human Pending';
-  if (mode === 'HUMAN_ACTIVE') return 'Human Active';
+  if (mode === 'HUMAN_ACTIVE') return "Human Aktif";
   if (mode === 'MANUAL_ALWAYS') return 'Manual Always';
   if (mode === 'AUTO_RESUME_PENDING') return 'Auto Resume';
   return 'Auto';
@@ -142,9 +142,9 @@ function findRelatedConversationKeys(items: ConversationItem[], selectedKey: str
   const selectedUsername = normalizeUsername(selected.profileUsername);
   const selectedName = normalizeName(selected.customerName);
   const selectedLinkedId =
-    typeof selected.linkedCustomerId === 'number' && selected.linkedCustomerId > 0
-      ? selected.linkedCustomerId
-      : null;
+  typeof selected.linkedCustomerId === 'number' && selected.linkedCustomerId > 0 ?
+  selected.linkedCustomerId :
+  null;
 
   const related = items.filter((item) => {
     if (item.conversationKey === selected.conversationKey) return true;
@@ -162,26 +162,26 @@ function findRelatedConversationKeys(items: ConversationItem[], selectedKey: str
 
   return Array.from(
     new Set(
-      related
-        .sort((a, b) => {
-          if (a.conversationKey === selectedKey) return -1;
-          if (b.conversationKey === selectedKey) return 1;
-          return (b.messageCount || 0) - (a.messageCount || 0);
-        })
-        .map((item) => item.conversationKey),
-    ),
+      related.
+      sort((a, b) => {
+        if (a.conversationKey === selectedKey) return -1;
+        if (b.conversationKey === selectedKey) return 1;
+        return (b.messageCount || 0) - (a.messageCount || 0);
+      }).
+      map((item) => item.conversationKey)
+    )
   );
 }
 
-function mergeAndSortMessages(responses: Array<{ items: MessageItem[] } | null | undefined>): MessageItem[] {
+function mergeAndSortMessages(responses: Array<{items: MessageItem[];} | null | undefined>): MessageItem[] {
   const merged = new Map<string, MessageItem>();
   for (const response of responses) {
     const items = response?.items || [];
     for (const msg of items) {
       const providerId = typeof msg.providerMessageId === 'string' ? msg.providerMessageId.trim() : '';
-      const fingerprint = providerId
-        ? `provider:${providerId}`
-        : `fallback:${msg.direction}|${msg.messageType}|${msg.eventTimestamp}|${msg.text || ''}`;
+      const fingerprint = providerId ?
+      `provider:${providerId}` :
+      `fallback:${msg.direction}|${msg.messageType}|${msg.eventTimestamp}|${msg.text || ''}`;
       if (!merged.has(fingerprint)) {
         merged.set(fingerprint, msg);
       }
@@ -219,7 +219,7 @@ export function InstagramInboxPage() {
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.conversationKey === selectedKey) || null,
-    [conversations, selectedKey],
+    [conversations, selectedKey]
   );
 
   useEffect(() => {
@@ -238,7 +238,7 @@ export function InstagramInboxPage() {
     if (showLoading) setLoadingConversations(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: ConversationItem[] }>('/api/admin/instagram-inbox/conversations?limit=40');
+      const response = await apiFetch<{items: ConversationItem[];}>('/api/admin/instagram-inbox/conversations?limit=40');
       const next = response?.items || [];
       setConversations(next);
       conversationsRef.current = next;
@@ -248,7 +248,7 @@ export function InstagramInboxPage() {
         setSelectedKey(nextKey);
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to load conversations.');
+      setError(err?.message || "Konuşmalar yuklenemedi.");
     } finally {
       if (showLoading) setLoadingConversations(false);
     }
@@ -261,29 +261,29 @@ export function InstagramInboxPage() {
       const relatedKeys = findRelatedConversationKeys(conversationsRef.current, conversationKey).slice(0, 5);
       const responses = await Promise.all(
         relatedKeys.map((key) =>
-          apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload }>(
-            `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`,
-          ),
-        ),
+        apiFetch<{items: MessageItem[];conversationState?: ConversationStatePayload;}>(
+          `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`
+        )
+        )
       );
       const response = responses[0];
       setMessages(mergeAndSortMessages(responses));
       if (response?.conversationState) {
         const patch = response.conversationState;
         setConversations((prev) =>
-          prev.map((item) =>
-            item.conversationKey === conversationKey
-              ? {
-                  ...item,
-                  ...patch,
-                  automationMode: normalizeAutomationMode(patch.automationMode || item.automationMode),
-                }
-              : item,
-          ),
+        prev.map((item) =>
+        item.conversationKey === conversationKey ?
+        {
+          ...item,
+          ...patch,
+          automationMode: normalizeAutomationMode(patch.automationMode || item.automationMode)
+        } :
+        item
+        )
         );
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to load conversation messages.');
+      setError(err?.message || "Konuşma mesajlari yuklenemedi.");
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
@@ -312,9 +312,9 @@ export function InstagramInboxPage() {
     if (!accessToken) return;
 
     const streamUrl =
-      `${API_BASE_URL}/api/admin/conversations/stream` +
-      `?authToken=${encodeURIComponent(accessToken)}` +
-      `&channel=INSTAGRAM`;
+    `${API_BASE_URL}/api/admin/conversations/stream` +
+    `?authToken=${encodeURIComponent(accessToken)}` +
+    `&channel=INSTAGRAM`;
     const es = new EventSource(streamUrl);
 
     const scheduleRefresh = () => {
@@ -352,7 +352,7 @@ export function InstagramInboxPage() {
     try {
       await apiFetch(`/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/reply`, {
         method: 'POST',
-        body: JSON.stringify({ text: replyText.trim() }),
+        body: JSON.stringify({ text: replyText.trim() })
       });
       setReplyText('');
       setActionInfo('Reply sent successfully.');
@@ -372,12 +372,12 @@ export function InstagramInboxPage() {
     setActionInfo(null);
     setError(null);
     try {
-      const response = await apiFetch<{ alreadyRequested?: boolean }>(
+      const response = await apiFetch<{alreadyRequested?: boolean;}>(
         `/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/handover`,
         {
           method: 'POST',
-          body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' }),
-        },
+          body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' })
+        }
       );
       setActionInfo(response?.alreadyRequested ? 'This conversation is already under human handover.' : 'Handover request created.');
       await loadMessages(selectedKey);
@@ -397,7 +397,7 @@ export function InstagramInboxPage() {
     setError(null);
     try {
       await apiFetch(`/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/resume-auto`, {
-        method: 'POST',
+        method: 'POST'
       });
       setActionInfo('AI automation resumed for this conversation.');
       await loadMessages(selectedKey);
@@ -418,14 +418,14 @@ export function InstagramInboxPage() {
         <button
           type="button"
           onClick={() => navigate('/app/features', { state: { navDirection: 'back' } })}
-          className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70"
-        >
+          className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
+          
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back</span>
         </button>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold">Instagram Conversation Center</h1>
+            <h1 className="text-xl font-semibold">Instagram Konuşma Merkezi</h1>
             <p className="text-xs text-muted-foreground mt-1">
               View DMs, send manual replies, and hand over AI conversations to staff.
             </p>
@@ -443,28 +443,28 @@ export function InstagramInboxPage() {
         <Card className="border-border/60 shadow-sm backdrop-blur bg-card/85">
           <CardContent className="p-3 space-y-2">
             <p className="text-sm font-semibold">Conversations</p>
-            {loadingConversations ? (
-              <div className="py-6 grid place-items-center text-muted-foreground">
+            {loadingConversations ?
+            <div className="py-6 grid place-items-center text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
-              </div>
-            ) : conversations.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-3">No Instagram conversations yet.</p>
-            ) : (
-              <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
+              </div> :
+            conversations.length === 0 ?
+            <p className="text-xs text-muted-foreground py-3">Henüz Instagram konuşması yok.</p> :
+
+            <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
                 {conversations.map((item) => {
-                  const active = item.conversationKey === selectedKey;
-                  const displayName = conversationDisplayName(item);
-                  return (
-                    <button
-                      key={item.conversationKey}
-                      type="button"
-                      onClick={() => setSelectedKey(item.conversationKey)}
-                      className={`w-full text-left rounded-xl border p-3 transition-all ${
-                        active
-                          ? 'border-[var(--deep-indigo)]/60 bg-[var(--deep-indigo)]/10 shadow-sm'
-                          : 'border-border/70 hover:bg-muted/40 hover:border-border'
-                      }`}
-                    >
+                const active = item.conversationKey === selectedKey;
+                const displayName = conversationDisplayName(item);
+                return (
+                  <button
+                    key={item.conversationKey}
+                    type="button"
+                    onClick={() => setSelectedKey(item.conversationKey)}
+                    className={`w-full text-left rounded-xl border p-3 transition-all ${
+                    active ?
+                    'border-[var(--deep-indigo)]/60 bg-[var(--deep-indigo)]/10 shadow-sm' :
+                    'border-border/70 hover:bg-muted/40 hover:border-border'}`
+                    }>
+                    
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <Avatar className="size-8 border border-border/60">
@@ -474,21 +474,21 @@ export function InstagramInboxPage() {
                           <p className="text-sm font-medium truncate">{displayName}</p>
                         </div>
                         <div className="flex items-center gap-1">
-                          {item.unreadCount > 0 ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
+                          {item.unreadCount > 0 ?
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
                               {item.unreadCount}
-                            </span>
-                          ) : null}
+                            </span> :
+                        null}
                           <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}
-                          >
+                          className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
+                          
                             {automationLabel(normalizeAutomationMode(item.automationMode))}
                           </span>
                           <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded ${
-                              item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'
-                            }`}
-                          >
+                          className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
+                          }>
+                          
                             {item.identityLinked ? 'Linked' : 'Unlinked'}
                           </span>
                         </div>
@@ -498,27 +498,27 @@ export function InstagramInboxPage() {
                         <p className="text-[10px] text-muted-foreground">{formatTs(item.lastEventTimestamp)}</p>
                         <span className="text-[10px] text-muted-foreground">{item.messageCount} msg</span>
                       </div>
-                    </button>
-                  );
-                })}
+                    </button>);
+
+              })}
               </div>
-            )}
+            }
           </CardContent>
         </Card>
 
         <Card className="border-border/60 shadow-sm backdrop-blur bg-card/85">
           <CardContent className="p-3 space-y-3">
-            {selectedConversation ? (
-              <>
+            {selectedConversation ?
+            <>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar className="size-10 border border-border/60">
-                      {selectedConversation.profilePicUrl ? (
-                        <AvatarImage
-                          src={selectedConversation.profilePicUrl}
-                          alt={conversationDisplayName(selectedConversation)}
-                        />
-                      ) : null}
+                      {selectedConversation.profilePicUrl ?
+                    <AvatarImage
+                      src={selectedConversation.profilePicUrl}
+                      alt={conversationDisplayName(selectedConversation)} /> :
+
+                    null}
                       <AvatarFallback className="text-xs">
                         {initialsFromLabel(conversationDisplayName(selectedConversation))}
                       </AvatarFallback>
@@ -529,11 +529,11 @@ export function InstagramInboxPage() {
                       </p>
                       <p className="text-xs text-muted-foreground">Key: {selectedConversation.conversationKey}</p>
                       {(() => {
-                        const username = normalizeUsername(selectedConversation.profileUsername);
-                        return username ? (
-                          <p className="text-[10px] text-muted-foreground truncate">@{username}</p>
-                        ) : null;
-                      })()}
+                      const username = normalizeUsername(selectedConversation.profileUsername);
+                      return username ?
+                      <p className="text-[10px] text-muted-foreground truncate">@{username}</p> :
+                      null;
+                    })()}
                       <div className="mt-1">
                         <span className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(selectedMode)}`}>
                           {automationLabel(selectedMode)}
@@ -542,55 +542,55 @@ export function InstagramInboxPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {selectedConversation.hasHandoverRequest ? (
-                      <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Handover requested</span>
-                    ) : null}
-                    {handoverInProgress ? (
-                      <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
+                    {selectedConversation.hasHandoverRequest ?
+                  <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Handover requested</span> :
+                  null}
+                    {handoverInProgress ?
+                  <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
                         {sendingResume ? 'Resuming...' : 'Resume AI'}
-                      </Button>
-                    ) : null}
+                      </Button> :
+                  null}
                     <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
-                      {sendingHandover ? 'Requesting...' : handoverInProgress ? 'Handover Active' : 'Request Handover'}
+                      {sendingHandover ? 'Requesting...' : handoverInProgress ? "Handover Aktif" : 'Request Handover'}
                     </Button>
                   </div>
                 </div>
 
                 <div
-                  ref={messagesViewportRef}
-                  onScroll={(event) => {
-                    const el = event.currentTarget;
-                    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-                    stickToBottomRef.current = distanceToBottom < 48;
-                  }}
-                  className="rounded-xl border border-border/70 bg-muted/20 p-3 max-h-[52vh] overflow-y-auto space-y-2"
-                >
-                  {loadingMessages ? (
-                    <div className="py-6 grid place-items-center text-muted-foreground">
+                ref={messagesViewportRef}
+                onScroll={(event) => {
+                  const el = event.currentTarget;
+                  const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+                  stickToBottomRef.current = distanceToBottom < 48;
+                }}
+                className="rounded-xl border border-border/70 bg-muted/20 p-3 max-h-[52vh] overflow-y-auto space-y-2">
+                
+                  {loadingMessages ?
+                <div className="py-6 grid place-items-center text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No messages in this conversation.</p>
-                  ) : (
-                    messages.map((msg) => {
-                      const isOutbound = msg.direction === 'outbound';
-                      const isSystem = msg.direction === 'system';
-                      const senderLabel = isSystem
-                        ? 'System'
-                        : isOutbound
-                          ? msg.outboundSourceLabel || 'Salon'
-                          : 'Customer';
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`max-w-[90%] rounded-lg border px-3 py-2 text-sm ${
-                            isSystem
-                              ? 'bg-amber-50 border-amber-200 text-amber-900 mx-auto'
-                              : isOutbound
-                                ? 'bg-[var(--deep-indigo)]/8 border-[var(--deep-indigo)]/20 ml-auto'
-                                : 'bg-background border-border'
-                          }`}
-                        >
+                    </div> :
+                messages.length === 0 ?
+                <p className="text-xs text-muted-foreground">Bu konuşmada mesaj yok.</p> :
+
+                messages.map((msg) => {
+                  const isOutbound = msg.direction === 'outbound';
+                  const isSystem = msg.direction === 'system';
+                  const senderLabel = isSystem ?
+                  'System' :
+                  isOutbound ?
+                  msg.outboundSourceLabel || 'Salon' :
+                  "Müşteri";
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`max-w-[90%] rounded-lg border px-3 py-2 text-sm ${
+                      isSystem ?
+                      'bg-amber-50 border-amber-200 text-amber-900 mx-auto' :
+                      isOutbound ?
+                      'bg-[var(--deep-indigo)]/8 border-[var(--deep-indigo)]/20 ml-auto' :
+                      'bg-background border-border'}`
+                      }>
+                      
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
                             {isSystem ? <AlertTriangle className="w-3 h-3" /> : isOutbound ? <Send className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
                             <span>{senderLabel}</span>
@@ -598,51 +598,51 @@ export function InstagramInboxPage() {
                             <span>{formatTs(msg.eventTimestamp)}</span>
                           </div>
                           <p className="whitespace-pre-wrap break-words">{msg.text || `[${msg.messageType}]`}</p>
-                        </div>
-                      );
-                    })
-                  )}
+                        </div>);
+
+                })
+                }
                 </div>
 
                 <div className="flex gap-2">
                   <Input
-                    value={replyText}
-                    onChange={(event) => setReplyText(event.target.value)}
-                    placeholder="Write manual reply to customer"
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault();
-                        void sendReply();
-                      }
-                    }}
-                  />
+                  value={replyText}
+                  onChange={(event) => setReplyText(event.target.value)}
+                  placeholder="Write manual reply to customer"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      void sendReply();
+                    }
+                  }} />
+                
                   <Button type="button" onClick={sendReply} disabled={sendingReply || !replyText.trim()}>
-                    {sendingReply ? 'Sending...' : 'Send'}
+                    {sendingReply ? "Gönderiliyor..." : "Gönder"}
                   </Button>
                 </div>
-              </>
-            ) : (
-              <div className="py-12 text-center text-muted-foreground">
+              </> :
+
+            <div className="py-12 text-center text-muted-foreground">
                 <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-60" />
                 <p className="text-sm">Select a conversation to view messages.</p>
               </div>
-            )}
+            }
 
-            {actionInfo ? (
-              <div className="rounded-lg border border-green-200 bg-green-50 text-green-800 px-3 py-2 text-xs flex items-center gap-2">
+            {actionInfo ?
+            <div className="rounded-lg border border-green-200 bg-green-50 text-green-800 px-3 py-2 text-xs flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{actionInfo}</span>
-              </div>
-            ) : null}
+              </div> :
+            null}
 
-            {error ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2 text-xs">
+            {error ?
+            <div className="rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2 text-xs">
                 {error}
-              </div>
-            ) : null}
+              </div> :
+            null}
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

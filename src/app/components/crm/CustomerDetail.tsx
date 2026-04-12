@@ -31,7 +31,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
       case 'no-show':
         return <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-300">No-show</Badge>;
       case 'cancelled':
-        return <Badge variant="secondary" className="bg-gray-500/10 text-gray-700 dark:text-gray-300">Cancel</Badge>;
+        return <Badge variant="secondary" className="bg-gray-500/10 text-gray-700 dark:text-gray-300">İptal</Badge>;
       default:
         return <Badge>Scheduled</Badge>;
     }
@@ -43,17 +43,17 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
         <Button variant="ghost" size="sm" onClick={onBack} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Customers
+          Müşterilere Dön
         </Button>
 
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-semibold mb-1">{customer.name}</h1>
             <div className="flex items-center gap-2">
-              <Badge 
+              <Badge
                 variant="outline"
-                className={`text-xs ${getRiskBadgeStyle(customer.riskLevel)}`}
-              >
+                className={`text-xs ${getRiskBadgeStyle(customer.riskLevel)}`}>
+                
                 {customer.riskLevel === 'high' && <AlertTriangle className="w-3 h-3 mr-1" />}
                 <span className="capitalize">Risk: {customer.riskLevel === 'low' ? 'Low' : customer.riskLevel === 'medium' ? 'Medium' : 'High'}</span>
               </Badge>
@@ -71,7 +71,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
                 <Phone className="w-5 h-5 text-[var(--rose-gold)]" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Phone</p>
+                <p className="text-xs text-muted-foreground">Telefon</p>
                 <p className="font-medium">{customer.phone}</p>
               </div>
             </div>
@@ -113,8 +113,8 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
         </div>
 
         {/* Risk Profile */}
-        {customer.riskLevel !== 'low' && (
-          <Card className={`border-2 ${customer.riskLevel === 'high' ? 'border-red-500/30 bg-red-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
+        {customer.riskLevel !== 'low' &&
+        <Card className={`border-2 ${customer.riskLevel === 'high' ? 'border-red-500/30 bg-red-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <AlertTriangle className={`w-4 h-4 ${customer.riskLevel === 'high' ? 'text-red-600' : 'text-amber-600'}`} />
@@ -129,19 +129,19 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">No-show Rate:</span>
                 <span className="font-semibold">
-                  %{((customer.noShowCount / customer.visitCount) * 100).toFixed(1)}
+                  %{(customer.noShowCount / customer.visitCount * 100).toFixed(1)}
                 </span>
               </div>
-              {customer.riskLevel === 'high' && (
-                <div className="pt-2 mt-2 border-t border-border">
+              {customer.riskLevel === 'high' &&
+            <div className="pt-2 mt-2 border-t border-border">
                   <p className="text-xs text-red-700 dark:text-red-300">
-                    <strong>Recommendation:</strong> Take a deposit for future bookings. Send a WhatsApp reminder 24 hours before the appointment.
+                    <strong>Recommendation:</strong> Take a deposit for future bookings. Gönder a WhatsApp reminder 24 hours before the appointment.
                   </p>
                 </div>
-              )}
+            }
             </CardContent>
           </Card>
-        )}
+        }
 
         {/* Notes */}
         <Card className="border-border/50">
@@ -162,8 +162,8 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
             <CardTitle className="text-base">Visit History</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {visits.map(visit => (
-              <div key={visit.id} className="p-3 bg-muted/30 rounded-lg">
+            {visits.map((visit) =>
+            <div key={visit.id} className="p-3 bg-muted/30 rounded-lg">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <p className="font-medium text-sm">{visit.date}</p>
@@ -172,16 +172,16 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
                   {getStatusBadge(visit.status)}
                 </div>
                 <div className="space-y-1 mb-2">
-                  {visit.services.map((service, idx) => (
-                    <p key={idx} className="text-sm">• {service}</p>
-                  ))}
+                  {visit.services.map((service, idx) =>
+                <p key={idx} className="text-sm">• {service}</p>
+                )}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <span className="text-xs text-muted-foreground">Toplam</span>
                   <span className="font-semibold text-[var(--rose-gold)]">₺{visit.total}</span>
                 </div>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -193,10 +193,10 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
           </Button>
           <Button className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)]">
             <Phone className="w-4 h-4 mr-2" />
-            Call Customer
+            Müşteriyi Ara
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -40,46 +40,46 @@ interface LoyaltyCampaign {
 }
 
 const mockReferralCampaigns: ReferralCampaign[] = [
-  {
-    id: 'ref1',
-    name: 'Bring Your Friend Campaign',
-    active: true,
-    referrerReward: '₺50 indirim',
-    refereeReward: '₺30 indirim',
-    minSpend: 200,
-    expiryDays: 30,
-    totalReferrals: 24,
-    successfulReferrals: 18,
-    revenue: 5400,
-  },
-];
+{
+  id: 'ref1',
+  name: "Arkadaşını Getir Kampanyası",
+  active: true,
+  referrerReward: '₺50 indirim',
+  refereeReward: '₺30 indirim',
+  minSpend: 200,
+  expiryDays: 30,
+  totalReferrals: 24,
+  successfulReferrals: 18,
+  revenue: 5400
+}];
+
 
 const mockLoyaltyCampaigns: LoyaltyCampaign[] = [
-  {
-    id: 'loy1',
-    name: 'VIP Loyalty Program',
-    active: true,
-    pointsPerLira: 1,
-    pointsForReward: 500,
-    rewardType: 'discount',
-    rewardValue: '₺100 indirim',
-    memberCount: 67,
-    totalPointsIssued: 12450,
-    rewardsRedeemed: 8,
-  },
-];
+{
+  id: 'loy1',
+  name: 'VIP Loyalty Program',
+  active: true,
+  pointsPerLira: 1,
+  pointsForReward: 500,
+  rewardType: 'discount',
+  rewardValue: '₺100 indirim',
+  memberCount: 67,
+  totalPointsIssued: 12450,
+  rewardsRedeemed: 8
+}];
+
 
 const referralMetrics = [
-  { month: 'Oca', referrals: 5, conversions: 3 },
-  { month: 'feb', referrals: 8, conversions: 6 },
-  { month: 'Mar', referrals: 11, conversions: 9 },
-];
+{ month: 'Oca', referrals: 5, conversions: 3 },
+{ month: 'feb', referrals: 8, conversions: 6 },
+{ month: 'Mar', referrals: 11, conversions: 9 }];
+
 
 const loyaltyMetrics = [
-  { month: 'Oca', points: 3200, redeemed: 2 },
-  { month: 'feb', points: 4100, redeemed: 3 },
-  { month: 'Mar', points: 5150, redeemed: 3 },
-];
+{ month: 'Oca', points: 3200, redeemed: 2 },
+{ month: 'feb', points: 4100, redeemed: 3 },
+{ month: 'Mar', points: 5150, redeemed: 3 }];
+
 
 export function Campaigns({ onBack }: CampaignsProps) {
   const [activeTab, setActiveTab] = useState<'referral' | 'loyalty'>('referral');
@@ -87,14 +87,14 @@ export function Campaigns({ onBack }: CampaignsProps) {
   const [loyaltyCampaigns, setLoyaltyCampaigns] = useState(mockLoyaltyCampaigns);
   const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
-  
+
   // Referral form state
   const [referralForm, setReferralForm] = useState({
     name: '',
     referrerReward: '',
     refereeReward: '',
     minSpend: '',
-    expiryDays: '30',
+    expiryDays: '30'
   });
 
   // Loyalty form state
@@ -102,7 +102,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
     name: '',
     pointsPerLira: '1',
     pointsForReward: '',
-    rewardValue: '',
+    rewardValue: ''
   });
 
   const handleCreateReferral = () => {
@@ -116,9 +116,9 @@ export function Campaigns({ onBack }: CampaignsProps) {
       expiryDays: parseInt(referralForm.expiryDays),
       totalReferrals: 0,
       successfulReferrals: 0,
-      revenue: 0,
+      revenue: 0
     };
-    
+
     setReferralCampaigns([...referralCampaigns, newCampaign]);
     setShowNewCampaign(false);
     setReferralForm({
@@ -126,7 +126,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
       referrerReward: '',
       refereeReward: '',
       minSpend: '',
-      expiryDays: '30',
+      expiryDays: '30'
     });
   };
 
@@ -141,27 +141,27 @@ export function Campaigns({ onBack }: CampaignsProps) {
       rewardValue: loyaltyForm.rewardValue,
       memberCount: 0,
       totalPointsIssued: 0,
-      rewardsRedeemed: 0,
+      rewardsRedeemed: 0
     };
-    
+
     setLoyaltyCampaigns([...loyaltyCampaigns, newCampaign]);
     setShowNewCampaign(false);
     setLoyaltyForm({
       name: '',
       pointsPerLira: '1',
       pointsForReward: '',
-      rewardValue: '',
+      rewardValue: ''
     });
   };
 
   const toggleCampaignActive = (id: string, type: 'referral' | 'loyalty') => {
     if (type === 'referral') {
-      setReferralCampaigns(referralCampaigns.map(c => 
-        c.id === id ? { ...c, active: !c.active } : c
+      setReferralCampaigns(referralCampaigns.map((c) =>
+      c.id === id ? { ...c, active: !c.active } : c
       ));
     } else {
-      setLoyaltyCampaigns(loyaltyCampaigns.map(c => 
-        c.id === id ? { ...c, active: !c.active } : c
+      setLoyaltyCampaigns(loyaltyCampaigns.map((c) =>
+      c.id === id ? { ...c, active: !c.active } : c
       ));
     }
   };
@@ -180,8 +180,8 @@ export function Campaigns({ onBack }: CampaignsProps) {
           </div>
           <Button
             onClick={() => setShowNewCampaign(!showNewCampaign)}
-            style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-          >
+            style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
+            
             <Plus className="w-4 h-4 mr-1" />
             New
           </Button>
@@ -192,22 +192,22 @@ export function Campaigns({ onBack }: CampaignsProps) {
           <button
             onClick={() => setActiveTab('referral')}
             className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'referral'
-                ? 'bg-gradient-to-r from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white shadow-md'
-                : 'bg-muted text-muted-foreground'
-            }`}
-          >
+            activeTab === 'referral' ?
+            'bg-gradient-to-r from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white shadow-md' :
+            'bg-muted text-muted-foreground'}`
+            }>
+            
             <UserPlus className="w-4 h-4 inline mr-2" />
             Referral
           </button>
           <button
             onClick={() => setActiveTab('loyalty')}
             className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'loyalty'
-                ? 'bg-gradient-to-r from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white shadow-md'
-                : 'bg-muted text-muted-foreground'
-            }`}
-          >
+            activeTab === 'loyalty' ?
+            'bg-gradient-to-r from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white shadow-md' :
+            'bg-muted text-muted-foreground'}`
+            }>
+            
             <Award className="w-4 h-4 inline mr-2" />
             Loyalty Program
           </button>
@@ -216,13 +216,13 @@ export function Campaigns({ onBack }: CampaignsProps) {
 
       <div className="p-4 space-y-5">
         {/* New Campaign Form */}
-        {showNewCampaign && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+        {showNewCampaign &&
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}>
+          
             <Card className="border-[var(--rose-gold)]/30 bg-[var(--rose-gold)]/5">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -231,37 +231,37 @@ export function Campaigns({ onBack }: CampaignsProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {activeTab === 'referral' ? (
-                  <>
+                {activeTab === 'referral' ?
+              <>
                     <div className="space-y-2">
-                      <Label htmlFor="ref-name">Campaign Name *</Label>
+                      <Label htmlFor="ref-name">Kampanya Adı *</Label>
                       <Input
-                        id="ref-name"
-                        value={referralForm.name}
-                        onChange={(e) => setReferralForm({ ...referralForm, name: e.target.value })}
-                        placeholder="Ex: Bahar Bring a Friend"
-                      />
+                    id="ref-name"
+                    value={referralForm.name}
+                    onChange={(e) => setReferralForm({ ...referralForm, name: e.target.value })}
+                    placeholder="Ex: Bahar Bring a Friend" />
+                  
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="ref-reward">Referrer Reward</Label>
                         <Input
-                          id="ref-reward"
-                          value={referralForm.referrerReward}
-                          onChange={(e) => setReferralForm({ ...referralForm, referrerReward: e.target.value })}
-                          placeholder="₺50 indirim"
-                        />
+                      id="ref-reward"
+                      value={referralForm.referrerReward}
+                      onChange={(e) => setReferralForm({ ...referralForm, referrerReward: e.target.value })}
+                      placeholder="₺50 indirim" />
+                    
                         <p className="text-xs text-muted-foreground">For the referrer</p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="ref-new">Win New Customers</Label>
+                        <Label htmlFor="ref-new">Win Yeni Müşteris</Label>
                         <Input
-                          id="ref-new"
-                          value={referralForm.refereeReward}
-                          onChange={(e) => setReferralForm({ ...referralForm, refereeReward: e.target.value })}
-                          placeholder="₺30 indirim"
-                        />
+                      id="ref-new"
+                      value={referralForm.refereeReward}
+                      onChange={(e) => setReferralForm({ ...referralForm, refereeReward: e.target.value })}
+                      placeholder="₺30 indirim" />
+                    
                         <p className="text-xs text-muted-foreground">For the invited customer</p>
                       </div>
                     </div>
@@ -270,22 +270,22 @@ export function Campaigns({ onBack }: CampaignsProps) {
                       <div className="space-y-2">
                         <Label htmlFor="ref-min">Minimum Harcama</Label>
                         <Input
-                          id="ref-min"
-                          type="number"
-                          value={referralForm.minSpend}
-                          onChange={(e) => setReferralForm({ ...referralForm, minSpend: e.target.value })}
-                          placeholder="200"
-                        />
+                      id="ref-min"
+                      type="number"
+                      value={referralForm.minSpend}
+                      onChange={(e) => setReferralForm({ ...referralForm, minSpend: e.target.value })}
+                      placeholder="200" />
+                    
                         <p className="text-xs text-muted-foreground">Required amount for reward (₺)</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="ref-expiry">Validity Period</Label>
                         <select
-                          id="ref-expiry"
-                          value={referralForm.expiryDays}
-                          onChange={(e) => setReferralForm({ ...referralForm, expiryDays: e.target.value })}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm"
-                        >
+                      id="ref-expiry"
+                      value={referralForm.expiryDays}
+                      onChange={(e) => setReferralForm({ ...referralForm, expiryDays: e.target.value })}
+                      className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm">
+                      
                           <option value="7">7 days</option>
                           <option value="14">14 days</option>
                           <option value="30">30 days</option>
@@ -296,34 +296,34 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     </div>
 
                     <Button
-                      onClick={handleCreateReferral}
-                      disabled={!referralForm.name || !referralForm.referrerReward || !referralForm.refereeReward}
-                      className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
-                    >
-                      Create Campaign
+                  onClick={handleCreateReferral}
+                  disabled={!referralForm.name || !referralForm.referrerReward || !referralForm.refereeReward}
+                  className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
+                  
+                      Kampanya Oluştur
                     </Button>
-                  </>
-                ) : (
-                  <>
+                  </> :
+
+              <>
                     <div className="space-y-2">
                       <Label htmlFor="loy-name">Program Name *</Label>
                       <Input
-                        id="loy-name"
-                        value={loyaltyForm.name}
-                        onChange={(e) => setLoyaltyForm({ ...loyaltyForm, name: e.target.value })}
-                        placeholder="Ex: VIP Loyalty Program"
-                      />
+                    id="loy-name"
+                    value={loyaltyForm.name}
+                    onChange={(e) => setLoyaltyForm({ ...loyaltyForm, name: e.target.value })}
+                    placeholder="Ex: VIP Loyalty Program" />
+                  
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="loy-rate">Point Rate</Label>
                         <select
-                          id="loy-rate"
-                          value={loyaltyForm.pointsPerLira}
-                          onChange={(e) => setLoyaltyForm({ ...loyaltyForm, pointsPerLira: e.target.value })}
-                          className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm"
-                        >
+                      id="loy-rate"
+                      value={loyaltyForm.pointsPerLira}
+                      onChange={(e) => setLoyaltyForm({ ...loyaltyForm, pointsPerLira: e.target.value })}
+                      className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm">
+                      
                           <option value="0.5">Her ₺2'de 1 puan</option>
                           <option value="1">Her ₺1'de 1 puan</option>
                           <option value="2">Her ₺1'de 2 puan</option>
@@ -333,52 +333,52 @@ export function Campaigns({ onBack }: CampaignsProps) {
                       <div className="space-y-2">
                         <Label htmlFor="loy-threshold">Points Required for Reward</Label>
                         <Input
-                          id="loy-threshold"
-                          type="number"
-                          value={loyaltyForm.pointsForReward}
-                          onChange={(e) => setLoyaltyForm({ ...loyaltyForm, pointsForReward: e.target.value })}
-                          placeholder="500"
-                        />
+                      id="loy-threshold"
+                      type="number"
+                      value={loyaltyForm.pointsForReward}
+                      onChange={(e) => setLoyaltyForm({ ...loyaltyForm, pointsForReward: e.target.value })}
+                      placeholder="500" />
+                    
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="loy-reward">Reward</Label>
                       <Input
-                        id="loy-reward"
-                        value={loyaltyForm.rewardValue}
-                        onChange={(e) => setLoyaltyForm({ ...loyaltyForm, rewardValue: e.target.value })}
-                        placeholder="₺100 off or Free manicure"
-                      />
+                    id="loy-reward"
+                    value={loyaltyForm.rewardValue}
+                    onChange={(e) => setLoyaltyForm({ ...loyaltyForm, rewardValue: e.target.value })}
+                    placeholder="₺100 off or Free manicure" />
+                  
                       <p className="text-xs text-muted-foreground">
                         Reward earned when customer reaches required points
                       </p>
                     </div>
 
                     <Button
-                      onClick={handleCreateLoyalty}
-                      disabled={!loyaltyForm.name || !loyaltyForm.pointsForReward || !loyaltyForm.rewardValue}
-                      className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
-                    >
-                      Create Program
+                  onClick={handleCreateLoyalty}
+                  disabled={!loyaltyForm.name || !loyaltyForm.pointsForReward || !loyaltyForm.rewardValue}
+                  className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
+                  
+                      Program Oluştur
                     </Button>
                   </>
-                )}
+              }
               </CardContent>
             </Card>
           </motion.div>
-        )}
+        }
 
         {/* Referral Campaigns */}
-        {activeTab === 'referral' && (
-          <>
+        {activeTab === 'referral' &&
+        <>
             {/* Stats */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="grid grid-cols-3 gap-3"
-            >
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="grid grid-cols-3 gap-3">
+            
               <Card className="border-border/50">
                 <CardContent className="p-3 text-center">
                   <p className="text-2xl font-bold text-[var(--rose-gold)]">
@@ -422,8 +422,8 @@ export function Campaigns({ onBack }: CampaignsProps) {
                       <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                       <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                       <Tooltip
-                        contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }}
-                      />
+                      contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }} />
+                    
                       <Bar key="referrals-bar" dataKey="referrals" name="Tavsiyeler" fill="var(--rose-gold)" opacity={0.6} radius={[4, 4, 0, 0]} />
                       <Bar key="conversions-bar" dataKey="conversions" name="Transformers" fill="#22C55E" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -446,13 +446,13 @@ export function Campaigns({ onBack }: CampaignsProps) {
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
               <h2 className="font-semibold mb-3 px-1">Aktif Campaigns</h2>
               <div className="space-y-2">
-                {referralCampaigns.map((campaign) => (
-                  <Card key={campaign.id} className={`border-border/50 ${campaign.active ? 'border-l-4 border-l-green-500' : 'opacity-60'}`}>
+                {referralCampaigns.map((campaign) =>
+              <Card key={campaign.id} className={`border-border/50 ${campaign.active ? 'border-l-4 border-l-green-500' : 'opacity-60'}`}>
                     <CardContent className="p-4">
                       <button
-                        className="w-full text-left"
-                        onClick={() => setExpandedCampaign(expandedCampaign === campaign.id ? null : campaign.id)}
-                      >
+                    className="w-full text-left"
+                    onClick={() => setExpandedCampaign(expandedCampaign === campaign.id ? null : campaign.id)}>
+                    
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{campaign.name}</h3>
@@ -460,11 +460,11 @@ export function Campaigns({ onBack }: CampaignsProps) {
                               {campaign.active ? 'Aktif' : 'Pasif'}
                             </Badge>
                           </div>
-                          {expandedCampaign === campaign.id ? (
-                            <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                          )}
+                          {expandedCampaign === campaign.id ?
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" /> :
+
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      }
                         </div>
                         
                         <div className="flex items-center gap-4 text-xs">
@@ -483,20 +483,20 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         </div>
                       </button>
 
-                      {expandedCampaign === campaign.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          transition={{ duration: 0.25 }}
-                          className="mt-4 pt-4 border-t border-border space-y-4"
-                        >
+                      {expandedCampaign === campaign.id &&
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.25 }}
+                    className="mt-4 pt-4 border-t border-border space-y-4">
+                    
                           <div className="grid grid-cols-2 gap-3">
                             <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/20">
                               <p className="text-xs text-muted-foreground mb-1">Referrer Reward</p>
                               <p className="font-semibold text-green-700">{campaign.referrerReward}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                              <p className="text-xs text-muted-foreground mb-1">Win New Customers</p>
+                              <p className="text-xs text-muted-foreground mb-1">Win Yeni Müşteris</p>
                               <p className="font-semibold text-blue-700">{campaign.refereeReward}</p>
                             </div>
                           </div>
@@ -513,7 +513,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                             <div>
                               <p className="text-muted-foreground mb-1">Success Rate</p>
                               <p className="font-medium text-green-600">
-                                %{campaign.totalReferrals > 0 ? Math.round((campaign.successfulReferrals / campaign.totalReferrals) * 100) : 0}
+                                %{campaign.totalReferrals > 0 ? Math.round(campaign.successfulReferrals / campaign.totalReferrals * 100) : 0}
                               </p>
                             </div>
                             <div>
@@ -525,20 +525,20 @@ export function Campaigns({ onBack }: CampaignsProps) {
                           </div>
 
                           <div className="flex items-center justify-between pt-2">
-                            <Label className="text-sm">Campaign Status</Label>
+                            <Label className="text-sm">Kampanya Durumu</Label>
                             <Switch
-                              checked={campaign.active}
-                              onCheckedChange={() => toggleCampaignActive(campaign.id, 'referral')}
-                            />
+                        checked={campaign.active}
+                        onCheckedChange={() => toggleCampaignActive(campaign.id, 'referral')} />
+                      
                           </div>
                         </motion.div>
-                      )}
+                  }
                     </CardContent>
                   </Card>
-                ))}
+              )}
 
-                {referralCampaigns.length === 0 && (
-                  <Card className="border-border/50">
+                {referralCampaigns.length === 0 &&
+              <Card className="border-border/50">
                     <CardContent className="p-12 text-center">
                       <UserPlus className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
                       <p className="text-sm text-muted-foreground">
@@ -546,22 +546,22 @@ export function Campaigns({ onBack }: CampaignsProps) {
                       </p>
                     </CardContent>
                   </Card>
-                )}
+              }
               </div>
             </motion.div>
           </>
-        )}
+        }
 
         {/* Loyalty Programs */}
-        {activeTab === 'loyalty' && (
-          <>
+        {activeTab === 'loyalty' &&
+        <>
             {/* Stats */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="grid grid-cols-3 gap-3"
-            >
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="grid grid-cols-3 gap-3">
+            
               <Card className="border-border/50">
                 <CardContent className="p-3 text-center">
                   <p className="text-2xl font-bold text-[var(--rose-gold)]">
@@ -605,8 +605,8 @@ export function Campaigns({ onBack }: CampaignsProps) {
                       <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                       <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                       <Tooltip
-                        contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }}
-                      />
+                      contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }} />
+                    
                       <Line key="points-line" type="monotone" dataKey="points" name="Verilen Puan" stroke="var(--rose-gold)" strokeWidth={2} dot={{ r: 4 }} />
                       <Line key="redeemed-line" type="monotone" dataKey="redeemed" name="used" stroke="#22C55E" strokeWidth={2} dot={{ r: 4 }} />
                     </LineChart>
@@ -629,13 +629,13 @@ export function Campaigns({ onBack }: CampaignsProps) {
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
               <h2 className="font-semibold mb-3 px-1">Aktif Programlar</h2>
               <div className="space-y-2">
-                {loyaltyCampaigns.map((program) => (
-                  <Card key={program.id} className={`border-border/50 ${program.active ? 'border-l-4 border-l-amber-500' : 'opacity-60'}`}>
+                {loyaltyCampaigns.map((program) =>
+              <Card key={program.id} className={`border-border/50 ${program.active ? 'border-l-4 border-l-amber-500' : 'opacity-60'}`}>
                     <CardContent className="p-4">
                       <button
-                        className="w-full text-left"
-                        onClick={() => setExpandedCampaign(expandedCampaign === program.id ? null : program.id)}
-                      >
+                    className="w-full text-left"
+                    onClick={() => setExpandedCampaign(expandedCampaign === program.id ? null : program.id)}>
+                    
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{program.name}</h3>
@@ -643,11 +643,11 @@ export function Campaigns({ onBack }: CampaignsProps) {
                               {program.active ? 'Aktif' : 'Pasif'}
                             </Badge>
                           </div>
-                          {expandedCampaign === program.id ? (
-                            <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                          )}
+                          {expandedCampaign === program.id ?
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" /> :
+
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      }
                         </div>
                         
                         <div className="flex items-center gap-4 text-xs">
@@ -666,13 +666,13 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         </div>
                       </button>
 
-                      {expandedCampaign === program.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          transition={{ duration: 0.25 }}
-                          className="mt-4 pt-4 border-t border-border space-y-4"
-                        >
+                      {expandedCampaign === program.id &&
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.25 }}
+                    className="mt-4 pt-4 border-t border-border space-y-4">
+                    
                           <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
                             <div className="flex items-center justify-between mb-2">
                               <p className="text-xs text-muted-foreground">Reward Earning System</p>
@@ -688,7 +688,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
 
                           <div className="grid grid-cols-2 gap-3 text-xs">
                             <div>
-                              <p className="text-muted-foreground mb-1">Active Members</p>
+                              <p className="text-muted-foreground mb-1">Aktif Members</p>
                               <p className="font-medium text-[var(--rose-gold)]">{program.memberCount} people</p>
                             </div>
                             <div>
@@ -700,7 +700,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                             <div>
                               <p className="text-muted-foreground mb-1">Usage Rate</p>
                               <p className="font-medium text-green-600">
-                                %{program.memberCount > 0 ? Math.round((program.rewardsRedeemed / program.memberCount) * 100) : 0}
+                                %{program.memberCount > 0 ? Math.round(program.rewardsRedeemed / program.memberCount * 100) : 0}
                               </p>
                             </div>
                             <div>
@@ -712,20 +712,20 @@ export function Campaigns({ onBack }: CampaignsProps) {
                           </div>
 
                           <div className="flex items-center justify-between pt-2">
-                            <Label className="text-sm">Program Status</Label>
+                            <Label className="text-sm">Program Durumu</Label>
                             <Switch
-                              checked={program.active}
-                              onCheckedChange={() => toggleCampaignActive(program.id, 'loyalty')}
-                            />
+                        checked={program.active}
+                        onCheckedChange={() => toggleCampaignActive(program.id, 'loyalty')} />
+                      
                           </div>
                         </motion.div>
-                      )}
+                  }
                     </CardContent>
                   </Card>
-                ))}
+              )}
 
-                {loyaltyCampaigns.length === 0 && (
-                  <Card className="border-border/50">
+                {loyaltyCampaigns.length === 0 &&
+              <Card className="border-border/50">
                     <CardContent className="p-12 text-center">
                       <Award className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
                       <p className="text-sm text-muted-foreground">
@@ -733,12 +733,12 @@ export function Campaigns({ onBack }: CampaignsProps) {
                       </p>
                     </CardContent>
                   </Card>
-                )}
+              }
               </div>
             </motion.div>
           </>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -34,7 +34,7 @@ interface CategoryItem {
   sequentialRequired: boolean | null;
   bufferMinutes: number | null;
   marketingDescription?: string | null;
-  commonQuestions?: Array<{ question: string; answer: string }> | null;
+  commonQuestions?: Array<{question: string;answer: string;}> | null;
   serviceCount: number;
   isActive?: boolean | null;
 }
@@ -67,11 +67,11 @@ function colorById(id: number) {
 
 function ToggleSwitch({
   checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (next: boolean) => void;
-}) {
+  onChange
+
+
+
+}: {checked: boolean;onChange: (next: boolean) => void;}) {
   return (
     <button
       type="button"
@@ -79,27 +79,27 @@ function ToggleSwitch({
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors ${
-        checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'
-      }`}
-    >
+      checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'}`
+      }>
+      
       <span
         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-          checked ? 'translate-x-5' : 'translate-x-0.5'
-        }`}
-      />
-    </button>
-  );
+        checked ? 'translate-x-5' : 'translate-x-0.5'}`
+        } />
+      
+    </button>);
+
 }
 
 function StatusToggleChip({
   active,
   onToggle,
-  className = '',
-}: {
-  active: boolean;
-  onToggle: (next: boolean) => void;
-  className?: string;
-}) {
+  className = ''
+
+
+
+
+}: {active: boolean;onToggle: (next: boolean) => void;className?: string;}) {
   return (
     <button
       type="button"
@@ -108,16 +108,16 @@ function StatusToggleChip({
       aria-label={active ? 'Durumu pasif yap' : 'Durumu aktif yap'}
       onClick={() => onToggle(!active)}
       className={`relative inline-flex h-7 w-12 items-center rounded-full border p-0.5 transition-colors ${
-        active ? 'border-emerald-500 bg-emerald-300' : 'border-zinc-300 bg-zinc-200'
-      } ${className}`}
-    >
+      active ? 'border-emerald-500 bg-emerald-300' : 'border-zinc-300 bg-zinc-200'} ${
+      className}`}>
+      
       <span
         className={`inline-block h-6 w-6 rounded-full border border-zinc-300 bg-white shadow-sm transition-transform ${
-          active ? 'translate-x-5' : 'translate-x-0'
-        }`}
-      />
-    </button>
-  );
+        active ? 'translate-x-5' : 'translate-x-0'}`
+        } />
+      
+    </button>);
+
 }
 
 function clampInt(value: number, min: number, max: number) {
@@ -126,18 +126,18 @@ function clampInt(value: number, min: number, max: number) {
 
 function normalizeCommonQuestions(value: unknown) {
   if (!Array.isArray(value)) return [];
-  return value
-    .map((item: any) => ({
-      question: typeof item?.question === 'string' ? item.question.trim() : '',
-      answer: typeof item?.answer === 'string' ? item.answer.trim() : '',
-    }))
-    .filter((item: any) => item.question || item.answer);
+  return value.
+  map((item: any) => ({
+    question: typeof item?.question === 'string' ? item.question.trim() : '',
+    answer: typeof item?.answer === 'string' ? item.answer.trim() : ''
+  })).
+  filter((item: any) => item.question || item.answer);
 }
 
 function formatGenderLabel(genders?: string[] | null) {
-  const normalized = (genders || [])
-    .map((item) => String(item).toLowerCase().trim())
-    .filter((item) => item === 'female' || item === 'male' || item === 'other');
+  const normalized = (genders || []).
+  map((item) => String(item).toLowerCase().trim()).
+  filter((item) => item === 'female' || item === 'male' || item === 'other');
   if (normalized.length === 0) {
     return 'Kadın • Erkek';
   }
@@ -185,15 +185,15 @@ export function ServicesCrudPage() {
     genderMale: true,
     capacityOverride: '',
     preparationMinutes: '',
-    isActive: true,
+    isActive: true
   });
 
   const [categoryForm, setCategoryForm] = useState({
     capacity: '1',
     sequentialRequired: false,
-    bufferMinutes: '0',
+    bufferMinutes: '0'
   });
-  const [categoryQuestions, setCategoryQuestions] = useState<Array<{ question: string; answer: string }>>([]);
+  const [categoryQuestions, setCategoryQuestions] = useState<Array<{question: string;answer: string;}>>([]);
   const [categoryCapacityEnabled, setCategoryCapacityEnabled] = useState(true);
   const [categoryBufferEnabled, setCategoryBufferEnabled] = useState(true);
 
@@ -202,7 +202,7 @@ export function ServicesCrudPage() {
     capacity: '1',
     sequentialRequired: false,
     preparationMinutes: '0',
-    isActive: true,
+    isActive: true
   });
 
   const load = async () => {
@@ -210,16 +210,16 @@ export function ServicesCrudPage() {
     setError(null);
     try {
       const [servicesRes, categoriesRes, groupsRes] = await Promise.all([
-        apiFetch<{ items: ServiceItem[] }>('/api/admin/services'),
-        apiFetch<{ items: CategoryItem[] }>('/api/admin/service-categories'),
-        apiFetch<{ items: ServiceGroupItem[] }>('/api/admin/service-groups'),
-      ]);
+      apiFetch<{items: ServiceItem[];}>('/api/admin/services'),
+      apiFetch<{items: CategoryItem[];}>('/api/admin/service-categories'),
+      apiFetch<{items: ServiceGroupItem[];}>('/api/admin/service-groups')]
+      );
 
       const sortedCategories = [...(categoriesRes.items || [])].sort(
-        (a, b) => a.effectiveOrder - b.effectiveOrder || a.id - b.id,
+        (a, b) => a.effectiveOrder - b.effectiveOrder || a.id - b.id
       );
       const sortedGroups = [...(groupsRes.items || [])].sort(
-        (a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999) || a.id - b.id,
+        (a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999) || a.id - b.id
       );
       setServices(servicesRes.items || []);
       setCategories(sortedCategories);
@@ -300,7 +300,7 @@ export function ServicesCrudPage() {
       genderMale: true,
       capacityOverride: '',
       preparationMinutes: '',
-      isActive: true,
+      isActive: true
     });
     setServiceDialogOpen(true);
   };
@@ -316,17 +316,17 @@ export function ServicesCrudPage() {
       duration: String(item.duration || 60),
       price: String(item.price || 0),
       requiresSpecialist: Boolean(item.requiresSpecialist),
-      genderFemale: item.genders?.length
-        ? item.genders.some((gender) => String(gender).toLowerCase().trim() === 'female')
-        : true,
-      genderMale: item.genders?.length
-        ? item.genders.some((gender) => String(gender).toLowerCase().trim() === 'male')
-        : true,
+      genderFemale: item.genders?.length ?
+      item.genders.some((gender) => String(gender).toLowerCase().trim() === 'female') :
+      true,
+      genderMale: item.genders?.length ?
+      item.genders.some((gender) => String(gender).toLowerCase().trim() === 'male') :
+      true,
       capacityOverride:
-        item.capacityOverride === null || item.capacityOverride === undefined ? '' : String(item.capacityOverride),
+      item.capacityOverride === null || item.capacityOverride === undefined ? '' : String(item.capacityOverride),
       preparationMinutes:
-        item.bufferOverride === null || item.bufferOverride === undefined ? '' : String(item.bufferOverride),
-      isActive: item.isActive !== false,
+      item.bufferOverride === null || item.bufferOverride === undefined ? '' : String(item.bufferOverride),
+      isActive: item.isActive !== false
     });
     setServiceDialogOpen(true);
   };
@@ -338,7 +338,7 @@ export function ServicesCrudPage() {
     setCategoryForm({
       capacity: String(category.capacity ?? 1),
       sequentialRequired: Boolean(category.sequentialRequired),
-      bufferMinutes: String(category.bufferMinutes ?? 0),
+      bufferMinutes: String(category.bufferMinutes ?? 0)
     });
     setCategoryCapacityEnabled(category.capacity !== null && category.capacity !== undefined);
     setCategoryBufferEnabled(category.bufferMinutes !== null && category.bufferMinutes !== undefined);
@@ -370,7 +370,7 @@ export function ServicesCrudPage() {
   const saveService = async (event: FormEvent) => {
     event.preventDefault();
     if (!serviceForm.name.trim()) {
-      setError('Service name is required.');
+      setError("Hizmet adı zorunludur.");
       return;
     }
 
@@ -386,7 +386,7 @@ export function ServicesCrudPage() {
       return;
     }
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
-      setError('Category selection is mandatory.');
+      setError("Kategori seçimi zorunludur.");
       return;
     }
 
@@ -412,20 +412,20 @@ export function ServicesCrudPage() {
       capacityOverride: parseNullableInt(serviceForm.capacityOverride),
       sequentialOverride: null,
       bufferOverride: parseNullableInt(serviceForm.preparationMinutes),
-      isActive: serviceForm.isActive,
+      isActive: serviceForm.isActive
     };
 
     try {
       if (editingService) {
-        const response = await apiFetch<{ item: ServiceItem }>(`/api/admin/services/${editingService.id}`, {
+        const response = await apiFetch<{item: ServiceItem;}>(`/api/admin/services/${editingService.id}`, {
           method: 'PUT',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
-        setServices((prev) => prev.map((item) => (item.id === editingService.id ? response.item : item)));
+        setServices((prev) => prev.map((item) => item.id === editingService.id ? response.item : item));
       } else {
-        const response = await apiFetch<{ item: ServiceItem }>('/api/admin/services', {
+        const response = await apiFetch<{item: ServiceItem;}>('/api/admin/services', {
           method: 'POST',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
         setServices((prev) => [response.item, ...prev]);
       }
@@ -433,29 +433,29 @@ export function ServicesCrudPage() {
       // Keep category-level defaults in sync with service-level numeric settings when provided.
       if (category) {
         const nextCategoryCapacity =
-          payload.capacityOverride !== null ? payload.capacityOverride : category.capacity ?? 1;
+        payload.capacityOverride !== null ? payload.capacityOverride : category.capacity ?? 1;
         const nextCategoryBuffer =
-          payload.bufferOverride !== null ? payload.bufferOverride : category.bufferMinutes ?? 0;
+        payload.bufferOverride !== null ? payload.bufferOverride : category.bufferMinutes ?? 0;
 
         await apiFetch(`/api/admin/service-categories/${category.id}`, {
           method: 'PUT',
           body: JSON.stringify({
             capacity: nextCategoryCapacity,
             sequentialRequired: category.sequentialRequired ?? false,
-            bufferMinutes: nextCategoryBuffer,
-          }),
+            bufferMinutes: nextCategoryBuffer
+          })
         });
 
         setCategories((prev) =>
-          prev.map((item) =>
-            item.id === category.id
-              ? {
-                  ...item,
-                  capacity: nextCategoryCapacity,
-                  bufferMinutes: nextCategoryBuffer,
-                }
-              : item,
-          ),
+        prev.map((item) =>
+        item.id === category.id ?
+        {
+          ...item,
+          capacity: nextCategoryCapacity,
+          bufferMinutes: nextCategoryBuffer
+        } :
+        item
+        )
         );
       }
 
@@ -463,7 +463,7 @@ export function ServicesCrudPage() {
       setEditingService(null);
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Service could not be saved.');
+      setError(err?.message || "Hizmet kaydedilemedi.");
     } finally {
       setSaving(false);
     }
@@ -474,13 +474,13 @@ export function ServicesCrudPage() {
     if (!editingCategory) return;
 
     const updates: Record<string, unknown> = {
-      sequentialRequired: categoryForm.sequentialRequired,
+      sequentialRequired: categoryForm.sequentialRequired
     };
 
     if (categoryCapacityEnabled) {
       const capacity = Number(categoryForm.capacity);
       if (!Number.isInteger(capacity) || capacity <= 0) {
-        setError('Category capacity must be a positive integer.');
+        setError("Kategori kapasitesi pozitif bir tam sayı olmalıdır.");
         return;
       }
       updates.capacity = capacity;
@@ -501,14 +501,14 @@ export function ServicesCrudPage() {
     try {
       await apiFetch(`/api/admin/service-categories/${editingCategory.id}`, {
         method: 'PUT',
-        body: JSON.stringify(updates),
+        body: JSON.stringify(updates)
       });
 
       setCategoryDialogOpen(false);
       setEditingCategory(null);
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Category settings could not be saved.');
+      setError(err?.message || "Kategori ayarları kaydedilemedi.");
     } finally {
       setSaving(false);
     }
@@ -518,12 +518,12 @@ export function ServicesCrudPage() {
     event.preventDefault();
     if (!editingCategoryFaq) return;
 
-    const cleanedQuestions = categoryQuestions
-      .map((item) => ({
-        question: item.question.trim(),
-        answer: item.answer.trim(),
-      }))
-      .filter((item) => item.question || item.answer);
+    const cleanedQuestions = categoryQuestions.
+    map((item) => ({
+      question: item.question.trim(),
+      answer: item.answer.trim()
+    })).
+    filter((item) => item.question || item.answer);
 
     setSaving(true);
     setError(null);
@@ -531,7 +531,7 @@ export function ServicesCrudPage() {
     try {
       await apiFetch(`/api/admin/service-categories/${editingCategoryFaq.id}`, {
         method: 'PUT',
-        body: JSON.stringify({ commonQuestions: cleanedQuestions }),
+        body: JSON.stringify({ commonQuestions: cleanedQuestions })
       });
 
       setCategoryFaqDialogOpen(false);
@@ -555,10 +555,10 @@ export function ServicesCrudPage() {
     try {
       await apiFetch('/api/admin/service-categories/reorder', {
         method: 'POST',
-        body: JSON.stringify({ orderedIds: next.map((item) => item.id) }),
+        body: JSON.stringify({ orderedIds: next.map((item) => item.id) })
       });
     } catch (err: any) {
-      setError(err?.message || 'Category order could not be saved.');
+      setError(err?.message || "Kategori sırası kaydedilemedi.");
       await load();
     }
   };
@@ -569,7 +569,7 @@ export function ServicesCrudPage() {
 
   const updateCategoryQuestion = (index: number, field: 'question' | 'answer', value: string) => {
     setCategoryQuestions((prev) =>
-      prev.map((item, idx) => (idx === index ? { ...item, [field]: value } : item)),
+    prev.map((item, idx) => idx === index ? { ...item, [field]: value } : item)
     );
   };
 
@@ -585,7 +585,7 @@ export function ServicesCrudPage() {
       await apiFetch(`/api/admin/services/${item.id}`, { method: 'DELETE' });
       setServices((prev) => prev.filter((entry) => entry.id !== item.id));
     } catch (err: any) {
-      setError(err?.message || 'Service could not be deleted.');
+      setError(err?.message || "Hizmet silinemedi.");
     }
   };
 
@@ -596,7 +596,7 @@ export function ServicesCrudPage() {
       capacity: '1',
       sequentialRequired: false,
       preparationMinutes: '0',
-      isActive: true,
+      isActive: true
     });
     setGroupDialogOpen(true);
   };
@@ -608,7 +608,7 @@ export function ServicesCrudPage() {
       capacity: String(group.capacity ?? 1),
       sequentialRequired: Boolean(group.sequentialRequired),
       preparationMinutes: String(group.preparationMinutes ?? 0),
-      isActive: group.isActive !== false,
+      isActive: group.isActive !== false
     });
     setGroupDialogOpen(true);
   };
@@ -640,19 +640,19 @@ export function ServicesCrudPage() {
       capacity,
       sequentialRequired: groupForm.sequentialRequired,
       preparationMinutes,
-      isActive: groupForm.isActive,
+      isActive: groupForm.isActive
     };
 
     try {
       if (editingGroup) {
         await apiFetch(`/api/admin/service-groups/${editingGroup.id}`, {
           method: 'PUT',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
       } else {
         await apiFetch('/api/admin/service-groups', {
           method: 'POST',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
       }
 
@@ -677,10 +677,10 @@ export function ServicesCrudPage() {
     try {
       await apiFetch('/api/admin/service-groups/reorder', {
         method: 'POST',
-        body: JSON.stringify({ orderedIds: next.map((item) => item.id) }),
+        body: JSON.stringify({ orderedIds: next.map((item) => item.id) })
       });
     } catch (err: any) {
-      setError(err?.message || 'Failed to save group order.');
+      setError(err?.message || "Grup sırası kaydedilemedi.");
       await load();
     }
   };
@@ -689,11 +689,11 @@ export function ServicesCrudPage() {
     try {
       await apiFetch(`/api/admin/service-categories/${category.id}`, {
         method: 'PUT',
-        body: JSON.stringify({ isActive: next }),
+        body: JSON.stringify({ isActive: next })
       });
-      setCategories((prev) => prev.map((item) => (item.id === category.id ? { ...item, isActive: next } : item)));
+      setCategories((prev) => prev.map((item) => item.id === category.id ? { ...item, isActive: next } : item));
     } catch (err: any) {
-      setError(err?.message || 'Category status could not be updated.');
+      setError(err?.message || "Kategori durumu güncellenemedi.");
     }
   };
 
@@ -701,9 +701,9 @@ export function ServicesCrudPage() {
     try {
       await apiFetch(`/api/admin/services/${item.id}`, {
         method: 'PUT',
-        body: JSON.stringify({ isActive: next }),
+        body: JSON.stringify({ isActive: next })
       });
-      setServices((prev) => prev.map((row) => (row.id === item.id ? { ...row, isActive: next } : row)));
+      setServices((prev) => prev.map((row) => row.id === item.id ? { ...row, isActive: next } : row));
     } catch (err: any) {
       setError(err?.message || 'The service status could not be updated.');
     }
@@ -713,9 +713,9 @@ export function ServicesCrudPage() {
     try {
       await apiFetch(`/api/admin/service-groups/${group.id}`, {
         method: 'PUT',
-        body: JSON.stringify({ isActive: next }),
+        body: JSON.stringify({ isActive: next })
       });
-      setGroups((prev) => prev.map((item) => (item.id === group.id ? { ...item, isActive: next } : item)));
+      setGroups((prev) => prev.map((item) => item.id === group.id ? { ...item, isActive: next } : item));
     } catch (err: any) {
       setError(err?.message || 'Group status could not be updated.');
     }
@@ -724,47 +724,47 @@ export function ServicesCrudPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Service Management</h1>
-        <p className="text-sm text-muted-foreground">Services and categories</p>
+        <h1 className="text-2xl font-semibold">Hizmet Yönetimi</h1>
+        <p className="text-sm text-muted-foreground">Hizmetler ve kategoriler</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => setCategoryOrderDialogOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
-        >
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+          
           <ListOrdered className="h-4 w-4" />
-          Category Order
+          Kategori Sırası
         </button>
 
         <button
           type="button"
           onClick={() => setGroupManagerOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
-        >
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+          
           <Layers className="h-4 w-4" />
-          Service Groups
+          Hizmet Grupları
         </button>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
-      {!loading ? (
-        <div className="space-y-3 pb-20">
+      {!loading ?
+      <div className="space-y-3 pb-20">
           {categories.map((category) => {
-            const categoryItems = groupedServices[category.id] || [];
-            const expanded = Boolean(expandedCategories[category.id]);
+          const categoryItems = groupedServices[category.id] || [];
+          const expanded = Boolean(expandedCategories[category.id]);
 
-            return (
-              <div key={category.id} className="rounded-2xl border border-border bg-card overflow-hidden">
+          return (
+            <div key={category.id} className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2 px-3 py-3">
                   <button
-                    type="button"
-                    onClick={() => toggleCategory(category.id)}
-                    className="h-7 w-7 grid place-items-center rounded-md hover:bg-muted"
-                  >
+                  type="button"
+                  onClick={() => toggleCategory(category.id)}
+                  className="h-7 w-7 grid place-items-center rounded-md hover:bg-muted">
+                  
                     {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
 
@@ -781,51 +781,51 @@ export function ServicesCrudPage() {
 
                   <div className="ml-auto flex items-center gap-1.5 shrink-0">
                     <button
-                      type="button"
-                      onClick={() => openCategoryFaq(category)}
-                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
-                      title="Kategori Sık Sorular"
-                    >
+                    type="button"
+                    onClick={() => openCategoryFaq(category)}
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                    title="Kategori Sık Sorular">
+                    
                       <HelpCircle className="h-4 w-4" />
                     </button>
 
                     <StatusToggleChip
-                      active={category.isActive !== false}
-                      onToggle={(next) => void toggleCategoryActive(category, next)}
-                    />
+                    active={category.isActive !== false}
+                    onToggle={(next) => void toggleCategoryActive(category, next)} />
+                  
 
                     <button
-                      type="button"
-                      onClick={() => openCategorySettings(category)}
-                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
-                      title="Category settings"
-                    >
+                    type="button"
+                    onClick={() => openCategorySettings(category)}
+                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                    title="Kategori ayarları">
+                    
                       <Settings2 className="h-4 w-4" />
                     </button>
 
                     <button
-                      type="button"
-                      onClick={() => openCreateService(category)}
-                      className="inline-flex h-8 items-center gap-1 rounded-md px-1 text-sm font-medium hover:bg-muted"
-                    >
+                    type="button"
+                    onClick={() => openCreateService(category)}
+                    className="inline-flex h-8 items-center gap-1 rounded-md px-1 text-sm font-medium hover:bg-muted">
+                    
                       <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">Add</span>
+                      <span className="hidden sm:inline">Ekle</span>
                     </button>
                   </div>
                 </div>
 
-                {expanded ? (
-                  <div className="border-t border-border/50">
-                    {categoryItems.length === 0 ? (
-                      <div className="px-4 py-4 text-sm text-muted-foreground">No services yet in this category.</div>
-                    ) : (
-                      categoryItems.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`grid grid-cols-[32px_minmax(0,1fr)_auto_auto_auto] items-center gap-1.5 px-4 py-3 border-b border-border/40 last:border-b-0 ${
-                            item.isActive === false ? 'opacity-65' : ''
-                          }`}
-                        >
+                {expanded ?
+              <div className="border-t border-border/50">
+                    {categoryItems.length === 0 ?
+                <div className="px-4 py-4 text-sm text-muted-foreground">Bu kategoride henüz hizmet yok.</div> :
+
+                categoryItems.map((item) =>
+                <div
+                  key={item.id}
+                  className={`grid grid-cols-[32px_minmax(0,1fr)_auto_auto_auto] items-center gap-1.5 px-4 py-3 border-b border-border/40 last:border-b-0 ${
+                  item.isActive === false ? 'opacity-65' : ''}`
+                  }>
+                  
                           <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: colorById(item.id) }} />
 
                           <div className="min-w-0 flex-1">
@@ -835,15 +835,15 @@ export function ServicesCrudPage() {
                               {` • ${formatGenderLabel(item.genders)}`}
                               {item.serviceGroupName ? ` • ${item.serviceGroupName}` : ''}
                             </p>
-                            {item.description ? (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
-                            ) : null}
+                            {item.description ?
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p> :
+                    null}
                           </div>
 
                           <StatusToggleChip
-                            active={item.isActive !== false}
-                            onToggle={(next) => void toggleServiceActive(item, next)}
-                          />
+                    active={item.isActive !== false}
+                    onToggle={(next) => void toggleServiceActive(item, next)} />
+                  
                           <button type="button" onClick={() => openEditService(item)} className="h-8 w-8 grid place-items-center text-muted-foreground hover:text-foreground">
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -851,91 +851,91 @@ export function ServicesCrudPage() {
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                      ))
-                    )}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
+                )
+                }
+                  </div> :
+              null}
+              </div>);
 
-      {serviceDialogOpen ? (
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+        })}
+        </div> :
+      null}
+
+      {serviceDialogOpen ?
+      <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">{editingService ? 'Edit Service' : 'New Add Service'}</h2>
+              <h2 className="text-lg font-semibold">{editingService ? "Hizmeti Düzenle" : "New Hizmet Ekle"}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
             </div>
 
             <form className="space-y-3" onSubmit={saveService}>
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Category</span>
+                <span className="text-muted-foreground">Kategori</span>
                 <select
-                  value={serviceForm.categoryId}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, categoryId: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                >
+                value={serviceForm.categoryId}
+                onChange={(event) => setServiceForm((prev) => ({ ...prev, categoryId: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
+                
                   <option value="">Select category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
+                  {categories.map((category) =>
+                <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
-                  ))}
+                )}
                 </select>
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Service Group (optional)</span>
+                <span className="text-muted-foreground">Hizmet Grubu (isteğe bağlı)</span>
                 <select
-                  value={serviceForm.serviceGroupId}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, serviceGroupId: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                >
+                value={serviceForm.serviceGroupId}
+                onChange={(event) => setServiceForm((prev) => ({ ...prev, serviceGroupId: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
+                
                   <option value="">Continue without selecting a group</option>
-                  {groups.map((group) => (
-                    <option key={group.id} value={group.id}>
+                  {groups.map((group) =>
+                <option key={group.id} value={group.id}>
                       {group.name}
                     </option>
-                  ))}
+                )}
                 </select>
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Service Name</span>
+                <span className="text-muted-foreground">Hizmet Adı</span>
                 <input
-                  value={serviceForm.name}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, name: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                value={serviceForm.name}
+                onChange={(event) => setServiceForm((prev) => ({ ...prev, name: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Description (optional)</span>
                 <textarea
-                  value={serviceForm.description}
-                  onChange={(event) => setServiceForm((prev) => ({ ...prev, description: event.target.value }))}
-                  className="w-full min-h-[90px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                />
+                value={serviceForm.description}
+                onChange={(event) => setServiceForm((prev) => ({ ...prev, description: event.target.value }))}
+                className="w-full min-h-[90px] rounded-lg border border-border bg-card px-3 py-2 text-sm" />
+              
               </label>
 
               <div className="rounded-lg border border-border p-3 space-y-2">
                 <p className="text-sm font-medium">Hizmet Cinsiyeti</p>
                 <label className="flex items-center gap-2 text-sm">
                   <input
-                    type="checkbox"
-                    checked={serviceForm.genderFemale}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, genderFemale: event.target.checked }))}
-                  />
+                  type="checkbox"
+                  checked={serviceForm.genderFemale}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, genderFemale: event.target.checked }))} />
+                
                   <span>Kadın</span>
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <input
-                    type="checkbox"
-                    checked={serviceForm.genderMale}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, genderMale: event.target.checked }))}
-                  />
+                  type="checkbox"
+                  checked={serviceForm.genderMale}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, genderMale: event.target.checked }))} />
+                
                   <span>Erkek</span>
                 </label>
                 <p className="text-xs text-muted-foreground">İkisi de seçilirse unisex olarak değerlendirilir.</p>
@@ -945,30 +945,30 @@ export function ServicesCrudPage() {
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Duration (min)</span>
                   <input
-                    type="number"
-                    min={5}
-                    step={5}
-                    value={serviceForm.duration}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, duration: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  />
+                  type="number"
+                  min={5}
+                  step={5}
+                  value={serviceForm.duration}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, duration: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+                
                 </label>
 
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Fiyat (₺)</span>
                   <input
-                    type="number"
-                    min={0}
-                    step={10}
-                    value={serviceForm.price}
-                    onChange={(event) => setServiceForm((prev) => ({ ...prev, price: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  />
+                  type="number"
+                  min={0}
+                  step={10}
+                  value={serviceForm.price}
+                  onChange={(event) => setServiceForm((prev) => ({ ...prev, price: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+                
                 </label>
               </div>
 
               <div className="rounded-lg border border-border p-3 space-y-3">
-                <p className="text-sm font-medium">Service Settings</p>
+                <p className="text-sm font-medium">Hizmet Ayarları</p>
 
                 <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div>
@@ -976,9 +976,9 @@ export function ServicesCrudPage() {
                     <p className="text-xs text-muted-foreground">When enabled, specialist selection appears in booking flow.</p>
                   </div>
                   <ToggleSwitch
-                    checked={serviceForm.requiresSpecialist}
-                    onChange={(next) => setServiceForm((prev) => ({ ...prev, requiresSpecialist: next }))}
-                  />
+                  checked={serviceForm.requiresSpecialist}
+                  onChange={(next) => setServiceForm((prev) => ({ ...prev, requiresSpecialist: next }))} />
+                
                 </label>
 
                 <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
@@ -990,57 +990,57 @@ export function ServicesCrudPage() {
                       </p>
                     </div>
                     <ToggleSwitch
-                      checked={serviceForm.capacityOverride.trim().length > 0}
-                      onChange={(enabled) =>
-                        setServiceForm((prev) => ({
-                          ...prev,
-                          capacityOverride: enabled ? prev.capacityOverride || '1' : '',
-                        }))
-                      }
-                    />
+                    checked={serviceForm.capacityOverride.trim().length > 0}
+                    onChange={(enabled) =>
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      capacityOverride: enabled ? prev.capacityOverride || '1' : ''
+                    }))
+                    } />
+                  
                   </div>
 
-                  {serviceForm.capacityOverride.trim().length > 0 ? (
-                    <div className="space-y-2">
+                  {serviceForm.capacityOverride.trim().length > 0 ?
+                <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <button
-                          type="button"
-                          onClick={() =>
-                            setServiceForm((prev) => {
-                              const current = Number(prev.capacityOverride || '1');
-                              const next = clampInt(current - 1, 1, 20);
-                              return { ...prev, capacityOverride: String(next) };
-                            })
-                          }
-                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                        >
+                      type="button"
+                      onClick={() =>
+                      setServiceForm((prev) => {
+                        const current = Number(prev.capacityOverride || '1');
+                        const next = clampInt(current - 1, 1, 20);
+                        return { ...prev, capacityOverride: String(next) };
+                      })
+                      }
+                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+                      
                           -
                         </button>
                         <input
-                          type="number"
-                          min={1}
-                          max={20}
-                          value={serviceForm.capacityOverride}
-                          onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
-                          className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
-                          placeholder="1"
-                        />
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={serviceForm.capacityOverride}
+                      onChange={(event) => setServiceForm((prev) => ({ ...prev, capacityOverride: event.target.value }))}
+                      className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
+                      placeholder="1" />
+                    
                         <button
-                          type="button"
-                          onClick={() =>
-                            setServiceForm((prev) => {
-                              const current = Number(prev.capacityOverride || '1');
-                              const next = clampInt(current + 1, 1, 20);
-                              return { ...prev, capacityOverride: String(next) };
-                            })
-                          }
-                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                        >
+                      type="button"
+                      onClick={() =>
+                      setServiceForm((prev) => {
+                        const current = Number(prev.capacityOverride || '1');
+                        const next = clampInt(current + 1, 1, 20);
+                        return { ...prev, capacityOverride: String(next) };
+                      })
+                      }
+                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+                      
                           +
                         </button>
                       </div>
-                    </div>
-                  ) : null}
+                    </div> :
+                null}
                 </div>
 
                 <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
@@ -1052,75 +1052,75 @@ export function ServicesCrudPage() {
                       </p>
                     </div>
                     <ToggleSwitch
-                      checked={serviceForm.preparationMinutes.trim().length > 0}
-                      onChange={(enabled) =>
-                        setServiceForm((prev) => ({
-                          ...prev,
-                          preparationMinutes: enabled ? prev.preparationMinutes || '0' : '',
-                        }))
-                      }
-                    />
+                    checked={serviceForm.preparationMinutes.trim().length > 0}
+                    onChange={(enabled) =>
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      preparationMinutes: enabled ? prev.preparationMinutes || '0' : ''
+                    }))
+                    } />
+                  
                   </div>
 
-                  {serviceForm.preparationMinutes.trim().length > 0 ? (
-                    <div className="space-y-2">
+                  {serviceForm.preparationMinutes.trim().length > 0 ?
+                <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <button
-                          type="button"
-                          onClick={() =>
-                            setServiceForm((prev) => {
-                              const current = Number(prev.preparationMinutes || '0');
-                              const next = clampInt(current - 5, 0, 180);
-                              return { ...prev, preparationMinutes: String(next) };
-                            })
-                          }
-                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                        >
+                      type="button"
+                      onClick={() =>
+                      setServiceForm((prev) => {
+                        const current = Number(prev.preparationMinutes || '0');
+                        const next = clampInt(current - 5, 0, 180);
+                        return { ...prev, preparationMinutes: String(next) };
+                      })
+                      }
+                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+                      
                           -
                         </button>
                         <input
-                          type="number"
-                          min={0}
-                          max={180}
-                          step={5}
-                          value={serviceForm.preparationMinutes}
-                          onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
-                          className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
-                          placeholder="0"
-                        />
+                      type="number"
+                      min={0}
+                      max={180}
+                      step={5}
+                      value={serviceForm.preparationMinutes}
+                      onChange={(event) => setServiceForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))}
+                      className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
+                      placeholder="0" />
+                    
                         <button
-                          type="button"
-                          onClick={() =>
-                            setServiceForm((prev) => {
-                              const current = Number(prev.preparationMinutes || '0');
-                              const next = clampInt(current + 5, 0, 180);
-                              return { ...prev, preparationMinutes: String(next) };
-                            })
-                          }
-                          className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                        >
+                      type="button"
+                      onClick={() =>
+                      setServiceForm((prev) => {
+                        const current = Number(prev.preparationMinutes || '0');
+                        const next = clampInt(current + 5, 0, 180);
+                        return { ...prev, preparationMinutes: String(next) };
+                      })
+                      }
+                      className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+                      
                           +
                         </button>
                       </div>
                       <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p>
-                    </div>
-                  ) : null}
+                    </div> :
+                null}
                 </div>
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Saving...' : editingService ? 'Update' : 'Add'}
+                {saving ? "Kaydediliyor..." : editingService ? "Güncelle" : "Ekle"}
               </button>
             </form>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {categoryDialogOpen && editingCategory ? (
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+      {categoryDialogOpen && editingCategory ?
+      <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Category Settings · {editingCategory.name}</h2>
+              <h2 className="text-lg font-semibold">Kategori Ayarları · {editingCategory.name}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
             </div>
 
@@ -1132,50 +1132,50 @@ export function ServicesCrudPage() {
                     <p className="text-xs text-muted-foreground">Determines concurrent capacity for all services in this category.</p>
                   </div>
                   <ToggleSwitch
-                    checked={categoryCapacityEnabled}
-                    onChange={(next) => setCategoryCapacityEnabled(next)}
-                  />
+                  checked={categoryCapacityEnabled}
+                  onChange={(next) => setCategoryCapacityEnabled(next)} />
+                
                 </div>
-                {categoryCapacityEnabled ? (
-                <div className="flex items-center gap-2">
+                {categoryCapacityEnabled ?
+              <div className="flex items-center gap-2">
                   <button
-                    type="button"
-                    onClick={() =>
-                      setCategoryForm((prev) => {
-                        const current = Number(prev.capacity || '1');
-                        const next = clampInt(current - 1, 1, 20);
-                        return { ...prev, capacity: String(next) };
-                      })
-                    }
-                    className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                  >
+                  type="button"
+                  onClick={() =>
+                  setCategoryForm((prev) => {
+                    const current = Number(prev.capacity || '1');
+                    const next = clampInt(current - 1, 1, 20);
+                    return { ...prev, capacity: String(next) };
+                  })
+                  }
+                  className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+                  
                     -
                   </button>
                   <input
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={categoryForm.capacity}
-                    onChange={(event) => setCategoryForm((prev) => ({ ...prev, capacity: event.target.value }))}
-                    className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
-                  />
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={categoryForm.capacity}
+                  onChange={(event) => setCategoryForm((prev) => ({ ...prev, capacity: event.target.value }))}
+                  className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium" />
+                
                   <button
-                    type="button"
-                    onClick={() =>
-                      setCategoryForm((prev) => {
-                        const current = Number(prev.capacity || '1');
-                        const next = clampInt(current + 1, 1, 20);
-                        return { ...prev, capacity: String(next) };
-                      })
-                    }
-                    className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                  >
+                  type="button"
+                  onClick={() =>
+                  setCategoryForm((prev) => {
+                    const current = Number(prev.capacity || '1');
+                    const next = clampInt(current + 1, 1, 20);
+                    return { ...prev, capacity: String(next) };
+                  })
+                  }
+                  className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+                  
                     +
                   </button>
-                </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">When disabled, current category capacity is preserved.</p>
-                )}
+                </div> :
+
+              <p className="text-xs text-muted-foreground">When disabled, current category capacity is preserved.</p>
+              }
               </div>
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
@@ -1184,76 +1184,76 @@ export function ServicesCrudPage() {
                   <p className="text-xs text-muted-foreground">For multi-service selection in a category, services are scheduled sequentially.</p>
                 </div>
                 <ToggleSwitch
-                  checked={categoryForm.sequentialRequired}
-                  onChange={(next) => setCategoryForm((prev) => ({ ...prev, sequentialRequired: next }))}
-                />
+                checked={categoryForm.sequentialRequired}
+                onChange={(next) => setCategoryForm((prev) => ({ ...prev, sequentialRequired: next }))} />
+              
               </label>
 
               <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium">Buffer duration (minutes)</p>
-                    <p className="text-xs text-muted-foreground">Adds automatic buffer between this category’s services for the same staff member.</p>
+                    <p className="text-xs text-muted-foreground">Aynı personel için bu kategorideki hizmetler arasına otomatik tampon süre ekler.</p>
                   </div>
                   <ToggleSwitch
-                    checked={categoryBufferEnabled}
-                    onChange={(next) => setCategoryBufferEnabled(next)}
-                  />
+                  checked={categoryBufferEnabled}
+                  onChange={(next) => setCategoryBufferEnabled(next)} />
+                
                 </div>
-                {categoryBufferEnabled ? (
-                <div className="flex items-center gap-2">
+                {categoryBufferEnabled ?
+              <div className="flex items-center gap-2">
                   <button
-                    type="button"
-                    onClick={() =>
-                      setCategoryForm((prev) => {
-                        const current = Number(prev.bufferMinutes || '0');
-                        const next = clampInt(current - 5, 0, 180);
-                        return { ...prev, bufferMinutes: String(next) };
-                      })
-                    }
-                    className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                  >
+                  type="button"
+                  onClick={() =>
+                  setCategoryForm((prev) => {
+                    const current = Number(prev.bufferMinutes || '0');
+                    const next = clampInt(current - 5, 0, 180);
+                    return { ...prev, bufferMinutes: String(next) };
+                  })
+                  }
+                  className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+                  
                     -
                   </button>
                   <input
-                    type="number"
-                    min={0}
-                    max={180}
-                    step={5}
-                    value={categoryForm.bufferMinutes}
-                    onChange={(event) => setCategoryForm((prev) => ({ ...prev, bufferMinutes: event.target.value }))}
-                    className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium"
-                  />
+                  type="number"
+                  min={0}
+                  max={180}
+                  step={5}
+                  value={categoryForm.bufferMinutes}
+                  onChange={(event) => setCategoryForm((prev) => ({ ...prev, bufferMinutes: event.target.value }))}
+                  className="w-full h-10 rounded-xl border border-border bg-card px-3 text-sm text-center font-medium" />
+                
                   <button
-                    type="button"
-                    onClick={() =>
-                      setCategoryForm((prev) => {
-                        const current = Number(prev.bufferMinutes || '0');
-                        const next = clampInt(current + 5, 0, 180);
-                        return { ...prev, bufferMinutes: String(next) };
-                      })
-                    }
-                    className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm"
-                  >
+                  type="button"
+                  onClick={() =>
+                  setCategoryForm((prev) => {
+                    const current = Number(prev.bufferMinutes || '0');
+                    const next = clampInt(current + 5, 0, 180);
+                    return { ...prev, bufferMinutes: String(next) };
+                  })
+                  }
+                  className="h-10 w-10 rounded-xl border border-border bg-background text-xl font-semibold shadow-sm">
+                  
                     +
                   </button>
-                </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">When disabled, current category buffer duration is preserved.</p>
-                )}
+                </div> :
+
+              <p className="text-xs text-muted-foreground">When disabled, current category buffer duration is preserved.</p>
+              }
                 {categoryBufferEnabled ? <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p> : null}
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Saving...' : 'Save Category Settings'}
+                {saving ? "Kaydediliyor..." : "Kategori Ayarlarını Kaydet"}
               </button>
             </form>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {categoryFaqDialogOpen && editingCategoryFaq ? (
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+      {categoryFaqDialogOpen && editingCategoryFaq ?
+      <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Sık Sorular · {editingCategoryFaq.name}</h2>
@@ -1272,48 +1272,48 @@ export function ServicesCrudPage() {
                   </button>
                 </div>
 
-                {categoryQuestions.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Henüz soru eklenmedi.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {categoryQuestions.map((item, index) => (
-                      <div key={`cat-faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
+                {categoryQuestions.length === 0 ?
+              <p className="text-xs text-muted-foreground">Henüz soru eklenmedi.</p> :
+
+              <div className="space-y-2">
+                    {categoryQuestions.map((item, index) =>
+                <div key={`cat-faq-${index}`} className="rounded-md border border-border/60 p-2 space-y-2">
                         <input
-                          className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                          placeholder="Soru"
-                          value={item.question}
-                          onChange={(event) => updateCategoryQuestion(index, 'question', event.target.value)}
-                        />
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                    placeholder="Soru"
+                    value={item.question}
+                    onChange={(event) => updateCategoryQuestion(index, 'question', event.target.value)} />
+                  
                         <textarea
-                          className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
-                          placeholder="Cevap"
-                          value={item.answer}
-                          onChange={(event) => updateCategoryQuestion(index, 'answer', event.target.value)}
-                        />
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[70px]"
+                    placeholder="Cevap"
+                    value={item.answer}
+                    onChange={(event) => updateCategoryQuestion(index, 'answer', event.target.value)} />
+                  
                         <div className="flex justify-end">
                           <button type="button" onClick={() => removeCategoryQuestion(index)} className="text-xs text-red-600">
                             Sil
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
                 )}
+                  </div>
+              }
               </div>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Saving...' : 'SSS Kaydet'}
+                {saving ? "Kaydediliyor..." : 'SSS Kaydet'}
               </button>
             </form>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {categoryOrderDialogOpen ? (
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+      {categoryOrderDialogOpen ?
+      <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Category Sorting</h2>
+              <h2 className="text-lg font-semibold">Kategori Sıralama</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
             </div>
 
@@ -1322,103 +1322,103 @@ export function ServicesCrudPage() {
             </p>
 
             <div className="space-y-2">
-              {categories.map((category, index) => (
-                <div key={category.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
+              {categories.map((category, index) =>
+            <div key={category.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
                   <span className="flex-1 text-sm font-medium">{category.name}</span>
                   <button
-                    type="button"
-                    onClick={() => void moveCategory(index, index - 1)}
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                    disabled={index === 0}
-                  >
+                type="button"
+                onClick={() => void moveCategory(index, index - 1)}
+                className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                disabled={index === 0}>
+                
                     <ArrowUp className="h-4 w-4" />
                   </button>
                   <button
-                    type="button"
-                    onClick={() => void moveCategory(index, index + 1)}
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                    disabled={index === categories.length - 1}
-                  >
+                type="button"
+                onClick={() => void moveCategory(index, index + 1)}
+                className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                disabled={index === categories.length - 1}>
+                
                     <ArrowDown className="h-4 w-4" />
                   </button>
                 </div>
-              ))}
+            )}
             </div>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {groupManagerOpen ? (
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
+      {groupManagerOpen ?
+      <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Service Groups</h2>
+              <h2 className="text-lg font-semibold">Hizmet Grupları</h2>
               <button type="button" onClick={() => setGroupManagerOpen(false)} className="text-sm text-muted-foreground">Close</button>
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Create service sets with groups and manage capacity and sequential planning per group.
+              Gruplarla hizmet setleri oluştürün; kapasiteyi ve sıralı planlamayı grup bazında yönetin.
             </p>
 
             <button
-              type="button"
-              onClick={openCreateGroup}
-              className="mb-3 w-full h-10 rounded-lg border border-border text-sm inline-flex items-center justify-center gap-2"
-            >
+            type="button"
+            onClick={openCreateGroup}
+            className="mb-3 w-full h-10 rounded-lg border border-border text-sm inline-flex items-center justify-center gap-2">
+            
               <Plus className="h-4 w-4" />
-              Create New Group
+              Yeni Grup Oluştur
             </button>
 
             <div className="space-y-2">
-              {groups.map((group, index) => (
-                <div key={group.id} className={`rounded-lg border border-border px-3 py-2 ${group.isActive === false ? 'opacity-65' : ''}`}>
+              {groups.map((group, index) =>
+            <div key={group.id} className={`rounded-lg border border-border px-3 py-2 ${group.isActive === false ? 'opacity-65' : ''}`}>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{group.name}</p>
                       <p className="text-xs text-muted-foreground">{group.serviceCount} hizmet</p>
                     </div>
                     <button
-                      type="button"
-                      onClick={() => void moveGroup(index, index - 1)}
-                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                      disabled={index === 0}
-                    >
+                  type="button"
+                  onClick={() => void moveGroup(index, index - 1)}
+                  className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                  disabled={index === 0}>
+                  
                       <ArrowUp className="h-4 w-4" />
                     </button>
                     <button
-                      type="button"
-                      onClick={() => void moveGroup(index, index + 1)}
-                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
-                      disabled={index === groups.length - 1}
-                    >
+                  type="button"
+                  onClick={() => void moveGroup(index, index + 1)}
+                  className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+                  disabled={index === groups.length - 1}>
+                  
                       <ArrowDown className="h-4 w-4" />
                     </button>
                     <StatusToggleChip
-                      active={group.isActive !== false}
-                      onToggle={(next) => void toggleGroupActive(group, next)}
-                    />
+                  active={group.isActive !== false}
+                  onToggle={(next) => void toggleGroupActive(group, next)} />
+                
                     <button
-                      type="button"
-                      onClick={() => openEditGroup(group)}
-                      className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
-                    >
+                  type="button"
+                  onClick={() => openEditGroup(group)}
+                  className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted">
+                  
                       <Pencil className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-              ))}
+            )}
 
-              {!groups.length ? <p className="text-sm text-muted-foreground">No groups yet.</p> : null}
+              {!groups.length ? <p className="text-sm text-muted-foreground">Henüz grup yok.</p> : null}
             </div>
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
-      {groupDialogOpen ? (
-        <div className="fixed inset-0 z-50 bg-black/35 p-4">
+      {groupDialogOpen ?
+      <div className="fixed inset-0 z-50 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">{editingGroup ? 'Edit Group' : 'Create New Group'}</h2>
+              <h2 className="text-lg font-semibold">{editingGroup ? "Grubu Düzenle" : "Yeni Grup Oluştur"}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
             </div>
 
@@ -1426,58 +1426,58 @@ export function ServicesCrudPage() {
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Group name</span>
                 <input
-                  value={groupForm.name}
-                  onChange={(event) => setGroupForm((prev) => ({ ...prev, name: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                value={groupForm.name}
+                onChange={(event) => setGroupForm((prev) => ({ ...prev, name: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
 
               <label className="block text-sm space-y-1">
                 <span className="text-muted-foreground">Maximum concurrent appointments accepted</span>
                 <input
-                  type="number"
-                  min={1}
-                  value={groupForm.capacity}
-                  onChange={(event) => setGroupForm((prev) => ({ ...prev, capacity: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                type="number"
+                min={1}
+                value={groupForm.capacity}
+                onChange={(event) => setGroupForm((prev) => ({ ...prev, capacity: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
                 <div>
-                  <p>Sequential scheduling</p>
-                  <p className="text-xs text-muted-foreground">When services in a group are selected, they are scheduled one after another.</p>
+                  <p>Sirali planlama</p>
+                  <p className="text-xs text-muted-foreground">Bir gruptaki hizmetler secildiginde biri bittikten sonra digeri planlanir.</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={groupForm.sequentialRequired}
-                  onChange={(event) =>
-                    setGroupForm((prev) => ({ ...prev, sequentialRequired: event.target.checked }))
-                  }
-                />
+                type="checkbox"
+                checked={groupForm.sequentialRequired}
+                onChange={(event) =>
+                setGroupForm((prev) => ({ ...prev, sequentialRequired: event.target.checked }))
+                } />
+              
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Buffer between appointments (min)</span>
+                <span className="text-muted-foreground">Randevular arasi tampon sure (dk)</span>
                 <input
-                  type="number"
-                  min={0}
-                  step={5}
-                  value={groupForm.preparationMinutes}
-                  onChange={(event) =>
-                    setGroupForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))
-                  }
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                type="number"
+                min={0}
+                step={5}
+                value={groupForm.preparationMinutes}
+                onChange={(event) =>
+                setGroupForm((prev) => ({ ...prev, preparationMinutes: event.target.value }))
+                }
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
 
               <button type="submit" disabled={saving} className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-                {saving ? 'Saving...' : editingGroup ? 'Update' : 'Create'}
+                {saving ? "Kaydediliyor..." : editingGroup ? "Güncelle" : "Oluştur"}
               </button>
             </form>
           </div>
-        </div>
-      ) : null}
-    </div>
-  );
+        </div> :
+      null}
+    </div>);
+
 }

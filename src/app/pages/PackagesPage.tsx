@@ -35,7 +35,7 @@ export function PackagesPage() {
 
   const serviceOptions = useMemo(
     () => services.map((service) => ({ label: service.name, value: String(service.id) })),
-    [services],
+    [services]
   );
 
   const resetForm = () => {
@@ -54,13 +54,13 @@ export function PackagesPage() {
     setError(null);
     try {
       const [servicesResponse, templatesResponse] = await Promise.all([
-        apiFetch<{ items: ServiceItem[] }>('/api/admin/services'),
-        apiFetch<{ items: PackageTemplateItem[] }>('/api/admin/package-templates'),
-      ]);
+      apiFetch<{items: ServiceItem[];}>('/api/admin/services'),
+      apiFetch<{items: PackageTemplateItem[];}>('/api/admin/package-templates')]
+      );
       setServices(servicesResponse.items || []);
       setTemplates(templatesResponse.items || []);
     } catch (err: any) {
-      setError(err?.message || 'Package templates could not be loaded.');
+      setError(err?.message || "Paket şablonları yüklenemedi.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ export function PackagesPage() {
   };
 
   const setRowValue = (index: number, patch: Partial<TemplateFormService>) => {
-    setRows((prev) => prev.map((row, idx) => (idx === index ? { ...row, ...patch } : row)));
+    setRows((prev) => prev.map((row, idx) => idx === index ? { ...row, ...patch } : row));
   };
 
   const hydrateFormFromTemplate = (item: PackageTemplateItem) => {
@@ -96,12 +96,12 @@ export function PackagesPage() {
     setNotes(item.notes || '');
     setIsActive(Boolean(item.isActive));
     setRows(
-      item.services.length
-        ? item.services.map((row) => ({
-            serviceId: String(row.serviceId),
-            initialQuota: String(row.initialQuota),
-          }))
-        : [{ ...EMPTY_FORM_SERVICE }],
+      item.services.length ?
+      item.services.map((row) => ({
+        serviceId: String(row.serviceId),
+        initialQuota: String(row.initialQuota)
+      })) :
+      [{ ...EMPTY_FORM_SERVICE }]
     );
   };
 
@@ -112,22 +112,22 @@ export function PackagesPage() {
       return;
     }
 
-    const payloadServices = rows
-      .map((row) => ({
-        serviceId: Number(row.serviceId),
-        initialQuota: Number(row.initialQuota),
-      }))
-      .filter(
-        (row) =>
-          Number.isInteger(row.serviceId) &&
-          row.serviceId > 0 &&
-          Number.isInteger(row.initialQuota) &&
-          row.initialQuota > 0,
-      );
+    const payloadServices = rows.
+    map((row) => ({
+      serviceId: Number(row.serviceId),
+      initialQuota: Number(row.initialQuota)
+    })).
+    filter(
+      (row) =>
+      Number.isInteger(row.serviceId) &&
+      row.serviceId > 0 &&
+      Number.isInteger(row.initialQuota) &&
+      row.initialQuota > 0
+    );
 
     const uniqueServiceIds = new Set(payloadServices.map((row) => row.serviceId));
     if (!payloadServices.length || payloadServices.length !== uniqueServiceIds.size) {
-      setError('Add at least one valid service and avoid duplicate services.');
+      setError("En az bir geçerli hizmet ekleyin ve yinelenen hizmetlerden kaçının.");
       return;
     }
 
@@ -148,19 +148,19 @@ export function PackagesPage() {
         isActive,
         price: price.trim() ? Number(price) : null,
         validityDays: validityDays.trim() ? Number(validityDays) : null,
-        notes: notes.trim() || null,
+        notes: notes.trim() || null
       };
 
       if (editingId) {
-        await apiFetch<{ item: PackageTemplateItem }>(`/api/admin/package-templates/${editingId}`, {
+        await apiFetch<{item: PackageTemplateItem;}>(`/api/admin/package-templates/${editingId}`, {
           method: 'PUT',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
         setSuccess('Template updated.');
       } else {
-        await apiFetch<{ item: PackageTemplateItem }>('/api/admin/package-templates', {
+        await apiFetch<{item: PackageTemplateItem;}>('/api/admin/package-templates', {
           method: 'POST',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
         setSuccess('Template created.');
       }
@@ -177,43 +177,43 @@ export function PackagesPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Package Management</h1>
+        <h1 className="text-2xl font-semibold">Paket Yönetimi</h1>
         <p className="text-sm text-muted-foreground mt-1">Define service-based package templates (quota per service).</p>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold">{editingId ? 'Edit Template' : 'New Template'}</p>
-          {editingId ? (
-            <button type="button" className="rounded-md border border-border px-3 py-1.5 text-xs" onClick={resetForm}>
-              Cancel Edit
-            </button>
-          ) : null}
+          <p className="text-sm font-semibold">{editingId ? "Şablonu Düzenle" : "Yeni Şablon"}</p>
+          {editingId ?
+          <button type="button" className="rounded-md border border-border px-3 py-1.5 text-xs" onClick={resetForm}>
+              Düzenlemeyi İptal Et
+            </button> :
+          null}
         </div>
 
         <input
           value={name}
           onChange={(event) => setName(event.target.value)}
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Template name"
-        />
+          placeholder="Template name" />
+        
 
         <div className="grid grid-cols-2 gap-2">
           <select
             value={scopeType}
             onChange={(event) => setScopeType(event.target.value === 'POOL' ? 'POOL' : 'SINGLE_SERVICE')}
-            className="h-10 rounded-md border border-border px-3 text-sm bg-background"
-          >
-            <option value="SINGLE_SERVICE">Single Service</option>
+            className="h-10 rounded-md border border-border px-3 text-sm bg-background">
+            
+            <option value="SINGLE_SERVICE">Tek Hizmet</option>
             <option value="POOL">Pool</option>
           </select>
           <select
             value={isActive ? '1' : '0'}
             onChange={(event) => setIsActive(event.target.value === '1')}
-            className="h-10 rounded-md border border-border px-3 text-sm bg-background"
-          >
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
+            className="h-10 rounded-md border border-border px-3 text-sm bg-background">
+            
+            <option value="1">Aktif</option>
+            <option value="0">Pasif</option>
           </select>
         </div>
 
@@ -225,8 +225,8 @@ export function PackagesPage() {
             step="0.01"
             onChange={(event) => setPrice(event.target.value)}
             className="w-full rounded-md border border-border px-3 py-2 text-sm"
-            placeholder="Price (optional)"
-          />
+            placeholder="Price (optional)" />
+          
           <input
             value={validityDays}
             type="number"
@@ -234,60 +234,60 @@ export function PackagesPage() {
             step="1"
             onChange={(event) => setValidityDays(event.target.value)}
             className="w-full rounded-md border border-border px-3 py-2 text-sm"
-            placeholder="Validity days"
-          />
+            placeholder="Validity days" />
+          
         </div>
 
         <textarea
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[80px]"
-          placeholder="Notes (optional)"
-        />
+          placeholder="Notes (optional)" />
+        
 
         <div className="space-y-2 rounded-md border border-border p-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium">Services and Initial Quotas</p>
+            <p className="text-xs font-medium">Hizmetler ve Başlangıç Hakları</p>
             <button type="button" onClick={addRow} className="rounded-md border border-border px-2 py-1 text-xs">
-              Add Service
+              Hizmet Ekle
             </button>
           </div>
 
-          {rows.map((row, idx) => (
-            <div key={idx} className="grid grid-cols-[1fr_110px_70px] gap-2">
+          {rows.map((row, idx) =>
+          <div key={idx} className="grid grid-cols-[1fr_110px_70px] gap-2">
               <select
-                value={row.serviceId}
-                onChange={(event) => setRowValue(idx, { serviceId: event.target.value })}
-                className="h-10 rounded-md border border-border px-2 text-sm bg-background"
-              >
+              value={row.serviceId}
+              onChange={(event) => setRowValue(idx, { serviceId: event.target.value })}
+              className="h-10 rounded-md border border-border px-2 text-sm bg-background">
+              
                 <option value="">Select service</option>
-                {serviceOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                {serviceOptions.map((option) =>
+              <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
-                ))}
+              )}
               </select>
 
               <input
-                value={row.initialQuota}
-                onChange={(event) => setRowValue(idx, { initialQuota: event.target.value })}
-                type="number"
-                min="1"
-                step="1"
-                className="h-10 rounded-md border border-border px-2 text-sm"
-                placeholder="Quota"
-              />
+              value={row.initialQuota}
+              onChange={(event) => setRowValue(idx, { initialQuota: event.target.value })}
+              type="number"
+              min="1"
+              step="1"
+              className="h-10 rounded-md border border-border px-2 text-sm"
+              placeholder="Quota" />
+            
 
               <button
-                type="button"
-                onClick={() => removeRow(idx)}
-                className="h-10 rounded-md border border-border text-xs"
-                disabled={rows.length <= 1}
-              >
+              type="button"
+              onClick={() => removeRow(idx)}
+              className="h-10 rounded-md border border-border text-xs"
+              disabled={rows.length <= 1}>
+              
                 Remove
               </button>
             </div>
-          ))}
+          )}
         </div>
 
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -297,43 +297,43 @@ export function PackagesPage() {
           type="button"
           onClick={() => void submitTemplate()}
           disabled={saving}
-          className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60"
-        >
-          {saving ? 'Saving...' : editingId ? 'Update Template' : 'Create Template'}
+          className="w-full rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm disabled:opacity-60">
+          
+          {saving ? "Kaydediliyor..." : editingId ? "Şablonu Güncelle" : "Şablon Oluştur"}
         </button>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-2">
         <p className="text-sm font-semibold">Existing Templates</p>
-        {loading ? <p className="text-sm text-muted-foreground">Loading templates...</p> : null}
-        {!loading && templates.length === 0 ? <p className="text-sm text-muted-foreground">No templates yet.</p> : null}
+        {loading ? <p className="text-sm text-muted-foreground">Şablonlar yükleniyor...</p> : null}
+        {!loading && templates.length === 0 ? <p className="text-sm text-muted-foreground">Henüz şablon yok.</p> : null}
 
-        {templates.map((template) => (
-          <div key={template.id} className="rounded-lg border border-border p-3 space-y-1.5">
+        {templates.map((template) =>
+        <div key={template.id} className="rounded-lg border border-border p-3 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <p className="font-medium text-sm">{template.name}</p>
               <button
-                type="button"
-                className="rounded-md border border-border px-2 py-1 text-xs"
-                onClick={() => hydrateFormFromTemplate(template)}
-              >
-                Edit
+              type="button"
+              className="rounded-md border border-border px-2 py-1 text-xs"
+              onClick={() => hydrateFormFromTemplate(template)}>
+              
+                Düzenle
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              {template.isActive ? 'Active' : 'Inactive'} • {template.scopeType} •{' '}
-              {template.validityDays ? `${template.validityDays} days` : 'No expiry'}
+              {template.isActive ? "Aktif" : "Pasif"} • {template.scopeType} •{' '}
+              {template.validityDays ? `${template.validityDays} days` : "Bitiş yok"}
             </p>
             <div className="flex flex-wrap gap-1">
-              {template.services.map((service) => (
-                <span key={service.id} className="text-[11px] rounded-full border border-border px-2 py-0.5">
+              {template.services.map((service) =>
+            <span key={service.id} className="text-[11px] rounded-full border border-border px-2 py-0.5">
                   {service.service?.name || `#${service.serviceId}`}: {service.initialQuota}
                 </span>
-              ))}
+            )}
             </div>
           </div>
-        ))}
+        )}
       </div>
-    </div>
-  );
+    </div>);
+
 }

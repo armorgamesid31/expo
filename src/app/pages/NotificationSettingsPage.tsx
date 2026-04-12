@@ -4,35 +4,35 @@ import {
   LocalPushPermissionState,
   PUSH_NOTIFICATION_RECEIVED_EVENT,
   PUSH_REGISTRATION_CHANGED_EVENT,
-  getLocalPushPermissionState,
-} from '../lib/push-notifications';
+  getLocalPushPermissionState } from
+'../lib/push-notifications';
 import type {
   NotificationPreferences,
   PushStatusResponse,
-  PushTestResponse,
-} from '../types/mobile-api';
+  PushTestResponse } from
+'../types/mobile-api';
 
 const EVENTS = [
-  { key: 'HANDOVER_REQUIRED', label: 'Handover gerekli' },
-  { key: 'HANDOVER_REMINDER', label: 'Handover tekrar' },
-  { key: 'SAME_DAY_APPOINTMENT_CHANGE', label: 'Ayni gun randevu degisikligi' },
-  { key: 'END_OF_DAY_MISSING_DATA', label: 'Gun sonu eksik veri' },
-  { key: 'DAILY_MANAGER_REPORT', label: 'Gunluk rapor' },
-] as const;
+{ key: 'HANDOVER_REQUIRED', label: 'Handover gerekli' },
+{ key: 'HANDOVER_REMINDER', label: 'Handover tekrar' },
+{ key: 'SAME_DAY_APPOINTMENT_CHANGE', label: "Ayni gun randevu değişikliği" },
+{ key: 'END_OF_DAY_MISSING_DATA', label: "Gun sonu eksık veri" },
+{ key: 'DAILY_MANAGER_REPORT', label: 'Gunluk rapor' }] as
+const;
 
 const PUSH_SOUND_TESTS = [
-  { scenario: 'APPOINTMENT_NEW', label: 'Yeni randevu sesi' },
-  { scenario: 'BOOKING_CHANGE', label: 'Degisiklik sesi' },
-  { scenario: 'REPORT', label: 'Rapor sesi' },
-  { scenario: 'HANDOVER', label: 'Handover sesi' },
-] as const;
+{ scenario: 'APPOINTMENT_NEW', label: 'Yeni randevu sesi' },
+{ scenario: 'BOOKING_CHANGE', label: "Değişıklik sesi" },
+{ scenario: 'REPORT', label: 'Rapor sesi' },
+{ scenario: 'HANDOVER', label: 'Handover sesi' }] as
+const;
 
 const PERMISSION_LABELS: Record<LocalPushPermissionState, string> = {
-  granted: 'Izin verildi',
-  denied: 'Izin reddedildi',
-  prompt: 'Izin bekleniyor',
-  'prompt-with-rationale': 'Ek aciklama gerekli',
-  unsupported: 'Sadece native cihazda calisir',
+  granted: "İzin verildi",
+  denied: "İzin reddedildi",
+  prompt: "İzin bekleniyor",
+  'prompt-with-rationale': "Ek açıklama gerekli",
+  unsupported: 'Sadece native cihazda calisir'
 };
 
 type EventKey = (typeof EVENTS)[number]['key'];
@@ -61,13 +61,13 @@ export function NotificationSettingsPage() {
     HANDOVER_REMINDER: true,
     SAME_DAY_APPOINTMENT_CHANGE: true,
     END_OF_DAY_MISSING_DATA: true,
-    DAILY_MANAGER_REPORT: true,
+    DAILY_MANAGER_REPORT: true
   });
 
   const loadPreferences = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await apiFetch<{ preferences: NotificationPreferences }>('/api/mobile/notification-preferences');
+      const response = await apiFetch<{preferences: NotificationPreferences;}>('/api/mobile/notification-preferences');
       setMasterEnabled(response.preferences?.masterEnabled !== false);
       const remote = (response.preferences?.eventConfig?.events || {}) as Record<string, boolean>;
       setEvents((prev) => ({
@@ -76,7 +76,7 @@ export function NotificationSettingsPage() {
         HANDOVER_REMINDER: remote.HANDOVER_REMINDER ?? prev.HANDOVER_REMINDER,
         SAME_DAY_APPOINTMENT_CHANGE: remote.SAME_DAY_APPOINTMENT_CHANGE ?? prev.SAME_DAY_APPOINTMENT_CHANGE,
         END_OF_DAY_MISSING_DATA: remote.END_OF_DAY_MISSING_DATA ?? prev.END_OF_DAY_MISSING_DATA,
-        DAILY_MANAGER_REPORT: remote.DAILY_MANAGER_REPORT ?? prev.DAILY_MANAGER_REPORT,
+        DAILY_MANAGER_REPORT: remote.DAILY_MANAGER_REPORT ?? prev.DAILY_MANAGER_REPORT
       }));
       setError(null);
     } catch (err: any) {
@@ -90,9 +90,9 @@ export function NotificationSettingsPage() {
     setPushStatusLoading(true);
     try {
       const [remoteStatus, permission] = await Promise.all([
-        apiFetch<PushStatusResponse>('/api/mobile/push/status'),
-        getLocalPushPermissionState(),
-      ]);
+      apiFetch<PushStatusResponse>('/api/mobile/push/status'),
+      getLocalPushPermissionState()]
+      );
       setPushStatus(remoteStatus);
       setLocalPermission(permission);
       setPushStatusError(null);
@@ -132,9 +132,9 @@ export function NotificationSettingsPage() {
           masterEnabled,
           eventConfig: {
             masterEnabled,
-            events,
-          },
-        }),
+            events
+          }
+        })
       });
     } catch (err: any) {
       setError(err?.message || 'Bildirim tercihleri kaydedilemedi.');
@@ -151,7 +151,7 @@ export function NotificationSettingsPage() {
     await sendPushTest({ delaySeconds: 5, scenario: 'GENERAL' });
   };
 
-  const sendPushTest = async (input: { delaySeconds: number; scenario: string }) => {
+  const sendPushTest = async (input: {delaySeconds: number;scenario: string;}) => {
     setTesting(true);
     setTestMessage(null);
     setPushStatusError(null);
@@ -159,17 +159,17 @@ export function NotificationSettingsPage() {
     try {
       const result = await apiFetch<PushTestResponse>('/api/mobile/push/test', {
         method: 'POST',
-        body: JSON.stringify({ delaySeconds: input.delaySeconds, scenario: input.scenario }),
+        body: JSON.stringify({ delaySeconds: input.delaySeconds, scenario: input.scenario })
       });
 
       setTestMessage(
-        result.scheduled
-          ? `${result.delaySeconds} saniyelik gecikmeli ${result.scenario || input.scenario} testi planlandi. Simdi uygulamayi arka plana al.`
-          : `Test sonucu: SENT ${result.pushDeliverySummary.SENT}, FAILED ${result.pushDeliverySummary.FAILED}, SKIPPED ${result.pushDeliverySummary.SKIPPED}`,
+        result.scheduled ?
+        `${result.delaySeconds} saniyelik gecikmeli ${result.scenario || input.scenario} testi planlandi. Simdi uygulamayi arka plana al.` :
+        `Test sonucu: SENT ${result.pushDeliverySummary.SENT}, FAILED ${result.pushDeliverySummary.FAILED}, SKIPPED ${result.pushDeliverySummary.SKIPPED}`
       );
       await loadPushStatus();
     } catch (err: any) {
-      setPushStatusError(err?.message || 'Test bildirimi gonderilemedi.');
+      setPushStatusError(err?.message || "Test bildirimi gönderilemedi.");
     } finally {
       setTesting(false);
     }
@@ -178,13 +178,13 @@ export function NotificationSettingsPage() {
   return (
     <div className="p-4 space-y-4">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold">Notification Settings</h1>
+        <h1 className="text-2xl font-semibold">Bildirim Ayarları</h1>
         <p className="text-sm text-muted-foreground">
           Push kurulumu, cihaz kaydi ve bildirim tercihlerini bu ekrandan takip edebilirsin.
         </p>
       </div>
 
-      {loading ? <p className="text-sm text-muted-foreground">Tercihler yukleniyor...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Tercihler yükleniyor...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -196,13 +196,13 @@ export function NotificationSettingsPage() {
           <button
             type="button"
             onClick={() => void loadPushStatus()}
-            className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground"
-          >
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+            
             Yenile
           </button>
         </div>
 
-        {pushStatusLoading ? <p className="text-sm text-muted-foreground">Push durumu yukleniyor...</p> : null}
+        {pushStatusLoading ? <p className="text-sm text-muted-foreground">Push durumu yükleniyor...</p> : null}
         {pushStatusError ? <p className="text-sm text-red-500">{pushStatusError}</p> : null}
 
         <div className="grid gap-2 text-sm">
@@ -213,7 +213,7 @@ export function NotificationSettingsPage() {
           <div className="flex items-center justify-between gap-3">
             <span>Backend push provider</span>
             <span className="font-medium">
-              {pushStatus?.providerConfigured ? `Hazir (${pushStatus.providerSource})` : 'Hazir degil'}
+              {pushStatus?.providerConfigured ? `Hazir (${pushStatus.providerSource})` : "Hazir değil"}
             </span>
           </div>
           <div className="flex items-center justify-between gap-3">
@@ -222,15 +222,15 @@ export function NotificationSettingsPage() {
           </div>
         </div>
 
-        {pushStatus?.providerError ? (
-          <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600">
+        {pushStatus?.providerError ?
+        <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600">
             Provider hatasi: {pushStatus.providerError}
-          </p>
-        ) : null}
+          </p> :
+        null}
 
         <div className="space-y-2">
-          {(pushStatus?.devices || []).map((device) => (
-            <div key={device.id} className="rounded-lg border border-border/70 px-3 py-2 text-xs">
+          {(pushStatus?.devices || []).map((device) =>
+          <div key={device.id} className="rounded-lg border border-border/70 px-3 py-2 text-xs">
               <p className="font-semibold">
                 {device.platform} · {device.tokenMasked}
               </p>
@@ -238,10 +238,10 @@ export function NotificationSettingsPage() {
                 Versiyon: {device.appVersion || 'bilinmiyor'} · Son gorulme: {formatDate(device.lastSeenAt)}
               </p>
             </div>
-          ))}
-          {!pushStatusLoading && (pushStatus?.devices || []).length === 0 ? (
-            <p className="text-xs text-muted-foreground">Bu kullanici icin kayitli push cihazi yok.</p>
-          ) : null}
+          )}
+          {!pushStatusLoading && (pushStatus?.devices || []).length === 0 ?
+          <p className="text-xs text-muted-foreground">Bu kullanıcı icin kayitli push cihazi yok.</p> :
+          null}
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2">
@@ -249,16 +249,16 @@ export function NotificationSettingsPage() {
             type="button"
             disabled={testing}
             onClick={() => void sendTestNotification()}
-            className="h-10 rounded-lg bg-[var(--deep-indigo)] text-white text-sm font-semibold disabled:opacity-60"
-          >
-            {testing ? 'Gonderiliyor...' : 'Anlik test bildirimi'}
+            className="h-10 rounded-lg bg-[var(--deep-indigo)] text-white text-sm font-semibold disabled:opacity-60">
+            
+            {testing ? "Gönderiliyor..." : 'Anlik test bildirimi'}
           </button>
           <button
             type="button"
             disabled={testing}
             onClick={() => void sendDelayedTestNotification()}
-            className="h-10 rounded-lg border border-[var(--deep-indigo)] text-[var(--deep-indigo)] text-sm font-semibold disabled:opacity-60"
-          >
+            className="h-10 rounded-lg border border-[var(--deep-indigo)] text-[var(--deep-indigo)] text-sm font-semibold disabled:opacity-60">
+            
             {testing ? 'Planlaniyor...' : '5 saniye sonra test'}
           </button>
         </div>
@@ -266,17 +266,17 @@ export function NotificationSettingsPage() {
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">5 saniye gecikmeli ozel ses testleri</p>
           <div className="grid gap-2 sm:grid-cols-2">
-            {PUSH_SOUND_TESTS.map((testItem) => (
-              <button
-                key={testItem.scenario}
-                type="button"
-                disabled={testing}
-                onClick={() => void sendPushTest({ delaySeconds: 5, scenario: testItem.scenario })}
-                className="h-10 rounded-lg border border-border text-sm font-semibold disabled:opacity-60"
-              >
+            {PUSH_SOUND_TESTS.map((testItem) =>
+            <button
+              key={testItem.scenario}
+              type="button"
+              disabled={testing}
+              onClick={() => void sendPushTest({ delaySeconds: 5, scenario: testItem.scenario })}
+              className="h-10 rounded-lg border border-border text-sm font-semibold disabled:opacity-60">
+              
                 {testing ? 'Planlaniyor...' : `${testItem.label} (5 sn)`}
               </button>
-            ))}
+            )}
           </div>
         </div>
 
@@ -290,34 +290,34 @@ export function NotificationSettingsPage() {
             type="checkbox"
             checked={masterEnabled}
             onChange={(e) => setMasterEnabled(e.target.checked)}
-            className="h-4 w-4"
-          />
+            className="h-4 w-4" />
+          
         </label>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-        {EVENTS.map((item) => (
-          <label key={item.key} className="flex items-center justify-between gap-3">
+        {EVENTS.map((item) =>
+        <label key={item.key} className="flex items-center justify-between gap-3">
             <span className="text-sm">{item.label}</span>
             <input
-              type="checkbox"
-              checked={events[item.key]}
-              disabled={!masterEnabled}
-              onChange={(e) => setEvents((prev) => ({ ...prev, [item.key]: e.target.checked }))}
-              className="h-4 w-4"
-            />
+            type="checkbox"
+            checked={events[item.key]}
+            disabled={!masterEnabled}
+            onChange={(e) => setEvents((prev) => ({ ...prev, [item.key]: e.target.checked }))}
+            className="h-4 w-4" />
+          
           </label>
-        ))}
+        )}
       </div>
 
       <button
         type="button"
         disabled={saving}
         onClick={() => void save()}
-        className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60"
-      >
+        className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60">
+        
         {saving ? 'Kaydediliyor...' : 'Kaydet'}
       </button>
-    </div>
-  );
+    </div>);
+
 }

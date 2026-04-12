@@ -26,8 +26,8 @@ type PreviewResponse = {
   rows: AdminImportRow[];
   conflicts: AdminImportConflict[];
   mappingOptions: {
-    services: Array<{ id: number; name: string; duration: number; price: number }>;
-    staff: Array<{ id: number; name: string; title?: string | null }>;
+    services: Array<{id: number;name: string;duration: number;price: number;}>;
+    staff: Array<{id: number;name: string;title?: string | null;}>;
   };
 };
 
@@ -80,9 +80,9 @@ function asConflictTypeLabel(type: AdminImportConflict['type']) {
     case 'INVALID_PHONE':
       return 'Invalid phone';
     case 'SERVICE_UNMATCHED':
-      return 'Service unmatched';
+      return "Hizmet eşleşmedi";
     case 'STAFF_UNMATCHED':
-      return 'Staff unmatched';
+      return "Personel eşleşmedi";
     case 'APPOINTMENT_OVERLAP':
       return 'Appointment overlap';
     case 'OUT_OF_RANGE_DATE':
@@ -110,13 +110,13 @@ export function DataImportWizardPage() {
 
   const openConflicts = useMemo(
     () => (preview?.conflicts || []).filter((item) => item.status === 'OPEN'),
-    [preview?.conflicts],
+    [preview?.conflicts]
   );
   const stepIndex = batch ? statusToStep(batch.status) : 0;
   const summary = toSummaryRecord(batch?.summary);
 
   const loadBatch = async (batchId: string) => {
-    const response = await apiFetch<{ batch: AdminImportBatch }>(`/api/admin/imports/${batchId}`);
+    const response = await apiFetch<{batch: AdminImportBatch;}>(`/api/admin/imports/${batchId}`);
     setBatch(response.batch);
     return response.batch;
   };
@@ -139,8 +139,8 @@ export function DataImportWizardPage() {
       body: JSON.stringify({
         fileName: file.name,
         mimeType: file.type || 'application/octet-stream',
-        sizeBytes: file.size,
-      }),
+        sizeBytes: file.size
+      })
     });
 
     if (presign.upload.mode !== 'PRESIGNED_PUT' || !presign.upload.uploadUrl) {
@@ -150,7 +150,7 @@ export function DataImportWizardPage() {
     const uploadResponse = await fetch(presign.upload.uploadUrl, {
       method: presign.upload.method || 'PUT',
       headers: presign.upload.headers || {},
-      body: file,
+      body: file
     });
     if (!uploadResponse.ok) {
       throw new Error(`Upload failed for ${file.name}`);
@@ -161,16 +161,16 @@ export function DataImportWizardPage() {
       body: JSON.stringify({
         fileId: presign.file.id,
         objectKey: presign.file.objectKey,
-        publicUrl: presign.file.publicUrl,
-      }),
+        publicUrl: presign.file.publicUrl
+      })
     });
   };
 
   const handleCreateBatch = async () => {
     setIsLoading(true);
     try {
-      const response = await apiFetch<{ batch: AdminImportBatch }>('/api/admin/imports', {
-        method: 'POST',
+      const response = await apiFetch<{batch: AdminImportBatch;}>('/api/admin/imports', {
+        method: 'POST'
       });
       setBatch(response.batch);
       setPreview(null);
@@ -197,7 +197,7 @@ export function DataImportWizardPage() {
       }
       setPollTick((prev) => prev + 1);
     } catch (error: any) {
-      toast.error(error?.message || 'Refresh failed');
+      toast.error(error?.message || "Yenileme başarısız");
     } finally {
       setIsLoading(false);
     }
@@ -268,15 +268,15 @@ export function DataImportWizardPage() {
         method: 'POST',
         body: JSON.stringify({
           decisions: [
-            {
-              rowId: conflict.rowId,
-              conflictId: conflict.id,
-              decisionType: 'MANUAL_PATCH',
-              decisionKey: `conflict-${conflict.id}`,
-              decisionValue,
-            },
-          ],
-        }),
+          {
+            rowId: conflict.rowId,
+            conflictId: conflict.id,
+            decisionType: 'MANUAL_PATCH',
+            decisionKey: `conflict-${conflict.id}`,
+            decisionValue
+          }]
+
+        })
       });
       toast.success('Conflict decision saved');
       await handleRefresh();
@@ -290,7 +290,7 @@ export function DataImportWizardPage() {
     setIsCommitting(true);
     try {
       await apiFetch(`/api/admin/imports/${batch.id}/commit`, {
-        method: 'POST',
+        method: 'POST'
       });
       toast.success('Commit started');
       await handleRefresh();
@@ -324,8 +324,8 @@ export function DataImportWizardPage() {
             type="button"
             onClick={() => void handleCreateBatch()}
             disabled={isLoading || isUploading || isCommitting}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--deep-indigo)] px-3 py-2 text-sm text-white disabled:opacity-60"
-          >
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--deep-indigo)] px-3 py-2 text-sm text-white disabled:opacity-60">
+            
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
             Yeni Batch
           </button>
@@ -333,8 +333,8 @@ export function DataImportWizardPage() {
             type="button"
             onClick={() => void handleRefresh()}
             disabled={!batch?.id || isLoading}
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm disabled:opacity-50"
-          >
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm disabled:opacity-50">
+            
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Yenile
           </button>
@@ -350,30 +350,30 @@ export function DataImportWizardPage() {
               <div
                 key={step}
                 className={`rounded-lg border px-2 py-2 text-center text-xs ${
-                  isDone
-                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700'
-                    : isActive
-                      ? 'border-[var(--deep-indigo)]/50 bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)]'
-                      : 'border-border bg-background text-muted-foreground'
-                }`}
-              >
+                isDone ?
+                'border-emerald-500/50 bg-emerald-500/10 text-emerald-700' :
+                isActive ?
+                'border-[var(--deep-indigo)]/50 bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)]' :
+                'border-border bg-background text-muted-foreground'}`
+                }>
+                
                 {step}
-              </div>
-            );
+              </div>);
+
           })}
         </div>
       </div>
 
-      {batch ? (
-        <div className="rounded-xl border border-border bg-card p-4 space-y-2 text-sm">
+      {batch ?
+      <div className="rounded-xl border border-border bg-card p-4 space-y-2 text-sm">
           <p><strong>Batch:</strong> {batch.id}</p>
-          <p><strong>Status:</strong> {batch.status}</p>
+          <p><strong>Durum:</strong> {batch.status}</p>
           <p>
             <strong>Rows:</strong> {String(summary.totalRows || 0)} | <strong>Open conflicts:</strong>{' '}
             {String(summary.openConflicts || 0)}
           </p>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <h2 className="font-semibold">1) Dosya yükle</h2>
@@ -392,8 +392,8 @@ export function DataImportWizardPage() {
             onChange={(event) => {
               void handleFilesSelected(event.target.files);
               event.currentTarget.value = '';
-            }}
-          />
+            }} />
+          
         </label>
         {!batch?.id ? <p className="text-xs text-amber-600">Önce Yeni Batch oluştur.</p> : null}
         {isUploading ? <p className="text-xs text-muted-foreground">Dosyalar yükleniyor...</p> : null}
@@ -416,30 +416,30 @@ export function DataImportWizardPage() {
             onChange={(event) => {
               void handleBenchmarkFilesSelected(event.target.files);
               event.currentTarget.value = '';
-            }}
-          />
+            }} />
+          
         </label>
         {!batch?.id ? <p className="text-xs text-amber-600">Benchmark için önce Yeni Batch oluştur.</p> : null}
-        {isBenchmarkUploading ? (
-          <p className="text-xs text-muted-foreground">Benchmark yükleme çalışıyor: 4-5 sn aralıklarla 5 görsel gönderiliyor...</p>
-        ) : null}
+        {isBenchmarkUploading ?
+        <p className="text-xs text-muted-foreground">Benchmark yükleme çalışıyor: 4-5 sn aralıklarla 5 görsel gönderiliyor...</p> :
+        null}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <h2 className="font-semibold">2) Conflict çözümü</h2>
-        {!preview ? (
-          <p className="text-xs text-muted-foreground">Preview yüklemek için Yenile butonuna bas.</p>
-        ) : openConflicts.length === 0 ? (
-          <p className="inline-flex items-center gap-2 text-sm text-emerald-600">
+        {!preview ?
+        <p className="text-xs text-muted-foreground">Preview yüklemek için Yenile butonuna bas.</p> :
+        openConflicts.length === 0 ?
+        <p className="inline-flex items-center gap-2 text-sm text-emerald-600">
             <CheckCircle2 className="h-4 w-4" />
             Açık conflict yok.
-          </p>
-        ) : (
-          <div className="space-y-3">
+          </p> :
+
+        <div className="space-y-3">
             {openConflicts.map((conflict) => {
-              const edit = conflictEdits[conflict.id] || {};
-              return (
-                <div key={conflict.id} className="rounded-lg border border-border p-3 space-y-2">
+            const edit = conflictEdits[conflict.id] || {};
+            return (
+              <div key={conflict.id} className="rounded-lg border border-border p-3 space-y-2">
                   <p className="text-sm font-medium inline-flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-amber-500" />
                     {asConflictTypeLabel(conflict.type)}
@@ -447,102 +447,102 @@ export function DataImportWizardPage() {
                   <p className="text-xs text-muted-foreground">{conflict.message}</p>
                   <p className="text-xs text-muted-foreground">Row ID: {conflict.rowId ?? '-'}</p>
 
-                  {conflict.type === 'SERVICE_UNMATCHED' ? (
-                    <select
-                      value={edit.serviceId || ''}
-                      onChange={(event) =>
-                        setConflictEdits((prev) => ({
-                          ...prev,
-                          [conflict.id]: {
-                            ...prev[conflict.id],
-                            serviceId: Number(event.target.value) || undefined,
-                            ignoreConflict: false,
-                          },
-                        }))
-                      }
-                      className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
-                    >
+                  {conflict.type === 'SERVICE_UNMATCHED' ?
+                <select
+                  value={edit.serviceId || ''}
+                  onChange={(event) =>
+                  setConflictEdits((prev) => ({
+                    ...prev,
+                    [conflict.id]: {
+                      ...prev[conflict.id],
+                      serviceId: Number(event.target.value) || undefined,
+                      ignoreConflict: false
+                    }
+                  }))
+                  }
+                  className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm">
+                  
                       <option value="">Select service</option>
-                      {(preview.mappingOptions.services || []).map((service) => (
-                        <option key={service.id} value={service.id}>
+                      {(preview.mappingOptions.services || []).map((service) =>
+                  <option key={service.id} value={service.id}>
                           {service.name}
                         </option>
-                      ))}
-                    </select>
-                  ) : null}
+                  )}
+                    </select> :
+                null}
 
-                  {conflict.type === 'STAFF_UNMATCHED' ? (
-                    <select
-                      value={edit.staffId || ''}
-                      onChange={(event) =>
-                        setConflictEdits((prev) => ({
-                          ...prev,
-                          [conflict.id]: {
-                            ...prev[conflict.id],
-                            staffId: Number(event.target.value) || undefined,
-                            ignoreConflict: false,
-                          },
-                        }))
-                      }
-                      className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
-                    >
+                  {conflict.type === 'STAFF_UNMATCHED' ?
+                <select
+                  value={edit.staffId || ''}
+                  onChange={(event) =>
+                  setConflictEdits((prev) => ({
+                    ...prev,
+                    [conflict.id]: {
+                      ...prev[conflict.id],
+                      staffId: Number(event.target.value) || undefined,
+                      ignoreConflict: false
+                    }
+                  }))
+                  }
+                  className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm">
+                  
                       <option value="">Select staff</option>
-                      {(preview.mappingOptions.staff || []).map((staff) => (
-                        <option key={staff.id} value={staff.id}>
+                      {(preview.mappingOptions.staff || []).map((staff) =>
+                  <option key={staff.id} value={staff.id}>
                           {staff.name}
                         </option>
-                      ))}
-                    </select>
-                  ) : null}
+                  )}
+                    </select> :
+                null}
 
-                  {(conflict.type === 'MISSING_PHONE' || conflict.type === 'INVALID_PHONE') ? (
-                    <input
-                      type="text"
-                      placeholder="Phone digits (e.g. 905551112233)"
-                      value={edit.customerPhone || ''}
-                      onChange={(event) =>
-                        setConflictEdits((prev) => ({
-                          ...prev,
-                          [conflict.id]: {
-                            ...prev[conflict.id],
-                            customerPhone: event.target.value.replace(/\D/g, ''),
-                            ignoreConflict: false,
-                          },
-                        }))
-                      }
-                      className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
-                    />
-                  ) : null}
+                  {conflict.type === 'MISSING_PHONE' || conflict.type === 'INVALID_PHONE' ?
+                <input
+                  type="text"
+                  placeholder="Telefon rakamları (örn. 905551112233)"
+                  value={edit.customerPhone || ''}
+                  onChange={(event) =>
+                  setConflictEdits((prev) => ({
+                    ...prev,
+                    [conflict.id]: {
+                      ...prev[conflict.id],
+                      customerPhone: event.target.value.replace(/\D/g, ''),
+                      ignoreConflict: false
+                    }
+                  }))
+                  }
+                  className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm" /> :
+
+                null}
 
                   <div className="flex flex-wrap gap-2">
                     <button
-                      type="button"
-                      onClick={() => void handleSaveConflict(conflict)}
-                      className="rounded-md bg-[var(--deep-indigo)] px-3 py-2 text-xs text-white"
-                    >
+                    type="button"
+                    onClick={() => void handleSaveConflict(conflict)}
+                    className="rounded-md bg-[var(--deep-indigo)] px-3 py-2 text-xs text-white">
+                    
                       Kaydet ve Çöz
                     </button>
                     <button
-                      type="button"
-                      onClick={() =>
-                        setConflictEdits((prev) => ({
-                          ...prev,
-                          [conflict.id]: {
-                            ...prev[conflict.id],
-                            ignoreConflict: true,
-                          },
-                        }))
+                    type="button"
+                    onClick={() =>
+                    setConflictEdits((prev) => ({
+                      ...prev,
+                      [conflict.id]: {
+                        ...prev[conflict.id],
+                        ignoreConflict: true
                       }
-                      className="rounded-md border border-border px-3 py-2 text-xs"
-                    >
+                    }))
+                    }
+                    className="rounded-md border border-border px-3 py-2 text-xs">
+                    
                       Ignore işaretle
                     </button>
                   </div>
-                </div>
-              );
-            })}
+                </div>);
+
+          })}
           </div>
-        )}
+        }
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -551,17 +551,17 @@ export function DataImportWizardPage() {
           type="button"
           onClick={() => void handleCommit()}
           disabled={!batch?.id || isCommitting || openConflicts.length > 0}
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-        >
+          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-50">
+          
           {isCommitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
           Commit Başlat
         </button>
-        {openConflicts.length > 0 ? (
-          <p className="text-xs text-amber-600">Commit için önce açık conflictleri çözmen gerekiyor.</p>
-        ) : null}
+        {openConflicts.length > 0 ?
+        <p className="text-xs text-amber-600">Commit için önce açık conflictleri çözmen gerekiyor.</p> :
+        null}
 
-        {report ? (
-          <div className="rounded-lg border border-border p-3 text-xs space-y-1">
+        {report ?
+        <div className="rounded-lg border border-border p-3 text-xs space-y-1">
             <p><strong>Run:</strong> {report.latestRun?.status || '-'}</p>
             <p>
               <strong>Rows</strong> READY: {report.rows.READY || 0} | IMPORTED: {report.rows.IMPORTED || 0} | FAILED:{' '}
@@ -571,27 +571,27 @@ export function DataImportWizardPage() {
               <strong>Conflicts</strong> OPEN: {report.conflicts.OPEN || 0} | RESOLVED: {report.conflicts.RESOLVED || 0} |
               {' '}IGNORED: {report.conflicts.IGNORED || 0}
             </p>
-          </div>
-        ) : null}
+          </div> :
+        null}
       </div>
 
-      {preview ? (
-        <div className="rounded-xl border border-border bg-card p-4 space-y-2 text-xs">
+      {preview ?
+      <div className="rounded-xl border border-border bg-card p-4 space-y-2 text-xs">
           <h2 className="font-semibold text-sm">Önizleme (ilk {preview.rows.length} satır)</h2>
           <div className="space-y-1 max-h-64 overflow-auto">
-            {preview.rows.map((row) => (
-              <div key={row.id} className="rounded-md border border-border px-2 py-1">
+            {preview.rows.map((row) =>
+          <div key={row.id} className="rounded-md border border-border px-2 py-1">
                 #{row.rowIndex} | {row.customerName || '-'} | {row.customerPhoneNormalized || '-'} |{' '}
                 {row.serviceNameRaw || '-'} | {row.staffNameRaw || '-'} | {row.rowStatus}
               </div>
-            ))}
+          )}
           </div>
-        </div>
-      ) : null}
+        </div> :
+      null}
 
       <div className="text-[11px] text-muted-foreground">
         Poll tick: {pollTick}
       </div>
-    </div>
-  );
+    </div>);
+
 }

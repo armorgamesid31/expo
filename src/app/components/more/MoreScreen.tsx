@@ -13,69 +13,69 @@ interface MoreScreenProps {
 }
 
 export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSettings, isFeatureVisible }: MoreScreenProps) {
-  const [warningModal, setWarningModal] = useState<{ 
-    title: string; 
-    message: string; 
-    actionText?: string; 
+  const [warningModal, setWarningModal] = useState<{
+    title: string;
+    message: string;
+    actionText?: string;
     actionTarget?: string;
-    requirements?: { label: string; done: boolean }[];
+    requirements?: {label: string;done: boolean;}[];
   } | null>(null);
 
   // Management Tools — her zaman üstte
   const managementTools = [
-    {
-      icon: Settings,
-      label: 'Settings',
-      description: 'Theme, notifications, and account preferences',
-      action: () => {
-        if (onOpenSettings) {
-          onOpenSettings();
-          return;
-        }
-        onNavigate('settings');
-      },
-      color: 'var(--rose-gold)',
+  {
+    icon: Settings,
+    label: "Ayarlar",
+    description: 'Theme, notifications, and account preferences',
+    action: () => {
+      if (onOpenSettings) {
+        onOpenSettings();
+        return;
+      }
+      onNavigate('settings');
     },
-    {
-      featureKey: 'operations.studio',
-      icon: Layers,
-      label: 'Operations Studio',
-      description: 'Services, packages, and inventory in one workspace',
-      action: () => onNavigate('operations-studio'),
-      color: 'var(--deep-indigo)',
-    },
-    {
-      featureKey: 'team.management',
-      icon: UserCog,
-      label: 'Team Management',
-      description: 'Employees, team users, roles, and access',
-      action: () => onNavigate('team-management'),
-      color: 'var(--deep-indigo)',
-    },
-    {
-      featureKey: 'brand.growth.hub',
-      icon: Megaphone,
-      label: 'Brand & Growth Hub',
-      description: 'Salon profile, website, and campaigns in one place',
-      action: () => onNavigate('brand-growth-hub'),
-      color: 'var(--rose-gold)',
-    },
-    {
-      featureKey: 'analytics.view',
-      icon: BarChart3,
-      label: 'Analytics',
-      description: 'Business performance and trends',
-      action: () => onNavigate('analytics'),
-      color: 'var(--deep-indigo)',
-    },
-  ];
+    color: 'var(--rose-gold)'
+  },
+  {
+    featureKey: 'operations.studio',
+    icon: Layers,
+    label: 'Operations Studio',
+    description: "Hizmetler, paketler ve envanter tek çalışma alanında",
+    action: () => onNavigate('operations-studio'),
+    color: 'var(--deep-indigo)'
+  },
+  {
+    featureKey: 'team.management',
+    icon: UserCog,
+    label: "Ekip Yönetimi",
+    description: 'Employees, team users, roles, and access',
+    action: () => onNavigate('team-management'),
+    color: 'var(--deep-indigo)'
+  },
+  {
+    featureKey: 'brand.growth.hub',
+    icon: Megaphone,
+    label: 'Brand & Growth Hub',
+    description: 'Salon profile, website, and campaigns in one place',
+    action: () => onNavigate('brand-growth-hub'),
+    color: 'var(--rose-gold)'
+  },
+  {
+    featureKey: 'analytics.view',
+    icon: BarChart3,
+    label: "Analitik",
+    description: 'Business performance and trends',
+    action: () => onNavigate('analytics'),
+    color: 'var(--deep-indigo)'
+  }];
+
 
   // Advanced Modules — Altta
   return (
     <div className="h-full pb-20 relative overflow-y-auto">
       {/* Warning Modal Overlay */}
-      {warningModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95">
+      {warningModal &&
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95">
           <Card className="w-full max-w-sm border-border/50 shadow-2xl bg-[var(--deep-indigo)] text-white">
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-4">
@@ -90,47 +90,47 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
               <p className="text-white/70 text-sm mb-4 leading-relaxed">{warningModal.message}</p>
               
               {/* Requirements List */}
-              {warningModal.requirements && warningModal.requirements.length > 0 && (
-                <div className="space-y-2 mb-5">
-                  {warningModal.requirements.map((req, idx) => (
-                    <div key={idx} className="flex items-center gap-2 bg-white/5 p-2 rounded-lg">
-                      {req.done ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-                      ) : (
-                        <Circle className="w-4 h-4 text-white/40 shrink-0" />
-                      )}
+              {warningModal.requirements && warningModal.requirements.length > 0 &&
+            <div className="space-y-2 mb-5">
+                  {warningModal.requirements.map((req, idx) =>
+              <div key={idx} className="flex items-center gap-2 bg-white/5 p-2 rounded-lg">
+                      {req.done ?
+                <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /> :
+
+                <Circle className="w-4 h-4 text-white/40 shrink-0" />
+                }
                       <span className={`text-xs ${req.done ? 'text-green-400 line-through' : 'text-white/90'}`}>
                         {req.label}
                       </span>
                     </div>
-                  ))}
-                </div>
               )}
+                </div>
+            }
 
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 rounded-lg bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white" 
-                  onClick={() => setWarningModal(null)}
-                >
+                <Button
+                variant="outline"
+                className="flex-1 rounded-lg bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white"
+                onClick={() => setWarningModal(null)}>
+                
                   Close
                 </Button>
-                {warningModal.actionText && (
-                  <Button 
-                    className="flex-1 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white rounded-lg shadow-lg border-0"
-                    onClick={() => {
-                      setWarningModal(null);
-                      onNavigate(warningModal.actionTarget || 'dashboard');
-                    }}
-                  >
+                {warningModal.actionText &&
+              <Button
+                className="flex-1 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white rounded-lg shadow-lg border-0"
+                onClick={() => {
+                  setWarningModal(null);
+                  onNavigate(warningModal.actionTarget || 'dashboard');
+                }}>
+                
                     {warningModal.actionText}
                   </Button>
-                )}
+              }
               </div>
             </CardContent>
           </Card>
         </div>
-      )}
+      }
 
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
         <h1 className="text-2xl font-semibold mb-1">Features</h1>
@@ -142,8 +142,8 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-        >
+          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}>
+          
           <Card className="border-border/50 bg-gradient-to-br from-[var(--rose-gold)]/10 to-transparent">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
@@ -152,7 +152,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold">
-                    Salon Owner
+                    Salon Sahip
                   </h2>
                   <div className="flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-[var(--rose-gold)]" />
@@ -170,26 +170,26 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
         <div>
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Management Tools</h3>
           <div className="grid grid-cols-2 gap-3">
-            {managementTools
-              .filter((item) => (isFeatureVisible ? isFeatureVisible((item as any).featureKey || '') : true))
-              .map((item, idx) => {
+            {managementTools.
+            filter((item) => isFeatureVisible ? isFeatureVisible((item as any).featureKey || '') : true).
+            map((item, idx) => {
               const Icon = item.icon;
               return (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 * idx, ease: [0.22, 1, 0.36, 1] }}
-                >
+                  transition={{ duration: 0.3, delay: 0.05 * idx, ease: [0.22, 1, 0.36, 1] }}>
+                  
                   <Card
                     className="border-border/50 cursor-pointer hover:border-[var(--rose-gold)]/50 transition-all active:scale-98 shadow-sm"
-                    onClick={item.action}
-                  >
+                    onClick={item.action}>
+                    
                     <CardContent className="p-4 flex flex-col gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: `${item.color}15` }}
-                      >
+                        style={{ backgroundColor: `${item.color}15` }}>
+                        
                         <Icon className="w-5 h-5" style={{ color: item.color }} />
                       </div>
                       <div>
@@ -198,8 +198,8 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
-              );
+                </motion.div>);
+
             })}
           </div>
         </div>
@@ -208,6 +208,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
           <p>Salon OS Enterprise — v3.2.0</p>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

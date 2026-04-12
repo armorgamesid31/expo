@@ -43,17 +43,17 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist, analytics }: AdminDashboardProps) {
   const analyticsSeries = analytics?.trendRevenue ?? analytics?.weeklyRevenue;
-  const weekData = analyticsSeries
-    ? analyticsSeries
-    : [
-        { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
-        { label: 'Sal', revenue: 0, appointments: 0, date: '' },
-        { label: 'Tsar', revenue: 0, appointments: 0, date: '' },
-        { label: 'Per', revenue: 0, appointments: 0, date: '' },
-        { label: 'Cum', revenue: 0, appointments: 0, date: '' },
-        { label: 'Cmt', revenue: 0, appointments: 0, date: '' },
-        { label: 'Paz', revenue: 0, appointments: 0, date: '' },
-      ];
+  const weekData = analyticsSeries ?
+  analyticsSeries :
+  [
+  { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
+  { label: 'Sal', revenue: 0, appointments: 0, date: '' },
+  { label: 'Tsar', revenue: 0, appointments: 0, date: '' },
+  { label: 'Per', revenue: 0, appointments: 0, date: '' },
+  { label: 'Cum', revenue: 0, appointments: 0, date: '' },
+  { label: 'Cmt', revenue: 0, appointments: 0, date: '' },
+  { label: 'Paz', revenue: 0, appointments: 0, date: '' }];
+
   const todayPoint = weekData[weekData.length - 1];
   const monthlyRevenue = analytics?.metrics?.revenue || 0;
   const newCustomers = analytics?.metrics?.newCustomers || 0;
@@ -63,40 +63,40 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
   const totalAppointments = analytics?.metrics?.totalAppointments || 0;
   const checklistReady = checklist !== undefined;
   const setupCompleted =
-    checklistReady &&
-    (Boolean(checklist?.completed) ||
-      Boolean(checklist?.workingHours && checklist?.address && checklist?.phone && checklist?.service && checklist?.staff));
+  checklistReady && (
+  Boolean(checklist?.completed) ||
+  Boolean(checklist?.workingHours && checklist?.address && checklist?.phone && checklist?.service && checklist?.staff));
 
   const stats = [
-    {
-      title: 'Last Day Revenue',
-      value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
-      subtitle: `Last day in selected range • ${todayPoint?.appointments || 0} appointment`,
-      icon: DollarSign,
-      color: 'var(--rose-gold)',
-    },
-    {
-      title: 'Monthly Total',
-      value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
-      subtitle: `${completedAppointments}/${totalAppointments} appointments completed`,
-      icon: TrendingUp,
-      color: 'var(--deep-indigo)',
-    },
-    {
-      title: 'New Customers',
-      value: newCustomers.toString(),
-      subtitle: 'This month',
-      icon: UserPlus,
-      color: 'var(--rose-gold-light)',
-    },
-    {
-      title: 'Loyal Customers',
-      value: returningCustomers.toString(),
-      subtitle: 'Returning Customers',
-      icon: UserCheck,
-      color: 'var(--deep-indigo-light)',
-    },
-  ];
+  {
+    title: 'Last Day Revenue',
+    value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
+    subtitle: `Last day in selected range • ${todayPoint?.appointments || 0} appointment`,
+    icon: DollarSign,
+    color: 'var(--rose-gold)'
+  },
+  {
+    title: 'Monthly Total',
+    value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
+    subtitle: `${completedAppointments}/${totalAppointments} appointments completed`,
+    icon: TrendingUp,
+    color: 'var(--deep-indigo)'
+  },
+  {
+    title: "Yeni Müşteris",
+    value: newCustomers.toString(),
+    subtitle: 'This month',
+    icon: UserPlus,
+    color: 'var(--rose-gold-light)'
+  },
+  {
+    title: "Sadık Müşteriler",
+    value: returningCustomers.toString(),
+    subtitle: "Geri Dönen Müşteriler",
+    icon: UserCheck,
+    color: 'var(--deep-indigo-light)'
+  }];
+
 
   return (
     <div className="space-y-6 pb-20">
@@ -110,11 +110,11 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
       {rangeError ? <p className="px-4 text-xs text-red-500">{rangeError}</p> : null}
 
       {/* Setup Checklist - Displayed only if empty state is true */}
-      {onNavigate && checklistReady && !setupCompleted && (
-        <div className="px-4">
+      {onNavigate && checklistReady && !setupCompleted &&
+      <div className="px-4">
           <SetupChecklist onNavigate={onNavigate} checklist={checklist} />
         </div>
-      )}
+      }
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 px-4">
@@ -124,10 +124,10 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
             <Card key={index} className="border-border/50 overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: `${stat.color}20` }}
-                  >
+                    style={{ backgroundColor: `${stat.color}20` }}>
+                    
                     <Icon className="w-5 h-5" style={{ color: stat.color }} />
                   </div>
                 </div>
@@ -137,8 +137,8 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
                   <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
                 </div>
               </CardContent>
-            </Card>
-          );
+            </Card>);
+
         })}
       </div>
 
@@ -156,40 +156,40 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
               <AreaChart data={weekData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--rose-gold)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="var(--rose-gold)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--rose-gold)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--rose-gold)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid key="grid" strokeDasharray="3 3" opacity={0.1} />
-                <XAxis 
+                <XAxis
                   key="xaxis"
-                  dataKey="label" 
+                  dataKey="label"
                   tick={{ fontSize: 12 }}
-                  stroke="var(--muted-foreground)"
-                />
-                <YAxis 
+                  stroke="var(--muted-foreground)" />
+                
+                <YAxis
                   key="yaxis"
                   tick={{ fontSize: 12 }}
-                  stroke="var(--muted-foreground)"
-                />
-                <Tooltip 
+                  stroke="var(--muted-foreground)" />
+                
+                <Tooltip
                   key="tooltip"
-                  contentStyle={{ 
+                  contentStyle={{
                     backgroundColor: 'var(--card)',
                     border: '1px solid var(--border)',
-                    borderRadius: '8px',
+                    borderRadius: '8px'
                   }}
-                  formatter={(value: any) => [`₺${Number(value || 0).toLocaleString('tr-TR')}`, 'Ciro']}
-                />
-                <Area 
+                  formatter={(value: any) => [`₺${Number(value || 0).toLocaleString('tr-TR')}`, 'Ciro']} />
+                
+                <Area
                   key="area-revenue"
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="var(--rose-gold)" 
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="var(--rose-gold)"
                   strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#colorRevenue)" 
-                />
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)" />
+                
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -202,14 +202,14 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
         <div className="grid grid-cols-2 gap-3">
           <button onClick={() => onNavigate?.('/app/customers')} className="p-4 bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
             <Users className="w-6 h-6 mb-2" />
-            <p className="font-medium text-sm">All Customers</p>
+            <p className="font-medium text-sm">Tüm Müşteriler</p>
           </button>
           <button onClick={() => onNavigate?.('/app/analytics')} className="p-4 bg-gradient-to-br from-[var(--deep-indigo)] to-[var(--deep-indigo-light)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
             <TrendingUp className="w-6 h-6 mb-2" />
-            <p className="font-medium text-sm">Analytics Report</p>
+            <p className="font-medium text-sm">Analitik Raporu</p>
           </button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

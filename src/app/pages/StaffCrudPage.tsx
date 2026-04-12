@@ -74,11 +74,11 @@ function formatPrice(value: number) {
 
 function ToggleSwitch({
   checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (next: boolean) => void;
-}) {
+  onChange
+
+
+
+}: {checked: boolean;onChange: (next: boolean) => void;}) {
   return (
     <button
       type="button"
@@ -86,16 +86,16 @@ function ToggleSwitch({
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'
-      }`}
-    >
+      checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'}`
+      }>
+      
       <span
         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-          checked ? 'translate-x-5' : 'translate-x-0.5'
-        }`}
-      />
-    </button>
-  );
+        checked ? 'translate-x-5' : 'translate-x-0.5'}`
+        } />
+      
+    </button>);
+
 }
 
 export function StaffCrudPage() {
@@ -115,7 +115,7 @@ export function StaffCrudPage() {
   const [form, setForm] = useState({
     name: '',
     title: '',
-    phone: '',
+    phone: ''
   });
 
   const [serviceDrafts, setServiceDrafts] = useState<Record<number, StaffDraftService>>({});
@@ -125,7 +125,7 @@ export function StaffCrudPage() {
   }, [categories]);
 
   const groupedServices = useMemo(() => {
-    const groups = new Map<string, { title: string; order: number; items: ServiceItem[] }>();
+    const groups = new Map<string, {title: string;order: number;items: ServiceItem[];}>();
 
     for (const service of services) {
       const key = String(service.categoryKey || 'OTHER').toUpperCase();
@@ -139,14 +139,14 @@ export function StaffCrudPage() {
       groups.get(key)!.items.push(service);
     }
 
-    return Array.from(groups.entries())
-      .map(([key, group]) => ({ key, ...group, items: group.items.sort((a, b) => a.name.localeCompare(b.name, 'tr')) }))
-      .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, 'tr'));
+    return Array.from(groups.entries()).
+    map(([key, group]) => ({ key, ...group, items: group.items.sort((a, b) => a.name.localeCompare(b.name, 'tr')) })).
+    sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, 'tr'));
   }, [services, categoryOrderMap]);
 
   const selectedServiceCount = useMemo(
     () => Object.values(serviceDrafts).filter((item) => item.selected).length,
-    [serviceDrafts],
+    [serviceDrafts]
   );
 
   const load = async () => {
@@ -155,10 +155,10 @@ export function StaffCrudPage() {
 
     try {
       const [staffRes, servicesRes, categoriesRes] = await Promise.all([
-        apiFetch<{ items: StaffItem[] }>('/api/admin/staff'),
-        apiFetch<{ items: ServiceItem[] }>('/api/admin/services'),
-        apiFetch<{ items: CategoryItem[] }>('/api/admin/service-categories'),
-      ]);
+      apiFetch<{items: StaffItem[];}>('/api/admin/staff'),
+      apiFetch<{items: ServiceItem[];}>('/api/admin/services'),
+      apiFetch<{items: CategoryItem[];}>('/api/admin/service-categories')]
+      );
 
       setStaff((staffRes.items || []).sort((a, b) => a.name.localeCompare(b.name, 'tr')));
       setServices(servicesRes.items || []);
@@ -185,13 +185,13 @@ export function StaffCrudPage() {
         selected: Boolean(assigned),
         useCustomPrice: assigned?.customPrice !== null && assigned?.customPrice !== undefined,
         customPrice:
-          assigned?.customPrice !== null && assigned?.customPrice !== undefined ? String(assigned.customPrice) : String(service.price),
+        assigned?.customPrice !== null && assigned?.customPrice !== undefined ? String(assigned.customPrice) : String(service.price),
         useCustomDuration: assigned?.customDuration !== null && assigned?.customDuration !== undefined,
         customDuration:
-          assigned?.customDuration !== null && assigned?.customDuration !== undefined
-            ? String(assigned.customDuration)
-            : String(service.duration),
-        gender: assignedGender,
+        assigned?.customDuration !== null && assigned?.customDuration !== undefined ?
+        String(assigned.customDuration) :
+        String(service.duration),
+        gender: assignedGender
       };
     }
 
@@ -211,7 +211,7 @@ export function StaffCrudPage() {
     setForm({
       name: item.name,
       title: item.title || '',
-      phone: item.phone || '',
+      phone: item.phone || ''
     });
     resetDrafts(services, item);
     setModalOpen(true);
@@ -231,15 +231,15 @@ export function StaffCrudPage() {
         useCustomPrice: false,
         customPrice: '',
         useCustomDuration: false,
-        customDuration: '',
+        customDuration: ''
       };
 
       return {
         ...prev,
         [serviceId]: {
           ...current,
-          selected,
-        },
+          selected
+        }
       };
     });
   };
@@ -253,15 +253,15 @@ export function StaffCrudPage() {
         ...prev,
         [serviceId]: {
           ...current,
-          [field]: value,
-        },
+          [field]: value
+        }
       };
     });
   };
 
   const buildAssignmentsPayload = () => {
     const serviceMap = new Map(services.map((item) => [item.id, item]));
-    const payload: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null; gender: string }> = [];
+    const payload: Array<{serviceId: number;customPrice: number | null;customDuration: number | null;gender: string;}> = [];
 
     for (const [serviceIdString, draft] of Object.entries(serviceDrafts)) {
       const serviceId = Number(serviceIdString);
@@ -303,11 +303,11 @@ export function StaffCrudPage() {
       return;
     }
 
-    let assignments: Array<{ serviceId: number; customPrice: number | null; customDuration: number | null; gender: string }> = [];
+    let assignments: Array<{serviceId: number;customPrice: number | null;customDuration: number | null;gender: string;}> = [];
     try {
       assignments = buildAssignmentsPayload();
     } catch (err: any) {
-      setError(err?.message || 'Service settings are invalid.');
+      setError(err?.message || "Hizmet ayarları geçersiz.");
       return;
     }
 
@@ -318,25 +318,25 @@ export function StaffCrudPage() {
       name: form.name.trim(),
       title: form.title.trim() || null,
       phone: form.phone.trim() || null,
-      serviceAssignments: assignments,
+      serviceAssignments: assignments
     };
 
     try {
       if (editingStaffId) {
-        const response = await apiFetch<{ item: StaffItem }>(`/api/admin/staff/${editingStaffId}`, {
+        const response = await apiFetch<{item: StaffItem;}>(`/api/admin/staff/${editingStaffId}`, {
           method: 'PUT',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
 
         setStaff((prev) =>
-          prev
-            .map((item) => (item.id === editingStaffId ? response.item : item))
-            .sort((a, b) => a.name.localeCompare(b.name, 'tr')),
+        prev.
+        map((item) => item.id === editingStaffId ? response.item : item).
+        sort((a, b) => a.name.localeCompare(b.name, 'tr'))
         );
       } else {
-        const response = await apiFetch<{ item: StaffItem }>('/api/admin/staff', {
+        const response = await apiFetch<{item: StaffItem;}>('/api/admin/staff', {
           method: 'POST',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
 
         setStaff((prev) => [response.item, ...prev].sort((a, b) => a.name.localeCompare(b.name, 'tr')));
@@ -367,31 +367,31 @@ export function StaffCrudPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Staff Management</h1>
-          <p className="text-sm text-muted-foreground">Staff and service permissions</p>
+          <h1 className="text-2xl font-semibold">Personel Management</h1>
+          <p className="text-sm text-muted-foreground">Personel ve hizmet yetkileri</p>
         </div>
         <button
           type="button"
           onClick={openCreate}
-          className="h-10 px-4 rounded-lg bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 shrink-0"
-        >
+          className="h-10 px-4 rounded-lg bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 shrink-0">
+          
           <Plus className="h-4 w-4" />
-          Add
+          Ekle
         </button>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
-      {!loading ? (
-        <div className="space-y-3 pb-20">
-          {staff.map((item) => (
-            <div key={item.id} className="rounded-2xl border border-border bg-card p-4">
+      {!loading ?
+      <div className="space-y-3 pb-20">
+          {staff.map((item) =>
+        <div key={item.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex items-start gap-3">
                 <div
-                  className="h-11 w-11 rounded-full flex items-center justify-center text-white"
-                  style={{ backgroundColor: toHexColor(item.themeColor, item.id) }}
-                >
+              className="h-11 w-11 rounded-full flex items-center justify-center text-white"
+              style={{ backgroundColor: toHexColor(item.themeColor, item.id) }}>
+              
                   <UserRound className="h-5 w-5" />
                 </div>
 
@@ -402,19 +402,19 @@ export function StaffCrudPage() {
 
                 <div className="flex items-center gap-1">
                   <button
-                    type="button"
-                    onClick={() => openEdit(item)}
-                    className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
-                    title="Edit"
-                  >
+                type="button"
+                onClick={() => openEdit(item)}
+                className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                title="Düzenle">
+                
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
-                    type="button"
-                    onClick={() => void deleteStaff(item)}
-                    className="h-8 w-8 grid place-items-center rounded-md text-red-500 hover:bg-red-50"
-                    title="Sil"
-                  >
+                type="button"
+                onClick={() => void deleteStaff(item)}
+                className="h-8 w-8 grid place-items-center rounded-md text-red-500 hover:bg-red-50"
+                title="Sil">
+                
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -422,48 +422,48 @@ export function StaffCrudPage() {
 
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {item.services.slice(0, 6).map((service) => {
-                  const hasCustom = service.customPrice !== null || service.customDuration !== null;
-                  return (
-                    <span
-                      key={`${item.id}-${service.serviceId}`}
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs ${
-                        hasCustom
-                          ? 'bg-[var(--rose-gold)]/10 text-[var(--rose-gold)] border border-[var(--rose-gold)]/35'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
+              const hasCustom = service.customPrice !== null || service.customDuration !== null;
+              return (
+                <span
+                  key={`${item.id}-${service.serviceId}`}
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs ${
+                  hasCustom ?
+                  'bg-[var(--rose-gold)]/10 text-[var(--rose-gold)] border border-[var(--rose-gold)]/35' :
+                  'bg-muted text-muted-foreground'}`
+                  }>
+                  
                       {service.name}
                       {hasCustom ? ` • ${service.effectiveDuration} dk • ${formatPrice(service.effectivePrice)}` : ''}
-                    </span>
-                  );
-                })}
-                {item.services.length > 6 ? (
-                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs bg-muted text-muted-foreground">
+                    </span>);
+
+            })}
+                {item.services.length > 6 ?
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs bg-muted text-muted-foreground">
                     +{item.services.length - 6} hizmet
-                  </span>
-                ) : null}
-                {!item.services.length ? (
-                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs bg-muted text-muted-foreground">
-                    No service assignment
-                  </span>
-                ) : null}
+                  </span> :
+            null}
+                {!item.services.length ?
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs bg-muted text-muted-foreground">
+                    Hizmet ataması yok
+                  </span> :
+            null}
               </div>
             </div>
-          ))}
+        )}
 
-          {!staff.length ? (
-            <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              No staff records found.
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+          {!staff.length ?
+        <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Personel kaydı bulunamadı.
+            </div> :
+        null}
+        </div> :
+      null}
 
-      {modalOpen ? (
-        <div className="fixed inset-0 z-[90] bg-black/40 p-4">
+      {modalOpen ?
+      <div className="fixed inset-0 z-[90] bg-black/40 p-4">
           <div className="mx-auto mt-2 max-w-md rounded-2xl border border-border bg-background shadow-xl max-h-[calc(100dvh-16px)] flex flex-col overflow-hidden">
             <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{editingStaffId ? 'Edit Employee' : 'New Employee'}</h2>
+              <h2 className="text-lg font-semibold">{editingStaffId ? "Düzenle Employee" : 'New Employee'}</h2>
               <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Close</button>
             </div>
 
@@ -472,68 +472,68 @@ export function StaffCrudPage() {
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Ad Soyad *</span>
                   <input
-                    value={form.name}
-                    onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  />
+                  value={form.name}
+                  onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+                
                 </label>
 
                 <label className="block text-sm space-y-1">
                   <span className="text-muted-foreground">Title (optional)</span>
                   <input
-                    value={form.title}
-                    onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-                    className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  />
+                  value={form.title}
+                  onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+                
                 </label>
               </div>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Phone (optional)</span>
+                <span className="text-muted-foreground">Telefon (isteğe bağlı)</span>
                 <input
-                  value={form.phone}
-                  onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                />
+                value={form.phone}
+                onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              
               </label>
 
               <div className="rounded-xl border border-border p-3 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium">Services *</p>
+                  <p className="text-sm font-medium">Hizmetler *</p>
                   <span className="text-xs text-muted-foreground">{selectedServiceCount} services selected</span>
                 </div>
 
                 <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1">
-                  {groupedServices.map((group) => (
-                    <div key={group.key}>
+                  {groupedServices.map((group) =>
+                <div key={group.key}>
                       <p className="text-xs font-semibold tracking-wide text-muted-foreground mb-2 uppercase">{group.title}</p>
 
                       <div className="space-y-2">
                         {group.items.map((service) => {
-                          const draft = serviceDrafts[service.id] || {
-                            selected: false,
-                            useCustomPrice: false,
-                            customPrice: String(service.price),
-                            useCustomDuration: false,
-                            customDuration: String(service.duration),
-                            gender: 'female' as const,
-                          };
+                      const draft = serviceDrafts[service.id] || {
+                        selected: false,
+                        useCustomPrice: false,
+                        customPrice: String(service.price),
+                        useCustomDuration: false,
+                        customDuration: String(service.duration),
+                        gender: 'female' as const
+                      };
 
-                          return (
-                            <div key={service.id} className="rounded-lg border border-border p-2.5">
+                      return (
+                        <div key={service.id} className="rounded-lg border border-border p-2.5">
                               <label className="flex items-start gap-2 cursor-pointer">
                                 <input
-                                  type="checkbox"
-                                  checked={draft.selected}
-                                  onChange={(event) => toggleServiceSelected(service.id, event.target.checked)}
-                                  className="mt-1"
-                                />
+                              type="checkbox"
+                              checked={draft.selected}
+                              onChange={(event) => toggleServiceSelected(service.id, event.target.checked)}
+                              className="mt-1" />
+                            
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
                                     <span
-                                      className="inline-block h-3.5 w-3.5 rounded-sm"
-                                      style={{ backgroundColor: colorBySeed(service.id) }}
-                                    />
+                                  className="inline-block h-3.5 w-3.5 rounded-sm"
+                                  style={{ backgroundColor: colorBySeed(service.id) }} />
+                                
                                     <p className="text-sm font-medium leading-tight">{service.name}</p>
                                   </div>
                                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -542,15 +542,15 @@ export function StaffCrudPage() {
                                 </div>
                               </label>
 
-                              {draft.selected ? (
-                                <div className="mt-2 space-y-2 rounded-md bg-muted/40 p-2">
+                              {draft.selected ?
+                          <div className="mt-2 space-y-2 rounded-md bg-muted/40 p-2">
                                   <label className="block text-xs space-y-1">
                                     <span className="text-muted-foreground">Cinsiyet</span>
                                     <select
-                                      value={draft.gender}
-                                      onChange={(event) => updateDraftField(service.id, 'gender', event.target.value)}
-                                      className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
-                                    >
+                                value={draft.gender}
+                                onChange={(event) => updateDraftField(service.id, 'gender', event.target.value)}
+                                className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm">
+                                
                                       <option value="female">Kadın</option>
                                       <option value="male">Erkek</option>
                                       <option value="other">Unisex</option>
@@ -559,67 +559,67 @@ export function StaffCrudPage() {
                                   <div className="flex items-center justify-between gap-2 text-xs">
                                     <span>Custom fiyat</span>
                                     <ToggleSwitch
-                                      checked={draft.useCustomPrice}
-                                      onChange={(next) => updateDraftField(service.id, 'useCustomPrice', next)}
-                                    />
+                                checked={draft.useCustomPrice}
+                                onChange={(next) => updateDraftField(service.id, 'useCustomPrice', next)} />
+                              
                                   </div>
-                                  {draft.useCustomPrice ? (
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      step={10}
-                                      value={draft.customPrice}
-                                      onChange={(event) =>
-                                        updateDraftField(service.id, 'customPrice', event.target.value)
-                                      }
-                                      className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
-                                      placeholder="Ex: 180"
-                                    />
-                                  ) : null}
+                                  {draft.useCustomPrice ?
+                            <input
+                              type="number"
+                              min={0}
+                              step={10}
+                              value={draft.customPrice}
+                              onChange={(event) =>
+                              updateDraftField(service.id, 'customPrice', event.target.value)
+                              }
+                              className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
+                              placeholder="Ex: 180" /> :
+
+                            null}
 
                                   <div className="flex items-center justify-between gap-2 text-xs">
                                     <span>Custom duration</span>
                                     <ToggleSwitch
-                                      checked={draft.useCustomDuration}
-                                      onChange={(next) => updateDraftField(service.id, 'useCustomDuration', next)}
-                                    />
+                                checked={draft.useCustomDuration}
+                                onChange={(next) => updateDraftField(service.id, 'useCustomDuration', next)} />
+                              
                                   </div>
-                                  {draft.useCustomDuration ? (
-                                    <input
-                                      type="number"
-                                      min={5}
-                                      step={5}
-                                      value={draft.customDuration}
-                                      onChange={(event) =>
-                                        updateDraftField(service.id, 'customDuration', event.target.value)
-                                      }
-                                      className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
-                                      placeholder="Ex: 75"
-                                    />
-                                  ) : null}
-                                </div>
-                              ) : null}
-                            </div>
-                          );
-                        })}
+                                  {draft.useCustomDuration ?
+                            <input
+                              type="number"
+                              min={5}
+                              step={5}
+                              value={draft.customDuration}
+                              onChange={(event) =>
+                              updateDraftField(service.id, 'customDuration', event.target.value)
+                              }
+                              className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
+                              placeholder="Ex: 75" /> :
+
+                            null}
+                                </div> :
+                          null}
+                            </div>);
+
+                    })}
                       </div>
                     </div>
-                  ))}
+                )}
                 </div>
               </div>
               <div className="sticky bottom-0 bg-background pt-2 pb-[calc(env(safe-area-inset-bottom)+8px)]">
                 <button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70"
-                >
-                  {saving ? 'Saving...' : editingStaffId ? 'Update' : 'Add'}
+                type="submit"
+                disabled={saving}
+                className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
+                
+                  {saving ? "Kaydediliyor..." : editingStaffId ? "Güncelle" : "Ekle"}
                 </button>
               </div>
             </form>
           </div>
-        </div>
-      ) : null}
-    </div>
-  );
+        </div> :
+      null}
+    </div>);
+
 }

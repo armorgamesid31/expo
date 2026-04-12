@@ -2,40 +2,40 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const EVENTS = [
-  {
-    key: 'HANDOVER_REQUIRED',
-    title: 'Customer Needs Salon Support',
-    description: 'Sends an alert when AI hands the conversation to your team.',
-  },
-  {
-    key: 'HANDOVER_REMINDER',
-    title: 'Handover Reminder',
-    description: 'Repeats reminders while handover is still pending.',
-  },
-  {
-    key: 'SAME_DAY_APPOINTMENT_CHANGE',
-    title: 'Same-Day Appointment Changes',
-    description: 'Notifies new bookings, updates, and cancellations for today.',
-  },
-  {
-    key: 'END_OF_DAY_MISSING_DATA',
-    title: 'End-of-Day Missing Data',
-    description: 'Reminds the team when check-in or payment info is missing.',
-  },
-  {
-    key: 'DAILY_MANAGER_REPORT',
-    title: 'Daily Manager Report',
-    description: 'Sends the daily summary after closing.',
-  },
-] as const;
+{
+  key: 'HANDOVER_REQUIRED',
+  title: "Müşteri salon desteğine ihtiyaç duyuyor",
+  description: "Gönders an alert when AI hands the conversation to your team."
+},
+{
+  key: 'HANDOVER_REMINDER',
+  title: "Devir hatırlatması",
+  description: 'Repeats reminders while handover is still pending.'
+},
+{
+  key: 'SAME_DAY_APPOINTMENT_CHANGE',
+  title: 'Same-Day Appointment Changes',
+  description: 'Notifies new bookings, updates, and cancellations for today.'
+},
+{
+  key: 'END_OF_DAY_MISSING_DATA',
+  title: 'End-of-Day Missing Data',
+  description: 'Reminds the team when check-in or payment info is missing.'
+},
+{
+  key: 'DAILY_MANAGER_REPORT',
+  title: "Daily Yönetici Report",
+  description: "Gönders the daily summary after closing."
+}] as
+const;
 
 const ROLES = [
-  { key: 'OWNER', label: 'Owner' },
-  { key: 'MANAGER', label: 'Manager' },
-  { key: 'RECEPTION', label: 'Reception' },
-  { key: 'STAFF', label: 'Staff' },
-  { key: 'FINANCE', label: 'Finance' },
-] as const;
+{ key: 'OWNER', label: "Sahip" },
+{ key: 'MANAGER', label: "Yönetici" },
+{ key: 'RECEPTION', label: "Resepsiyon" },
+{ key: 'STAFF', label: "Personel" },
+{ key: 'FINANCE', label: "Finans" }] as
+const;
 
 type EventType = (typeof EVENTS)[number];
 type EventKey = EventType['key'];
@@ -56,19 +56,19 @@ export function NotificationRoleMatrixPage() {
   const [policy, setPolicy] = useState<NotificationPolicy>({
     recipients: {},
     handoverReminderIntervalMinutes: 30,
-    handoverReminderMaxCount: 6,
+    handoverReminderMaxCount: 6
   });
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const response = await apiFetch<{ policy: NotificationPolicy }>('/api/admin/notification-settings');
+        const response = await apiFetch<{policy: NotificationPolicy;}>('/api/admin/notification-settings');
         if (!active) return;
         setPolicy({
           recipients: response.policy?.recipients || {},
           handoverReminderIntervalMinutes: response.policy?.handoverReminderIntervalMinutes || 30,
-          handoverReminderMaxCount: response.policy?.handoverReminderMaxCount || 6,
+          handoverReminderMaxCount: response.policy?.handoverReminderMaxCount || 6
         });
       } catch (err: any) {
         if (!active) return;
@@ -109,7 +109,7 @@ export function NotificationRoleMatrixPage() {
     try {
       await apiFetch('/api/admin/notification-settings', {
         method: 'PUT',
-        body: JSON.stringify(policy),
+        body: JSON.stringify(policy)
       });
       setSavedMessage('Notification settings saved.');
     } catch (err: any) {
@@ -125,16 +125,16 @@ export function NotificationRoleMatrixPage() {
       <p className="text-sm text-muted-foreground">
         Choose which team roles receive each notification type.
       </p>
-      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {savedMessage ? <p className="text-sm text-emerald-600">{savedMessage}</p> : null}
 
-      {!loading ? (
-        <div className="space-y-3">
+      {!loading ?
+      <div className="space-y-3">
           {EVENTS.map((eventItem) => {
-            const selected = (policy?.recipients?.[eventItem.key] || []) as string[];
-            return (
-              <div key={eventItem.key} className="rounded-xl border border-border bg-card p-3 space-y-3">
+          const selected = (policy?.recipients?.[eventItem.key] || []) as string[];
+          return (
+            <div key={eventItem.key} className="rounded-xl border border-border bg-card p-3 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">{eventItem.title}</p>
@@ -142,90 +142,90 @@ export function NotificationRoleMatrixPage() {
                   </div>
                   <div className="shrink-0 flex gap-1">
                     <button
-                      type="button"
-                      onClick={() => setAllForEvent(eventItem.key, true)}
-                      className="h-7 px-2 rounded-md border border-border text-[11px]"
-                    >
+                    type="button"
+                    onClick={() => setAllForEvent(eventItem.key, true)}
+                    className="h-7 px-2 rounded-md border border-border text-[11px]">
+                    
                       Enable all
                     </button>
                     <button
-                      type="button"
-                      onClick={() => setAllForEvent(eventItem.key, false)}
-                      className="h-7 px-2 rounded-md border border-border text-[11px]"
-                    >
+                    type="button"
+                    onClick={() => setAllForEvent(eventItem.key, false)}
+                    className="h-7 px-2 rounded-md border border-border text-[11px]">
+                    
                       Disable all
                     </button>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {ROLES.map((role) => (
-                    <button
-                      key={role.key}
-                      type="button"
-                      onClick={() => toggle(eventItem.key, role.key)}
-                      className={`px-2.5 h-8 rounded-full border text-xs ${
-                        selected.includes(role.key)
-                          ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/15 text-[var(--deep-indigo)]'
-                          : 'border-border text-muted-foreground'
-                      }`}
-                    >
+                  {ROLES.map((role) =>
+                <button
+                  key={role.key}
+                  type="button"
+                  onClick={() => toggle(eventItem.key, role.key)}
+                  className={`px-2.5 h-8 rounded-full border text-xs ${
+                  selected.includes(role.key) ?
+                  'border-[var(--rose-gold)] bg-[var(--rose-gold)]/15 text-[var(--deep-indigo)]' :
+                  'border-border text-muted-foreground'}`
+                  }>
+                  
                       {role.label}
                     </button>
-                  ))}
+                )}
                 </div>
-              </div>
-            );
-          })}
+              </div>);
+
+        })}
 
           <div className="rounded-xl border border-border bg-card p-3 space-y-3">
-            <p className="text-sm font-semibold">Handover Reminder Rules</p>
+            <p className="text-sm font-semibold">Devir hatırlatma kuralları</p>
             <p className="text-xs text-muted-foreground">
               If handover stays active, reminders are repeated with these limits.
             </p>
             <label className="flex items-center justify-between text-sm">
-              <span>Reminder interval (min)</span>
+              <span>Hatırlatma aralığı (dk)</span>
               <input
-                type="number"
-                min={5}
-                max={180}
-                value={policy?.handoverReminderIntervalMinutes || 30}
-                onChange={(e) =>
-                  setPolicy((prev) => ({
-                    ...prev,
-                    handoverReminderIntervalMinutes: Math.min(180, Math.max(5, Number(e.target.value) || 30)),
-                  }))
-                }
-                className="w-20 h-8 rounded border border-border px-2"
-              />
+              type="number"
+              min={5}
+              max={180}
+              value={policy?.handoverReminderIntervalMinutes || 30}
+              onChange={(e) =>
+              setPolicy((prev) => ({
+                ...prev,
+                handoverReminderIntervalMinutes: Math.min(180, Math.max(5, Number(e.target.value) || 30))
+              }))
+              }
+              className="w-20 h-8 rounded border border-border px-2" />
+            
             </label>
             <label className="flex items-center justify-between text-sm">
               <span>Max reminders</span>
               <input
-                type="number"
-                min={1}
-                max={12}
-                value={policy?.handoverReminderMaxCount || 6}
-                onChange={(e) =>
-                  setPolicy((prev) => ({
-                    ...prev,
-                    handoverReminderMaxCount: Math.min(12, Math.max(1, Number(e.target.value) || 6)),
-                  }))
-                }
-                className="w-20 h-8 rounded border border-border px-2"
-              />
+              type="number"
+              min={1}
+              max={12}
+              value={policy?.handoverReminderMaxCount || 6}
+              onChange={(e) =>
+              setPolicy((prev) => ({
+                ...prev,
+                handoverReminderMaxCount: Math.min(12, Math.max(1, Number(e.target.value) || 6))
+              }))
+              }
+              className="w-20 h-8 rounded border border-border px-2" />
+            
             </label>
           </div>
 
           <button
-            type="button"
-            disabled={saving}
-            onClick={() => void save()}
-            className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60"
-          >
+          type="button"
+          disabled={saving}
+          onClick={() => void save()}
+          className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60">
+          
             {saving ? 'Kaydediliyor...' : 'Kaydet'}
           </button>
-        </div>
-      ) : null}
-    </div>
-  );
+        </div> :
+      null}
+    </div>);
+
 }

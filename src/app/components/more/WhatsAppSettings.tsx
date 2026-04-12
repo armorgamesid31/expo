@@ -9,8 +9,8 @@ import {
   Settings2,
   AlertTriangle,
   Power,
-  ChevronRight,
-} from 'lucide-react';
+  ChevronRight } from
+'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -60,17 +60,17 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   const navigate = useNavigate();
 
   const [status, setStatus] = useState<ChakraStatusResponse | null>(
-    () => readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10),
+    () => readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10)
   );
   const [automations, setAutomations] = useState<AutomationItem[]>(
-    () => readSnapshot<AutomationItem[]>(WHATSAPP_AUTOMATIONS_CACHE_KEY, 1000 * 60 * 10) || [],
+    () => readSnapshot<AutomationItem[]>(WHATSAPP_AUTOMATIONS_CACHE_KEY, 1000 * 60 * 10) || []
   );
   const [agentSettings, setAgentSettings] = useState<AgentSettings | null>(
-    () => readSnapshot<AgentSettings>(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, 1000 * 60 * 10),
+    () => readSnapshot<AgentSettings>(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, 1000 * 60 * 10)
   );
 
   const [statusLoading, setStatusLoading] = useState<boolean>(
-    () => !(readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10) || null),
+    () => !(readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10) || null)
   );
   const [statusRefreshing, setStatusRefreshing] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
   const reminderRule = useMemo(
     () => automations.find((item) => item.key === REMINDER_KEY),
-    [automations],
+    [automations]
   );
 
   const reminderEnabled = Boolean(reminderRule?.isEnabled);
@@ -106,10 +106,10 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
     try {
       const [statusResponse, automationsResponse, agentResponse] = await Promise.all([
-        apiFetch<ChakraStatusResponse>(`/api/app/chakra/status?t=${Date.now()}`),
-        apiFetch<{ items: AutomationItem[] }>('/api/admin/automations').catch(() => ({ items: [] })),
-        apiFetch<{ settings?: AgentSettings }>('/api/admin/whatsapp-agent/settings').catch(() => ({ settings: {} })),
-      ]);
+      apiFetch<ChakraStatusResponse>(`/api/app/chakra/status?t=${Date.now()}`),
+      apiFetch<{items: AutomationItem[];}>('/api/admin/automations').catch(() => ({ items: [] })),
+      apiFetch<{settings?: AgentSettings;}>('/api/admin/whatsapp-agent/settings').catch(() => ({ settings: {} }))]
+      );
 
       setStatus(statusResponse);
       setAutomations(automationsResponse.items || []);
@@ -118,7 +118,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
       writeSnapshot(WHATSAPP_AUTOMATIONS_CACHE_KEY, automationsResponse.items || []);
       writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, agentResponse.settings || {});
     } catch (error: any) {
-      setStatusError(error?.message || 'Failed to retrieve WhatsApp settings.');
+      setStatusError(error?.message || "WhatsApp ayarları alinamadi.");
     } finally {
       if (refresh) {
         setStatusRefreshing(false);
@@ -138,7 +138,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
   const openReplaceFlow = () => {
     const ok = window.confirm(
-      'WhatsApp numarasini degistirmek istediginize emin misiniz? Yeni numara baglaninca eski kimlik pasiflestirilir.',
+      "WhatsApp numarasini değiştirmek istediginize emin misiniz? Yeni numara baglaninca eski kimlik pasiflestirilir."
     );
     if (!ok) return;
     navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward', replaceConnection: true } });
@@ -175,8 +175,8 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
         method: 'PUT',
         body: JSON.stringify({
           pluginId: status.pluginId,
-          isActive: nextValue,
-        }),
+          isActive: nextValue
+        })
       });
 
       setPluginToggleFeedback(nextValue ? 'The connection has been activated.' : 'The connection has been disabled.');
@@ -184,35 +184,35 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
       await loadAll(true);
     } catch (error: any) {
-      setPluginToggleError(error?.message || 'Connection activity could not be updated.');
+      setPluginToggleError(error?.message || "Bağlantı durumu güncellenemedi.");
     } finally {
       setPluginToggleBusy(false);
     }
   };
 
-  const connectionBadge = statusLoading
-    ? 'Checking'
-    : !isConnected
-      ? 'Setup gerekli'
-      : pluginActive
-        ? 'Aktif'
-        : 'Pasif';
+  const connectionBadge = statusLoading ?
+  'Checking' :
+  !isConnected ?
+  'Setup gerekli' :
+  pluginActive ?
+  'Aktif' :
+  'Pasif';
 
-  const reminderBadge = !isConnected
-    ? 'Kilitli'
-    : !pluginActive
-      ? 'Connection passive'
-      : reminderEnabled
-        ? 'Aktif'
-        : 'Closed';
+  const reminderBadge = !isConnected ?
+  'Kilitli' :
+  !pluginActive ?
+  "Bağlantı pasif" :
+  reminderEnabled ?
+  'Aktif' :
+  'Closed';
 
-  const agentBadge = !isConnected
-    ? 'Kilitli'
-    : !pluginActive
-      ? 'Connection passive'
-      : agentEnabled
-        ? 'Aktif'
-        : 'Closed';
+  const agentBadge = !isConnected ?
+  'Kilitli' :
+  !pluginActive ?
+  "Bağlantı pasif" :
+  agentEnabled ?
+  'Aktif' :
+  'Closed';
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -222,32 +222,32 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold">WhatsApp Settings</h1>
-            <p className="text-sm text-muted-foreground">Connection, AI agent, and reminder settings</p>
+            <h1 className="text-2xl font-semibold">WhatsApp Ayarları</h1>
+            <p className="text-sm text-muted-foreground">Bağlantı, yapay zeka asistanı ve hatırlatma ayarları</p>
           </div>
         </div>
       </div>
 
       <div className="p-4 space-y-4">
-        {statusError ? (
-          <Card className="border-red-300 bg-red-50 dark:bg-red-950/20">
+        {statusError ?
+        <Card className="border-red-300 bg-red-50 dark:bg-red-950/20">
             <CardContent className="p-3 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
               <p className="text-sm text-red-700 dark:text-red-300">{statusError}</p>
             </CardContent>
-          </Card>
-        ) : null}
+          </Card> :
+        null}
 
-        {isConnected && !pluginActive ? (
-          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+        {isConnected && !pluginActive ?
+        <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
             <CardContent className="p-3 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
               <p className="text-sm text-amber-800 dark:text-amber-300">
                 WhatsApp connection is inactive. AI agent and appointment reminders are locked in this state.
               </p>
             </CardContent>
-          </Card>
-        ) : null}
+          </Card> :
+        null}
 
         <Card className="border-border/50 shadow-sm">
           <CardContent className="p-4 space-y-3">
@@ -257,7 +257,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                   <Link2 className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-base font-semibold leading-tight">WhatsApp Connection</p>
+                  <p className="text-base font-semibold leading-tight">WhatsApp Bağlantısı</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Complete setup and manage connection status here.
                   </p>
@@ -266,13 +266,13 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
               <span
                 className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${
-                  !isConnected
-                    ? 'bg-amber-500/10 text-amber-700'
-                    : pluginActive
-                      ? 'bg-green-500/10 text-green-700'
-                      : 'bg-muted text-muted-foreground'
-                }`}
-              >
+                !isConnected ?
+                'bg-amber-500/10 text-amber-700' :
+                pluginActive ?
+                'bg-green-500/10 text-green-700' :
+                'bg-muted text-muted-foreground'}`
+                }>
+                
                 {connectionBadge}
               </span>
             </div>
@@ -281,7 +281,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
               <div className="min-w-0">
                 <p className="text-sm font-medium flex items-center gap-2">
                   <Power className="w-4 h-4" />
-                  Connection status
+                  Bağlantı durumu
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   When disabled, AI and reminder flows over WhatsApp do not run.
@@ -292,8 +292,8 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                 onCheckedChange={(checked) => {
                   void updatePluginActive(checked);
                 }}
-                disabled={!isConnected || !status?.pluginId || pluginToggleBusy}
-              />
+                disabled={!isConnected || !status?.pluginId || pluginToggleBusy} />
+              
             </div>
 
             {pluginToggleError ? <p className="text-xs text-red-600">{pluginToggleError}</p> : null}
@@ -301,21 +301,21 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
             <div className="flex flex-wrap gap-2">
               <Button type="button" onClick={openConnectionFlow} className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
-                {isConnected ? 'Manage Connection' : 'Start Connection'}
+                {isConnected ? "Bağlantıyı Yönet" : "Bağlantıyı Başlat"}
               </Button>
-              {isConnected ? (
-                <Button type="button" variant="outline" onClick={openReplaceFlow}>
-                  Numarayi Degistir
-                </Button>
-              ) : null}
+              {isConnected ?
+              <Button type="button" variant="outline" onClick={openReplaceFlow}>
+                  Numarayi Değiştir
+                </Button> :
+              null}
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
                   void loadAll(true);
                 }}
-                disabled={statusLoading || statusRefreshing}
-              >
+                disabled={statusLoading || statusRefreshing}>
+                
                 <RefreshCcw className={`w-4 h-4 mr-2 ${statusRefreshing ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
@@ -331,35 +331,35 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                   <Bell className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-base font-semibold leading-tight">Appointment Reminder Settings</p>
-                  <p className="text-sm text-muted-foreground mt-1">Manage send steps for 2 and 24 hours before appointment.</p>
+                  <p className="text-base font-semibold leading-tight">Randevu Hatırlatma Ayarları</p>
+                  <p className="text-sm text-muted-foreground mt-1">Randevudan 2 ve 24 saat önce gönderim adımlarini yönetin.</p>
                 </div>
               </div>
               <span
                 className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${
-                  reminderBadge === 'Aktif'
-                    ? 'bg-green-500/10 text-green-700'
-                    : reminderBadge === 'Closed'
-                      ? 'bg-muted text-muted-foreground'
-                      : 'bg-amber-500/10 text-amber-700'
-                }`}
-              >
+                reminderBadge === 'Aktif' ?
+                'bg-green-500/10 text-green-700' :
+                reminderBadge === "Kapalı" ?
+                'bg-muted text-muted-foreground' :
+                'bg-amber-500/10 text-amber-700'}`
+                }>
+                
                 {reminderBadge}
               </span>
             </div>
 
             <div className="flex flex-wrap gap-1.5">
               <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                2 hours before + location
+                2 saat önce + konum
               </span>
               <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                24-hour reminder + attendance confirmation
+                24 saat önce hatırlatma + katılım onayi
               </span>
             </div>
 
             <Button type="button" variant="outline" onClick={openReminderSettings} disabled={integrationLocked}>
               {integrationLocked ? <Lock className="w-4 h-4 mr-2" /> : <Settings2 className="w-4 h-4 mr-2" />}
-              {!isConnected ? 'Complete WhatsApp connection first' : !pluginActive ? 'Activate the connection first' : 'Open Reminder Settings'}
+              {!isConnected ? "Önce WhatsApp bağlantısini tamamlayin" : !pluginActive ? "Önce bağlantıyi aktifleştirin" : "Hatırlatma Ayarlarıni Ac"}
             </Button>
           </CardContent>
         </Card>
@@ -372,19 +372,19 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                   <Bot className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-base font-semibold leading-tight">AI WhatsApp Agent</p>
-                  <p className="text-sm text-muted-foreground mt-1">Manage FAQ, tone, and behavior rules.</p>
+                  <p className="text-base font-semibold leading-tight">Yapay Zeka WhatsApp Asistani</p>
+                  <p className="text-sm text-muted-foreground mt-1">SSS, ton ve davranis kurallarini yönetin.</p>
                 </div>
               </div>
               <span
                 className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${
-                  agentBadge === 'Aktif'
-                    ? 'bg-green-500/10 text-green-700'
-                    : agentBadge === 'Closed'
-                      ? 'bg-muted text-muted-foreground'
-                      : 'bg-amber-500/10 text-amber-700'
-                }`}
-              >
+                agentBadge === 'Aktif' ?
+                'bg-green-500/10 text-green-700' :
+                agentBadge === "Kapalı" ?
+                'bg-muted text-muted-foreground' :
+                'bg-amber-500/10 text-amber-700'}`
+                }>
+                
                 {agentBadge}
               </span>
             </div>
@@ -394,14 +394,14 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
               onClick={openAgentSettings}
               variant={integrationLocked ? 'outline' : 'default'}
               disabled={integrationLocked}
-              className={integrationLocked ? '' : 'bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white'}
-            >
+              className={integrationLocked ? '' : 'bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white'}>
+              
               {integrationLocked ? <Lock className="w-4 h-4 mr-2" /> : <ChevronRight className="w-4 h-4 mr-2" />}
-              {!isConnected ? 'Complete WhatsApp connection first' : !pluginActive ? 'Activate the connection first' : 'Open AI Agent Settings'}
+              {!isConnected ? "Önce WhatsApp bağlantısini tamamlayin" : !pluginActive ? "Önce bağlantıyi aktifleştirin" : "Yapay Zeka Asistan Ayarlarıni Ac"}
             </Button>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

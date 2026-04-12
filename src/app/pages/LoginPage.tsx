@@ -25,7 +25,7 @@ export function LoginPage() {
       await login(email, password);
       navigate('/app/dashboard', { replace: true });
     } catch (err: any) {
-      setError(err?.message || 'Login failed.');
+      setError(err?.message || "Giriş başarısız.");
     } finally {
       setSubmitting(false);
     }
@@ -39,17 +39,17 @@ export function LoginPage() {
             src="https://cdn.kedyapp.com/kedylogo_koyu.png"
             alt="Kedy Logo"
             className="h-[52px] w-auto dark:hidden"
-            loading="eager"
-          />
+            loading="eager" />
+          
           <img
-            src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
+            src="https://cdn.kedyapp.com/kedylogo_beyaztürüncu.png"
             alt="Kedy Logo"
             className="hidden h-[52px] w-auto dark:block"
-            loading="eager"
-          />
+            loading="eager" />
+          
         </div>
-        <h1 className="text-xl font-semibold">Salon Mobile Login</h1>
-        <p className="text-sm text-muted-foreground mt-1">Sign in with your account.</p>
+        <h1 className="text-xl font-semibold">Salon Mobil Giriş</h1>
+        <p className="text-sm text-muted-foreground mt-1">Hesabınızla giriş yapın.</p>
 
         <form className="mt-5 space-y-4" onSubmit={onSubmit}>
           <div>
@@ -59,19 +59,19 @@ export function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            
           </div>
 
           <div>
-            <label className="text-sm block mb-1">Password</label>
+            <label className="text-sm block mb-1">Şifre</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            
           </div>
 
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -79,12 +79,12 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-          >
-            {submitting ? 'Logging in...' : 'Login'}
+            className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
+            
+            {submitting ? "Giriş yapılıyor..." : "Giriş Yap"}
           </button>
         </form>
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -8,9 +8,9 @@ export function AuthGuard() {
   if (isLoading) {
     return (
       <div className="min-h-screen grid place-items-center bg-[var(--luxury-bg)] text-foreground">
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      </div>
-    );
+        <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+      </div>);
+
   }
 
   if (!isAuthenticated) {

@@ -34,11 +34,11 @@ interface WebsiteContentResponse {
 }
 
 const defaultGalleryImages: GalleryImageItem[] = [
-  { id: 'seed-1', label: 'Hair Coloring', emoji: '💇‍♀️' },
-  { id: 'seed-2', label: 'Manicure', emoji: '💅' },
-  { id: 'seed-3', label: 'Skin Care', emoji: '✨' },
-  { id: 'seed-4', label: 'Salon', emoji: '🌸' },
-];
+{ id: 'seed-1', label: 'Hair Coloring', emoji: '💇‍♀️' },
+{ id: 'seed-2', label: 'Manicure', emoji: '💅' },
+{ id: 'seed-3', label: 'Skin Care', emoji: '✨' },
+{ id: 'seed-4', label: 'Salon', emoji: '🌸' }];
+
 
 function normalizeInstagram(value: string) {
   const trimmed = value.trim();
@@ -60,8 +60,8 @@ function buildLocalWebsiteCopy(name: string, cityHint?: string) {
     heroText: `${salonName} take care of yourself with`,
     tagline: `${city} professional beauty experience`,
     description:
-      `${salonName}, with its expert team hair, skin, and care delivers reliable results in its services. ` +
-      'The hygienic salon environment turns every visit into a pleasant experience with quality products and personalized touches.',
+    `${salonName}, with its expert team hair, skin, and care delivers reliable results in its services. ` +
+    'The hygienic salon environment turns every visit into a pleasant experience with quality products and personalized touches.'
   };
 }
 
@@ -71,12 +71,12 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [status, setStatus] = useState<{type: 'success' | 'error';message: string;} | null>(null);
 
   const [salonName, setSalonName] = useState('Beauté Salon');
   const [tagline, setTagline] = useState('Discover Your Beauty');
   const [description, setDescription] = useState(
-    "A special beauty experience where luxury and comfort meet in the heart of Istanbul. Feel special with our expert team.",
+    "A special beauty experience where luxury and comfort meet in the heart of Istanbul. Feel special with our expert team."
   );
   const [instagram, setInstagram] = useState('@beautesalon');
   const [whatsapp, setWhatsapp] = useState('+90 532 123 4567');
@@ -106,8 +106,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             response.gallery.map((image) => ({
               id: `db-${image.id}`,
               label: image.altText || 'Hall Image',
-              imageUrl: image.imageUrl,
-            })),
+              imageUrl: image.imageUrl
+            }))
           );
         } else {
           setGalleryImages(defaultGalleryImages);
@@ -131,13 +131,13 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
   }, [apiFetch]);
 
   const galleryPayload = useMemo(() => {
-    return galleryImages
-      .filter((item) => Boolean(item.imageUrl))
-      .map((item, index) => ({
-        imageUrl: item.imageUrl!,
-        altText: item.label,
-        displayOrder: index,
-      }));
+    return galleryImages.
+    filter((item) => Boolean(item.imageUrl)).
+    map((item, index) => ({
+      imageUrl: item.imageUrl!,
+      altText: item.label,
+      displayOrder: index
+    }));
   }, [galleryImages]);
 
   const handleGenerate = async () => {
@@ -145,7 +145,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
     setIsGenerating(true);
 
     try {
-      const result = await apiFetch<{ generated: { heroText: string; tagline: string; description: string } }>(
+      const result = await apiFetch<{generated: {heroText: string;tagline: string;description: string;};}>(
         '/api/admin/website/generate',
         {
           method: 'POST',
@@ -153,9 +153,9 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             salonName,
             tagline,
             description,
-            city: bootstrap?.salon?.city || null,
-          }),
-        },
+            city: bootstrap?.salon?.city || null
+          })
+        }
       );
 
       setHeroText(result.generated.heroText);
@@ -188,8 +188,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
           description,
           instagram: normalizeInstagram(instagram),
           whatsapp,
-          gallery: galleryPayload,
-        }),
+          gallery: galleryPayload
+        })
       });
 
       setStatus({ type: 'success', message: 'Website content has been saved and published.' });
@@ -224,7 +224,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
         const newImage: GalleryImageItem = {
           id: `local-${Date.now()}`,
           label: file.name.replace(/\.[^/.]+$/, ''),
-          imageUrl: reader.result,
+          imageUrl: reader.result
         };
 
         if (replaceIndex >= 0) {
@@ -240,7 +240,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
         return [...next, newImage];
       });
 
-      setStatus({ type: 'success', message: 'Photo added. You can publish it with Save.' });
+      setStatus({ type: 'success', message: "Fotoğraf eklendi. Kaydet ile yayınlayabilirsiniz." });
     };
     reader.onerror = () => {
       setStatus({ type: 'error', message: 'The photo could not be read.' });
@@ -278,26 +278,26 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="space-y-4"
-        >
-          {status && (
-            <div
-              className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
-                status.type === 'success'
-                  ? 'border-green-500/30 bg-green-500/10 text-green-700'
-                  : 'border-red-500/30 bg-red-500/10 text-red-700'
-              }`}
-            >
+          className="space-y-4">
+          
+          {status &&
+          <div
+            className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
+            status.type === 'success' ?
+            'border-green-500/30 bg-green-500/10 text-green-700' :
+            'border-red-500/30 bg-red-500/10 text-red-700'}`
+            }>
+            
               {status.type === 'success' ? <Check className="w-4 h-4 mt-0.5" /> : <AlertCircle className="w-4 h-4 mt-0.5" />}
               <span>{status.message}</span>
             </div>
-          )}
+          }
 
-          {isLoading && (
-            <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-              Loading website content...
+          {isLoading &&
+          <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+              Web sitesi içeriği yükleniyor...
             </div>
-          )}
+          }
 
           <Card className="border-border/50">
             <CardHeader className="pb-3">
@@ -310,8 +310,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   value={salonName}
                   onChange={(e) => setSalonName(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Your salon name"
-                />
+                  placeholder="Your salon name" />
+                
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Slogan</label>
@@ -319,8 +319,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   value={tagline}
                   onChange={(e) => setTagline(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Your salon's motto"
-                />
+                  placeholder="Your salon's motto" />
+                
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Hero Title</label>
@@ -328,8 +328,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   value={heroText}
                   onChange={(e) => setHeroText(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Home page title"
-                />
+                  placeholder="Home page title" />
+                
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Description</label>
@@ -338,8 +338,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all resize-none"
-                  placeholder="Brief description of your salon"
-                />
+                  placeholder="Brief description of your salon" />
+                
               </div>
             </CardContent>
           </Card>
@@ -358,8 +358,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   value={instagram}
                   onChange={(e) => setInstagram(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="@kullanici_adi"
-                />
+                  placeholder="@kullanıcı_adi" />
+                
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
@@ -370,8 +370,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="+90 5xx xxx xxxx"
-                />
+                  placeholder="+90 5xx xxx xxxx" />
+                
               </div>
             </CardContent>
           </Card>
@@ -385,36 +385,36 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-4 gap-2 mb-3">
-                {galleryImages.map((img) => (
-                  <div
-                    key={img.id}
-                    className="aspect-square rounded-lg bg-gradient-to-br from-[var(--rose-gold)]/10 to-[var(--deep-indigo)]/10 flex flex-col items-center justify-center border-2 border-[var(--rose-gold)]/20 overflow-hidden"
-                  >
-                    {img.imageUrl ? (
-                      <img src={img.imageUrl} alt={img.label} className="h-full w-full object-cover" />
-                    ) : (
-                      <>
+                {galleryImages.map((img) =>
+                <div
+                  key={img.id}
+                  className="aspect-square rounded-lg bg-gradient-to-br from-[var(--rose-gold)]/10 to-[var(--deep-indigo)]/10 flex flex-col items-center justify-center border-2 border-[var(--rose-gold)]/20 overflow-hidden">
+                  
+                    {img.imageUrl ?
+                  <img src={img.imageUrl} alt={img.label} className="h-full w-full object-cover" /> :
+
+                  <>
                         <span className="text-2xl">{img.emoji || '✨'}</span>
                         <span className="text-[9px] text-muted-foreground mt-1">{img.label}</span>
                       </>
-                    )}
+                  }
                   </div>
-                ))}
+                )}
               </div>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={handlePhotoSelected}
-              />
+                onChange={handlePhotoSelected} />
+              
               <button
                 type="button"
                 onClick={handleAddPhotoClick}
-                className="w-full py-2.5 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground flex items-center justify-center gap-2 active:scale-95 transition-transform"
-              >
+                className="w-full py-2.5 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                
                 <Camera className="w-4 h-4" />
-                Add Photo
+                Fotoğraf Ekle
               </button>
             </CardContent>
           </Card>
@@ -435,8 +435,8 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
                     void handleGenerate();
                   }}
                   disabled={isGenerating}
-                  className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed"
-                >
+                  className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed">
+                  
                   {isGenerating ? 'Being produced...' : 'produce'}
                 </button>
               </div>
@@ -449,12 +449,12 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
               void handleSave();
             }}
             disabled={isSaving}
-            className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all active:scale-98 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isSaving ? 'Saving...' : 'Save Changes & Publish'}
+            className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all active:scale-98 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white disabled:opacity-70 disabled:cursor-not-allowed">
+            
+            {isSaving ? "Kaydediliyor..." : "Değişiklikleri Kaydet ve Yayınla"}
           </button>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

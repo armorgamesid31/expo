@@ -81,15 +81,15 @@ function loadChakraSdk(sdkUrl: string): Promise<void> {
 
 function isConnectedEvent(event: unknown, data: unknown): boolean {
   const eventText = typeof event === 'string' ? event.toLowerCase() : '';
-  const dataObj = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, any>) : null;
+  const dataObj = data && typeof data === 'object' && !Array.isArray(data) ? data as Record<string, any> : null;
   const status = typeof dataObj?.status === 'string' ? dataObj.status.toLowerCase() : '';
   const state = typeof dataObj?.state === 'string' ? dataObj.state.toLowerCase() : '';
   const hasAuth = Boolean(dataObj?.auth && typeof dataObj.auth === 'object');
   const hasEnabledNumbers =
-    Array.isArray(dataObj?.serverConfig?.enabledWhatsappPhoneNumbers) &&
-    dataObj.serverConfig.enabledWhatsappPhoneNumbers.some(
-      (value: unknown) => typeof value === 'string' && value.trim().length > 0,
-    );
+  Array.isArray(dataObj?.serverConfig?.enabledWhatsappPhoneNumbers) &&
+  dataObj.serverConfig.enabledWhatsappPhoneNumbers.some(
+    (value: unknown) => typeof value === 'string' && value.trim().length > 0
+  );
   const pattern = /(connected|success|complete|completed|linked)/i;
   return pattern.test(eventText) || pattern.test(status) || pattern.test(state) || hasAuth || hasEnabledNumbers;
 }
@@ -114,13 +114,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const [devBypassed, setDevBypassed] = useState(false);
   const [statusText, setStatusText] = useState(() => {
     if (!cachedStatus) {
-      return 'Tap the Get Started button to connect your WhatsApp account.';
+      return "WhatsApp hesabınızı bağlamak için Başlayın düğmesine dokunun.";
     }
     const cachedConnected = Boolean(cachedStatus.connected) || Boolean(cachedStatus.isActive);
     if (!cachedStatus.pluginId) {
-      return 'Tap the Get Started button to connect your WhatsApp account.';
+      return "WhatsApp hesabınızı bağlamak için Başlayın düğmesine dokunun.";
     }
-    return cachedConnected ? 'WhatsApp connection completed.' : 'Complete the connection by continuing with Facebook.';
+    return cachedConnected ? "WhatsApp bağlantısı tamamlandı." : 'Complete the connection by continuing with Facebook.';
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -131,16 +131,16 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setPluginId(status.pluginId || null);
 
     const isConnected = Boolean(status.connected) || Boolean(status.isActive);
-    setConnected((prev) => (prev ? true : isConnected));
+    setConnected((prev) => prev ? true : isConnected);
 
     if (!status.pluginId) {
-      setStatusText('Tap the Get Started button to connect your WhatsApp account.');
+      setStatusText("WhatsApp hesabınızı bağlamak için Başlayın düğmesine dokunun.");
       setNativeTriggerReady(false);
       return { hasPlugin: false, connected: false };
     }
 
     if (isConnected) {
-      setStatusText('WhatsApp connection completed.');
+      setStatusText("WhatsApp bağlantısı tamamlandı.");
       setNativeTriggerReady(false);
       return { hasPlugin: true, connected: true };
     }
@@ -157,15 +157,15 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           event,
           data,
           pluginId: pluginIdValue,
-          intent: replaceConnection ? 'REPLACE_CONNECTION' : 'CONNECT',
-        }),
+          intent: replaceConnection ? 'REPLACE_CONNECTION' : 'CONNECT'
+        })
       });
 
       if (response.connected || Boolean(response.isActive)) {
         setConnected(true);
         setAutoNavigatePending(true);
         setIsPopupConnecting(false);
-        setStatusText('WhatsApp connection completed.');
+        setStatusText("WhatsApp bağlantısı tamamlandı.");
       }
     } catch (err) {
       console.warn('Connect event capture failed:', err);
@@ -173,7 +173,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       try {
         await syncStatusFromBackend();
       } catch (statusError) {
-        console.warn('Status refresh after connect event failed:', statusError);
+        console.warn('Bağlantı sonrası durum yenileme başarısız:', statusError);
       }
     }
   }, [apiFetch, replaceConnection, syncStatusFromBackend]);
@@ -185,7 +185,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
     try {
       const token = await apiFetch<ConnectTokenResponse>(
-        `/api/app/chakra/connect-token?intent=${replaceConnection ? 'REPLACE_CONNECTION' : 'CONNECT'}`,
+        `/api/app/chakra/connect-token?intent=${replaceConnection ? 'REPLACE_CONNECTION' : 'CONNECT'}`
       );
       await loadChakraSdk(token.sdkUrl);
 
@@ -221,7 +221,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           position: 'relative',
           inset: '',
           zIndex: '',
-          pointerEvents: 'auto',
+          pointerEvents: 'auto'
         },
         onMessage: (event: any, data: any) => {
           void captureEvent(event, data, token.pluginId);
@@ -229,7 +229,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             setConnected(true);
             setAutoNavigatePending(true);
             setIsPopupConnecting(false);
-            setStatusText('WhatsApp connection completed.');
+            setStatusText("WhatsApp bağlantısı tamamlandı.");
             void syncStatusFromBackend();
           }
         },
@@ -241,13 +241,13 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         onError: (sdkError: any) => {
           console.error('Chakra SDK error:', sdkError);
           setError(sdkError?.message || 'An error occurred in the Chakra popup flow.');
-        },
+        }
       });
 
       instanceRef.current = [scaledInstance];
     } catch (err: any) {
-      setError(err?.message || 'Failed to initialize Facebook connection.');
-      setStatusText('Failed to initialize Facebook connection.');
+      setError(err?.message || "Facebook baglantisi baslatilamadi.");
+      setStatusText("Facebook baglantisi baslatilamadi.");
     } finally {
       setPreparingConnect(false);
     }
@@ -276,8 +276,8 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         }
       } catch (err: any) {
         if (mounted) {
-          setError(err?.message || 'Failed to retrieve WhatsApp installation status.');
-          setStatusText('Status could not be retrieved. Refresh the page.');
+          setError(err?.message || "WhatsApp kurulum durumu alinamadi.");
+          setStatusText("Durum alınamadı. Sayfayı yenileyin.");
         }
       } finally {
         if (mounted) {
@@ -320,7 +320,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     const onBlur = () => {
       if (nativeTriggerReady && pluginId && !connected) {
         setIsPopupConnecting(true);
-        setStatusText('Connection process continues...');
+        setStatusText("Bağlantı süreci devam ediyor...");
       }
     };
 
@@ -342,7 +342,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   useEffect(() => {
     if (connected) {
       setIsPopupConnecting(false);
-      setStatusText('WhatsApp connection completed.');
+      setStatusText("WhatsApp bağlantısı tamamlandı.");
     }
   }, [connected]);
 
@@ -384,7 +384,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setStatusText('Starting the installation...');
     try {
       const response = await apiFetch<CreatePluginResponse>('/api/app/chakra/create-plugin', {
-        method: 'POST',
+        method: 'POST'
       });
       setPluginId(response.pluginId);
       setNativeTriggerReady(false);
@@ -407,19 +407,19 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
 
   const connectionStage = !pluginId ? 'plugin' : connected ? 'connected' : nativeTriggerReady ? 'ready' : 'preparing';
   const stageBadgeClass =
-    connectionStage === 'connected'
-      ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
-      : connectionStage === 'ready'
-        ? 'bg-blue-500/10 text-blue-700 border-blue-500/20'
-        : 'bg-amber-500/10 text-amber-700 border-amber-500/20';
+  connectionStage === 'connected' ?
+  'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' :
+  connectionStage === 'ready' ?
+  'bg-blue-500/10 text-blue-700 border-blue-500/20' :
+  'bg-amber-500/10 text-amber-700 border-amber-500/20';
   const stageLabel =
-    connectionStage === 'connected'
-      ? 'Connected'
-      : connectionStage === 'ready'
-        ? 'Ready to connect'
-        : connectionStage === 'plugin'
-          ? 'Plugin setup needed'
-          : 'Preparing';
+  connectionStage === 'connected' ?
+  "Bağlı" :
+  connectionStage === 'ready' ?
+  'Ready to connect' :
+  connectionStage === 'plugin' ?
+  'Plugin setup needed' :
+  'Preparing';
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -434,7 +434,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
               {replaceConnection ? 'Replace active WhatsApp number securely' : 'Connect your WhatsApp account with quick setup'}
             </p>
           </div>
-          {connected ? <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Connected</Badge> : null}
+          {connected ? <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Bağlı</Badge> : null}
         </div>
       </div>
 
@@ -444,61 +444,61 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-4 h-4 text-[#22C55E]" />
-                <p className="text-sm font-semibold">WhatsApp Connection Health</p>
+                <p className="text-sm font-semibold">WhatsApp Bağlantısı Health</p>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{statusText}</p>
             </div>
             <Badge className={stageBadgeClass}>{stageLabel}</Badge>
           </div>
-          {loadingStatus ? (
-            <div className="mt-3 text-xs text-muted-foreground flex items-center gap-2">
+          {loadingStatus ?
+          <div className="mt-3 text-xs text-muted-foreground flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Loading live status...
-            </div>
-          ) : null}
+              Canlı durum yükleniyor...
+            </div> :
+          null}
         </section>
 
         <div className="grid grid-cols-1 xl:grid-cols-[1.2fr,1fr] gap-4">
           <section className="rounded-2xl border border-border bg-background/90 p-4 space-y-4">
-            {!pluginId ? (
-              <>
+            {!pluginId ?
+            <>
                 <div className="space-y-1">
                   <p className="text-sm font-semibold">1. Initialize plugin</p>
                   <p className="text-xs text-muted-foreground">
-                    Required once per salon before opening Facebook secure connect.
+                    Required önce per salon before opening Facebook secure connect.
                   </p>
                 </div>
                 <Button
-                  type="button"
-                  onClick={() => {
-                    void handleStart();
-                  }}
-                  disabled={creatingPlugin || loadingStatus}
-                  className="w-full"
-                  style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-                >
-                  {creatingPlugin ? (
-                    <>
+                type="button"
+                onClick={() => {
+                  void handleStart();
+                }}
+                disabled={creatingPlugin || loadingStatus}
+                className="w-full"
+                style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
+                
+                  {creatingPlugin ?
+                <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Initializing...
-                    </>
-                  ) : (
-                    'Initialize and Continue'
-                  )}
+                    </> :
+
+                'Initialize and Continue'
+                }
                 </Button>
-              </>
-            ) : connected ? (
-              <>
+              </> :
+            connected ?
+            <>
                 <div className="flex items-center gap-2 text-emerald-700">
                   <CheckCircle2 className="w-5 h-5" />
-                  <p className="text-sm font-semibold">Connection completed</p>
+                  <p className="text-sm font-semibold">Bağlantı tamamlandı</p>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   WhatsApp channel is active for this salon. You can return to settings safely.
                 </p>
-              </>
-            ) : (
-              <>
+              </> :
+
+            <>
                 <div className="space-y-1">
                   <p className="text-sm font-semibold">{replaceConnection ? '2. Replace phone number' : '2. Secure Facebook connection'}</p>
                   <p className="text-xs text-muted-foreground">
@@ -507,53 +507,53 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                 </div>
                 <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
                   <div
-                    id={CONTAINER_ID}
-                    aria-label="Chakra connect button"
-                    className="absolute inset-0 h-[58px]"
-                  />
-                  {nativeTriggerReady ? (
-                    isPopupConnecting ? (
-                      <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
+                  id={CONTAINER_ID}
+                  aria-label="Chakra connect button"
+                  className="absolute inset-0 h-[58px]" />
+                
+                  {nativeTriggerReady ?
+                isPopupConnecting ?
+                <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Waiting for callback...
-                      </div>
-                    ) : (
-                      <div
-                        className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
-                        style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-                      >
+                      </div> :
+
+                <div
+                  className="pointer-events-none absolute inset-0 h-[58px] rounded-md text-base font-semibold flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
+                  
                         Connect with Facebook
-                      </div>
-                    )
-                  ) : (
-                    <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
+                      </div> :
+
+
+                <div className="pointer-events-none absolute inset-0 h-[58px] rounded-md bg-[var(--rose-gold)] text-white px-4 py-2 text-sm font-medium flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Preparing connect button...
                     </div>
-                  )}
+                }
                 </div>
-                {error ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      void prepareConnect();
-                    }}
-                    disabled={preparingConnect}
-                  >
+                {error ?
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  void prepareConnect();
+                }}
+                disabled={preparingConnect}>
+                
                     Retry
-                  </Button>
-                ) : null}
+                  </Button> :
+              null}
               </>
-            )}
+            }
 
             <Button
               type="button"
               variant="outline"
               onClick={handleDevBypass}
-              className="w-full"
-            >
-              {devBypassed ? 'Test Mode: Open AI Agent Screen' : 'Test Mode: Continue as Connected'}
+              className="w-full">
+              
+              {devBypassed ? 'Test Mode: Open AI Agent Screen' : "Test Modu: Bağlı Olarak Devam Et"}
             </Button>
           </section>
 
@@ -564,12 +564,12 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
               <p>- Replace mode keeps flow same, only intent changes for safe identity switch.</p>
               <p>- If popup closes early, reopen from this page and complete callback.</p>
             </div>
-            {error ? (
-              <div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/5 p-3 text-sm text-red-700 flex items-start gap-2">
+            {error ?
+            <div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/5 p-3 text-sm text-red-700 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5" />
                 <span>{error}</span>
-              </div>
-            ) : null}
+              </div> :
+            null}
             <div className="mt-4 rounded-xl border border-border/60 bg-muted/10 p-3">
               <p className="text-sm font-medium">Help</p>
               <Accordion type="single" collapsible>
@@ -588,7 +588,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                 <AccordionItem value="faq-3">
                   <AccordionTrigger>How do I verify completion?</AccordionTrigger>
                   <AccordionContent>
-                    Status badge turns to Connected and this page redirects to WhatsApp settings.
+                    Durum rözeti Bağlı olur ve bu sayfa WhatsApp ayarlarına yönlenir.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -596,6 +596,6 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           </section>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

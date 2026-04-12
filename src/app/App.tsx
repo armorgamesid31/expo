@@ -74,9 +74,9 @@ function PushNotificationBridge() {
       navigate(
         resolvePushAppPath({
           route: payload?.route,
-          eventType: payload?.eventType,
+          eventType: payload?.eventType
         }),
-        { state: { navDirection: 'forward' } },
+        { state: { navDirection: 'forward' } }
       );
     };
 
@@ -91,13 +91,13 @@ function PushNotificationBridge() {
             label: 'Open',
             onClick: () => {
               void openNotification(notification.data || null);
-            },
-          },
+            }
+          }
         });
       },
       onPushAction: (action) => {
         void openNotification(action.notification.data || null);
-      },
+      }
     });
 
     return () => {
@@ -119,18 +119,18 @@ function RootRedirect() {
             src="https://cdn.kedyapp.com/kedylogo_koyu.png"
             alt="Kedy Logo"
             className="h-[52px] w-auto dark:hidden"
-            loading="eager"
-          />
+            loading="eager" />
+          
           <img
             src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
             alt="Kedy Logo"
             className="hidden h-[52px] w-auto dark:block"
-            loading="eager"
-          />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+            loading="eager" />
+          
+          <p className="text-sm text-muted-foreground">Yükleniyor...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return <Navigate to={isAuthenticated ? '/app/dashboard' : '/auth/login'} replace />;
@@ -139,12 +139,12 @@ function RootRedirect() {
 function PermissionGuard({
   permissionKey,
   fallback = '/app/dashboard',
-  children,
-}: {
-  permissionKey: string;
-  fallback?: string;
-  children: React.ReactNode;
-}) {
+  children
+
+
+
+
+}: {permissionKey: string;fallback?: string;children: React.ReactNode;}) {
   const { hasPermission } = useAuth();
   if (!hasPermission(permissionKey)) {
     return <Navigate to={fallback} replace />;
@@ -155,12 +155,12 @@ function PermissionGuard({
 function AnyPermissionGuard({
   permissionKeys,
   fallback = '/app/dashboard',
-  children,
-}: {
-  permissionKeys: string[];
-  fallback?: string;
-  children: React.ReactNode;
-}) {
+  children
+
+
+
+
+}: {permissionKeys: string[];fallback?: string;children: React.ReactNode;}) {
   const { hasPermission } = useAuth();
   if (!permissionKeys.some((key) => hasPermission(key))) {
     return <Navigate to={fallback} replace />;
@@ -194,35 +194,35 @@ function AppRoutes() {
           <Route
             path="operations-studio"
             element={
-              <AnyPermissionGuard permissionKeys={['customers.manage', 'services.manage', 'packages.manage', 'inventory.manage']}>
+            <AnyPermissionGuard permissionKeys={['customers.manage', 'services.manage', 'packages.manage', 'inventory.manage']}>
                 <OperationsStudioPage />
               </AnyPermissionGuard>
-            }
-          />
+            } />
+          
           <Route
             path="brand-growth-hub"
             element={
-              <AnyPermissionGuard permissionKeys={['website.manage', 'campaigns.manage', 'campaigns.publish']}>
+            <AnyPermissionGuard permissionKeys={['website.manage', 'campaigns.manage', 'campaigns.publish']}>
                 <BrandGrowthHubPage />
               </AnyPermissionGuard>
-            }
-          />
+            } />
+          
           <Route
             path="data-import"
             element={
-              <PermissionGuard permissionKey="imports.manage" fallback="/app/operations-studio">
+            <PermissionGuard permissionKey="imports.manage" fallback="/app/operations-studio">
                 <DataImportWizardPage />
               </PermissionGuard>
-            }
-          />
+            } />
+          
           <Route
             path="team-management"
             element={
-              <AnyPermissionGuard permissionKeys={['staff.manage', 'access.users.manage', 'access.roles.manage', 'notifications.policy.manage']}>
+            <AnyPermissionGuard permissionKeys={['staff.manage', 'access.users.manage', 'access.roles.manage', 'notifications.policy.manage']}>
                 <TeamManagementPage />
               </AnyPermissionGuard>
-            }
-          />
+            } />
+          
           <Route path="features" element={<FeaturesPage />} />
           <Route path="features/:featureKey" element={<FeatureDetailPage />} />
           <Route path="settings" element={<SettingsPage />} />
@@ -231,25 +231,25 @@ function AppRoutes() {
           <Route
             path="notification-role-matrix"
             element={
-              <PermissionGuard permissionKey="notifications.policy.manage">
+            <PermissionGuard permissionKey="notifications.policy.manage">
                 <NotificationRoleMatrixPage />
               </PermissionGuard>
-            }
-          />
+            } />
+          
           <Route
             path="team-access"
             element={
-              <AnyPermissionGuard permissionKeys={['access.users.manage', 'access.roles.manage']}>
+            <AnyPermissionGuard permissionKeys={['access.users.manage', 'access.roles.manage']}>
                 <TeamAccessPage />
               </AnyPermissionGuard>
-            }
-          />
+            } />
+          
         </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
+    </Routes>);
+
 }
 
 export default function App() {
@@ -263,6 +263,6 @@ export default function App() {
         </BrowserRouter>
         <Toaster position="top-center" richColors />
       </AuthProvider>
-    </LocaleProvider>
-  );
+    </LocaleProvider>);
+
 }

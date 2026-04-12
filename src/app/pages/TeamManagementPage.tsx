@@ -13,28 +13,28 @@ export function TeamManagementPage() {
   if (!canManageEmployees && !canManageAccess && !canManageNotificationRules) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-semibold">Team Management</h1>
+        <h1 className="text-2xl font-semibold">Ekip Yönetimi</h1>
         <p className="text-sm text-muted-foreground mt-2">
           You do not have permission to open team management tools.
         </p>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Team Management</h1>
+      <h1 className="text-2xl font-semibold">Ekip Yönetimi</h1>
       <p className="text-sm text-muted-foreground">
         Manage employees and control account-level access from one place.
       </p>
 
       <div className="space-y-3">
-        {canManageEmployees ? (
-          <button
-            type="button"
-            onClick={() => navigate('/app/staff', { state: { navDirection: 'forward' } })}
-            className="w-full rounded-xl border border-border bg-card p-4 text-left"
-          >
+        {canManageEmployees ?
+        <button
+          type="button"
+          onClick={() => navigate('/app/staff', { state: { navDirection: 'forward' } })}
+          className="w-full rounded-xl border border-border bg-card p-4 text-left">
+          
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/15 grid place-items-center">
@@ -42,41 +42,41 @@ export function TeamManagementPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Employee Management</p>
-                  <p className="text-xs text-muted-foreground">Staff profiles, assignments, and service permissions</p>
+                  <p className="text-xs text-muted-foreground">Personel profilleri, atamalar ve hizmet yetkileri</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
-          </button>
-        ) : null}
+          </button> :
+        null}
 
-        {canManageAccess ? (
-          <button
-            type="button"
-            onClick={() => navigate('/app/team-access', { state: { navDirection: 'forward' } })}
-            className="w-full rounded-xl border border-border bg-card p-4 text-left"
-          >
+        {canManageAccess ?
+        <button
+          type="button"
+          onClick={() => navigate('/app/team-access', { state: { navDirection: 'forward' } })}
+          className="w-full rounded-xl border border-border bg-card p-4 text-left">
+          
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
                   <Shield className="h-5 w-5 text-[var(--deep-indigo)]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Team & Access</p>
-                  <p className="text-xs text-muted-foreground">Team user accounts, roles, and permissions</p>
+                  <p className="text-sm font-semibold">Ekip ve Yetki</p>
+                  <p className="text-xs text-muted-foreground">Ekip kullanıcı hesapları, roller ve yetkiler</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
-          </button>
-        ) : null}
+          </button> :
+        null}
 
-        {canManageNotificationRules ? (
-          <button
-            type="button"
-            onClick={() => navigate('/app/notification-role-matrix', { state: { navDirection: 'forward' } })}
-            className="w-full rounded-xl border border-border bg-card p-4 text-left"
-          >
+        {canManageNotificationRules ?
+        <button
+          type="button"
+          onClick={() => navigate('/app/notification-role-matrix', { state: { navDirection: 'forward' } })}
+          className="w-full rounded-xl border border-border bg-card p-4 text-left">
+          
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
@@ -89,9 +89,9 @@ export function TeamManagementPage() {
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
-          </button>
-        ) : null}
+          </button> :
+        null}
       </div>
-    </div>
-  );
+    </div>);
+
 }

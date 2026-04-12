@@ -31,105 +31,105 @@ interface AutomationSetting {
   label: string;
   type: 'time' | 'toggle' | 'select';
   value: string | boolean;
-  options?: { value: string; label: string }[];
+  options?: {value: string;label: string;}[];
 }
 
 const initialAutomations: Automation[] = [
-  {
-    id: 'reminder-24h',
-    name: 'Appointment Reminder (24 Hours)',
-    description: 'Automatic reminder 24 hours before appointment',
-    icon: Bell,
-    color: '#3B82F6',
-    enabled: true,
-    category: 'reminder',
-    timing: '24 hours ago',
-    details: 'Appointment date, time, service and employee information is sent to the customer via WhatsApp.',
-    settings: [
-      { key: 'timing', label: 'Shipping Time', type: 'select', value: '24h', options: [
-        { value: '48h', label: '48 hours ago' },
-        { value: '24h', label: '24 hours ago' },
-        { value: '12h', label: '12 hours ago' },
-        { value: '6h', label: '6 hours ago' },
-      ]},
-      { key: 'includeDirections', label: 'Add Directions', type: 'toggle', value: true },
-      { key: 'confirmButton', label: 'Add Confirmation Button', type: 'toggle', value: true },
-    ],
+{
+  id: 'reminder-24h',
+  name: "Randevu Hatırlatması (24 Hours)",
+  description: 'Automatic reminder 24 hours before appointment',
+  icon: Bell,
+  color: '#3B82F6',
+  enabled: true,
+  category: 'reminder',
+  timing: '24 hours ago',
+  details: 'Appointment date, time, service and employee information is sent to the customer via WhatsApp.',
+  settings: [
+  { key: 'timing', label: 'Shipping Time', type: 'select', value: '24h', options: [
+    { value: '48h', label: '48 hours ago' },
+    { value: '24h', label: '24 hours ago' },
+    { value: '12h', label: '12 hours ago' },
+    { value: '6h', label: '6 hours ago' }]
   },
-  {
-    id: 'reminder-2h',
-    name: 'Appointment Reminder (2 Hours)',
-    description: 'Quick reminder 2 hours before the appointment',
-    icon: Clock,
-    color: '#8B5CF6',
-    enabled: true,
-    category: 'reminder',
-    timing: '2 hours ago',
-    details: 'The customer is reminded of his appointment with a short WhatsApp message.',
-    settings: [
-      { key: 'timing', label: 'Shipping Time', type: 'select', value: '2h', options: [
-        { value: '3h', label: '3 hours ago' },
-        { value: '2h', label: '2 hours ago' },
-        { value: '1h', label: '1 hour ago' },
-      ]},
-    ],
+  { key: 'includeDirections', label: "Yol Tarifi Ekle", type: 'toggle', value: true },
+  { key: 'confirmButton', label: "Onay Butonu Ekle", type: 'toggle', value: true }]
+
+},
+{
+  id: 'reminder-2h',
+  name: "Randevu Hatırlatması (2 Hours)",
+  description: 'Quick reminder 2 hours before the appointment',
+  icon: Clock,
+  color: '#8B5CF6',
+  enabled: true,
+  category: 'reminder',
+  timing: '2 hours ago',
+  details: 'The customer is reminded of his appointment with a short WhatsApp message.',
+  settings: [
+  { key: 'timing', label: 'Shipping Time', type: 'select', value: '2h', options: [
+    { value: '3h', label: '3 hours ago' },
+    { value: '2h', label: '2 hours ago' },
+    { value: '1h', label: '1 hour ago' }]
+  }]
+
+},
+{
+  id: 'directions',
+  name: 'Directions Message',
+  description: 'Salon location and directions before your appointment',
+  icon: MapPin,
+  color: '#22C55E',
+  enabled: true,
+  category: 'info',
+  timing: 'With reminder',
+  details: 'Directions are sent to the customer via a Google Maps link. The map URL from Hall Information is used.',
+  settings: [
+  { key: 'standalone', label: "Gönder as Separate Message", type: 'toggle', value: false },
+  { key: 'includeParking', label: "Otopark Bilgisi Ekle", type: 'toggle', value: true }]
+
+},
+{
+  id: 'post-visit',
+  name: 'Post-Visit Thank You',
+  description: 'Thank you message after the appointment is completed',
+  icon: Star,
+  color: '#F59E0B',
+  enabled: true,
+  category: 'feedback',
+  timing: '2 saat sonra',
+  details: 'A thank you message and satisfaction survey are sent to the customer.',
+  settings: [
+  { key: 'timing', label: 'Shipping Time', type: 'select', value: '2h_after', options: [
+    { value: '1h_after', label: '1 saat sonra' },
+    { value: '2h_after', label: '2 saat sonra' },
+    { value: '24h_after', label: 'the next day' }]
   },
-  {
-    id: 'directions',
-    name: 'Directions Message',
-    description: 'Salon location and directions before your appointment',
-    icon: MapPin,
-    color: '#22C55E',
-    enabled: true,
-    category: 'info',
-    timing: 'With reminder',
-    details: 'Directions are sent to the customer via a Google Maps link. The map URL from Hall Information is used.',
-    settings: [
-      { key: 'standalone', label: 'Send as Separate Message', type: 'toggle', value: false },
-      { key: 'includeParking', label: 'Add Parking Info', type: 'toggle', value: true },
-    ],
-  },
-  {
-    id: 'post-visit',
-    name: 'Post-Visit Thank You',
-    description: 'Thank you message after the appointment is completed',
-    icon: Star,
-    color: '#F59E0B',
-    enabled: true,
-    category: 'feedback',
-    timing: '2 saat sonra',
-    details: 'A thank you message and satisfaction survey are sent to the customer.',
-    settings: [
-      { key: 'timing', label: 'Shipping Time', type: 'select', value: '2h_after', options: [
-        { value: '1h_after', label: '1 saat sonra' },
-        { value: '2h_after', label: '2 saat sonra' },
-        { value: '24h_after', label: 'the next day' },
-      ]},
-      { key: 'includeRating', label: 'Request Score Evaluation', type: 'toggle', value: true },
-      { key: 'includeRebookLink', label: 'Reappointment Link', type: 'toggle', value: true },
-    ],
-  },
-  {
-    id: 'no-show-warning',
-    name: 'No-Show Alert',
-    description: 'Automatic information for customers who miss appointments',
-    icon: CalendarCheck,
-    color: '#EF4444',
-    enabled: true,
-    category: 'reminder',
-    timing: '1 hour after no-show',
-    details: 'An information message is sent to the customer who does not attend the appointment. A blacklist warning is added to those who perform 3+ no-shows.',
-    settings: [
-      { key: 'autoBlacklist', label: 'Auto Blacklist (3+ no-shows)', type: 'toggle', value: false },
-      { key: 'includeReschedule', label: 'Reappointment Link', type: 'toggle', value: true },
-    ],
-  },
-];
+  { key: 'includeRating', label: 'Request Score Evaluation', type: 'toggle', value: true },
+  { key: 'includeRebookLink', label: 'Reappointment Link', type: 'toggle', value: true }]
+
+},
+{
+  id: 'no-show-warning',
+  name: 'No-Show Alert',
+  description: 'Automatic information for customers who miss appointments',
+  icon: CalendarCheck,
+  color: '#EF4444',
+  enabled: true,
+  category: 'reminder',
+  timing: '1 hour after no-show',
+  details: 'An information message is sent to the customer who does not attend the appointment. A blacklist warning is added to those who perform 3+ no-shows.',
+  settings: [
+  { key: 'autoBlacklist', label: 'Auto Blacklist (3+ no-shows)', type: 'toggle', value: false },
+  { key: 'includeReschedule', label: 'Reappointment Link', type: 'toggle', value: true }]
+
+}];
+
 
 const CATEGORY_LABELS: Record<string, string> = {
-  reminder: 'Reminders',
+  reminder: "Hatırlatmalar",
   feedback: 'Feedback',
-  info: 'Information',
+  info: 'Information'
 };
 
 const CATEGORY_ORDER = ['reminder', 'info', 'feedback'];
@@ -141,38 +141,38 @@ export function Automations({ onBack }: AutomationsProps) {
   const [localSettings, setLocalSettings] = useState<AutomationSetting[]>([]);
 
   const toggleAutomation = (id: string) => {
-    setAutomations(automations.map(a =>
-      a.id === id ? { ...a, enabled: !a.enabled } : a
+    setAutomations(automations.map((a) =>
+    a.id === id ? { ...a, enabled: !a.enabled } : a
     ));
   };
 
   const openSettings = (automation: Automation) => {
     setSelectedAutomation(automation);
-    setLocalSettings(automation.settings ? [...automation.settings.map(s => ({ ...s }))] : []);
+    setLocalSettings(automation.settings ? [...automation.settings.map((s) => ({ ...s }))] : []);
     setIsSettingsOpen(true);
   };
 
   const updateLocalSetting = (key: string, value: string | boolean) => {
-    setLocalSettings(localSettings.map(s =>
-      s.key === key ? { ...s, value } : s
+    setLocalSettings(localSettings.map((s) =>
+    s.key === key ? { ...s, value } : s
     ));
   };
 
   const saveSettings = () => {
     if (!selectedAutomation) return;
-    setAutomations(automations.map(a =>
-      a.id === selectedAutomation.id ? { ...a, settings: localSettings } : a
+    setAutomations(automations.map((a) =>
+    a.id === selectedAutomation.id ? { ...a, settings: localSettings } : a
     ));
     setIsSettingsOpen(false);
   };
 
-  const activeCount = automations.filter(a => a.enabled).length;
+  const activeCount = automations.filter((a) => a.enabled).length;
 
-  const groupedAutomations = CATEGORY_ORDER.map(cat => ({
+  const groupedAutomations = CATEGORY_ORDER.map((cat) => ({
     category: cat,
     label: CATEGORY_LABELS[cat],
-    items: automations.filter(a => a.category === cat),
-  })).filter(g => g.items.length > 0);
+    items: automations.filter((a) => a.category === cat)
+  })).filter((g) => g.items.length > 0);
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -217,25 +217,25 @@ export function Automations({ onBack }: AutomationsProps) {
         </div>
 
         {/* Grouped Automations */}
-        {groupedAutomations.map(group => (
-          <div key={group.category}>
+        {groupedAutomations.map((group) =>
+        <div key={group.category}>
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-1">
               {group.label}
             </h3>
             <div className="space-y-2">
-              {group.items.map(automation => {
-                const Icon = automation.icon;
-                return (
-                  <Card
-                    key={automation.id}
-                    className={`border-border/50 transition-all ${automation.enabled ? '' : 'opacity-60'}`}
-                  >
+              {group.items.map((automation) => {
+              const Icon = automation.icon;
+              return (
+                <Card
+                  key={automation.id}
+                  className={`border-border/50 transition-all ${automation.enabled ? '' : 'opacity-60'}`}>
+                  
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: `${automation.color}15` }}
-                        >
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${automation.color}15` }}>
+                        
                           <Icon className="w-5 h-5" style={{ color: automation.color }} />
                         </div>
 
@@ -243,39 +243,39 @@ export function Automations({ onBack }: AutomationsProps) {
                           <div className="flex items-center justify-between mb-1">
                             <h4 className="font-semibold text-sm text-foreground leading-tight">{automation.name}</h4>
                             <Switch
-                              checked={automation.enabled}
-                              onCheckedChange={() => toggleAutomation(automation.id)}
-                            />
+                            checked={automation.enabled}
+                            onCheckedChange={() => toggleAutomation(automation.id)} />
+                          
                           </div>
                           <p className="text-xs text-muted-foreground mb-2">{automation.description}</p>
 
                           <div className="flex items-center gap-2 flex-wrap">
-                            {automation.timing && (
-                              <Badge variant="secondary" className="text-[10px] py-0 h-4">
+                            {automation.timing &&
+                          <Badge variant="secondary" className="text-[10px] py-0 h-4">
                                 {automation.timing}
                               </Badge>
-                            )}
+                          }
                           </div>
 
-                          {automation.settings && automation.settings.length > 0 && (
-                            <button
-                              onClick={() => openSettings(automation)}
-                              className="mt-2 flex items-center gap-1 text-xs text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors"
-                            >
+                          {automation.settings && automation.settings.length > 0 &&
+                        <button
+                          onClick={() => openSettings(automation)}
+                          className="mt-2 flex items-center gap-1 text-xs text-[var(--rose-gold)] hover:text-[var(--rose-gold-dark)] transition-colors">
+                          
                               <Settings2 className="w-3 h-3" />
-                              Edit Settings
+                              Ayarları Düzenle
                               <ChevronRight className="w-3 h-3" />
                             </button>
-                          )}
+                        }
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                );
-              })}
+                  </Card>);
+
+            })}
             </div>
           </div>
-        ))}
+        )}
 
         {/* Info Card */}
         <Card className="border-[var(--deep-indigo)]/20 bg-[var(--deep-indigo)]/5">
@@ -322,63 +322,63 @@ export function Automations({ onBack }: AutomationsProps) {
             </p>
 
             <div className="space-y-4 border-t border-border pt-4">
-              {localSettings.map(setting => (
-                <div key={setting.key}>
-                  {setting.type === 'toggle' ? (
-                    <div className="flex items-center justify-between">
+              {localSettings.map((setting) =>
+              <div key={setting.key}>
+                  {setting.type === 'toggle' ?
+                <div className="flex items-center justify-between">
                       <Label className="text-sm">{setting.label}</Label>
                       <Switch
-                        checked={setting.value as boolean}
-                        onCheckedChange={(checked) => updateLocalSetting(setting.key, checked)}
-                      />
-                    </div>
-                  ) : setting.type === 'select' ? (
-                    <div className="space-y-2">
+                    checked={setting.value as boolean}
+                    onCheckedChange={(checked) => updateLocalSetting(setting.key, checked)} />
+                  
+                    </div> :
+                setting.type === 'select' ?
+                <div className="space-y-2">
                       <Label>{setting.label}</Label>
                       <Select
-                        value={setting.value as string}
-                        onValueChange={(val) => updateLocalSetting(setting.key, val)}
-                      >
+                    value={setting.value as string}
+                    onValueChange={(val) => updateLocalSetting(setting.key, val)}>
+                    
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {setting.options?.map(opt => (
-                            <SelectItem key={opt.value} value={opt.value}>
+                          {setting.options?.map((opt) =>
+                      <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>
-                          ))}
+                      )}
                         </SelectContent>
                       </Select>
-                    </div>
-                  ) : setting.type === 'time' ? (
-                    <div className="space-y-2">
+                    </div> :
+                setting.type === 'time' ?
+                <div className="space-y-2">
                       <Label>{setting.label}</Label>
                       <Input
-                        type="time"
-                        value={setting.value as string}
-                        onChange={(e) => updateLocalSetting(setting.key, e.target.value)}
-                      />
-                    </div>
-                  ) : null}
+                    type="time"
+                    value={setting.value as string}
+                    onChange={(e) => updateLocalSetting(setting.key, e.target.value)} />
+                  
+                    </div> :
+                null}
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>
-              Cancel
+              İptal
             </Button>
             <Button
               onClick={saveSettings}
-              style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}
-            >
-              Save
+              style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
+              
+              Kaydet
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

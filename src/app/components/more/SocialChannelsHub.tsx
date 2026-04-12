@@ -14,13 +14,13 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
         <button
           type="button"
           onClick={onBack}
-          className="text-xs text-muted-foreground underline underline-offset-2"
-        >
+          className="text-xs text-muted-foreground underline underline-offset-2">
+          
           Geri
         </button>
         <h1 className="text-2xl font-semibold mt-2 mb-1">Sosyal Kanallar</h1>
         <p className="text-sm text-muted-foreground">
-          Instagram ve WhatsApp baglantilarini tek alandan yonetin.
+          Instagram ve WhatsApp bağlantılarini tek alandan yönetin.
         </p>
       </div>
 
@@ -28,8 +28,8 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
         <button
           type="button"
           onClick={() => navigate('/app/features/meta-direct', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left"
-        >
+          className="w-full rounded-xl border border-border bg-card p-4 text-left">
+          
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/15 grid place-items-center">
@@ -37,7 +37,7 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
               </div>
               <div>
                 <p className="text-sm font-semibold">Instagram (Meta Direct)</p>
-                <p className="text-xs text-muted-foreground">Baglanti, webhook ve DM entegrasyonu</p>
+                <p className="text-xs text-muted-foreground">Bağlantı, webhook ve DM entegrasyonu</p>
               </div>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -47,8 +47,8 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
         <button
           type="button"
           onClick={() => navigate('/app/features/whatsapp-settings', { state: { navDirection: 'forward' } })}
-          className="w-full rounded-xl border border-border bg-card p-4 text-left"
-        >
+          className="w-full rounded-xl border border-border bg-card p-4 text-left">
+          
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/15 grid place-items-center">
@@ -56,13 +56,13 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
               </div>
               <div>
                 <p className="text-sm font-semibold">WhatsApp</p>
-                <p className="text-xs text-muted-foreground">Baglanti, bot ayarlari ve ajan davranisi</p>
+                <p className="text-xs text-muted-foreground">Bağlantı, bot ayarları ve ajan davranisi</p>
               </div>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
         </button>
       </div>
-    </div>
-  );
+    </div>);
+
 }
