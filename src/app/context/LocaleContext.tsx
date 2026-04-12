@@ -209,14 +209,128 @@ const EN_TO_TR: Record<string, string> = {
   'Coming soon': 'Yakin zamanda',
   'Something went wrong': 'Bir seyler ters gitti',
   'Please try again later.': 'Lutfen daha sonra tekrar deneyin.',
+  'Next Customer': 'Sonraki Musteri',
+  "Today's Appointments": 'Bugunun Randevulari',
+  "Today's Schedule": 'Bugunun Takvimi',
+  'All mandatory steps completed!': 'Tum zorunlu adimlar tamamlandi!',
+  'All Customers': 'Tum Musteriler',
+  'Analytics Report': 'Analitik Raporu',
+  'Search for customers...': 'Musteri ara...',
+  'Recommendation:': 'Oneri:',
+  'Call Customer': 'Musteriyi Ara',
+  'Staff Performance': 'Personel Performansi',
+  'Service Revenue Distribution': 'Hizmet Gelir Dagilimi',
+  'Create a new appointment by selecting customer, service, and date': 'Musteri, hizmet ve tarih secerek yeni randevu olusturun',
+  'Select Customer': 'Musteri Sec',
+  'Search by name or phone...': 'Ad veya telefonla ara...',
+  'Select Service': 'Hizmet Sec',
+  'Create Appointment': 'Randevu Olustur',
+  'Business details and working hours': 'Isletme bilgileri ve calisma saatleri',
+  'Google Maps Business Link': 'Google Haritalar Isletme Baglantisi',
+  'Saved!': 'Kaydedildi!',
+  'Save Changes': 'Degisiklikleri Kaydet',
+  'Edit Settings': 'Ayarlari Duzenle',
+  'Send as Separate Message': 'Ayri Mesaj Olarak Gonder',
+  'Go to WhatsApp Settings': 'WhatsApp Ayarlarina Git',
+  'Conversation Analytics': 'Konusma Analitigi',
+  'Recent Conversations': 'Son Konusmalar',
+  'Agent Settings': 'Asistan Ayarlari',
+  'Early Handover': 'Erken Devir',
+  'Late Handover': 'Gec Devir',
+  'Connection activity could not be updated.': 'Baglanti durumu guncellenemedi.',
+  'Connection passive': 'Baglanti pasif',
+  'Connection, AI agent, and reminder settings': 'Baglanti, AI asistan ve hatirlatma ayarlari',
+  'Connection status': 'Baglanti durumu',
+  'Connection completed': 'Baglanti tamamlandi',
+  'Manage send steps for 2 and 24 hours before appointment.': 'Randevudan 2 ve 24 saat once gonderim adimlarini yonetin.',
+  'Open Reminder Settings': 'Hatirlatma Ayarlarini Ac',
+  'Open AI Agent Settings': 'AI Asistan Ayarlarini Ac',
+  'Back to Settings': 'Ayarlara Don',
+  All: 'Tumu',
+  'Live Support': 'Canli Destek',
+  'Send Email': 'E-posta Gonder',
+  'Status could not be retrieved. Refresh the page.': 'Durum alinamadi. Sayfayi yenileyin.',
+  'Connection process continues...': 'Baglanti sureci devam ediyor...',
+  'WhatsApp Connection Health': 'WhatsApp Baglanti Durumu',
+  'Loading live status...': 'Canli durum yukleniyor...',
+  'Test Mode: Open AI Agent Screen': 'Test Modu: AI Asistan Ekranini Ac',
+  'Test Mode: Continue as Connected': 'Test Modu: Bagli Olarak Devam Et',
+  'Bring Your Friend Campaign': 'Arkadasini Getir Kampanyasi',
+  'Invite a Friend': 'Arkadas Davet Et',
+  'Campaign Name *': 'Kampanya Adi *',
+  'Create Campaign': 'Kampanya Olustur',
+  'Create Program': 'Program Olustur',
+  'Campaign Status': 'Kampanya Durumu',
+  'Create New Campaign': 'Yeni Kampanya Olustur',
+  'Campaign Sent!': 'Kampanya Gonderildi!',
+  'Campaign Details': 'Kampanya Detaylari',
+  'Customer Segment': 'Musteri Segmenti',
+  'Send Campaign': 'Kampanya Gonder',
+  'Customer Segments': 'Musteri Segmentleri',
+  'Campaign Performance': 'Kampanya Performansi',
+  'Meta Direct Connection': 'Meta Direct Baglantisi',
+  'Instagram Login onboarding for Instagram DM.': 'Instagram DM icin Instagram Login kurulum akisi.',
+  'Instagram DM Connection': 'Instagram DM Baglantisi',
+  'Connection Flow': 'Baglanti Akisi',
+  'Staff Management': 'Personel Yonetimi',
+  'Add First Staff Member': 'Ilk Personeli Ekle',
+  'Edit Employee': 'Personeli Duzenle',
+  'Add New Employee': 'Yeni Personel Ekle',
+  'Team & Access': 'Ekip ve Yetkiler',
+  'Manage team accounts and role-based access permissions.': 'Ekip hesaplarini ve rol bazli yetkileri yonetin.',
+  'Team Users': 'Ekip Kullanicilari',
+  'Create Team User': 'Ekip Kullanicisi Olustur',
+  'Create User': 'Kullanici Olustur',
+  'Team Members': 'Ekip Uyeleri',
+  'Service unmatched': 'Hizmet eslesmedi',
+  'Staff unmatched': 'Personel eslesmedi',
+  'Refresh failed': 'Yenileme basarisiz',
+  'Open conflicts:': 'Acik cakismalar:',
+  'Package Management': 'Paket Yonetimi',
+  'Edit Template': 'Sablonu Duzenle',
+  'New Template': 'Yeni Sablon',
+  'Cancel Edit': 'Duzenlemeyi Iptal Et',
+  'Single Service': 'Tek Hizmet',
+  'Add Service': 'Hizmet Ekle',
+  'Update Template': 'Sablonu Guncelle',
+  'Create Template': 'Sablon Olustur',
+  'Loading templates...': 'Sablonlar yukleniyor...',
+  'Customer phone number is mandatory.': 'Musteri telefon numarasi zorunludur.',
+  'Customer name and phone are required.': 'Musteri adi ve telefon zorunludur.',
+  'Loading schedule...': 'Takvim yukleniyor...',
+  'Loading waitlist...': 'Bekleme listesi yukleniyor...',
+  'Salon added': 'Salon ekledi',
+  'Customer added': 'Musteri ekledi',
+  'Working...': 'Isleniyor...',
+  'Send Offer': 'Teklif Gonder',
+  'Not recorded': 'Kayitli degil',
+  'Complete & Payment': 'Tamamla ve Odeme Al',
+  'Update Payment': 'Odemeyi Guncelle',
+  'Complete & Checkout': 'Tamamla ve Odeme Islemi',
+  'New Package Sale': 'Yeni Paket Satisi',
+  'Package name': 'Paket adi',
+  'Loading active packages...': 'Aktif paketler yukleniyor...',
+  'Checkout Summary': 'Odeme Ozeti',
+  'No conversation matches this filter.': 'Bu filtreye uygun konusma yok.',
+  Linked: 'Bagli',
+  Unlinked: 'Bagsiz',
+  'Linked profile': 'Bagli profil',
+  'Not linked': 'Bagli degil',
+  'Resuming...': 'Devam ettiriliyor...',
+  'Resume AI': 'AI Devam Ettir',
+  'Requesting...': 'Talep gonderiliyor...',
+  'Handover Active': 'Devir Aktif',
+  'Request Handover': 'Devir Talep Et',
+  'No messages in this conversation.': 'Bu konusmada mesaj yok.',
+  System: 'Sistem',
+  'Type a manual reply': 'Manuel yanit yazin',
+  'Manual reply is available only for Instagram': 'Manuel yanit sadece Instagram icin kullanilabilir',
+  'Sending...': 'Gonderiliyor...',
+  Send: 'Gonder',
+  'Select a conversation to view messages.': 'Mesajlari gormek icin bir konusma secin.',
 };
 
-const TR_TO_EN = Object.fromEntries(
-  Object.entries(EN_TO_TR).map(([key, value]) => [value, key]),
-) as Record<string, string>;
-
 function detectInitialLocale(): AppLocale {
-  // Product decision: Turkish-first rollout.
   return 'tr';
 }
 
@@ -239,10 +353,63 @@ function setOriginalAttr(element: Element, attr: string, value: string) {
 }
 
 function buildMatcherMap(locale: AppLocale): [RegExp, string][] {
-  const dictionary = locale === 'tr' ? EN_TO_TR : TR_TO_EN;
+  const dictionary = EN_TO_TR;
   return Object.entries(dictionary)
     .sort((a, b) => b[0].length - a[0].length)
-    .map(([from, to]) => [new RegExp(escapeRegExp(from), 'g'), to]);
+    .map(([from, to]) => [new RegExp(escapeRegExp(from), 'gi'), to]);
+}
+
+function fixTurkishText(input: string): string {
+  const replacements: Array<[RegExp, string]> = [
+    [/\bYukleniyor\b/g, 'Yükleniyor'],
+    [/\bIptal\b/g, 'İptal'],
+    [/\bOneri\b/g, 'Öneri'],
+    [/\bCikis\b/g, 'Çıkış'],
+    [/\bKonusmalar\b/g, 'Konuşmalar'],
+    [/\bKonusma\b/g, 'Konuşma'],
+    [/\bOzellikler\b/g, 'Özellikler'],
+    [/\bDuzenle\b/g, 'Düzenle'],
+    [/\bOlustur\b/g, 'Oluştur'],
+    [/\bGuncelle\b/g, 'Güncelle'],
+    [/\bUyari\b/g, 'Uyarı'],
+    [/\bIstege\b/g, 'İsteğe'],
+    [/\bBagli\b/g, 'Bağlı'],
+    [/\bDegil\b/g, 'Değil'],
+    [/\bMusteri\b/g, 'Müşteri'],
+    [/\bSure\b/g, 'Süre'],
+    [/\bOdeme\b/g, 'Ödeme'],
+    [/\bOdemeler\b/g, 'Ödemeler'],
+    [/\bKullanilan\b/g, 'Kullanılan'],
+    [/\bDus\b/g, 'Düş'],
+    [/\bBol\b/g, 'Böl'],
+    [/\bGelismis\b/g, 'Gelişmiş'],
+    [/\bSali\b/g, 'Salı'],
+    [/\bCarsamba\b/g, 'Çarşamba'],
+    [/\bPersembe\b/g, 'Perşembe'],
+    [/\bGiris\b/g, 'Giriş'],
+    [/\bSifre\b/g, 'Şifre'],
+    [/\bBasarisiz\b/g, 'Başarısız'],
+    [/\bIsletme\b/g, 'İşletme'],
+    [/\bKisisel\b/g, 'Kişisel'],
+    [/\bSik\b/g, 'Sık'],
+    [/\bTurkce\b/g, 'Türkçe'],
+    [/\bIngilizce\b/g, 'İngilizce'],
+    [/\bYonetim\b/g, 'Yönetim'],
+    [/\bCalisma\b/g, 'Çalışma'],
+    [/\bAyarlarini\b/g, 'Ayarlarını'],
+    [/\bAciklama\b/g, 'Açıklama'],
+    [/\bBaglanti\b/g, 'Bağlantı'],
+    [/\bGonderim\b/g, 'Gönderim'],
+    [/\bHatirlatma\b/g, 'Hatırlatma'],
+    [/\bAsistani\b/g, 'Asistanı'],
+    [/\bTum\b/g, 'Tüm'],
+  ];
+
+  let output = input;
+  for (const [pattern, replacement] of replacements) {
+    output = output.replace(pattern, replacement);
+  }
+  return output;
 }
 
 function translateTextValue(input: string, locale: AppLocale): string {
@@ -257,6 +424,9 @@ function translateTextValue(input: string, locale: AppLocale): string {
     output = output.replace(pattern, replacement);
   }
 
+  if (locale === 'tr') {
+    return fixTurkishText(output);
+  }
   return output;
 }
 
@@ -337,30 +507,11 @@ function LocaleDomTranslator({ locale }: { locale: AppLocale }) {
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<AppLocale>(detectInitialLocale());
+  const [locale, setLocaleState] = useState<AppLocale>('tr');
 
   useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      try {
-        const stored = await Preferences.get({ key: LOCALE_PREF_KEY });
-        const savedLocale = stored.value === 'tr' || stored.value === 'en' ? stored.value : null;
-        // Force Turkish as default even when legacy stored value is "en".
-        const nextLocale = (savedLocale === 'tr' ? 'tr' : detectInitialLocale()) as AppLocale;
-        if (mounted) {
-          setLocaleState(nextLocale);
-        }
-      } catch {
-        if (mounted) {
-          setLocaleState(detectInitialLocale());
-        }
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
+    setLocaleState('tr');
+    void Preferences.set({ key: LOCALE_PREF_KEY, value: 'tr' });
   }, []);
 
   useEffect(() => {
@@ -370,7 +521,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale,
-      setLocale: (next) => setLocaleState(next),
+      setLocale: () => setLocaleState('tr'),
     }),
     [locale],
   );
