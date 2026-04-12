@@ -39,42 +39,40 @@ function transitionKindFromPathname(pathname: string): TransitionKind {
 }
 
 function transitionMotionByKind(kind: TransitionKind, direction: 1 | -1) {
+  const enterTransition = { duration: 0.35, ease: [0.22, 1, 0.36, 1] };
+  const exitTransition = { duration: 0.15, ease: [0.32, 0, 0.67, 0] };
+
   switch (kind) {
     case 'slide-x':
       return {
-        initial: { x: direction === 1 ? 36 : -36, opacity: 0 },
-        animate: { x: 0, opacity: 1 },
-        exit: { x: direction === 1 ? -28 : 28, opacity: 0 },
-        transition: { duration: 0.36, ease: [0.22, 1, 0.36, 1] }
+        initial: { x: direction === 1 ? 24 : -24, opacity: 0 },
+        animate: { x: 0, opacity: 1, transition: enterTransition },
+        exit: { x: direction === 1 ? -16 : 16, opacity: 0, transition: exitTransition }
       };
     case 'slide-y':
       return {
-        initial: { y: direction === 1 ? 28 : -20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        exit: { y: direction === 1 ? -18 : 20, opacity: 0 },
-        transition: { duration: 0.34, ease: [0.22, 1, 0.36, 1] }
+        initial: { y: direction === 1 ? 24 : -24, opacity: 0 },
+        animate: { y: 0, opacity: 1, transition: enterTransition },
+        exit: { y: direction === 1 ? -16 : 16, opacity: 0, transition: exitTransition }
       };
     case 'fade-lift':
       return {
-        initial: { y: 14, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        exit: { y: -10, opacity: 0 },
-        transition: { duration: 0.32, ease: [0.25, 1, 0.5, 1] }
+        initial: { y: 16, opacity: 0, filter: 'blur(2px)' },
+        animate: { y: 0, opacity: 1, filter: 'blur(0px)', transition: enterTransition },
+        exit: { y: -8, opacity: 0, filter: 'blur(2px)', transition: exitTransition }
       };
     case 'soft-scale':
       return {
-        initial: { scale: 0.985, y: 8, opacity: 0 },
-        animate: { scale: 1, y: 0, opacity: 1 },
-        exit: { scale: 0.992, y: -8, opacity: 0 },
-        transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] }
+        initial: { scale: 0.97, y: 10, opacity: 0 },
+        animate: { scale: 1, y: 0, opacity: 1, transition: enterTransition },
+        exit: { scale: 0.99, y: -5, opacity: 0, transition: exitTransition }
       };
     case 'fade':
     default:
       return {
         initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-        transition: { duration: 0.3, ease: 'easeInOut' }
+        animate: { opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
+        exit: { opacity: 0, transition: { duration: 0.15, ease: 'easeIn' } }
       };
   }
 }
