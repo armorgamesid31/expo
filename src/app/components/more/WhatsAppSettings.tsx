@@ -3,17 +3,20 @@ import {
   ArrowLeft,
   Bell,
   Bot,
+  CheckCircle2,
+  ChevronRight,
   Link2,
-  Lock,
+  Loader2,
+  MessageCircle,
+  Power,
   RefreshCcw,
   Settings2,
-  AlertTriangle,
-  Power,
-  ChevronRight
-} from
-  'lucide-react';
+  Shield,
+  Sparkles,
+  WifiOff,
+  XCircle,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { useAuth } from '../../context/AuthContext';
@@ -61,19 +64,19 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   const navigate = useNavigate();
 
   const [status, setStatus] = useState<ChakraStatusResponse | null>(
-    () => readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10)
+    () => readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10),
   );
   const [automations, setAutomations] = useState<AutomationItem[]>(
-    () => readSnapshot<AutomationItem[]>(WHATSAPP_AUTOMATIONS_CACHE_KEY, 1000 * 60 * 10) || []
+    () => readSnapshot<AutomationItem[]>(WHATSAPP_AUTOMATIONS_CACHE_KEY, 1000 * 60 * 10) || [],
   );
   const [agentSettings, setAgentSettings] = useState<AgentSettings | null>(
-    () => readSnapshot<AgentSettings>(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, 1000 * 60 * 10)
+    () => readSnapshot<AgentSettings>(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, 1000 * 60 * 10),
   );
 
   const [statusLoading, setStatusLoading] = useState<boolean>(
-    () => !(readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10) || null)
+    () => !(readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10) || null),
   );
-  const [statusYenileing, setStatusYenileing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
 
   const [pluginToggleBusy, setPluginToggleBusy] = useState(false);
@@ -90,7 +93,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
   const reminderRule = useMemo(
     () => automations.find((item) => item.key === REMINDER_KEY),
-    [automations]
+    [automations],
   );
 
   const reminderEnabled = Boolean(reminderRule?.isEnabled);
@@ -98,19 +101,18 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
   async function loadAll(refresh = false) {
     if (refresh) {
-      setStatusYenileing(true);
+      setRefreshing(true);
     } else {
       setStatusLoading(true);
     }
-
     setStatusError(null);
 
     try {
       const [statusResponse, automationsResponse, agentResponse] = await Promise.all([
         apiFetch<ChakraStatusResponse>(`/api/app/chakra/status?t=${Date.now()}`),
-        apiFetch<{ items: AutomationItem[]; }>('/api/admin/automations').catch(() => ({ items: [] })),
-        apiFetch<{ settings?: AgentSettings; }>('/api/admin/whatsapp-agent/settings').catch(() => ({ settings: {} }))]
-      );
+        apiFetch<{ items: AutomationItem[] }>('/api/admin/automations').catch(() => ({ items: [] })),
+        apiFetch<{ settings?: AgentSettings }>('/api/admin/whatsapp-agent/settings').catch(() => ({ settings: {} })),
+      ]);
 
       setStatus(statusResponse);
       setAutomations(automationsResponse.items || []);
@@ -119,10 +121,10 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
       writeSnapshot(WHATSAPP_AUTOMATIONS_CACHE_KEY, automationsResponse.items || []);
       writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, agentResponse.settings || {});
     } catch (error: any) {
-      setStatusError(error?.message || "WhatsApp ayarları alinamadi.");
+      setStatusError(error?.message || 'WhatsApp ayarları alınamadı.');
     } finally {
       if (refresh) {
-        setStatusYenileing(false);
+        setRefreshing(false);
       } else {
         setStatusLoading(false);
       }
@@ -139,7 +141,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
   const openReplaceFlow = () => {
     const ok = window.confirm(
-      "WhatsApp numarasini değiştirmek istediginize emin misiniz? Yeni numara baglaninca eski kimlik pasiflestirilir."
+      'WhatsApp numarasını değiştirmek istediğinize emin misiniz? Yeni numara bağlanınca eski kimlik pasifleştirilir.',
     );
     if (!ok) return;
     navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward', replaceConnection: true } });
@@ -160,246 +162,275 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
     setPluginToggleFeedback(null);
 
     if (!status?.pluginId) {
-      setPluginToggleError('You must first initiate the connection.');
+      setPluginToggleError('Önce bağlantıyı başlatmanız gerekiyor.');
       return;
     }
-
     if (!isConnected) {
-      setPluginToggleError('Complete WhatsApp connection first.');
+      setPluginToggleError('Önce WhatsApp bağlantısını tamamlayın.');
       return;
     }
 
     setPluginToggleBusy(true);
-
     try {
       await apiFetch('/api/app/chakra/plugin-active', {
         method: 'PUT',
-        body: JSON.stringify({
-          pluginId: status.pluginId,
-          isActive: nextValue
-        })
+        body: JSON.stringify({ pluginId: status.pluginId, isActive: nextValue }),
       });
-
       setPluginToggleFeedback(nextValue ? 'Bağlantı etkinleştirildi.' : 'Bağlantı devre dışı bırakıldı.');
       setTimeout(() => setPluginToggleFeedback(null), 2200);
-
       await loadAll(true);
     } catch (error: any) {
-      setPluginToggleError(error?.message || "Bağlantı durumu güncellenemedi.");
+      setPluginToggleError(error?.message || 'Bağlantı durumu güncellenemedi.');
     } finally {
       setPluginToggleBusy(false);
     }
   };
 
-  const connectionBadge = statusLoading ?
-    'Kontrol ediliyor' :
-    !isConnected ?
-      'Setup gerekli' :
-      pluginActive ?
-        'Aktif' :
-        'Pasif';
-
-  const reminderBadge = !isConnected ?
-    'Kilitli' :
-    !pluginActive ?
-      "Bağlantı pasif" :
-      reminderEnabled ?
-        'Aktif' :
-        'Kapalı';
-
-  const agentBadge = !isConnected ?
-    'Kilitli' :
-    !pluginActive ?
-      "Bağlantı pasif" :
-      agentEnabled ?
-        'Aktif' :
-        'Kapalı';
+  const StatusDot = ({ active }: { active: boolean }) => (
+    <span className="relative flex h-2.5 w-2.5 shrink-0">
+      {active && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />}
+      <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
+    </span>
+  );
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
-      <div className="sticky top-0 bg-[var(--luxury-bg)] z-10 border-b border-border p-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold">WhatsApp Ayarları</h1>
-            <p className="text-sm text-muted-foreground">Bağlantı, yapay zeka asistanı ve hatırlatma ayarları</p>
+      {/* Header */}
+      <div className="sticky top-0 z-10 border-b border-border bg-gradient-to-b from-background to-background/95 backdrop-blur-md">
+        <div className="p-4 pb-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 -ml-2">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold tracking-tight">WhatsApp Ayarları</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Bağlantı, asistan ve hatırlatma ayarları</p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => void loadAll(true)}
+              disabled={statusLoading || refreshing}
+              className="shrink-0"
+            >
+              <RefreshCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="p-4 space-y-4">
-        {statusError ?
-          <Card className="border-red-300 bg-red-50 dark:bg-red-950/20">
-            <CardContent className="p-3 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-              <p className="text-sm text-red-700 dark:text-red-300">{statusError}</p>
-            </CardContent>
-          </Card> :
-          null}
+        {/* Error banner */}
+        {statusError && (
+          <div className="flex items-start gap-2 rounded-xl bg-red-500/5 border border-red-500/15 p-3">
+            <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-red-700 dark:text-red-400">{statusError}</p>
+          </div>
+        )}
 
-        {isConnected && !pluginActive ?
-          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
-            <CardContent className="p-3 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
-              <p className="text-sm text-amber-800 dark:text-amber-300">
-                WhatsApp bağlantısı pasif. Bu durumda yapay zeka asistanı ve randevu hatırlatmaları kilitlidir.
-              </p>
-            </CardContent>
-          </Card> :
-          null}
-
-        <Card className="border-border/50 shadow-sm">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-700 flex items-center justify-center shrink-0">
-                  <Link2 className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-base font-semibold leading-tight">WhatsApp Bağlantısı</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Complete setup and manage connection status here.
-                  </p>
-                </div>
+        {/* ── Connection Card ─── */}
+        <section className="rounded-2xl border border-border overflow-hidden shadow-sm">
+          <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-400/5 to-transparent px-4 py-3 flex items-center justify-between gap-3 border-b border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#25D366]/15 flex items-center justify-center shrink-0">
+                <Link2 className="w-4 h-4 text-[#25D366]" />
               </div>
-
-              <span
-                className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${!isConnected ?
-                    'bg-amber-500/10 text-amber-700' :
-                    pluginActive ?
-                      'bg-green-500/10 text-green-700' :
-                      'bg-muted text-muted-foreground'}`
-                }>
-
-                {connectionBadge}
+              <p className="text-sm font-bold">WhatsApp Bağlantısı</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <StatusDot active={isConnected && pluginActive} />
+              <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                statusLoading
+                  ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                  : !isConnected
+                    ? 'bg-amber-500/10 text-amber-700'
+                    : pluginActive
+                      ? 'bg-emerald-500/10 text-emerald-700'
+                      : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+              }`}>
+                {statusLoading ? 'Kontrol ediliyor...' : !isConnected ? 'Bağlı Değil' : pluginActive ? 'Aktif' : 'Pasif'}
               </span>
             </div>
+          </div>
 
-            <div className="rounded-xl border border-border/70 bg-muted/20 p-3 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium flex items-center gap-2">
-                  <Power className="w-4 h-4" />
-                  Bağlantı durumu
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  When disabled, AI and reminder flows over WhatsApp do not run.
-                </p>
+          <div className="p-4 space-y-3 bg-card">
+            {statusLoading ? (
+              <div className="flex items-center gap-2 py-4 justify-center text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="text-sm">Durum kontrol ediliyor...</span>
               </div>
-              <Switch
-                checked={pluginActive}
-                onCheckedChange={(checked) => {
-                  void updatePluginActive(checked);
-                }}
-                disabled={!isConnected || !status?.pluginId || pluginToggleBusy} />
-
-            </div>
-
-            {pluginToggleError ? <p className="text-xs text-red-600">{pluginToggleError}</p> : null}
-            {pluginToggleFeedback ? <p className="text-xs text-green-700">{pluginToggleFeedback}</p> : null}
-
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={openConnectionFlow} className="bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white">
-                {isConnected ? "Bağlantıyı Yönet" : "Bağlantıyı Başlat"}
-              </Button>
-              {isConnected ?
-                <Button type="button" variant="outline" onClick={openReplaceFlow}>
-                  Numarayi Değiştir
-                </Button> :
-                null}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  void loadAll(true);
-                }}
-                disabled={statusLoading || statusYenileing}>
-
-                <RefreshCcw className={`w-4 h-4 mr-2 ${statusYenileing ? 'animate-spin' : ''}`} />
-                Yenile
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={`border-border/50 shadow-sm ${integrationLocked ? 'opacity-60' : ''}`}>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)] flex items-center justify-center shrink-0">
-                  <Bell className="w-5 h-5" />
+            ) : !isConnected ? (
+              <>
+                <div className="flex items-center gap-3 rounded-xl bg-amber-500/5 border border-amber-500/15 p-3">
+                  <WifiOff className="w-5 h-5 text-amber-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">WhatsApp bağlantısı gerekli</p>
+                    <p className="text-xs text-amber-700/70 dark:text-amber-400/70 mt-0.5">Asistan ve hatırlatmaları kullanmak için bağlantıyı tamamlayın.</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-base font-semibold leading-tight">Randevu Hatırlatma Ayarları</p>
-                  <p className="text-sm text-muted-foreground mt-1">Randevudan 2 ve 24 saat önce gönderim adımlarini yönetin.</p>
+                <Button
+                  type="button"
+                  className="w-full h-11 text-sm font-semibold bg-[#25D366] hover:bg-[#1da851] text-white"
+                  onClick={openConnectionFlow}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Bağlantıyı Başlat
+                </Button>
+              </>
+            ) : (
+              <>
+                {/* Active/inactive toggle */}
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium flex items-center gap-2">
+                      <Power className="w-4 h-4" />
+                      Bağlantı durumu
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Devre dışı bırakıldığında, WhatsApp üzerinden yapay zeka ve hatırlatma akışları çalışmaz.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={pluginActive}
+                    onCheckedChange={(checked) => void updatePluginActive(checked)}
+                    disabled={!isConnected || !status?.pluginId || pluginToggleBusy}
+                  />
                 </div>
+
+                {pluginToggleError && <p className="text-xs text-red-600">{pluginToggleError}</p>}
+                {pluginToggleFeedback && <p className="text-xs text-green-700">{pluginToggleFeedback}</p>}
+
+                {isConnected && !pluginActive && (
+                  <div className="flex items-start gap-2 rounded-xl bg-amber-500/5 border border-amber-500/15 p-3">
+                    <Shield className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      Bağlantı pasif. Yapay zeka asistanı ve randevu hatırlatmaları çalışmıyor.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={openConnectionFlow}
+                  >
+                    Bağlantıyı Yönet
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={openReplaceFlow}
+                  >
+                    Numarayı Değiştir
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* ── Reminder Card ─── */}
+        <section className={`rounded-2xl border border-border overflow-hidden shadow-sm transition-opacity ${integrationLocked ? 'opacity-50' : ''}`}>
+          <div className="bg-gradient-to-r from-blue-500/10 via-blue-400/5 to-transparent px-4 py-3 flex items-center justify-between gap-3 border-b border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center shrink-0">
+                <Bell className="w-4 h-4 text-blue-600" />
               </div>
-              <span
-                className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${reminderBadge === 'Aktif' ?
-                    'bg-green-500/10 text-green-700' :
-                    reminderBadge === "Kapalı" ?
-                      'bg-muted text-muted-foreground' :
-                      'bg-amber-500/10 text-amber-700'}`
-                }>
-
-                {reminderBadge}
-              </span>
+              <p className="text-sm font-bold">Randevu Hatırlatmaları</p>
             </div>
+            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+              integrationLocked
+                ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                : reminderEnabled
+                  ? 'bg-emerald-500/10 text-emerald-700'
+                  : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+            }`}>
+              {integrationLocked ? 'Kilitli' : reminderEnabled ? 'Aktif' : 'Kapalı'}
+            </span>
+          </div>
 
+          <div className="p-4 space-y-3 bg-card">
+            <p className="text-xs text-muted-foreground">Randevudan 2 ve 24 saat önce müşterilere otomatik hatırlatma gönderir.</p>
             <div className="flex flex-wrap gap-1.5">
               <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
                 2 saat önce + konum
               </span>
               <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                24 saat önce hatırlatma + katılım onayi
+                24 saat önce + katılım onayı
               </span>
             </div>
-
-            <Button type="button" variant="outline" onClick={openReminderSettings} disabled={integrationLocked}>
-              {integrationLocked ? <Lock className="w-4 h-4 mr-2" /> : <Settings2 className="w-4 h-4 mr-2" />}
-              {!isConnected ? "Önce WhatsApp bağlantısini tamamlayin" : !pluginActive ? "Önce bağlantıyi aktifleştirin" : "Hatırlatma Ayarlarıni Ac"}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-between"
+              onClick={openReminderSettings}
+              disabled={integrationLocked}
+            >
+              <span className="flex items-center gap-2">
+                <Settings2 className="w-4 h-4" />
+                {integrationLocked ? 'Önce bağlantıyı aktifleştirin' : 'Hatırlatma Ayarlarını Aç'}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className={`border-border/50 shadow-sm ${integrationLocked ? 'opacity-60' : ''}`}>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[var(--rose-gold)]/10 text-[var(--rose-gold)] flex items-center justify-center shrink-0">
-                  <Bot className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-base font-semibold leading-tight">Yapay Zeka WhatsApp Asistani</p>
-                  <p className="text-sm text-muted-foreground mt-1">SSS, ton ve davranis kurallarini yönetin.</p>
-                </div>
+        {/* ── AI Agent Card ─── */}
+        <section className={`rounded-2xl border border-border overflow-hidden shadow-sm transition-opacity ${integrationLocked ? 'opacity-50' : ''}`}>
+          <div className="bg-gradient-to-r from-[var(--rose-gold)]/10 via-[var(--rose-gold)]/5 to-transparent px-4 py-3 flex items-center justify-between gap-3 border-b border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[var(--rose-gold)]/15 flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4 text-[var(--rose-gold)]" />
               </div>
-              <span
-                className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${agentBadge === 'Aktif' ?
-                    'bg-green-500/10 text-green-700' :
-                    agentBadge === "Kapalı" ?
-                      'bg-muted text-muted-foreground' :
-                      'bg-amber-500/10 text-amber-700'}`
-                }>
-
-                {agentBadge}
-              </span>
+              <p className="text-sm font-bold">Yapay Zeka Asistanı</p>
             </div>
+            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+              integrationLocked
+                ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                : agentEnabled
+                  ? 'bg-emerald-500/10 text-emerald-700'
+                  : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+            }`}>
+              {integrationLocked ? 'Kilitli' : agentEnabled ? 'Aktif' : 'Kapalı'}
+            </span>
+          </div>
+
+          <div className="p-4 space-y-3 bg-card">
+            <p className="text-xs text-muted-foreground">
+              WhatsApp ve Instagram üzerinden gelen mesajları otomatik yanıtlar, SSS yanıtları oluşturur ve randevu yönlendirmesi yapar.
+            </p>
+
+            {agentEnabled && !integrationLocked && (
+              <div className="flex items-center gap-2 rounded-xl bg-emerald-500/5 border border-emerald-500/15 p-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <p className="text-xs text-emerald-700 dark:text-emerald-400">Asistan aktif, mesajlar otomatik yanıtlanıyor.</p>
+              </div>
+            )}
 
             <Button
               type="button"
-              onClick={openAgentSettings}
+              className={`w-full justify-between ${
+                integrationLocked ? '' : 'bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white'
+              }`}
               variant={integrationLocked ? 'outline' : 'default'}
+              onClick={openAgentSettings}
               disabled={integrationLocked}
-              className={integrationLocked ? '' : 'bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white'}>
-
-              {integrationLocked ? <Lock className="w-4 h-4 mr-2" /> : <ChevronRight className="w-4 h-4 mr-2" />}
-              {!isConnected ? "Önce WhatsApp bağlantısini tamamlayin" : !pluginActive ? "Önce bağlantıyi aktifleştirin" : "Yapay Zeka Asistan Ayarlarıni Ac"}
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                {integrationLocked ? 'Önce bağlantıyı aktifleştirin' : 'Asistan Ayarlarını Yönet'}
+              </span>
+              <ChevronRight className="w-4 h-4" />
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
-    </div>);
-
+    </div>
+  );
 }
