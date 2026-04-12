@@ -425,7 +425,7 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
                   type="button"
                   variant="outline"
                   className="w-full justify-between"
-                  onClick={() => navigate('/app/features/whatsapp-settings', { state: { navDirection: 'forward' } })}
+                  onClick={() => navigate('/app/features/whatsapp-settings', { state: { navDirection: 'forward', from: '/app/features/social-channels' } })}
                 >
                   <span className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--rose-gold)]" />
@@ -543,7 +543,7 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
                   type="button"
                   variant="outline"
                   className="w-full justify-between"
-                  onClick={() => navigate('/app/instagram-inbox', { state: { navDirection: 'forward' } })}
+                  onClick={() => navigate('/app/instagram-inbox', { state: { navDirection: 'forward', from: '/app/features/social-channels' } })}
                 >
                   <span className="flex items-center gap-2">
                     <Instagram className="w-4 h-4 text-fuchsia-600" />

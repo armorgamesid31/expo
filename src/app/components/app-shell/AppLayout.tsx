@@ -147,7 +147,13 @@ export function AppLayout() {
   const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
 
   const activeTab = tabFromPathname(location.pathname);
-  const backTarget = backTargetFromPathname(location.pathname);
+  let backTarget = backTargetFromPathname(location.pathname);
+
+  const fromState = (location.state as any)?.from;
+  if (fromState && typeof fromState === 'string') {
+    backTarget = fromState;
+  }
+
   const transitionKind = transitionKindFromPathname(location.pathname);
   const transitionMotion = transitionMotionByKind(transitionKind, transitionDirection);
 

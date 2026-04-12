@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Bot, CheckCircle2, ChevronRight, CircleHelp, Loader2, MessageCircle, Sparkles, TrendingUp, XCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Switch } from '../ui/switch';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -30,6 +30,7 @@ const toneExamples: Record<string, string> = {
 
 export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { apiFetch } = useAuth();
   const cachedStatus = readSnapshot<{ connected?: boolean; isActive?: boolean }>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10);
   const cachedSettings = readSnapshot<{
@@ -196,7 +197,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
             </div>
             <button
               type="button"
-              onClick={() => navigate('/app/features/whatsapp-agent-faq')}
+              onClick={() => navigate('/app/features/whatsapp-agent-faq', { state: { navDirection: 'forward', from: location.pathname } })}
               className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
               aria-label="SSS ekranını aç"
             >
@@ -283,9 +284,9 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                     variant="outline"
                     size="sm"
                     className="mt-2 h-7 text-[11px]"
-                    onClick={() => navigate('/app/features/whatsapp-settings', { state: { navDirection: 'back' } })}
+                    onClick={onGeri}
                   >
-                    WhatsApp Ayarlarına Git
+                    Bağlantı Ayarlarına Git
                   </Button>
                 </div>
               </div>

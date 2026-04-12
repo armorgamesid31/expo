@@ -16,7 +16,7 @@ import {
   WifiOff,
   XCircle,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { useAuth } from '../../context/AuthContext';
@@ -62,6 +62,7 @@ const WHATSAPP_AGENT_SETTINGS_CACHE_KEY = 'whatsapp:agent-settings';
 export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [status, setStatus] = useState<ChakraStatusResponse | null>(
     () => readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10),
@@ -136,7 +137,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   }, []);
 
   const openConnectionFlow = () => {
-    navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward' } });
+    navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward', from: location.pathname } });
   };
 
   const openReplaceFlow = () => {
@@ -144,17 +145,17 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
       'WhatsApp numaranızı değiştirmek istediğinize emin misiniz? Yeni bir numara bağladığınızda mevcut bağlantınız kalıcı olarak devre dışı bırakılır.'
     );
     if (!ok) return;
-    navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward', replaceConnection: true } });
+    navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward', replaceConnection: true, from: location.pathname } });
   };
 
   const openAgentSettings = () => {
     if (integrationLocked) return;
-    navigate('/app/features/whatsapp-agent', { state: { navDirection: 'forward' } });
+    navigate('/app/features/whatsapp-agent', { state: { navDirection: 'forward', from: location.pathname } });
   };
 
   const openReminderSettings = () => {
     if (integrationLocked) return;
-    navigate('/app/automations?section=reminder', { state: { navDirection: 'forward' } });
+    navigate('/app/automations?section=reminder', { state: { navDirection: 'forward', from: location.pathname } });
   };
 
   const updatePluginActive = async (nextValue: boolean) => {

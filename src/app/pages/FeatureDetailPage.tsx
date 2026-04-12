@@ -1,4 +1,4 @@
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { WhatsAppAgent } from '../components/more/WhatsAppAgent';
 import { WhatsAppSetup } from '../components/more/WhatsAppSetup';
 import { WebsiteBuilder } from '../components/more/WebsiteBuilder';
@@ -18,12 +18,20 @@ import { SocialChannelsHub } from '../components/more/SocialChannelsHub';
 export function FeatureDetailPage() {
   const { featureKey } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const onBack = () => navigate('/app/features', { state: { navDirection: 'back' } });
+  const onBack = () => {
+    const fromPath = (location.state as any)?.from;
+    if (fromPath) {
+      navigate(fromPath, { state: { navDirection: 'back' } });
+    } else {
+      navigate('/app/features', { state: { navDirection: 'back' } });
+    }
+  };
 
   if (featureKey === 'whatsapp-settings') return <WhatsAppSettings onBack={onBack} />;
   if (featureKey === 'whatsapp-agent') return <WhatsAppAgent onBack={onBack} />;
-  if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={() => navigate('/app/features/whatsapp-agent', { state: { navDirection: 'back' } })} />;
+  if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={onBack} />;
   if (featureKey === 'whatsapp-setup') return <WhatsAppSetup onBack={onBack} />;
   if (featureKey === 'website-builder') return <WebsiteBuilder onBack={onBack} />;
   if (featureKey === 'marketing') return <MarketingAutomation onBack={onBack} />;
