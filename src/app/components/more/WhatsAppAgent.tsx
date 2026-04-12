@@ -292,7 +292,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
             )}
 
             <p className="text-xs text-muted-foreground mt-2">
-              Asistan hem WhatsApp hem Instagram DM üzerinden gelen müşteri mesajlarını otomatik olarak yanıtlar.
+              Karmaşık müşteri mesajlarını anlar, soruları yanıtlar ve potansiyel müşterilerinizi akıllıca randevu almaya yönlendirir.
             </p>
           </div>
         </motion.section>
@@ -307,8 +307,8 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
           <div className="grid grid-cols-3 gap-2 mb-3">
             {[
               { value: totalConversations, label: 'Bu Hafta', color: 'text-[var(--rose-gold)]' },
-              { value: `%${conversionRate}`, label: 'Dönüşüm', color: 'text-emerald-600' },
-              { value: resolvedByBot, label: 'Bot Çözümü', color: 'text-blue-600' },
+              { value: `%${conversionRate}`, label: 'Randevu Dönüşümü', color: 'text-emerald-600' },
+              { value: resolvedByBot, label: 'Bot ile Çözüldü', color: 'text-blue-600' },
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl border border-border bg-card p-3 text-center">
                 <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -322,7 +322,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[var(--rose-gold)]" />
-                Randevu Dönüşüm Oranı
+                Randevu Dönüşüm Başarısı
               </span>
               <span className="text-sm font-bold text-[var(--rose-gold)]">%{conversionRate}</span>
             </div>
@@ -384,7 +384,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
           <div className="rounded-xl border border-border bg-card p-4">
             <OptionRow
               label="Konuşma Tonu"
-              description="Asistanın müşterilerle konuşurken kullandığı genel üslup."
+              description="Müşterilerinizle iletişim kurarken benimsenecek temel marka sesini belirleyin."
               options={[
                 { value: 'friendly', label: 'Sıcak ve Dostça' },
                 { value: 'professional', label: 'Profesyonel' },
@@ -401,7 +401,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
 
             <OptionRow
               label="Yanıt Uzunluğu"
-              description="Müşterilere verilen yanıtların kısa mı yoksa detaylı mı olacağını kontrol eder."
+              description="Müşterilere verilen metin yanıtlarının uzunluğunu ve kapsamını belirleyin."
               options={[
                 { value: 'short', label: 'Kısa' },
                 { value: 'medium', label: 'Orta' },
@@ -414,7 +414,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
 
             <OptionRow
               label="Emoji Kullanımı"
-              description="Yanıtlardaki emoji yoğunluğunu kontrol eder."
+              description="Seçtiğiniz iletişim tonunu destekleyici ve markanıza uygun emoji yoğunluğunu ayarlayın."
               options={[
                 { value: 'off', label: 'Kapalı' },
                 { value: 'low', label: 'Düşük' },
@@ -427,7 +427,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
 
             <OptionRow
               label="Randevu Yönlendirme"
-              description="Konuşma sırasında müşterinin randevu almaya ne kadar aktif yönlendirileceğini belirler."
+              description="Asistanın, konuşma sırasında müşteriyi ne sıklıkla ve proaktif şekilde randevu almaya yönlendireceğini seçin."
               options={[
                 { value: 'low', label: 'Düşük' },
                 { value: 'medium', label: 'Orta' },
@@ -440,7 +440,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
 
             <OptionRow
               label="İnsan Devri Eşiği"
-              description="Memnuniyetsizlik riski veya karmaşık talepler durumunda asistanın ne kadar erken personele devredeceğini belirler."
+              description="Müşteri memnuniyetsizliği riski olan durumlarda veya algılanamayan karmaşık taleplerde yönetimin ne zaman size devredileceğini belirler."
               options={[
                 { value: 'early', label: 'Erken Devir' },
                 { value: 'balanced', label: 'Dengeli' },
@@ -453,7 +453,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
 
             <OptionRow
               label="YZ Bilgilendirmesi"
-              description="Asistanın konuşmada kendini ne sıklıkla yapay zeka olarak tanıtacağını belirler."
+              description="Asistanın marka kimliğinizi korurken kendini ne sıklıkla dijital bir asistan olarak tanıtacağını konfigüre edin."
               options={[
                 { value: 'always', label: 'Her Zaman' },
                 { value: 'onQuestion', label: 'Sorulursa' },

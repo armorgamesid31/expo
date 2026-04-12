@@ -118,9 +118,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
     const cachedConnected = Boolean(cachedStatus.connected) || Boolean(cachedStatus.isActive);
     if (!cachedStatus.pluginId) {
-      return "WhatsApp hesabınızı bağlamak için Başlayın düğmesine dokunun.";
+      return "WhatsApp Business kanalınızı aktifleştirmek için bağlantı adımlarını başlatın.";
     }
-    return cachedConnected ? "WhatsApp bağlantısı tamamlandı." : 'Bağlantıyı tamamlamak için Facebook ile devam edin.';
+    return cachedConnected ? "WhatsApp bağlantısı tamamlandı." : 'Kurulumu tamamlamak için Meta (Facebook) üzerinden yetkilendirmeyi gerçekleştirin.';
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -134,7 +134,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setConnected((prev) => prev ? true : isConnected);
 
     if (!status.pluginId) {
-      setStatusText("WhatsApp hesabınızı bağlamak için Başlayın düğmesine dokunun.");
+      setStatusText("WhatsApp Business kanalınızı aktifleştirmek için bağlantı adımlarını başlatın.");
       setNativeTriggerReady(false);
       return { hasPlugin: false, connected: false };
     }
@@ -145,7 +145,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
       return { hasPlugin: true, connected: true };
     }
 
-    setStatusText('Bağlantıyı tamamlamak için Facebook ile devam edin.');
+    setStatusText('Kurulumu tamamlamak için Meta (Facebook) üzerinden yetkilendirmeyi gerçekleştirin.');
     return { hasPlugin: true, connected: false };
   }, [apiFetch]);
 
@@ -181,7 +181,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const prepareConnect = useCallback(async () => {
     setPreparingConnect(true);
     setError(null);
-    setStatusText('Facebook bağlantısı hazırlanıyor...');
+    setStatusText('Facebook işletme bağlantısı hazırlanıyor...');
 
     try {
       const token = await apiFetch<ConnectTokenResponse>(
@@ -236,7 +236,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         onReady: () => {
           setNativeTriggerReady(true);
           setIsPopupConnecting(false);
-          setStatusText('Bağlantı butonu hazır.');
+          setStatusText('Yetkilendirme butonu hazır.');
         },
         onError: (sdkError: any) => {
           console.error('Chakra SDK error:', sdkError);
@@ -320,7 +320,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     const onBlur = () => {
       if (nativeTriggerReady && pluginId && !connected) {
         setIsPopupConnecting(true);
-        setStatusText("Bağlantı süreci devam ediyor...");
+        setStatusText("Güvenli bağlantı kurulumu bekleniyor...");
       }
     };
 
@@ -381,7 +381,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
   const handleStart = async () => {
     setCreatingPlugin(true);
     setError(null);
-    setStatusText('Kurulum başlatılıyor...');
+    setStatusText('İşletme bağlantısı başlatılıyor...');
     try {
       const response = await apiFetch<CreatePluginResponse>('/api/app/chakra/create-plugin', {
         method: 'POST'
@@ -430,9 +430,9 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold tracking-tight">{replaceConnection ? 'Numara Değiştir' : 'WhatsApp Bağlantısı'}</h1>
+              <h1 className="text-xl font-bold tracking-tight">{replaceConnection ? 'Numara Değiştir' : 'Meta & WhatsApp Bağlantısı'}</h1>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {replaceConnection ? 'Aktif WhatsApp numaranızı güvenle değiştirin' : 'WhatsApp hesabınızı hızlıca bağlayın'}
+                {replaceConnection ? 'Salonunuz için kayıtlı WhatsApp numaranızı güvenle yenileyin.' : 'İşletmenizin WhatsApp hesabını bağlayarak otomatik hizmetleri aktifleştirin.'}
               </p>
             </div>
             {connected ? <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20">Bağlı</Badge> : null}
@@ -465,7 +465,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             ) : !pluginId ? (
               <>
                 <p className="text-xs text-muted-foreground">
-                  WhatsApp hesabınızı bağlamak için aşağıdaki butona tıklayın.
+                  WhatsApp hesabınızı entegre etmek için aşağıdaki butona tıklayarak kurulum sürecini başlatın.
                 </p>
                 <Button
                   type="button"
@@ -501,7 +501,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
             ) : (
               <>
                 <p className="text-xs text-muted-foreground">
-                  {replaceConnection ? 'Yeni numaranızı bağlamak için aşağıdaki butona tıklayın.' : 'Facebook ile güvenli bağlantıyı tamamlayın. İşlem bitene kadar bu ekranı açık tutun.'}
+                  {replaceConnection ? 'Yeni numaranızı yetkilendirmek için aşağıdaki butona tıklayın.' : 'Meta (Facebook) ile güvenli bağlantıyı tamamlayın. İşlem bitene kadar lütfen bu ekranı kapatmayın.'}
                 </p>
                 <div className="relative w-full h-[58px] overflow-hidden rounded-xl border border-border/60 bg-white">
                   <div
@@ -555,21 +555,21 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
           <p className="text-sm font-semibold mb-2">Sıkça Sorulan Sorular</p>
           <Accordion type="single" collapsible>
             <AccordionItem value="faq-1">
-              <AccordionTrigger className="text-sm">Bağlantı nasıl çalışır?</AccordionTrigger>
-              <AccordionContent className="text-xs text-muted-foreground">
-                Facebook hesabınız üzerinden güvenli şekilde WhatsApp Business API'ye bağlanırsınız. Salon için bağlantı tokenı oluşturulur.
+              <AccordionTrigger className="text-sm">Bağlantı işlemi nasıl güvenli çalışır?</AccordionTrigger>
+              <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
+                Bu kurulum süreci, Meta'nın resmi ve tamamen güvenli WhatsApp Business API arayüzünü kullanır. İşletmeniz için uçtan uca şifreli bir iletişim kanalı yaratılacaktır.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="faq-2">
-              <AccordionTrigger className="text-sm">Her seferinde yapmam gerekir mi?</AccordionTrigger>
-              <AccordionContent className="text-xs text-muted-foreground">
-                Hayır. Bağlantı bir kez kurulduktan sonra aktif kalır. Sadece numara değiştirme veya yeniden bağlantı gerektiğinde bu sayfayı kullanırsınız.
+              <AccordionTrigger className="text-sm">Bu işlemi her seferinde yapmam gerekir mi?</AccordionTrigger>
+              <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
+                Hayır, bu işlem yalnızca ilk yapılandırmada veya salon telefon numaranızı değiştirmek istediğiniz istisnai durumlarda gereklidir. Bağlantı bir kez sağlandığında arka planda sürekli aktif kalır.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="faq-3">
-              <AccordionTrigger className="text-sm">Bağlantının tamamlandığını nasıl anlarım?</AccordionTrigger>
-              <AccordionContent className="text-xs text-muted-foreground">
-                Durum "Bağlı" olarak güncellenir ve sayfa otomatik olarak WhatsApp ayarlarına yönlenir.
+              <AccordionTrigger className="text-sm">Kurulumun başarıyla tamamlandığını nasıl anlarım?</AccordionTrigger>
+              <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
+                Ekranda yer alan durum rozeti "Bağlı" statüsüne geçiş yapar ve sistem sizi güvenli bir şekilde WhatsApp yönetim paneline otomatik olarak yönlendirir.
               </AccordionContent>
             </AccordionItem>
           </Accordion>

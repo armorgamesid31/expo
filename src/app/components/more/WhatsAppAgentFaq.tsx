@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
+import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Badge } from '../ui/badge';
@@ -12,50 +13,55 @@ const faqItems = [
     id: 'faq-hours',
     tag: 'Mesai',
     question: 'Asistan çalışma saatleri dışında ne yapar?',
-    answer: 'Receives out-of-hours messages with a polite greeting text, offers convenient hours to the customer, and assigns them to the morning shift.',
+    answer: 'Mesai saatleri dışındaki mesajları nazik bir karşılama metni ile kabul eder, müşteriye uygun saat seçenekleri sunar ve sabah vardiyasına devreder.',
   },
   {
     id: 'faq-pricing',
     tag: 'Fiyat',
     question: 'Asistan fiyat sorularını nasıl yanıtlar?',
-    answer: 'The system uses current prices from your active service list. If an unclear service name comes up, it asks a clarifying question.',
+    answer: 'Aktif hizmet listenizdeki güncel fiyatları kullanır. Eğer tam anlaşılmayan bir hizmet sorulursa netleştirici sorular sorarak doğru fiyatı iletir.',
   },
   {
     id: 'faq-cancel',
-    tag: 'Appointment',
+    tag: 'Randevu',
     question: 'Müşteri iptal veya erteleme isterse ne olur?',
-    answer: 'The agent verifies the request, displays available new slots, and summarizes the transaction result in a single message to the client.',
+    answer: 'Talebi doğrular, uygun yeni saatleri listeler ve işlem sonucunu tek bir özet mesajı olarak müşteriye iletir.',
   },
   {
     id: 'faq-human',
     tag: 'Operasyon',
-    question: 'In what situation is the conversation delegated to staff?',
-    answer: 'If a complaint, payment dispute, aggressive language or special request outside the system is detected, the conversation is automatically directed to staff.',
+    question: 'Hangi durumlarda sohbet personele devredilir?',
+    answer: 'Şikayet, ödeme itirazı, agresif dil veya sistem dışı özel bir talep algılandığında sohbet otomatik olarak salon personeline yönlendirilir.',
   },
   {
     id: 'faq-language',
     tag: 'Dil',
-    question: 'Can the agent respond in multiple languages?',
-    answer: 'Yes. It detects the customer\'s message language and responds in the appropriate language among the supported languages.',
+    question: 'Asistan çok dilli yanıt verebilir mi?',
+    answer: 'Evet. Müşterinin gönderdiği mesajın dilini otomatik olarak algılar ve desteklenen diller arasından uygun olanı seçerek o dilde iletişimi sürdürür.',
   },
   {
     id: 'faq-training',
-    tag: 'Setup',
+    tag: 'Kurulum',
     question: 'Yanıtlar salonumuza göre nasıl özelleştirilir?',
-    answer: 'When the salon information, services and expert list are kept up to date, the agent produces a response using this data based on the system prompt.',
+    answer: 'Salon bilgileri, hizmet fiyatları ve personel listeniz güncel tutulduğunda; asistan bu verileri işleyip size özel yapılandırılmış sistem kurallarına göre dinamik yanıtlar üretir.',
   },
 ];
 
 export function WhatsAppAgentFaq({ onGeri }: WhatsAppAgentFaqProps) {
   return (
     <div className="h-full pb-20 overflow-y-auto">
-      <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <button onClick={onGeri} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Geri</span>
-        </button>
-        <h1 className="text-xl font-semibold">Standart SSS</h1>
-        <p className="text-xs text-muted-foreground mt-1">Agent default knowledge base</p>
+      <div className="sticky top-0 z-10 border-b border-border bg-gradient-to-b from-background to-background/95 backdrop-blur-md">
+        <div className="p-4 pb-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={onGeri} className="shrink-0 -ml-2">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold tracking-tight">Sıkça Sorulan Sorular</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Asistan bilgi bankası ve çalışma mantığı</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="p-4">

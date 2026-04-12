@@ -141,7 +141,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
   const openReplaceFlow = () => {
     const ok = window.confirm(
-      'WhatsApp numarasını değiştirmek istediğinize emin misiniz? Yeni numara bağlanınca eski kimlik pasifleştirilir.',
+      'WhatsApp numaranızı değiştirmek istediğinize emin misiniz? Yeni bir numara bağladığınızda mevcut bağlantınız kalıcı olarak devre dışı bırakılır.'
     );
     if (!ok) return;
     navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward', replaceConnection: true } });
@@ -204,7 +204,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
             </Button>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold tracking-tight">WhatsApp Ayarları</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">Bağlantı, asistan ve hatırlatma ayarları</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Bağlantı, yapay zeka asistanı ve otomasyon yönetimi</p>
             </div>
             <Button
               type="button"
@@ -266,7 +266,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                   <WifiOff className="w-5 h-5 text-amber-600 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-amber-800 dark:text-amber-300">WhatsApp bağlantısı gerekli</p>
-                    <p className="text-xs text-amber-700/70 dark:text-amber-400/70 mt-0.5">Asistan ve hatırlatmaları kullanmak için bağlantıyı tamamlayın.</p>
+                    <p className="text-xs text-amber-700/70 dark:text-amber-400/70 mt-0.5">Otomatik mesajlaşma ve yapay zeka asistanını kullanmak için işletme numaranızı bağlayın.</p>
                   </div>
                 </div>
                 <Button
@@ -285,10 +285,10 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                   <div className="min-w-0">
                     <p className="text-sm font-medium flex items-center gap-2">
                       <Power className="w-4 h-4" />
-                      Bağlantı durumu
+                      Bağlantı Durumu
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Devre dışı bırakıldığında, WhatsApp üzerinden yapay zeka ve hatırlatma akışları çalışmaz.
+                      Bağlantı devre dışı bırakıldığında yapay zeka asistanı ve otomatik mesaj otomasyonları çalışmayı durdurur.
                     </p>
                   </div>
                   <Switch
@@ -356,13 +356,13 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
           </div>
 
           <div className="p-4 space-y-3 bg-card">
-            <p className="text-xs text-muted-foreground">Randevudan 2 ve 24 saat önce müşterilere otomatik hatırlatma gönderir.</p>
+            <p className="text-xs text-muted-foreground">Müşterilerinize randevularından 2 ve 24 saat önce onay iletileri göndererek iptal ve gelmeme oranlarını düşürün.</p>
             <div className="flex flex-wrap gap-1.5">
               <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                2 saat önce + konum
+                2 Saat Önce + Konum
               </span>
               <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                24 saat önce + katılım onayı
+                24 Saat Önce + Katılım Onayı
               </span>
             </div>
             <Button
@@ -374,7 +374,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
             >
               <span className="flex items-center gap-2">
                 <Settings2 className="w-4 h-4" />
-                {integrationLocked ? 'Önce bağlantıyı aktifleştirin' : 'Hatırlatma Ayarlarını Aç'}
+                {integrationLocked ? 'Önce bağlantıyı aktifleştirin' : 'Ayarları Düzenle'}
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Button>
@@ -403,7 +403,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
           <div className="p-4 space-y-3 bg-card">
             <p className="text-xs text-muted-foreground">
-              WhatsApp ve Instagram üzerinden gelen mesajları otomatik yanıtlar, SSS yanıtları oluşturur ve randevu yönlendirmesi yapar.
+              Gelen mesajları yanıtlar, SSS (Sıkça Sorulan Sorular) yanıtları oluşturur ve randevu görüşmelerini sizin adınıza yönetir.
             </p>
 
             {agentEnabled && !integrationLocked && (
@@ -424,7 +424,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
             >
               <span className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
-                {integrationLocked ? 'Önce bağlantıyı aktifleştirin' : 'Asistan Ayarlarını Yönet'}
+                {integrationLocked ? 'Önce bağlantıyı aktifleştirin' : 'Ayarları Yapılandır'}
               </span>
               <ChevronRight className="w-4 h-4" />
             </Button>
