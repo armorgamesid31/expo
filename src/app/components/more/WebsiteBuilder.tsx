@@ -14,6 +14,12 @@ interface GalleryImageItem {
   label: string;
   imageUrl?: string;
   emoji?: string;
+  categoryId?: number | null;
+}
+
+interface ServiceCategory {
+  id: number;
+  name: string;
 }
 
 interface WebsiteContentResponse {
@@ -30,6 +36,7 @@ interface WebsiteContentResponse {
     imageUrl: string;
     altText: string | null;
     displayOrder: number | null;
+    categoryId: number | null;
   }>;
 }
 
@@ -78,42 +85,45 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
   const [description, setDescription] = useState(
     "A special beauty experience where luxury and comfort meet in the heart of Istanbul. Feel special with our expert team."
   );
-  const [instagram, setInstagram] = useState('@beautesalon');
-  const [whatsapp, setWhatsapp] = useState('+90 532 123 4567');
   const [heroText, setHeroText] = useState('Professional Care, Personal Touch');
   const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(defaultGalleryImages);
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
     (async () => {
       try {
-        const response = await apiFetch<WebsiteContentResponse>('/api/admin/website/content');
+        const [content, catRows] = await Promise.all([
+          apiFetch<WebsiteContentResponse>('/api/admin/website/content'),
+          apiFetch<ServiceCategory[]>('/api/admin/service-categories')
+        ]);
 
         if (!mounted) {
           return;
         }
 
-        setSalonName(response.salon.name || bootstrap?.salon?.name || salonName);
-        setTagline(response.salon.tagline || 'Discover Your Beauty');
-        setHeroText(response.salon.heroText || response.salon.tagline || 'Professional Care, Personal Touch');
-        setDescription(response.salon.about || description);
-        setInstagram(response.salon.instagramUrl || '@beautesalon');
-        setWhatsapp(response.salon.whatsappPhone || '+90 532 123 4567');
+        setCategories(catRows || []);
+        setSalonName(content.salon.name || bootstrap?.salon?.name || salonName);
+        setTagline(content.salon.tagline || 'Discover Your Beauty');
+        setHeroText(content.salon.heroText || content.salon.tagline || 'Professional Care, Personal Touch');
+        setDescription(content.salon.about || description);
 
-        if (response.gallery.length > 0) {
+        if (content.gallery.length > 0) {
           setGalleryImages(
-            response.gallery.map((image) => ({
+            content.gallery.map((image) => ({
               id: `db-${image.id}`,
               label: image.altText || 'Hall Image',
-              imageUrl: image.imageUrl
+              imageUrl: image.imageUrl,
+              categoryId: image.categoryId
             }))
           );
         } else {
           setGalleryImages(defaultGalleryImages);
         }
       } catch (error) {
-        console.error('Website content load failed:', error);
+        console.error('Website data load failed:', error);
         if (mounted) {
           setStatus({ type: 'error', message: 'The website content could not be loaded. Default content is used.' });
         }
@@ -136,9 +146,17 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       map((item, index) => ({
         imageUrl: item.imageUrl!,
         altText: item.label,
-        displayOrder: index
+        displayOrder: index,
+        categoryId: item.categoryId || null
       }));
   }, [galleryImages]);
+
+  const filteredGallery = useMemo(() => {
+    if (selectedCategoryId === null) {
+      return galleryImages;
+    }
+    return galleryImages.filter(img => img.categoryId === selectedCategoryId || (!img.imageUrl && !img.emoji));
+  }, [galleryImages, selectedCategoryId]);
 
   const handleGenerate = async () => {
     setStatus(null);
@@ -186,8 +204,6 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
           tagline,
           heroText,
           description,
-          instagram: normalizeInstagram(instagram),
-          whatsapp,
           gallery: galleryPayload
         })
       });
@@ -219,12 +235,13 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
 
       setGalleryImages((prev) => {
         const next = [...prev];
-        const replaceIndex = next.findIndex((item) => !item.imageUrl);
+        const replaceIndex = next.findIndex((item) => !item.imageUrl && (item.categoryId === selectedCategoryId || (!item.categoryId && !selectedCategoryId)));
 
         const newImage: GalleryImageItem = {
           id: `local-${Date.now()}`,
           label: file.name.replace(/\.[^/.]+$/, ''),
-          imageUrl: reader.result
+          imageUrl: reader.result,
+          categoryId: selectedCategoryId
         };
 
         if (replaceIndex >= 0) {
@@ -232,7 +249,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
           return next;
         }
 
-        if (next.length >= 8) {
+        if (next.length >= 24) {
           next[next.length - 1] = newImage;
           return next;
         }
@@ -344,57 +361,51 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
           </Card>
 
           <Card className="border-border/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Sosyal Medya ve İletişim</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
-                  <Instagram className="w-3.5 h-3.5 text-pink-500" />
-                  Instagram Account
-                </label>
-                <input
-                  value={instagram}
-                  onChange={(e) => setInstagram(e.target.value)}
-                  className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="@kullanıcı_adi" />
-
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
-                  <MessageCircle className="w-3.5 h-3.5 text-green-500" />
-                  WhatsApp Number
-                </label>
-                <input
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="+90 5xx xxx xxxx" />
-
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 px-4 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Camera className="w-4 h-4" />
                 Gallery Images
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
+              <div className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar">
+                <button
+                  onClick={() => setSelectedCategoryId(null)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                    selectedCategoryId === null ? 'bg-[var(--rose-gold)] text-white' : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                  }`}>
+                  Genel
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategoryId(cat.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                      selectedCategoryId === cat.id ? 'bg-[var(--rose-gold)] text-white' : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                    }`}>
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+
               <div className="grid grid-cols-4 gap-2 mb-3">
-                {galleryImages.map((img) =>
+                {filteredGallery.map((img) =>
                   <div
                     key={img.id}
-                    className="aspect-square rounded-lg bg-gradient-to-br from-[var(--rose-gold)]/10 to-[var(--deep-indigo)]/10 flex flex-col items-center justify-center border-2 border-[var(--rose-gold)]/20 overflow-hidden">
+                    className="aspect-square rounded-lg bg-gradient-to-br from-[var(--rose-gold)]/10 to-[var(--deep-indigo)]/10 flex flex-col items-center justify-center border-2 border-[var(--rose-gold)]/20 overflow-hidden relative group">
 
                     {img.imageUrl ?
-                      <img src={img.imageUrl} alt={img.label} className="h-full w-full object-cover" /> :
-
+                      <>
+                        <img src={img.imageUrl} alt={img.label} className="h-full w-full object-cover" />
+                        <button 
+                          onClick={() => setGalleryImages(prev => prev.filter(p => p.id !== img.id))}
+                          className="absolute top-1 right-1 w-5 h-5 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          ×
+                        </button>
+                      </> :
                       <>
                         <span className="text-2xl">{img.emoji || '✨'}</span>
-                        <span className="text-[9px] text-muted-foreground mt-1">{img.label}</span>
+                        <span className="text-[9px] text-muted-foreground mt-1 text-center px-1 truncate w-full">{img.label}</span>
                       </>
                     }
                   </div>
@@ -415,6 +426,9 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                 <Camera className="w-4 h-4" />
                 Fotoğraf Ekle
               </button>
+              <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                Seçili kategoriye göre fotoğraf ekleyebilirsiniz.
+              </p>
             </CardContent>
           </Card>
 
