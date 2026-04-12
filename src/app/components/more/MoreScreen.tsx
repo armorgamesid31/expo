@@ -39,7 +39,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
   {
     featureKey: 'operations.studio',
     icon: Layers,
-    label: 'Operations Studio',
+    label: 'Operasyon Stüdyosu',
     description: "Hizmetler, paketler ve envanter tek çalışma alanında",
     action: () => onNavigate('operations-studio'),
     color: 'var(--deep-indigo)'
@@ -55,7 +55,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
   {
     featureKey: 'brand.growth.hub',
     icon: Megaphone,
-    label: 'Brand & Growth Hub',
+    label: 'Marka & Büyüme Merkezi',
     description: 'Salon profile, website, and campaigns in one place',
     action: () => onNavigate('brand-growth-hub'),
     color: 'var(--rose-gold)'

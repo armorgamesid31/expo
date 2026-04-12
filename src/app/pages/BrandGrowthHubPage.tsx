@@ -13,7 +13,7 @@ export function BrandGrowthHubPage() {
   if (!canSalonInfo && !canWebsite && !canCampaigns) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-semibold">Brand & Growth Hub</h1>
+        <h1 className="text-2xl font-semibold">Marka & Büyüme Merkezi</h1>
         <p className="text-sm text-muted-foreground mt-2">
           You do not have permission to open brand and growth tools.
         </p>
@@ -23,7 +23,7 @@ export function BrandGrowthHubPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Brand & Growth Hub</h1>
+      <h1 className="text-2xl font-semibold">Marka & Büyüme Merkezi</h1>
       <p className="text-sm text-muted-foreground">
         Control salon profile, website experience, and campaign operations from one hub.
       </p>

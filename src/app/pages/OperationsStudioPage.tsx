@@ -15,7 +15,7 @@ export function OperationsStudioPage() {
   if (!canServices && !canPackages && !canInventory && !canCustomers && !canImports) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-semibold">Operations Studio</h1>
+        <h1 className="text-2xl font-semibold">Operasyon Stüdyosu</h1>
         <p className="text-sm text-muted-foreground mt-2">
           You do not have permission to open operations tools.
         </p>
@@ -25,7 +25,7 @@ export function OperationsStudioPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Operations Studio</h1>
+      <h1 className="text-2xl font-semibold">Operasyon Stüdyosu</h1>
       <p className="text-sm text-muted-foreground">
         Müşterileri, hizmetleri, paket işlemlerini ve envanteri tek çalışma alanından yönetin.
       </p>

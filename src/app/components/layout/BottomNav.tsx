@@ -7,8 +7,8 @@ interface BottomNavProps {
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
-  { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-  { id: 'schedule', label: 'Appointments', icon: Calendar },
+  { id: 'dashboard', label: 'Ana Sayfa', icon: LayoutDashboard },
+  { id: 'schedule', label: 'Randevular', icon: Calendar },
   { id: 'conversations', label: 'Konuşmalar', icon: MessagesSquare },
   { id: 'settings', label: "Ayarlar", icon: Settings }];
 
