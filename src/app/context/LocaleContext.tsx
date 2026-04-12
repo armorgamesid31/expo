@@ -14,19 +14,123 @@ const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
 
 const EN_TO_TR: Record<string, string> = {
   'Loading...': 'Yukleniyor...',
-  'Back': 'Geri',
+  Loading: 'Yukleniyor',
+  Back: 'Geri',
   Logout: 'Cikis',
+  'Log Out': 'Cikis Yap',
   Home: 'Ana Sayfa',
+  Dashboard: 'Panel',
   Appointments: 'Randevular',
   Conversations: 'Konusmalar',
+  Conversation: 'Konusma',
   Features: 'Ozellikler',
   Settings: 'Ayarlar',
+  Profile: 'Profil',
+  Search: 'Ara',
+  Filter: 'Filtre',
+  Clear: 'Temizle',
+  Save: 'Kaydet',
+  Cancel: 'Iptal',
+  Confirm: 'Onayla',
+  Continue: 'Devam Et',
+  Delete: 'Sil',
+  Edit: 'Duzenle',
+  Add: 'Ekle',
+  Remove: 'Kaldir',
+  Create: 'Olustur',
+  Update: 'Guncelle',
+  Retry: 'Tekrar Dene',
+  Success: 'Basarili',
+  Error: 'Hata',
+  Warning: 'Uyari',
+  Optional: 'Istege Bagli',
+  Required: 'Zorunlu',
+  Name: 'Ad',
+  Description: 'Aciklama',
+  Status: 'Durum',
+  Active: 'Aktif',
+  Inactive: 'Pasif',
+  Enabled: 'Etkin',
+  Disabled: 'Devre Disi',
+  Connect: 'Baglan',
+  Connected: 'Bagli',
+  Disconnected: 'Bagli Degil',
+  Reconnect: 'Yeniden Baglan',
+  Disconnect: 'Baglantiyi Kes',
+  Connection: 'Baglanti',
+  Sync: 'Esitle',
+  'Last sync': 'Son esitleme',
+  'Not connected': 'Bagli Degil',
+  'No data': 'Veri yok',
+  'No conversations yet': 'Henuz konusma yok',
+  'No appointments found': 'Randevu bulunamadi',
+  'No customers found': 'Musteri bulunamadi',
+  Customer: 'Musteri',
+  Customers: 'Musteriler',
+  Service: 'Hizmet',
+  Services: 'Hizmetler',
+  Staff: 'Personel',
+  Employee: 'Personel',
+  Employees: 'Personeller',
+  Specialist: 'Uzman',
+  Specialists: 'Uzmanlar',
+  Category: 'Kategori',
+  Categories: 'Kategoriler',
+  Price: 'Fiyat',
+  Duration: 'Sure',
+  Notes: 'Notlar',
+  Phone: 'Telefon',
+  Email: 'E-posta',
+  Address: 'Adres',
+  Date: 'Tarih',
+  Time: 'Saat',
+  Start: 'Baslangic',
+  End: 'Bitis',
+  'Start time': 'Baslangic saati',
+  'End time': 'Bitis saati',
+  Total: 'Toplam',
+  Subtotal: 'Ara toplam',
+  Payment: 'Odeme',
+  Payments: 'Odemeler',
+  Checkout: 'Odeme Islemi',
+  Cash: 'Nakit',
+  Card: 'Kart',
+  Transfer: 'Havale/EFT',
+  Other: 'Diger',
+  Package: 'Paket',
+  Packages: 'Paketler',
+  Quota: 'Hak',
+  Remaining: 'Kalan',
+  Used: 'Kullanilan',
+  'Use package': 'Paketten Dus',
+  'Sell package': 'Paket Sat',
+  'Single payment': 'Tekil Odeme',
+  Group: 'Grup',
+  Split: 'Bol',
+  Advanced: 'Gelismis',
+  'Advanced split': 'Gelismis bolme',
+  New: 'Yeni',
+  'New package': 'Yeni paket',
+  Existing: 'Mevcut',
+  'Existing package': 'Mevcut paket',
+  'All services': 'Tum hizmetler',
+  'Business hours': 'Calisma saatleri',
+  Monday: 'Pazartesi',
+  Tuesday: 'Sali',
+  Wednesday: 'Carsamba',
+  Thursday: 'Persembe',
+  Friday: 'Cuma',
+  Saturday: 'Cumartesi',
+  Sunday: 'Pazar',
   'Salon Mobile Login': 'Salon Mobil Giris',
   'Sign in with your account.': 'Hesabinizla giris yapin.',
+  'Forgot password?': 'Sifremi unuttum?',
   Password: 'Sifre',
+  Username: 'Kullanici adi',
   'Logging in...': 'Giris yapiliyor...',
   Login: 'Giris Yap',
   'Login failed.': 'Giris basarisiz.',
+  'Try again': 'Tekrar dene',
   'Manage your app preferences': 'Uygulama tercihlerinizi yonetin',
   'Account & Business': 'Hesap ve Isletme',
   'Profile Information': 'Profil Bilgileri',
@@ -43,11 +147,11 @@ const EN_TO_TR: Record<string, string> = {
   Support: 'Destek',
   'Help Center': 'Yardim Merkezi',
   'Frequently asked questions': 'Sik sorulan sorular',
-  'Log Out': 'Cikis Yap',
   Language: 'Dil',
   'App language': 'Uygulama dili',
   Turkish: 'Turkce',
   English: 'Ingilizce',
+  'Change language': 'Dili degistir',
   'Management tools and advanced modules': 'Yonetim araclari ve gelismis moduller',
   'Management Tools': 'Yonetim Araclari',
   'Advanced Modules': 'Gelismis Moduller',
@@ -61,6 +165,20 @@ const EN_TO_TR: Record<string, string> = {
   Analytics: 'Analitik',
   Inventory: 'Envanter',
   'Instagram Inbox': 'Instagram Gelen Kutusu',
+  Instagram: 'Instagram',
+  WhatsApp: 'WhatsApp',
+  'Instagram connection': 'Instagram baglantisi',
+  'WhatsApp connection': 'WhatsApp baglantisi',
+  'Connect Instagram': 'Instagram bagla',
+  'Connect WhatsApp': 'WhatsApp bagla',
+  'Reconnect Instagram': 'Instagrami yeniden bagla',
+  'Reconnect WhatsApp': 'WhatsAppi yeniden bagla',
+  'Disconnect Instagram': 'Instagram baglantisini kes',
+  'Disconnect WhatsApp': 'WhatsApp baglantisini kes',
+  'Account changed': 'Hesap degisti',
+  'Number changed': 'Numara degisti',
+  'Replace connection': 'Baglantiyi degistir',
+  'Connection settings': 'Baglanti ayarlari',
   'Conversation center + manual handover': 'Konusma merkezi + manuel devir',
   'Meta Direct': 'Meta Direct',
   'Instagram DM connection and management': 'Instagram DM baglanti ve yonetimi',
@@ -73,10 +191,24 @@ const EN_TO_TR: Record<string, string> = {
   Close: 'Kapat',
   Today: 'Bugun',
   Completed: 'Tamamlandi',
+  Pending: 'Beklemede',
+  Cancelled: 'Iptal edildi',
+  Confirmed: 'Onaylandi',
+  'In progress': 'Devam ediyor',
   Scheduled: 'Planlandi',
+  Upcoming: 'Yaklasan',
   Previous: 'Onceki',
   Next: 'Sonraki',
   More: 'Daha Fazla',
+  'View all': 'Tumunu gor',
+  'Open settings': 'Ayarlari ac',
+  'Go to settings': 'Ayarlara git',
+  'Try setup': 'Kuruluma git',
+  'Set up now': 'Simdi kur',
+  'Not available': 'Mevcut degil',
+  'Coming soon': 'Yakin zamanda',
+  'Something went wrong': 'Bir seyler ters gitti',
+  'Please try again later.': 'Lutfen daha sonra tekrar deneyin.',
 };
 
 const TR_TO_EN = Object.fromEntries(
@@ -207,12 +339,29 @@ function LocaleDomTranslator({ locale }: { locale: AppLocale }) {
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<AppLocale>('en');
+  const [locale, setLocaleState] = useState<AppLocale>(detectInitialLocale());
 
   useEffect(() => {
-    // Language switching is temporarily disabled. Keep app locale fixed to English.
-    setLocaleState('en');
-    void Preferences.set({ key: LOCALE_PREF_KEY, value: 'en' });
+    let mounted = true;
+
+    (async () => {
+      try {
+        const stored = await Preferences.get({ key: LOCALE_PREF_KEY });
+        const savedLocale = stored.value === 'tr' || stored.value === 'en' ? stored.value : null;
+        const nextLocale = (savedLocale ?? detectInitialLocale()) as AppLocale;
+        if (mounted) {
+          setLocaleState(nextLocale);
+        }
+      } catch {
+        if (mounted) {
+          setLocaleState(detectInitialLocale());
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -222,7 +371,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale,
-      setLocale: () => setLocaleState('en'),
+      setLocale: (next) => setLocaleState(next),
     }),
     [locale],
   );
