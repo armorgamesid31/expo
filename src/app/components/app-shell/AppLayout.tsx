@@ -145,7 +145,6 @@ export function AppLayout() {
   const navType = useNavigationType();
   const { bootstrap, logout } = useAuth();
   const previousPathRef = useRef(location.pathname);
-  const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
 
   const activeTab = tabFromPathname(location.pathname);
   let backTarget = backTargetFromPathname(location.pathname);
@@ -155,31 +154,30 @@ export function AppLayout() {
     backTarget = fromState;
   }
 
-  const transitionKind = transitionKindFromPathname(location.pathname);
-  const transitionMotion = transitionMotionByKind(transitionKind, transitionDirection);
-
-  useEffect(() => {
-    const previousPath = previousPathRef.current;
-    const currentPath = location.pathname;
-    const explicitDirection =
+  const explicitDirection =
     typeof (location.state as {navDirection?: unknown;} | null)?.navDirection === 'string' ?
     (location.state as {navDirection?: string;}).navDirection as string :
     null;
 
-    if (navType === 'POP') {
-      setTransitionDirection(-1);
-    } else if (explicitDirection === 'back') {
-      setTransitionDirection(-1);
-    } else if (explicitDirection === 'forward') {
-      setTransitionDirection(1);
-    } else {
-      const previousDepth = previousPath.split('/').filter(Boolean).length;
-      const currentDepth = currentPath.split('/').filter(Boolean).length;
-      setTransitionDirection(currentDepth < previousDepth ? -1 : 1);
-    }
+  let currentTransitionDirection: 1 | -1 = 1;
+  if (navType === 'POP') {
+    currentTransitionDirection = -1;
+  } else if (explicitDirection === 'back') {
+    currentTransitionDirection = -1;
+  } else if (explicitDirection === 'forward') {
+    currentTransitionDirection = 1;
+  } else {
+    const previousDepth = previousPathRef.current.split('/').filter(Boolean).length;
+    const currentDepth = location.pathname.split('/').filter(Boolean).length;
+    currentTransitionDirection = currentDepth < previousDepth ? -1 : 1;
+  }
 
-    previousPathRef.current = currentPath;
-  }, [location.pathname, location.state]);
+  const transitionKind = transitionKindFromPathname(location.pathname);
+  const transitionMotion = transitionMotionByKind(transitionKind, currentTransitionDirection);
+
+  useEffect(() => {
+    previousPathRef.current = location.pathname;
+  }, [location.pathname]);
 
   const handleTabChange = (tab: string) => {
     if (tab === 'schedule') {
