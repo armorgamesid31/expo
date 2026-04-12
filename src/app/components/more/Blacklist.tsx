@@ -343,10 +343,10 @@ export function Blacklist({ onBack }: BlacklistProps) {
                 onChange={(e) => setSettings({ ...settings, noShowThreshold: parseInt(e.target.value) })}
                 className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm">
                 
-                    <option value="2">2 times</option>
-                    <option value="3">3 times</option>
-                    <option value="4">4 times</option>
-                    <option value="5">5 times</option>
+                    <option value="2">2 kez</option>
+                    <option value="3">3 kez</option>
+                    <option value="4">4 kez</option>
+                    <option value="5">5 kez</option>
                   </select>
                   <p className="text-xs text-muted-foreground">
                     Müşteri bu sayıdaki no-show sonrası otomatik kara listeye alınır

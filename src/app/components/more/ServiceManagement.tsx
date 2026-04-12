@@ -348,7 +348,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-              <Label htmlFor="specialist-selection">Uzman Secimine Izin Ver</Label>
+              <Label htmlFor="specialist-selection">Uzman Seçimine İzin Ver</Label>
                 <Switch
                   id="specialist-selection"
                   checked={formData.allowSpecialistSelection || false}

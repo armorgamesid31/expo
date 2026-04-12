@@ -1978,9 +1978,9 @@ export function SchedulePage() {
               onChange={(event) => setCheckoutGroupCloseType(event.target.value as CheckoutCloseType)}
               className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
               
-                  <option value="SINGLE_PAYMENT">Single payment</option>
-                  <option value="USE_EXISTING_PACKAGE">Use existing package</option>
-                  <option value="SELL_NEW_PACKAGE">Sell new package</option>
+                  <option value="SINGLE_PAYMENT">Tek Ödeme</option>
+                  <option value="USE_EXISTING_PACKAGE">Mevcut Paketi Kullan</option>
+                  <option value="SELL_NEW_PACKAGE">Yeni Paket Sat</option>
                 </select>
               </div> :
           null}
@@ -2009,9 +2009,9 @@ export function SchedulePage() {
                     }
                     className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
                     
-                        <option value="SINGLE_PAYMENT">Single payment</option>
-                        <option value="USE_EXISTING_PACKAGE">Use existing package</option>
-                        <option value="SELL_NEW_PACKAGE">Sell new package</option>
+                        <option value="SINGLE_PAYMENT">Tek Ödeme</option>
+                        <option value="USE_EXISTING_PACKAGE">Mevcut Paketi Kullan</option>
+                        <option value="SELL_NEW_PACKAGE">Yeni Paket Sat</option>
                       </select> :
                   null}
                     {effectiveCloseType === 'SINGLE_PAYMENT' ?
@@ -2287,7 +2287,7 @@ export function SchedulePage() {
                     }
                     className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
                     
-                        <option value="">{required ? 'Choose specialist' : 'Any specialist'}</option>
+                        <option value="">{required ? 'Uzman Seç' : 'Herhangi Bir Uzman'}</option>
                         {options.map((item) =>
                     <option key={item.id} value={item.id}>
                             {item.name}
@@ -2342,7 +2342,7 @@ export function SchedulePage() {
                 onChange={(event) => handleCustomerSelect(event.target.value)}
                 className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
                 
-                    <option value="">New customer / Enter manually</option>
+                    <option value="">Yeni Müşteri / Manuel Gir</option>
                   {customers.map((customer) =>
                 <option key={customer.id} value={customer.id}>
                       {customer.name || 'Anonymous'} • {customer.phone}
@@ -2425,7 +2425,7 @@ export function SchedulePage() {
                     }
                     className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
                     
-                        <option value="">{required ? 'Choose an expert' : 'Auto-assign'}</option>
+                        <option value="">{required ? 'Uzman Seç' : 'Otomatik Ata'}</option>
                         {options.map((item) =>
                     <option key={item.id} value={item.id}>
                             {item.name}

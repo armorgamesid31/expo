@@ -64,7 +64,7 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
           {/* Header */}
           <SheetHeader className="p-4 border-b border-border">
             <div className="flex items-center justify-between">
-              <SheetTitle>New Appointment</SheetTitle>
+              <SheetTitle>Yeni Randevu</SheetTitle>
               <Button variant="ghost" size="sm" onClick={onClose}>
                 <X className="w-5 h-5" />
               </Button>

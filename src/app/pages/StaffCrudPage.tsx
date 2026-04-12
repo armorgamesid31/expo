@@ -553,7 +553,7 @@ export function StaffCrudPage() {
                                 
                                       <option value="female">Kadın</option>
                                       <option value="male">Erkek</option>
-                                      <option value="other">Unisex</option>
+                                      <option value="other">Uniseks</option>
                                     </select>
                                   </label>
                                   <div className="flex items-center justify-between gap-2 text-xs">

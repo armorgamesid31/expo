@@ -199,7 +199,7 @@ export function NotificationRoleMatrixPage() {
             
             </label>
             <label className="flex items-center justify-between text-sm">
-              <span>Max reminders</span>
+              <span>Maks. hatırlatma</span>
               <input
               type="number"
               min={1}

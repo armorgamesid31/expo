@@ -142,7 +142,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="salon-name">Salon Name</Label>
+                <Label htmlFor="salon-name">Salon Adı</Label>
                 <Input
                   id="salon-name"
                   value={salonData.name}

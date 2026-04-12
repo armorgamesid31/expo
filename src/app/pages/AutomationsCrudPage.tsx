@@ -870,7 +870,7 @@ export function AutomationsCrudPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>When should post-violation notifications be sent?</Label>
+                <Label>İhlal sonrası bildirimler ne zaman gönderilmeli?</Label>
                 <div className="grid grid-cols-1 gap-2">
                   <button
                   type="button"

@@ -459,9 +459,9 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                     <p className="text-sm font-medium">Conversation tone</p>
                     <p className="text-xs text-muted-foreground">The overall style the agent uses while talking to customers.</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => {setTone('friendly');void saveSettings('tone', { tone: 'friendly' });}}>Warm & Friendly</Button>
-                      <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => {setTone('professional');void saveSettings('tone', { tone: 'professional' });}}>Professional</Button>
-                      <Button type="button" className="col-span-2" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => {setTone('balanced');void saveSettings('tone', { tone: 'balanced' });}}>Balanced</Button>
+                      <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => {setTone('friendly');void saveSettings('tone', { tone: 'friendly' });}}>Sıcak ve Dostça</Button>
+                      <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => {setTone('professional');void saveSettings('tone', { tone: 'professional' });}}>Profesyonel</Button>
+                      <Button type="button" className="col-span-2" variant={tone === 'balanced' ? 'default' : 'outline'} onClick={() => {setTone('balanced');void saveSettings('tone', { tone: 'balanced' });}}>Dengeli</Button>
                     </div>
                     <p className="text-xs text-muted-foreground border border-border/60 rounded-md p-2 bg-muted/30">
                       Example approach: {toneExamples[tone]}
@@ -473,9 +473,9 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                     <p className="text-sm font-medium">Response length</p>
                     <p className="text-xs text-muted-foreground">Controls whether responses to customers are short or detailed.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={answerLength === 'short' ? 'default' : 'outline'} onClick={() => {setAnswerLength('short');void saveSettings('answerLength', { answerLength: 'short' });}}>Short</Button>
-                      <Button type="button" variant={answerLength === 'medium' ? 'default' : 'outline'} onClick={() => {setAnswerLength('medium');void saveSettings('answerLength', { answerLength: 'medium' });}}>Medium</Button>
-                      <Button type="button" variant={answerLength === 'detailed' ? 'default' : 'outline'} onClick={() => {setAnswerLength('detailed');void saveSettings('answerLength', { answerLength: 'detailed' });}}>Detailed</Button>
+                      <Button type="button" variant={answerLength === 'short' ? 'default' : 'outline'} onClick={() => {setAnswerLength('short');void saveSettings('answerLength', { answerLength: 'short' });}}>Kısa</Button>
+                      <Button type="button" variant={answerLength === 'medium' ? 'default' : 'outline'} onClick={() => {setAnswerLength('medium');void saveSettings('answerLength', { answerLength: 'medium' });}}>Orta</Button>
+                      <Button type="button" variant={answerLength === 'detailed' ? 'default' : 'outline'} onClick={() => {setAnswerLength('detailed');void saveSettings('answerLength', { answerLength: 'detailed' });}}>Detaylı</Button>
                     </div>
                     {savedField === 'answerLength' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>
@@ -485,7 +485,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                     <p className="text-xs text-muted-foreground">Controls emoji density in responses.</p>
                     <div className="grid grid-cols-3 gap-2">
                       <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('off');void saveSettings('emojiUsage', { emojiUsage: 'off' });}}>Kapalı</Button>
-                      <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('low');void saveSettings('emojiUsage', { emojiUsage: 'low' });}}>Low</Button>
+                      <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('low');void saveSettings('emojiUsage', { emojiUsage: 'low' });}}>Düşük</Button>
                       <Button type="button" variant={emojiUsage === 'normal' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('normal');void saveSettings('emojiUsage', { emojiUsage: 'normal' });}}>Normal</Button>
                     </div>
                     {savedField === 'emojiUsage' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
@@ -495,9 +495,9 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                     <p className="text-sm font-medium">Booking guidance level</p>
                     <p className="text-xs text-muted-foreground">Determines how actively the customer is guided to booking during conversation.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={bookingGuidance === 'low' ? 'default' : 'outline'} onClick={() => {setBookingGuidance('low');void saveSettings('bookingGuidance', { bookingGuidance: 'low' });}}>Low</Button>
-                      <Button type="button" variant={bookingGuidance === 'medium' ? 'default' : 'outline'} onClick={() => {setBookingGuidance('medium');void saveSettings('bookingGuidance', { bookingGuidance: 'medium' });}}>Medium</Button>
-                      <Button type="button" variant={bookingGuidance === 'high' ? 'default' : 'outline'} onClick={() => {setBookingGuidance('high');void saveSettings('bookingGuidance', { bookingGuidance: 'high' });}}>High</Button>
+                      <Button type="button" variant={bookingGuidance === 'low' ? 'default' : 'outline'} onClick={() => {setBookingGuidance('low');void saveSettings('bookingGuidance', { bookingGuidance: 'low' });}}>Düşük</Button>
+                      <Button type="button" variant={bookingGuidance === 'medium' ? 'default' : 'outline'} onClick={() => {setBookingGuidance('medium');void saveSettings('bookingGuidance', { bookingGuidance: 'medium' });}}>Orta</Button>
+                      <Button type="button" variant={bookingGuidance === 'high' ? 'default' : 'outline'} onClick={() => {setBookingGuidance('high');void saveSettings('bookingGuidance', { bookingGuidance: 'high' });}}>Yüksek</Button>
                     </div>
                     {savedField === 'bookingGuidance' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>
@@ -506,9 +506,9 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                     <p className="text-sm font-medium">Human handover threshold</p>
                     <p className="text-xs text-muted-foreground">Determines how early the agent hands over to human staff in cases of dissatisfaction risk, complex requests, or complaints.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={handoverThreshold === 'early' ? 'default' : 'outline'} onClick={() => {setHandoverThreshold('early');void saveSettings('handoverThreshold', { handoverThreshold: 'early' });}}>Early Handover</Button>
-                      <Button type="button" variant={handoverThreshold === 'balanced' ? 'default' : 'outline'} onClick={() => {setHandoverThreshold('balanced');void saveSettings('handoverThreshold', { handoverThreshold: 'balanced' });}}>Balanced</Button>
-                      <Button type="button" variant={handoverThreshold === 'late' ? 'default' : 'outline'} onClick={() => {setHandoverThreshold('late');void saveSettings('handoverThreshold', { handoverThreshold: 'late' });}}>Late Handover</Button>
+                      <Button type="button" variant={handoverThreshold === 'early' ? 'default' : 'outline'} onClick={() => {setHandoverThreshold('early');void saveSettings('handoverThreshold', { handoverThreshold: 'early' });}}>Erken Devir</Button>
+                      <Button type="button" variant={handoverThreshold === 'balanced' ? 'default' : 'outline'} onClick={() => {setHandoverThreshold('balanced');void saveSettings('handoverThreshold', { handoverThreshold: 'balanced' });}}>Dengeli</Button>
+                      <Button type="button" variant={handoverThreshold === 'late' ? 'default' : 'outline'} onClick={() => {setHandoverThreshold('late');void saveSettings('handoverThreshold', { handoverThreshold: 'late' });}}>Geç Devir</Button>
                     </div>
                     {savedField === 'handoverThreshold' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>

@@ -245,7 +245,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="ref-reward">Referrer Reward</Label>
+                        <Label htmlFor="ref-reward">Referans Ödülü</Label>
                         <Input
                       id="ref-reward"
                       value={referralForm.referrerReward}
@@ -279,7 +279,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         <p className="text-xs text-muted-foreground">Required amount for reward (₺)</p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="ref-expiry">Validity Period</Label>
+                        <Label htmlFor="ref-expiry">Geçerlilik Süresi</Label>
                         <select
                       id="ref-expiry"
                       value={referralForm.expiryDays}
@@ -306,7 +306,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
 
               <>
                     <div className="space-y-2">
-                      <Label htmlFor="loy-name">Program Name *</Label>
+                      <Label htmlFor="loy-name">Program Adı *</Label>
                       <Input
                     id="loy-name"
                     value={loyaltyForm.name}
@@ -317,7 +317,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="loy-rate">Point Rate</Label>
+                        <Label htmlFor="loy-rate">Puan Oranı</Label>
                         <select
                       id="loy-rate"
                       value={loyaltyForm.pointsPerLira}
@@ -331,7 +331,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="loy-threshold">Points Required for Reward</Label>
+                        <Label htmlFor="loy-threshold">Ödül İçin Gerekli Puan</Label>
                         <Input
                       id="loy-threshold"
                       type="number"
@@ -343,7 +343,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="loy-reward">Reward</Label>
+                      <Label htmlFor="loy-reward">Ödül</Label>
                       <Input
                     id="loy-reward"
                     value={loyaltyForm.rewardValue}
@@ -492,7 +492,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     
                           <div className="grid grid-cols-2 gap-3">
                             <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/20">
-                              <p className="text-xs text-muted-foreground mb-1">Referrer Reward</p>
+                              <p className="text-xs text-muted-foreground mb-1">Referans Ödülü</p>
                               <p className="font-semibold text-green-700">{campaign.referrerReward}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">

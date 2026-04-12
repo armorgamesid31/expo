@@ -292,7 +292,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Title *</Label>
+                <Label htmlFor="role">Unvan *</Label>
                 <Input
                   id="role"
                   value={formData.role || ''}

@@ -893,7 +893,7 @@ export function ServicesCrudPage() {
                 onChange={(event) => setServiceForm((prev) => ({ ...prev, serviceGroupId: event.target.value }))}
                 className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
                 
-                  <option value="">Continue without selecting a group</option>
+                  <option value="">Grup seçmeden devam et</option>
                   {groups.map((group) =>
                 <option key={group.id} value={group.id}>
                       {group.name}

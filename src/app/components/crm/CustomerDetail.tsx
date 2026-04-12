@@ -33,7 +33,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
       case 'cancelled':
         return <Badge variant="secondary" className="bg-gray-500/10 text-gray-700 dark:text-gray-300">İptal</Badge>;
       default:
-        return <Badge>Scheduled</Badge>;
+        return <Badge>Planlandı</Badge>;
     }
   };
 

@@ -984,7 +984,7 @@ export function CampaignsCrudPage() {
           <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label>Start date</Label>
+                  <Label>Başlangıç Tarihi</Label>
                   <Input
                   type="date"
                   value={createDraft.startsAt}
@@ -1000,7 +1000,7 @@ export function CampaignsCrudPage() {
                 
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Priority</Label>
+                  <Label>Öncelik</Label>
                   <Input
                   type="number"
                   value={createDraft.priority}
@@ -1008,7 +1008,7 @@ export function CampaignsCrudPage() {
                 
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Delivery mode</Label>
+                  <Label>Teslimat Modu</Label>
                   <Select
                   value={createDraft.deliveryMode}
                   onValueChange={(value: 'AUTO' | 'MANUAL') =>
@@ -1020,12 +1020,12 @@ export function CampaignsCrudPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="AUTO">AUTO</SelectItem>
-                      <SelectItem value="MANUAL">MANUAL</SelectItem>
+                      <SelectItem value="MANUAL">MANUEL</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Max global usage</Label>
+                  <Label>Maks. Genel Kullanım</Label>
                   <Input
                   type="number"
                   value={createDraft.maxGlobalUsage}
@@ -1035,7 +1035,7 @@ export function CampaignsCrudPage() {
                 
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Max per customer</Label>
+                  <Label>Müşteri Başına Maks.</Label>
                   <Input
                   type="number"
                   value={createDraft.maxPerCustomer}
@@ -1137,7 +1137,7 @@ export function CampaignsCrudPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label>Start date</Label>
+                  <Label>Başlangıç Tarihi</Label>
                   <Input
                   type="date"
                   value={detailDraft.startsAt}
@@ -1153,7 +1153,7 @@ export function CampaignsCrudPage() {
                 
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Priority</Label>
+                  <Label>Öncelik</Label>
                   <Input
                   type="number"
                   value={detailDraft.priority}
@@ -1161,7 +1161,7 @@ export function CampaignsCrudPage() {
                 
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Delivery mode</Label>
+                  <Label>Teslimat Modu</Label>
                   <Select
                   value={detailDraft.deliveryMode}
                   onValueChange={(value: 'AUTO' | 'MANUAL') =>
@@ -1173,12 +1173,12 @@ export function CampaignsCrudPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="AUTO">AUTO</SelectItem>
-                      <SelectItem value="MANUAL">MANUAL</SelectItem>
+                      <SelectItem value="MANUAL">MANUEL</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Max global usage</Label>
+                  <Label>Maks. Genel Kullanım</Label>
                   <Input
                   type="number"
                   value={detailDraft.maxGlobalUsage}
@@ -1188,7 +1188,7 @@ export function CampaignsCrudPage() {
                 
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Max per customer</Label>
+                  <Label>Müşteri Başına Maks.</Label>
                   <Input
                   type="number"
                   value={detailDraft.maxPerCustomer}

@@ -95,7 +95,7 @@ export function InventoryPage() {
         <div key={item.id} className="rounded-lg border border-border p-3">
             <div className="flex items-center justify-between">
               <p className="font-medium">{item.name}</p>
-              <span className={`text-xs ${item.lowStock ? 'text-red-500' : 'text-green-600'}`}>{item.lowStock ? 'low stock' : 'Normal'}</span>
+              <span className={`text-xs ${item.lowStock ? 'text-red-500' : 'text-green-600'}`}>{item.lowStock ? 'Düşük stok' : 'Normal'}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">{item.category || 'Genel'} • {item.currentStock} {item.unit} (min {item.minStock})</p>
             <div className="mt-2 flex gap-2">
