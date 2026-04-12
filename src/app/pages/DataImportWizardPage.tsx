@@ -462,7 +462,7 @@ export function DataImportWizardPage() {
                   }
                   className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm">
                   
-                      <option value="">Select service</option>
+                      <option value="">Hizmet seçin</option>
                       {(preview.mappingOptions.services || []).map((service) =>
                   <option key={service.id} value={service.id}>
                           {service.name}
@@ -486,7 +486,7 @@ export function DataImportWizardPage() {
                   }
                   className="w-full rounded-md border border-border bg-background px-2 py-2 text-sm">
                   
-                      <option value="">Select staff</option>
+                      <option value="">Personel seçin</option>
                       {(preview.mappingOptions.staff || []).map((staff) =>
                   <option key={staff.id} value={staff.id}>
                           {staff.name}

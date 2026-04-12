@@ -48,7 +48,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
   [
   { label: 'Pzt', revenue: 0, appointments: 0, date: '' },
   { label: 'Sal', revenue: 0, appointments: 0, date: '' },
-  { label: 'Tsar', revenue: 0, appointments: 0, date: '' },
+  { label: 'Çar', revenue: 0, appointments: 0, date: '' },
   { label: 'Per', revenue: 0, appointments: 0, date: '' },
   { label: 'Cum', revenue: 0, appointments: 0, date: '' },
   { label: 'Cmt', revenue: 0, appointments: 0, date: '' },
@@ -69,23 +69,23 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
 
   const stats = [
   {
-    title: 'Last Day Revenue',
+    title: 'Seçilen Gün Cirosu',
     value: `₺${(todayPoint?.revenue || 0).toLocaleString('tr-TR')}`,
-    subtitle: `Last day in selected range • ${todayPoint?.appointments || 0} appointment`,
+    subtitle: `Seçilen aralıktaki son gün • ${todayPoint?.appointments || 0} randevu`,
     icon: DollarSign,
     color: 'var(--rose-gold)'
   },
   {
     title: 'Monthly Total',
     value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
-    subtitle: `${completedAppointments}/${totalAppointments} appointments completed`,
+    subtitle: `${completedAppointments}/${totalAppointments}randevu tamamlandı`,
     icon: TrendingUp,
     color: 'var(--deep-indigo)'
   },
   {
-    title: "Yeni Müşteris",
+    title: "Yeni Müşteri",
     value: newCustomers.toString(),
-    subtitle: 'This month',
+    subtitle: 'Bu ay',
     icon: UserPlus,
     color: 'var(--rose-gold-light)'
   },
@@ -102,8 +102,8 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
     <div className="space-y-6 pb-20">
       {/* Header */}
       <div className="pt-6 px-4">
-        <h1 className="text-2xl font-semibold mb-1">Welcome</h1>
-        <p className="text-muted-foreground text-sm">Your salon performance summary</p>
+        <h1 className="text-2xl font-semibold mb-1">Hoş geldin</h1>
+        <p className="text-muted-foreground text-sm">Salon performans özetin</p>
       </div>
 
       {dayNavigator ? <div className="px-4">{dayNavigator}</div> : null}
@@ -148,7 +148,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
           <CardHeader className="pb-4">
             <CardTitle className="text-base flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[var(--rose-gold)] animate-pulse" />
-              Salon Pulse - This Week
+              Salon Nabzı - Bu Hafta
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -198,7 +198,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
 
       {/* Quick Actions */}
       <div className="px-4">
-        <h2 className="text-lg font-semibold mb-3">Quick Access</h2>
+        <h2 className="text-lg font-semibold mb-3">Hızlı Erişim</h2>
         <div className="grid grid-cols-2 gap-3">
           <button onClick={() => onNavigate?.('/app/customers')} className="p-4 bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
             <Users className="w-6 h-6 mb-2" />

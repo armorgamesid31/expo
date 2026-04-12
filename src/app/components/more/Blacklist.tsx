@@ -35,7 +35,7 @@ const initialBlacklist: BlacklistEntry[] = [
   id: 'bl1',
   name: 'Deniz Aktas',
   phone: '+90 538 111 2233',
-  reason: 'He missed the appointment 4 times in a row. Cannot be reached by phone.',
+  reason: '4 kez üst üste randevuya gelmedi. Telefonla ulaşılamıyor.',
   date: '2026-01-15',
   noShowCount: 4
 },
@@ -202,7 +202,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs text-amber-800 dark:text-amber-400">
-                  People in the blacklist see a warning during online booking and automatic appointment creation is blocked. A warning is also shown during manual booking.
+                  Kara listedeki kişiler online rezervasyonda uyarı görür ve otomatik randevu oluşturma engellenir. Manuel randevuda da uyarı gösterilir.
                 </p>
               </div>
             </CardContent>
@@ -233,7 +233,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
                 }).length}
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">This Month</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Bu Ay</p>
               </CardContent>
             </Card>
           </div>
@@ -326,7 +326,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                 <div className="flex-1">
                   <Label className="text-sm font-medium">Automatic Blacklist</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Automatically block customers reaching the specified no-show count
+                    Belirlenen no-show sayısına ulaşan müşterileri otomatik engelle
                   </p>
                 </div>
                 <Switch
@@ -365,7 +365,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                 <div className="flex-1">
                   <Label className="text-sm font-medium">Block Online Appointments</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Blacklisted customers cannot book online appointments
+                    Kara listedeki müşteriler online randevu alamaz
                   </p>
                 </div>
                 <Switch
@@ -378,7 +378,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                 <div className="flex-1">
                   <Label className="text-sm font-medium">Manuel Randevu Uyarısı</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Show warning during staff appointment entry
+                    Personel randevu girişinde uyarı göster
                   </p>
                 </div>
                 <Switch

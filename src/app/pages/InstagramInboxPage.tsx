@@ -58,7 +58,7 @@ interface ConversationStatePayload {
 function formatTs(value: string): string {
   const dt = new Date(value);
   if (Number.isNaN(dt.getTime())) return value;
-  return dt.toLocaleString('en-GB', {
+  return dt.toLocaleString('tr-TR', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -68,10 +68,10 @@ function formatTs(value: string): string {
 
 function getPreview(item: ConversationItem): string {
   if (item.lastMessageText && item.lastMessageText.trim()) return item.lastMessageText.trim();
-  if (item.lastMessageType === 'image') return '[Image]';
-  if (item.lastMessageType === 'audio') return '[Audio]';
+  if (item.lastMessageType === 'image') return '[Görsel]';
+  if (item.lastMessageType === 'audio') return '[Ses]';
   if (item.lastMessageType === 'video') return '[Video]';
-  if (item.lastMessageType === 'handover_request') return '[Handover Requested]';
+  if (item.lastMessageType === 'handover_request') return '[Temsilci Devri İstendi]';
   return `[${item.lastMessageType}]`;
 }
 
@@ -91,7 +91,7 @@ function conversationDisplayName(item: Pick<ConversationItem, 'customerName' | '
   if (item.customerName && item.customerName.trim()) return item.customerName.trim();
   const username = normalizeUsername(item.profileUsername);
   if (username) return `@${username}`;
-  return `User ${item.conversationKey}`;
+  return `Kullanıcı ${item.conversationKey}`;
 }
 
 function initialsFromLabel(value: string): string {
@@ -124,11 +124,11 @@ function automationBadgeClass(mode: AutomationMode): string {
 }
 
 function automationLabel(mode: AutomationMode): string {
-  if (mode === 'HUMAN_PENDING') return 'Human Pending';
-  if (mode === 'HUMAN_ACTIVE') return "Human Aktif";
-  if (mode === 'MANUAL_ALWAYS') return 'Manual Always';
-  if (mode === 'AUTO_RESUME_PENDING') return 'Auto Resume';
-  return 'Auto';
+  if (mode === 'HUMAN_PENDING') return 'İnsan Bekleniyor';
+  if (mode === 'HUMAN_ACTIVE') return 'İnsan Aktif';
+  if (mode === 'MANUAL_ALWAYS') return 'Her Zaman Manuel';
+  if (mode === 'AUTO_RESUME_PENDING') return 'Otomatik Devam Bekliyor';
+  return 'Otomatik';
 }
 
 function isHandoverInProgress(mode: AutomationMode): boolean {
@@ -211,7 +211,7 @@ export function InstagramInboxPage() {
   const [sendingHandover, setSendingHandover] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
   const [actionInfo, setActionInfo] = useState<string | null>(null);
-  const sseRefreshTimerRef = useRef<number | null>(null);
+  const sseYenileTimerRef = useRef<number | null>(null);
   const conversationsRef = useRef<ConversationItem[]>([]);
   const selectedKeyRef = useRef<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
@@ -248,7 +248,7 @@ export function InstagramInboxPage() {
         setSelectedKey(nextKey);
       }
     } catch (err: any) {
-      setError(err?.message || "Konuşmalar yuklenemedi.");
+      setError(err?.message || "Konuşmalar yüklenemedi.");
     } finally {
       if (showLoading) setLoadingConversations(false);
     }
@@ -283,7 +283,7 @@ export function InstagramInboxPage() {
         );
       }
     } catch (err: any) {
-      setError(err?.message || "Konuşma mesajlari yuklenemedi.");
+      setError(err?.message || "Konuşma mesajları yüklenemedi.");
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
@@ -317,10 +317,10 @@ export function InstagramInboxPage() {
     `&channel=INSTAGRAM`;
     const es = new EventSource(streamUrl);
 
-    const scheduleRefresh = () => {
-      if (sseRefreshTimerRef.current) return;
-      sseRefreshTimerRef.current = window.setTimeout(() => {
-        sseRefreshTimerRef.current = null;
+    const scheduleYenile = () => {
+      if (sseYenileTimerRef.current) return;
+      sseYenileTimerRef.current = window.setTimeout(() => {
+        sseYenileTimerRef.current = null;
         void loadConversations(false);
         const activeKey = selectedKeyRef.current;
         if (activeKey) {
@@ -329,14 +329,14 @@ export function InstagramInboxPage() {
       }, 350);
     };
 
-    es.addEventListener('conversation.update', scheduleRefresh);
+    es.addEventListener('conversation.update', scheduleYenile);
 
     return () => {
-      es.removeEventListener('conversation.update', scheduleRefresh);
+      es.removeEventListener('conversation.update', scheduleYenile);
       es.close();
-      if (sseRefreshTimerRef.current) {
-        window.clearTimeout(sseRefreshTimerRef.current);
-        sseRefreshTimerRef.current = null;
+      if (sseYenileTimerRef.current) {
+        window.clearTimeout(sseYenileTimerRef.current);
+        sseYenileTimerRef.current = null;
       }
     };
   }, [accessToken, loadConversations, loadMessages]);
@@ -399,11 +399,11 @@ export function InstagramInboxPage() {
       await apiFetch(`/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/resume-auto`, {
         method: 'POST'
       });
-      setActionInfo('AI automation resumed for this conversation.');
+      setActionInfo('Bu konuşmada yapay zeka otomasyonu yeniden başlatıldı.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
-      setError(err?.message || 'Resume action failed.');
+      setError(err?.message || 'Devralma işlemi başarısız oldu.');
     } finally {
       setSendingResume(false);
     }
@@ -421,20 +421,20 @@ export function InstagramInboxPage() {
           className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
           
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm">Geri</span>
         </button>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold">Instagram Konuşma Merkezi</h1>
             <p className="text-xs text-muted-foreground mt-1">
-              View DMs, send manual replies, and hand over AI conversations to staff.
+              DM'leri görüntüleyin, manuel yanıt gönderin ve yapay zeka konuşmalarını personele devredin.
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Automated replies may be used. Human handover is available for all conversations.
+              Otomatik yanıtlar kullanılabilir. Tüm konuşmalarda canlı temsilciye devretme mümkündür.
             </p>
           </div>
           <Button type="button" size="sm" variant="outline" onClick={() => void loadConversations()} disabled={loadingConversations}>
-            Refresh
+            Yenile
           </Button>
         </div>
       </div>
@@ -442,7 +442,7 @@ export function InstagramInboxPage() {
       <div className="p-4 grid grid-cols-1 lg:grid-cols-[340px,1fr] gap-4">
         <Card className="border-border/60 shadow-sm backdrop-blur bg-card/85">
           <CardContent className="p-3 space-y-2">
-            <p className="text-sm font-semibold">Conversations</p>
+            <p className="text-sm font-semibold">Konuşmalar</p>
             {loadingConversations ?
             <div className="py-6 grid place-items-center text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -574,9 +574,9 @@ export function InstagramInboxPage() {
 
                 messages.map((msg) => {
                   const isOutbound = msg.direction === 'outbound';
-                  const isSystem = msg.direction === 'system';
-                  const senderLabel = isSystem ?
-                  'System' :
+                  const isSistem = msg.direction === 'system';
+                  const senderLabel = isSistem ?
+                  'Sistem' :
                   isOutbound ?
                   msg.outboundSourceLabel || 'Salon' :
                   "Müşteri";
@@ -584,7 +584,7 @@ export function InstagramInboxPage() {
                     <div
                       key={msg.id}
                       className={`max-w-[90%] rounded-lg border px-3 py-2 text-sm ${
-                      isSystem ?
+                      isSistem ?
                       'bg-amber-50 border-amber-200 text-amber-900 mx-auto' :
                       isOutbound ?
                       'bg-[var(--deep-indigo)]/8 border-[var(--deep-indigo)]/20 ml-auto' :
@@ -592,7 +592,7 @@ export function InstagramInboxPage() {
                       }>
                       
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
-                            {isSystem ? <AlertTriangle className="w-3 h-3" /> : isOutbound ? <Send className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
+                            {isSistem ? <AlertTriangle className="w-3 h-3" /> : isOutbound ? <Send className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
                             <span>{senderLabel}</span>
                             <span>•</span>
                             <span>{formatTs(msg.eventTimestamp)}</span>
@@ -608,7 +608,7 @@ export function InstagramInboxPage() {
                   <Input
                   value={replyText}
                   onChange={(event) => setReplyText(event.target.value)}
-                  placeholder="Write manual reply to customer"
+                  placeholder="Müşteriye manuel yanıt yazın"
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && !event.shiftKey) {
                       event.preventDefault();
@@ -624,7 +624,7 @@ export function InstagramInboxPage() {
 
             <div className="py-12 text-center text-muted-foreground">
                 <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-60" />
-                <p className="text-sm">Select a conversation to view messages.</p>
+                <p className="text-sm">Mesajları görmek için bir konuşma seçin.</p>
               </div>
             }
 

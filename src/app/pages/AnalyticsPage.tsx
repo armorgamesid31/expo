@@ -215,7 +215,7 @@ export function AnalyticsPage() {
     return [
     { day: 'Pzt', revenue: 0, appointments: 0 },
     { day: 'Sal', revenue: 0, appointments: 0 },
-    { day: 'Tsar', revenue: 0, appointments: 0 },
+    { day: 'Çar', revenue: 0, appointments: 0 },
     { day: 'Per', revenue: 0, appointments: 0 },
     { day: 'Cum', revenue: 0, appointments: 0 },
     { day: 'Cmt', revenue: 0, appointments: 0 },
@@ -257,7 +257,7 @@ export function AnalyticsPage() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-base font-semibold flex items-center gap-2 mb-3">
               <span className="h-2 w-2 rounded-full bg-[var(--rose-gold)]" />
-              Salon Pulse - This Week
+              Salon Nabzı - Bu Hafta
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={weeklyPulse}>
@@ -277,8 +277,8 @@ export function AnalyticsPage() {
                   borderRadius: 10
                 }}
                 formatter={(value: number, _name: string, payload: any) => [
-                `${formatCurrency(value || 0)} • ${payload?.payload?.appointments || 0} appointment`,
-                'Daily turnover']
+                `${formatCurrency(value || 0)} • ${payload?.payload?.appointments || 0} randevu`,
+                'Günlük ciro']
                 } />
               
                 <Area type="monotone" dataKey="revenue" stroke="var(--rose-gold)" strokeWidth={2.5} fill="url(#pulseFill)" />
@@ -300,7 +300,7 @@ export function AnalyticsPage() {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="font-semibold text-sm">{staff.name}</p>
-                        <p className="text-xs text-muted-foreground">{staff.appointments} appointment</p>
+                        <p className="text-xs text-muted-foreground">{staff.appointments} randevu</p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-[var(--rose-gold)]">{formatCurrency(staff.revenue)}</p>

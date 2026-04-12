@@ -135,7 +135,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
               {customer.riskLevel === 'high' &&
             <div className="pt-2 mt-2 border-t border-border">
                   <p className="text-xs text-red-700 dark:text-red-300">
-                    <strong>Recommendation:</strong> Take a deposit for future bookings. Gönder a WhatsApp reminder 24 hours before the appointment.
+                    <strong>Öneri:</strong> Gelecek rezervasyonlar için kapora alın. Randevudan 24 saat önce WhatsApp hatırlatması gönderin.
                   </p>
                 </div>
             }

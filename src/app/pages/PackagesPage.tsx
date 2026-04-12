@@ -260,7 +260,7 @@ export function PackagesPage() {
               onChange={(event) => setRowValue(idx, { serviceId: event.target.value })}
               className="h-10 rounded-md border border-border px-2 text-sm bg-background">
               
-                <option value="">Select service</option>
+                <option value="">Hizmet seçin</option>
                 {serviceOptions.map((option) =>
               <option key={option.value} value={option.value}>
                     {option.label}

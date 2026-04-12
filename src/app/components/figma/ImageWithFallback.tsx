@@ -18,7 +18,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     style={style}>
     
       <div className="flex items-center justify-center w-full h-full">
-        <img src={ERROR_IMG_SRC} alt="Gorsel yuklenirken hata olustu" {...rest} data-original-url={src} />
+        <img src={ERROR_IMG_SRC} alt="Görsel yüklenirken hata oluştu" {...rest} data-original-url={src} />
       </div>
     </div> :
 

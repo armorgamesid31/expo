@@ -236,7 +236,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
         onReady: () => {
           setNativeTriggerReady(true);
           setIsPopupConnecting(false);
-          setStatusText('The connection button is ready.');
+          setStatusText('Bağlantı butonu hazır.');
         },
         onError: (sdkError: any) => {
           console.error('Chakra SDK error:', sdkError);
@@ -355,7 +355,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     }
 
     hasAutoNavigatedRef.current = true;
-    setStatusText('The connection is completed, you are directed to WhatsApp settings...');
+    setStatusText('Bağlantı tamamlandı, WhatsApp ayarlarına yönlendiriliyorsunuz...');
 
     const timer = window.setTimeout(() => {
       navigate('/app/features/whatsapp-settings', { replace: true });
@@ -502,7 +502,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                 <div className="space-y-1">
                   <p className="text-sm font-semibold">{replaceConnection ? '2. Replace phone number' : '2. Secure Facebook connection'}</p>
                   <p className="text-xs text-muted-foreground">
-                    Use the embedded secure flow. Keep this screen open until callback is completed.
+                    Gömülü güvenli akışı kullanın. Geri çağrı tamamlanana kadar bu ekranı açık tutun.
                   </p>
                 </div>
                 <div className="relative w-full h-[58px] overflow-hidden rounded-md border border-border/60 bg-white">
@@ -574,7 +574,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
               <p className="text-sm font-medium">Help</p>
               <Accordion type="single" collapsible>
                 <AccordionItem value="faq-1">
-                  <AccordionTrigger>What does initialize do?</AccordionTrigger>
+                  <AccordionTrigger>Initialize ne işe yarar?</AccordionTrigger>
                   <AccordionContent>
                     It creates plugin context for this salon and prepares the secure connect token.
                   </AccordionContent>
@@ -586,7 +586,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="faq-3">
-                  <AccordionTrigger>How do I verify completion?</AccordionTrigger>
+                  <AccordionTrigger>Tamamlandığını nasıl doğrularım?</AccordionTrigger>
                   <AccordionContent>
                     Durum rözeti Bağlı olur ve bu sayfa WhatsApp ayarlarına yönlenir.
                   </AccordionContent>

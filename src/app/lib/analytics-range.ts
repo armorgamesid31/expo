@@ -39,11 +39,11 @@ export function shiftDateInputValue(value: string, diffDays: number): string {
 
 export function resolveSingleDayRange(dateInput: string): { range: AnalyticsResolvedRange | null; error: string | null } {
   if (!dateInput) {
-    return { range: null, error: 'Select a date.' };
+    return { range: null, error: 'Tarih seçin.' };
   }
   const base = new Date(`${dateInput}T00:00:00`);
   if (Number.isNaN(base.getTime())) {
-    return { range: null, error: 'Select a valid date.' };
+    return { range: null, error: 'Geçerli bir tarih seçin.' };
   }
 
   const from = startOfLocalDay(base);
@@ -92,23 +92,23 @@ export function resolveAnalyticsRange(params: {
     to = now;
   } else {
     if (!params.customFromDate || !params.customToDate) {
-      return { range: null, error: 'Select a start and end date for the custom range.' };
+      return { range: null, error: 'Özel aralık için başlangıç ve bitiş tarihi seçin.' };
     }
     from = startOfLocalDay(new Date(`${params.customFromDate}T00:00:00`));
     to = endOfLocalDay(new Date(`${params.customToDate}T00:00:00`));
   }
 
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
-    return { range: null, error: 'Select a valid date range.' };
+    return { range: null, error: 'Geçerli bir tarih aralığı seçin.' };
   }
   if (from > to) {
-    return { range: null, error: 'The start date cannot be greater than the end date.' };
+    return { range: null, error: 'Başlangıç tarihi bitiş tarihinden büyük olamaz.' };
   }
 
   const maxDays = 180;
   const dayDiff = Math.ceil((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)) + 1;
   if (dayDiff > maxDays) {
-    return { range: null, error: `You can select up to ${maxDays} days.` };
+    return { range: null, error: `En fazla ${maxDays} gün seçebilirsiniz.` };
   }
 
   return {

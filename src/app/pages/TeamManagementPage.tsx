@@ -25,7 +25,7 @@ export function TeamManagementPage() {
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-semibold">Ekip Yönetimi</h1>
       <p className="text-sm text-muted-foreground">
-        Manage employees and control account-level access from one place.
+        Personelleri yönetin ve hesap düzeyi erişimi tek yerden kontrol edin.
       </p>
 
       <div className="space-y-3">

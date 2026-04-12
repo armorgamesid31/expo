@@ -255,7 +255,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                         <p className="text-xs text-muted-foreground">For the referrer</p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="ref-new">Win Yeni Müşteris</Label>
+                        <Label htmlFor="ref-new">Yeni Müşteri Kazanımı</Label>
                         <Input
                       id="ref-new"
                       value={referralForm.refereeReward}
@@ -496,7 +496,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                               <p className="font-semibold text-green-700">{campaign.referrerReward}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                              <p className="text-xs text-muted-foreground mb-1">Win Yeni Müşteris</p>
+                              <p className="text-xs text-muted-foreground mb-1">Yeni Müşteri Kazanımı</p>
                               <p className="font-semibold text-blue-700">{campaign.refereeReward}</p>
                             </div>
                           </div>

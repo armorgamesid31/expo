@@ -76,7 +76,7 @@ async function createDefaultAndroidChannel(): Promise<void> {
       PushNotifications.createChannel({
         id: ANDROID_PUSH_CHANNEL_BOOKING_CHANGE_ID,
         name: 'Randevu Degisiklikleri',
-        description: 'Iptal, degisiklik ve waitlist bildirimleri',
+        description: 'İptal, değişiklik ve bekleme listesi bildirimleri',
         importance: 5,
         visibility: 1,
         vibration: true,

@@ -177,7 +177,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     type: 'select',
     valueKind: 'string',
     options: [
-    { value: 'same_appointment', label: 'same appointment' },
+    { value: 'same_appointment', label: 'aynı randevu' },
     { value: 'same_day', label: 'same days' }]
 
   }]
@@ -187,7 +187,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   key: 'referral',
   name: "Arkadaşını Getir Kampanyası",
   type: 'REFERRAL',
-  bullets: ['Fixed/Percent reward', 'First appointment trigger rule'],
+  bullets: ['Fixed/Percent reward', 'İlk randevu tetikleme kuralı'],
   icon: UserPlus,
   config: {
     rewardType: 'discount_percent',
@@ -229,8 +229,8 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     type: 'select',
     valueKind: 'string',
     options: [
-    { value: 'first_appointment', label: 'Valid at first appointment' },
-    { value: 'after_first_completed', label: "Önce the first appointment is completed" }]
+    { value: 'first_appointment', label: 'İlk randevuda geçerli' },
+    { value: 'after_first_completed', label: "İlk randevu tamamlandıktan sonra" }]
 
   },
   {
@@ -316,7 +316,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
 },
 {
   key: 'welcome',
-  name: 'Welcome to First Appointment',
+  name: 'İlk Randevuya Hoş Geldin',
   type: 'WELCOME_FIRST_VISIT',
   bullets: ['Fixed/Percentage discount', 'Use with arknamebring'],
   icon: Calendar,
@@ -720,7 +720,7 @@ export function CampaignsCrudPage() {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to delete this campaign?')) {
+    if (!window.confirm('Bu kampanyayı silmek istediğinizden emin misiniz?')) {
       return;
     }
 
@@ -811,7 +811,7 @@ export function CampaignsCrudPage() {
               <Label>{field.label}</Label>
               <Select value={configInputs[field.key] || ''} onValueChange={(value) => onChange(field.key, value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Seçin" />
                 </SelectTrigger>
                 <SelectContent>
                   {(field.options || []).map((option) =>
@@ -1016,7 +1016,7 @@ export function CampaignsCrudPage() {
                   }>
                   
                     <SelectTrigger>
-                      <SelectValue placeholder="Select" />
+                      <SelectValue placeholder="Seçin" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="AUTO">AUTO</SelectItem>
@@ -1169,7 +1169,7 @@ export function CampaignsCrudPage() {
                   }>
                   
                     <SelectTrigger>
-                      <SelectValue placeholder="Select" />
+                      <SelectValue placeholder="Seçin" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="AUTO">AUTO</SelectItem>

@@ -617,7 +617,7 @@ export function ServicesCrudPage() {
     event.preventDefault();
 
     if (!groupForm.name.trim()) {
-      setError('Group name is required.');
+      setError('Grup adı is required.');
       return;
     }
 
@@ -866,7 +866,7 @@ export function ServicesCrudPage() {
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{editingService ? "Hizmeti Düzenle" : "New Hizmet Ekle"}</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
             <form className="space-y-3" onSubmit={saveService}>
@@ -877,7 +877,7 @@ export function ServicesCrudPage() {
                 onChange={(event) => setServiceForm((prev) => ({ ...prev, categoryId: event.target.value }))}
                 className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
                 
-                  <option value="">Select category</option>
+                  <option value="">Kategori seçin</option>
                   {categories.map((category) =>
                 <option key={category.id} value={category.id}>
                       {category.name}
@@ -943,7 +943,7 @@ export function ServicesCrudPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Duration (min)</span>
+                  <span className="text-muted-foreground">Süre (dk)</span>
                   <input
                   type="number"
                   min={5}
@@ -972,8 +972,8 @@ export function ServicesCrudPage() {
 
                 <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div>
-                    <p className="font-medium">Let customer choose specialist for this service</p>
-                    <p className="text-xs text-muted-foreground">When enabled, specialist selection appears in booking flow.</p>
+                    <p className="font-medium">Müşteri bu hizmet için uzman seçebilsin</p>
+                    <p className="text-xs text-muted-foreground">Etkinleştirildiğinde rezervasyon akışında uzman seçimi görünür.</p>
                   </div>
                   <ToggleSwitch
                   checked={serviceForm.requiresSpecialist}
@@ -984,9 +984,9 @@ export function ServicesCrudPage() {
                 <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium">Concurrent appointment capacity</p>
+                      <p className="text-sm font-medium">Eşzamanlı randevu kapasitesi</p>
                       <p className="text-xs text-muted-foreground">
-                        If disabled, category setting is used; if enabled, set a custom value for this service.
+                        Kapalıysa kategori ayarı kullanılır; açıksa bu hizmet için özel değer girilir.
                       </p>
                     </div>
                     <ToggleSwitch
@@ -1121,14 +1121,14 @@ export function ServicesCrudPage() {
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Ayarları · {editingCategory.name}</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
             <form className="space-y-3" onSubmit={saveCategorySettings}>
               <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium">Concurrent appointment capacity</p>
+                    <p className="text-sm font-medium">Eşzamanlı randevu kapasitesi</p>
                     <p className="text-xs text-muted-foreground">Determines concurrent capacity for all services in this category.</p>
                   </div>
                   <ToggleSwitch
@@ -1257,7 +1257,7 @@ export function ServicesCrudPage() {
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Sık Sorular · {editingCategoryFaq.name}</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
             <form className="space-y-3" onSubmit={saveCategoryFaq}>
@@ -1314,11 +1314,11 @@ export function ServicesCrudPage() {
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Sıralama</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              This order determines category display on appointment page and website.
+              Bu sıralama, kategorilerin randevu sayfası ve web sitesindeki görünümünü belirler.
             </p>
 
             <div className="space-y-2">
@@ -1353,7 +1353,7 @@ export function ServicesCrudPage() {
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Hizmet Grupları</h2>
-              <button type="button" onClick={() => setGroupManagerOpen(false)} className="text-sm text-muted-foreground">Close</button>
+              <button type="button" onClick={() => setGroupManagerOpen(false)} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
@@ -1419,12 +1419,12 @@ export function ServicesCrudPage() {
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{editingGroup ? "Grubu Düzenle" : "Yeni Grup Oluştur"}</h2>
-              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Close</button>
+              <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
             <form className="space-y-3" onSubmit={saveGroup}>
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Group name</span>
+                <span className="text-muted-foreground">Grup adı</span>
                 <input
                 value={groupForm.name}
                 onChange={(event) => setGroupForm((prev) => ({ ...prev, name: event.target.value }))}
@@ -1433,7 +1433,7 @@ export function ServicesCrudPage() {
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Maximum concurrent appointments accepted</span>
+                <span className="text-muted-foreground">Kabul edilen en yüksek eşzamanlı randevu sayısı</span>
                 <input
                 type="number"
                 min={1}
@@ -1445,8 +1445,8 @@ export function ServicesCrudPage() {
 
               <label className="flex items-center justify-between text-sm gap-3 rounded-lg border border-border p-3">
                 <div>
-                  <p>Sirali planlama</p>
-                  <p className="text-xs text-muted-foreground">Bir gruptaki hizmetler secildiginde biri bittikten sonra digeri planlanir.</p>
+                  <p>Sıralı planlama</p>
+                  <p className="text-xs text-muted-foreground">Bir gruptaki hizmetler seçildiğinde biri bittikten sonra diğeri planlanır.</p>
                 </div>
                 <input
                 type="checkbox"
@@ -1458,7 +1458,7 @@ export function ServicesCrudPage() {
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Randevular arasi tampon sure (dk)</span>
+                <span className="text-muted-foreground">Randevular arası tampon süre (dk)</span>
                 <input
                 type="number"
                 min={0}

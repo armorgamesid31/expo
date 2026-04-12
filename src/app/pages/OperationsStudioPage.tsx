@@ -27,7 +27,7 @@ export function OperationsStudioPage() {
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-semibold">Operations Studio</h1>
       <p className="text-sm text-muted-foreground">
-        Manage customers, services, package operations, and inventory from one workspace.
+        Müşterileri, hizmetleri, paket işlemlerini ve envanteri tek çalışma alanından yönetin.
       </p>
 
       <div className="space-y-3">

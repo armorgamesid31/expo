@@ -60,7 +60,7 @@ const initialState: MetaDirectState = {
 const productionChecklist = [
 {
   title: 'OAuth redirect URI',
-  detail: 'Ensure the callback URL matches exactly in Meta and app env settings.'
+  detail: "Geri çağrı URL'sinin Meta ve uygulama ortam ayarlarında birebir aynı olduğundan emin olun."
 },
 {
   title: 'Required permissions',
@@ -258,7 +258,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   const isConnected = channel.status === 'connected';
   const steps = [
   { key: 'preparing', label: 'Start connection' },
-  { key: 'oauth_opened', label: 'Open OAuth' },
+  { key: 'oauth_opened', label: 'OAuth Açıldı' },
   { key: 'callback_received', label: 'Receive callback' },
   { key: 'connected', label: 'Finalize token' }] as
   const;
@@ -295,17 +295,17 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
           type="button">
           
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm">Geri</span>
         </button>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-xl font-semibold">Meta Direct Bağlantısı</h1>
             <p className="text-xs text-muted-foreground mt-1">
-              Instagram Giriş Yap onboarding for Instagram DM.
+              Instagram DM için Instagram Giriş Yap kurulum akışı.
             </p>
           </div>
           <Badge className="bg-green-500/10 text-green-700 border-green-500/20">
-            Live
+            Canlı
           </Badge>
         </div>
       </div>

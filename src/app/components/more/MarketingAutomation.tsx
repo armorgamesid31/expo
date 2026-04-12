@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 interface MarketingAutomationProps {
-  onBack: () => void;
+  onGeri: () => void;
 }
 
 const segments = [
@@ -45,7 +45,7 @@ const campaignPerformance = [
 const pastCampaigns = [
 {
   id: 1,
-  name: 'February Custom Offer',
+  name: 'Şubat Özel Teklifi',
   channel: 'WhatsApp',
   segment: "VIP Müşteriler",
   sent: 7,
@@ -55,7 +55,7 @@ const pastCampaigns = [
 },
 {
   id: 2,
-  name: 'Come Back Campaign',
+  name: 'Geri Dönüş Kampanyası',
   channel: 'WhatsApp',
   segment: 'Those who have not come for 3 months',
   sent: 12,
@@ -75,7 +75,7 @@ const pastCampaigns = [
 }];
 
 
-export function MarketingAutomation({ onBack }: MarketingAutomationProps) {
+export function MarketingAutomation({ onGeri }: MarketingAutomationProps) {
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [showCampaignForm, setShowCampaignForm] = useState(false);
@@ -99,9 +99,9 @@ export function MarketingAutomation({ onBack }: MarketingAutomationProps) {
     <div className="h-full pb-20">
       {/* Header */}
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
+        <button onClick={onGeri} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm">Geri</span>
         </button>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[var(--rose-gold)]/10 flex items-center justify-center">
@@ -267,7 +267,7 @@ export function MarketingAutomation({ onBack }: MarketingAutomationProps) {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-[var(--rose-gold)]" />
-                Last 3 Months Comparison
+                Son 3 Ay Karşılaştırması
               </CardTitle>
             </CardHeader>
             <CardContent>

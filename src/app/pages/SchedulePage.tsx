@@ -291,7 +291,7 @@ export function SchedulePage() {
       if (!lastGroup) {
         groups.push({
           key: `${customerKey}-${appointment.id}`,
-          customerName: appointment.customerName || 'Guest',
+          customerName: appointment.customerName || 'Misafir',
           customerPhone: appointment.customerPhone || '-',
           startTime: appointment.startTime,
           endTime: appointment.endTime,
@@ -313,7 +313,7 @@ export function SchedulePage() {
       } else {
         groups.push({
           key: `${customerKey}-${appointment.id}`,
-          customerName: appointment.customerName || 'Guest',
+          customerName: appointment.customerName || 'Misafir',
           customerPhone: appointment.customerPhone || '-',
           startTime: appointment.startTime,
           endTime: appointment.endTime,
@@ -457,7 +457,7 @@ export function SchedulePage() {
       const response = await apiFetch<{items: AdminWaitlistItem[];}>(`/api/admin/waitlist?date=${encodeURIComponent(dayKey)}`);
       setWaitlistItems(response.items || []);
     } catch (err: any) {
-      setWaitlistError(err?.message || "Bekleme listesi yuklenemedi.");
+      setWaitlistError(err?.message || "Bekleme listesi yüklenemedi.");
     } finally {
       setWaitlistLoading(false);
     }
@@ -655,7 +655,7 @@ export function SchedulePage() {
       setForm((prev) => ({ ...prev, customerId: '', customerName: '', customerPhone: '', notes: '' }));
       await loadSchedule();
     } catch (err: any) {
-      setCreateError(err?.message || 'The appointment could not be created.');
+      setCreateError(err?.message || 'Randevu oluşturulamadı.');
     } finally {
       setSaving(false);
     }
@@ -730,14 +730,14 @@ export function SchedulePage() {
       }
 
       if (action === 'CONFIRMED') {
-        setStatusFeedback(`${appointmentIds.length} appointment(s) marked as confirmed.`);
+        setStatusFeedback(`${appointmentIds.length} randevu onaylandı.`);
       } else if (action === 'UPDATED') {
-        setStatusFeedback(`${appointmentIds.length} appointment(s) marked as updated.`);
+        setStatusFeedback(`${appointmentIds.length} randevu güncellendi.`);
       } else if (action === 'BOOKED') {
-        setStatusFeedback(`${appointmentIds.length} appointment(s) moved to booked.`);
+        setStatusFeedback(`${appointmentIds.length} randevu rezervasyona alındı.`);
       } else {
         const summary = summarizePackageAutomation(allEvents);
-        setStatusFeedback(`${appointmentIds.length} appointment(s) updated: ${summary}`);
+        setStatusFeedback(`${appointmentIds.length} randevu güncellendi: ${summary}`);
       }
       await loadSchedule();
       setStatusOverrides((previous) => {
@@ -767,7 +767,7 @@ export function SchedulePage() {
     filter((item): item is AdminAppointmentItem => Boolean(item));
     if (!selectedItems.length) return;
 
-    const customerIdList = Array.from(
+    const customerIdListe = Array.from(
       new Set(
         selectedItems.
         map((item) => item.customerId !== null && item.customerId !== undefined ? Number(item.customerId) : NaN).
@@ -800,9 +800,9 @@ export function SchedulePage() {
     }
     setCheckoutLineDrafts(nextLineDrafts);
 
-    if (customerIdList.length !== 1) {
+    if (customerIdListe.length !== 1) {
       setCheckoutCustomerPackages([]);
-      if (!customerIdList.length) {
+      if (!customerIdListe.length) {
         setCheckoutPackageError('Bu kayıtlar paket için uygun değil (müşteri kaydı yok).');
       } else {
         setCheckoutPackageError('Seçilen satırlar tek bir müşteriye ait olmalı.');
@@ -810,7 +810,7 @@ export function SchedulePage() {
       return;
     }
 
-    const customerId = customerIdList[0];
+    const customerId = customerIdListe[0];
     setCheckoutPackagesLoading(true);
     try {
       const response = await apiFetch<{items: CustomerPackageItem[];}>(`/api/admin/customers/${customerId}/packages`);
@@ -905,7 +905,7 @@ export function SchedulePage() {
       await loadSchedule();
       setSelectedAppointmentGroup(null);
       setCheckoutModal(null);
-      setStatusFeedback(response.summary?.message || `${checkoutTargets.length} line(s) checked out.`);
+      setStatusFeedback(response.summary?.message || `${checkoutTargets.length} satır kapatıldı.`);
     } catch (err: any) {
       setCheckoutPackageError(err?.message || "Ödeme işlemi tamamlanamadı.");
     } finally {
@@ -948,15 +948,15 @@ export function SchedulePage() {
 
   const submitWaitlistCreate = async () => {
     if (!waitlistForm.timeWindowStart || !waitlistForm.timeWindowEnd) {
-      setWaitlistCreateError('Time window is required.');
+      setWaitlistCreateError('Saat aralığı zorunludur.');
       return;
     }
     if (waitlistForm.timeWindowStart >= waitlistForm.timeWindowEnd) {
-      setWaitlistCreateError('End time must be after start time.');
+      setWaitlistCreateError('Bitiş saati başlangıç saatinden sonra olmalıdır.');
       return;
     }
     if (waitlistSelectedServiceIds.length === 0) {
-      setWaitlistCreateError('You must select at least one service.');
+      setWaitlistCreateError('En az bir hizmet seçmelisiniz.');
       return;
     }
     if (!waitlistForm.customerName.trim() || !waitlistForm.customerPhone.trim()) {
@@ -997,7 +997,7 @@ export function SchedulePage() {
       setWaitlistOpen(false);
       await loadWaitlist();
     } catch (err: any) {
-      setWaitlistCreateError(err?.message || 'Waitlist entry could not be created.');
+      setWaitlistCreateError(err?.message || 'Bekleme listesi kaydı oluşturulamadı.');
     } finally {
       setWaitlistSaving(false);
     }
@@ -1013,7 +1013,7 @@ export function SchedulePage() {
       });
       setWaitlistItems(response.items || []);
     } catch (err: any) {
-      setWaitlistError(err?.message || 'Waitlist matcher could not be run.');
+      setWaitlistError(err?.message || 'Bekleme listesi eşleştiricisi çalıştırılamadı.');
     } finally {
       setWaitlistMatching(false);
     }
@@ -1028,7 +1028,7 @@ export function SchedulePage() {
       });
       await loadWaitlist();
     } catch (err: any) {
-      setWaitlistError(err?.message || 'Offer could not be sent.');
+      setWaitlistError(err?.message || 'Teklif gönderilemedi.');
     } finally {
       setWaitlistBusyId(null);
     }
@@ -1043,7 +1043,7 @@ export function SchedulePage() {
       });
       await loadWaitlist();
     } catch (err: any) {
-      setWaitlistError(err?.message || 'Waitlist entry could not be cancelled.');
+      setWaitlistError(err?.message || 'Bekleme listesi kaydı iptal edilemedi.');
     } finally {
       setWaitlistBusyId(null);
     }
@@ -1202,7 +1202,7 @@ export function SchedulePage() {
       });
       setSelectedAppointmentGroup(null);
       setRescheduleSelection(null);
-      setStatusFeedback(`${(committed.items || []).length} appointment(s) rescheduled successfully.`);
+      setStatusFeedback(`${(committed.items || []).length} randevu başarıyla yeniden planlandı.`);
     } catch (err: any) {
       const message = err?.message || 'Reschedule failed.';
       setStatusFeedback(message);
@@ -1326,7 +1326,7 @@ export function SchedulePage() {
           }>
           
           <List className="h-3.5 w-3.5" />
-          List
+          Liste
         </button>
       </div>
 
@@ -1341,7 +1341,7 @@ export function SchedulePage() {
 
         <div className="text-center">
           <p className="font-semibold capitalize">{dateText}</p>
-          <p className="text-xs text-muted-foreground">{isToday ? 'Today' : format(activeDate, 'dd.MM.yyyy')}</p>
+          <p className="text-xs text-muted-foreground">{isToday ? 'Bugün' : format(activeDate, 'dd.MM.yyyy')}</p>
         </div>
 
         <button
@@ -1358,8 +1358,8 @@ export function SchedulePage() {
       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-semibold">Waitlist</h2>
-            <p className="text-xs text-muted-foreground">Requests for {format(activeDate, 'dd MMM yyyy')} and latest offer status.</p>
+            <h2 className="text-sm font-semibold">Bekleme Listesi</h2>
+            <p className="text-xs text-muted-foreground">İstekler: {format(activeDate, 'dd MMM yyyy')} ve son teklif durumu.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -1368,7 +1368,7 @@ export function SchedulePage() {
               disabled={waitlistMatching}
               className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground disabled:opacity-50">
               
-              {waitlistMatching ? 'Matching...' : 'Run Matcher'}
+              {waitlistMatching ? 'Eşleştiriliyor...' : 'Eşleştiriciyi Çalıştır'}
             </button>
             <button
               type="button"
@@ -1629,7 +1629,7 @@ export function SchedulePage() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Appointment Details</h2>
               <button type="button" onClick={() => setSelectedAppointmentGroup(null)} className="text-sm text-muted-foreground">
-                Close
+                Kapat
               </button>
             </div>
 
@@ -1654,7 +1654,7 @@ export function SchedulePage() {
               </div>
 
               <div className="rounded-lg border border-border p-3 space-y-2">
-                <p className="text-xs text-muted-foreground font-medium">Included appointments</p>
+                <p className="text-xs text-muted-foreground font-medium">Dahil edilen randevular</p>
                 {selectedAppointmentGroup.items.map((item) =>
               <div key={item.id} className="rounded-md border border-border/70 p-2">
                     <div className="flex items-center justify-between gap-2">
@@ -1746,7 +1746,7 @@ export function SchedulePage() {
           
             <h3 className="text-lg font-semibold">Reschedule Appointment</h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              Select a new start date/time. Related services will move together.
+              Yeni başlangıç tarih/saati seçin. İlişkili hizmetler birlikte taşınacaktır.
             </p>
 
             <div className="mt-4 space-y-3">
@@ -2058,7 +2058,7 @@ export function SchedulePage() {
                     }}
                     className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
                     
-                        <option value="">Select active package</option>
+                        <option value="">Aktif paket seçin</option>
                         {checkoutCustomerPackages.map((pkg) =>
                     <option key={pkg.id} value={String(pkg.id)}>
                             {pkg.name}
@@ -2166,9 +2166,9 @@ export function SchedulePage() {
       <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">New Waitlist Entry</h2>
+              <h2 className="text-lg font-semibold">Yeni Bekleme Listesi Kaydı</h2>
               <button type="button" onClick={() => setWaitlistOpen(false)} className="text-sm text-muted-foreground">
-                Close
+                Kapat
               </button>
             </div>
 
@@ -2180,10 +2180,10 @@ export function SchedulePage() {
                 onChange={(event) => handleWaitlistCustomerSelect(event.target.value)}
                 className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm">
                 
-                  <option value="">New customer / Enter manually</option>
+                  <option value="">Yeni müşteri / Elle gir</option>
                   {customers.map((customer) =>
                 <option key={customer.id} value={customer.id}>
-                      {customer.name || 'Anonymous'} • {customer.phone}
+                      {customer.name || 'İsimsiz'} • {customer.phone}
                     </option>
                 )}
                 </select>
@@ -2330,7 +2330,7 @@ export function SchedulePage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">New Appointment</h2>
               <button type="button" onClick={closeCreateModal} className="text-sm text-muted-foreground">
-                Close
+                Kapat
               </button>
             </div>
 

@@ -211,7 +211,7 @@ export function NotificationSettingsPage() {
             <span className="font-medium">{PERMISSION_LABELS[localPermission]}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <span>Backend push provider</span>
+            <span>Backend bildirim sağlayıcısı</span>
             <span className="font-medium">
               {pushStatus?.providerConfigured ? `Hazir (${pushStatus.providerSource})` : "Hazir değil"}
             </span>
@@ -235,12 +235,12 @@ export function NotificationSettingsPage() {
                 {device.platform} · {device.tokenMasked}
               </p>
               <p className="text-muted-foreground">
-                Versiyon: {device.appVersion || 'bilinmiyor'} · Son gorulme: {formatDate(device.lastSeenAt)}
+                Versiyon: {device.appVersion || 'bilinmiyor'} · Son görülme: {formatDate(device.lastSeenAt)}
               </p>
             </div>
           )}
           {!pushStatusLoading && (pushStatus?.devices || []).length === 0 ?
-          <p className="text-xs text-muted-foreground">Bu kullanıcı icin kayitli push cihazi yok.</p> :
+          <p className="text-xs text-muted-foreground">Bu kullanıcı için kayıtlı push cihazı yok.</p> :
           null}
         </div>
 
@@ -251,7 +251,7 @@ export function NotificationSettingsPage() {
             onClick={() => void sendTestNotification()}
             className="h-10 rounded-lg bg-[var(--deep-indigo)] text-white text-sm font-semibold disabled:opacity-60">
             
-            {testing ? "Gönderiliyor..." : 'Anlik test bildirimi'}
+            {testing ? "Gönderiliyor..." : 'Anlık test bildirimi'}
           </button>
           <button
             type="button"
@@ -259,12 +259,12 @@ export function NotificationSettingsPage() {
             onClick={() => void sendDelayedTestNotification()}
             className="h-10 rounded-lg border border-[var(--deep-indigo)] text-[var(--deep-indigo)] text-sm font-semibold disabled:opacity-60">
             
-            {testing ? 'Planlaniyor...' : '5 saniye sonra test'}
+            {testing ? 'Planlanıyor...' : '5 saniye sonra test'}
           </button>
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">5 saniye gecikmeli ozel ses testleri</p>
+          <p className="text-xs font-medium text-muted-foreground">5 saniye gecikmeli özel ses testleri</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {PUSH_SOUND_TESTS.map((testItem) =>
             <button
@@ -274,7 +274,7 @@ export function NotificationSettingsPage() {
               onClick={() => void sendPushTest({ delaySeconds: 5, scenario: testItem.scenario })}
               className="h-10 rounded-lg border border-border text-sm font-semibold disabled:opacity-60">
               
-                {testing ? 'Planlaniyor...' : `${testItem.label} (5 sn)`}
+                {testing ? 'Planlanıyor...' : `${testItem.label} (5 sn)`}
               </button>
             )}
           </div>

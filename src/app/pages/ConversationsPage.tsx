@@ -254,8 +254,8 @@ export function ConversationsPage() {
   const [channelView, setChannelView] = useState<ChannelType>('INSTAGRAM');
   const [searchQuery, setSearchQuery] = useState('');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
-  const [loadingConversations, setLoadingConversations] = useState(true);
-  const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [loadingKonuşmalar, setLoadingKonuşmalar] = useState(true);
+  const [conversations, setKonuşmalar] = useState<ConversationItem[]>([]);
   const [channelHealth, setChannelHealth] = useState<ChannelHealthPayload | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -277,7 +277,7 @@ export function ConversationsPage() {
     return conversations.find((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId) || null;
   }, [conversations, selectedConversationId]);
 
-  const filteredConversations = useMemo(() => {
+  const filteredKonuşmalar = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return conversations.filter((item) => {
       const matchesFilter =
@@ -307,7 +307,7 @@ export function ConversationsPage() {
   }, [selectedConversationId]);
 
   useEffect(() => {
-    if (!filteredConversations.length) {
+    if (!filteredKonuşmalar.length) {
       setSelectedConversationId(null);
       selectedConversationIdRef.current = null;
       setMessages([]);
@@ -316,21 +316,21 @@ export function ConversationsPage() {
 
     const isSelectedVisible =
     !!selectedConversationId &&
-    filteredConversations.some((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId);
+    filteredKonuşmalar.some((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId);
 
     if (!isSelectedVisible) {
-      const nextId = `${filteredConversations[0].channel}:${filteredConversations[0].conversationKey}`;
+      const nextId = `${filteredKonuşmalar[0].channel}:${filteredKonuşmalar[0].conversationKey}`;
       setSelectedConversationId(nextId);
       selectedConversationIdRef.current = nextId;
     }
-  }, [filteredConversations, selectedConversationId]);
+  }, [filteredKonuşmalar, selectedConversationId]);
 
   useEffect(() => {
     stickToBottomRef.current = true;
   }, [selectedConversationId]);
 
-  const loadConversations = useCallback(async (showLoading = true) => {
-    if (showLoading) setLoadingConversations(true);
+  const loadKonuşmalar = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoadingKonuşmalar(true);
     setError(null);
     try {
       const response = await apiFetch<{items: ConversationItem[];channelHealth?: ChannelHealthPayload;}>(
@@ -338,7 +338,7 @@ export function ConversationsPage() {
       );
       const next = response?.items || [];
       setChannelHealth(response?.channelHealth || null);
-      setConversations(next);
+      setKonuşmalar(next);
       conversationsRef.current = next;
       if (!selectedConversationIdRef.current && next.length > 0) {
         const nextId = `${next[0].channel}:${next[0].conversationKey}`;
@@ -346,9 +346,9 @@ export function ConversationsPage() {
         setSelectedConversationId(nextId);
       }
     } catch (err: any) {
-      setError(err?.message || "Konuşmalar yuklenemedi.");
+      setError(err?.message || "Konuşmalar yüklenemedi.");
     } finally {
-      if (showLoading) setLoadingConversations(false);
+      if (showLoading) setLoadingKonuşmalar(false);
     }
   }, [apiFetch, channelView]);
 
@@ -368,7 +368,7 @@ export function ConversationsPage() {
       setMessages(mergeAndSortMessages(responses));
       if (response?.conversationState) {
         const patch = response.conversationState;
-        setConversations((prev) =>
+        setKonuşmalar((prev) =>
         prev.map((item) =>
         item.channel === channel && item.conversationKey === conversationKey ?
         {
@@ -381,15 +381,15 @@ export function ConversationsPage() {
         );
       }
     } catch (err: any) {
-      setError(err?.message || "Konuşma mesajlari yuklenemedi.");
+      setError(err?.message || "Konuşma mesajları yüklenemedi.");
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
   }, [apiFetch]);
 
   useEffect(() => {
-    void loadConversations();
-  }, [loadConversations]);
+    void loadKonuşmalar();
+  }, [loadKonuşmalar]);
 
   useEffect(() => {
     if (!selectedConversationId || !selectedConversationId.includes(':')) {
@@ -425,7 +425,7 @@ export function ConversationsPage() {
       if (sseRefreshTimerRef.current) return;
       sseRefreshTimerRef.current = window.setTimeout(() => {
         sseRefreshTimerRef.current = null;
-        void loadConversations(false);
+        void loadKonuşmalar(false);
         const activeId = selectedConversationIdRef.current;
         if (activeId && activeId.includes(':')) {
           const [rawChannel, ...rest] = activeId.split(':');
@@ -447,7 +447,7 @@ export function ConversationsPage() {
         sseRefreshTimerRef.current = null;
       }
     };
-  }, [accessToken, channelView, loadConversations, loadMessages]);
+  }, [accessToken, channelView, loadKonuşmalar, loadMessages]);
 
   const sendReply = async () => {
     if (!selectedConversation || !replyText.trim()) return;
@@ -465,7 +465,7 @@ export function ConversationsPage() {
       setReplyText('');
       setActionInfo('Reply sent successfully.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
-      await loadConversations();
+      await loadKonuşmalar();
     } catch (err: any) {
       setError(err?.message || 'Reply could not be sent.');
     } finally {
@@ -488,7 +488,7 @@ export function ConversationsPage() {
       );
       setActionInfo(response?.alreadyRequested ? 'This conversation is already under human handover.' : 'Handover request created.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
-      await loadConversations();
+      await loadKonuşmalar();
     } catch (err: any) {
       setError(err?.message || 'Handover request failed.');
     } finally {
@@ -508,7 +508,7 @@ export function ConversationsPage() {
       );
       setActionInfo('AI automation resumed for this conversation.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
-      await loadConversations();
+      await loadKonuşmalar();
     } catch (err: any) {
       setError(err?.message || 'Resume action failed.');
     } finally {
@@ -519,8 +519,8 @@ export function ConversationsPage() {
   const canReply = selectedConversation?.channel === 'INSTAGRAM';
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
   const handoverInProgress = isHandoverInProgress(selectedMode);
-  const unreadTotal = filteredConversations.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
-  const handoverTotal = filteredConversations.filter((item) =>
+  const unreadTotal = filteredKonuşmalar.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
+  const handoverTotal = filteredKonuşmalar.filter((item) =>
   isHandoverInProgress(normalizeAutomationMode(item.automationMode))
   ).length;
   const selectedChannelHealth = channelView === 'INSTAGRAM' ? channelHealth?.instagram : channelHealth?.whatsapp;
@@ -539,7 +539,7 @@ export function ConversationsPage() {
     <div className="h-full pb-20 overflow-y-auto p-4">
       <div className="mb-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Conversations</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Konuşmalar</h1>
           <p className="mt-1 text-sm text-muted-foreground">Instagram ve WhatsApp için birleşik gelen kutusu.</p>
         </div>
       </div>
@@ -602,7 +602,7 @@ export function ConversationsPage() {
             {channelView === 'INSTAGRAM' ? "Instagram bağlantısi gerekli" : "WhatsApp bağlantısi gerekli"}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            {selectedChannelHealth?.message || "Bu kanal icin sohbetleri gormek önce bağlantı kurulmasini gerektirir."}
+            {selectedChannelHealth?.message || "Bu kanal için sohbetleri görmek önce bağlantı kurulmasını gerektirir."}
           </p>
           {selectedChannelHealth?.missingRequirements?.length ?
         <div className="mt-3 text-xs text-muted-foreground">
@@ -627,7 +627,7 @@ export function ConversationsPage() {
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
                 <p className="text-[10px] uppercase text-muted-foreground">Threads</p>
-                <p className="text-base font-semibold leading-tight">{filteredConversations.length}</p>
+                <p className="text-base font-semibold leading-tight">{filteredKonuşmalar.length}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
                 <p className="text-[10px] uppercase text-muted-foreground">Unread</p>
@@ -649,17 +649,17 @@ export function ConversationsPage() {
             
             </div>
 
-            {loadingConversations ?
+            {loadingKonuşmalar ?
           <div className="grid place-items-center py-10 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div> :
-          filteredConversations.length === 0 ?
+          filteredKonuşmalar.length === 0 ?
           <p className="py-8 text-center text-xs text-muted-foreground">
                 {selectedChannelHealth ? "Bağlı kanalda henuz konuşma yok." : "Bu filtreye uygun konuşma yok."}
               </p> :
 
           <div className="max-h-[66vh] space-y-2 overflow-y-auto pr-1">
-                {filteredConversations.map((item) => {
+                {filteredKonuşmalar.map((item) => {
               const id = `${item.channel}:${item.conversationKey}`;
               const active = id === selectedConversationId;
               const displayName = conversationDisplayName(item);
@@ -837,7 +837,7 @@ export function ConversationsPage() {
                   </div>
                   {!canReply ?
               <p className="mt-2 text-[11px] text-muted-foreground">
-                      WhatsApp icin manuel cevap su an kapalı. Handover ile AI akisini kontrol edebilirsin.
+                      WhatsApp için manuel cevap su an kapalı. Handover ile AI akışını kontrol edebilirsin.
                     </p> :
               null}
                 </div>
@@ -845,7 +845,7 @@ export function ConversationsPage() {
 
           <div className="py-12 text-center text-muted-foreground">
                 <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-60" />
-                <p className="text-sm">Select a conversation to view messages.</p>
+                <p className="text-sm">Mesajları görmek için bir konuşma seçin.</p>
               </div>
           }
 

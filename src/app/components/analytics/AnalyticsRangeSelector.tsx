@@ -7,16 +7,16 @@ interface AnalyticsRangeSelectorProps {
   customFromDate: string;
   customToDate: string;
   onPresetChange: (preset: AnalyticsRangePreset) => void;
-  onCustomFromDateChange: (value: string) => void;
-  onCustomToDateChange: (value: string) => void;
-  onApplyCustomRange: () => void;
+  onÖzelFromDateChange: (value: string) => void;
+  onÖzelToDateChange: (value: string) => void;
+  onApplyÖzelRange: () => void;
 }
 
 const OPTIONS: Array<{ value: AnalyticsRangePreset; label: string }> = [
-  { value: 'week', label: 'This Week' },
-  { value: 'month', label: 'This Month' },
-  { value: 'last30', label: 'Last 30 Days' },
-  { value: 'custom', label: 'Custom' },
+  { value: 'week', label: 'Bu Hafta' },
+  { value: 'month', label: 'Bu Ay' },
+  { value: 'last30', label: 'Son 30 Gün' },
+  { value: 'custom', label: 'Özel' },
 ];
 
 export function AnalyticsRangeSelector(props: AnalyticsRangeSelectorProps) {
@@ -27,7 +27,7 @@ export function AnalyticsRangeSelector(props: AnalyticsRangeSelectorProps) {
       {!compact ? (
         <div className="flex items-center gap-2">
           <CalendarClock className="w-4 h-4 text-[var(--rose-gold)]" />
-          <p className="text-sm font-semibold">Time Range</p>
+          <p className="text-sm font-semibold">Zaman Aralığı</p>
         </div>
       ) : null}
 
@@ -58,27 +58,27 @@ export function AnalyticsRangeSelector(props: AnalyticsRangeSelectorProps) {
             <input
               type="date"
               value={props.customFromDate}
-              onChange={(event) => props.onCustomFromDateChange(event.target.value)}
+              onChange={(event) => props.onÖzelFromDateChange(event.target.value)}
               className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
             <input
               type="date"
               value={props.customToDate}
-              onChange={(event) => props.onCustomToDateChange(event.target.value)}
+              onChange={(event) => props.onÖzelToDateChange(event.target.value)}
               className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </div>
           <button
             type="button"
-            onClick={props.onApplyCustomRange}
+            onClick={props.onApplyÖzelRange}
             className="rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-sm font-medium text-white"
           >
-            Apply Range
+            Aralığı Uygula
           </button>
         </div>
       ) : compact ? null : (
         <p className="text-xs text-muted-foreground">
-          Visible metrics and charts are calculated based on your selected time range.
+          Görünen metrikler ve grafikler seçtiğiniz zaman aralığına göre hesaplanır.
         </p>
       )}
     </div>

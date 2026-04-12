@@ -44,7 +44,7 @@ export function FeatureDetailPage() {
     <div className="p-4">
       <p className="text-sm text-muted-foreground">Feature not found.</p>
       <button type="button" onClick={onBack} className="mt-3 text-sm underline">
-        Go Back
+        Geri Dön
       </button>
     </div>
   );

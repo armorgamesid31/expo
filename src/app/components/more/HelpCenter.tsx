@@ -15,96 +15,102 @@ interface FAQItem {
 }
 
 const faqData: FAQItem[] = [
-{
-  question: 'How can I make an appointment?',
-  answer: 'Click on the date and time you want from the Calendar tab, then create an appointment by selecting customer, service and employee information. Alternatively, WhatsApp AI Agent can also create automatic appointments.',
-  category: 'Appointment Management'
-},
-{
-  question: 'What should I do in case of customer no-show?',
-  answer: "Müşteriler who do not show up for an appointment are automatically recorded. You can see the number of no-shows by going to customer details in the CRM section, and get an automatic blacklist recommendation for customers who have made 3+ no-shows.",
-  category: 'Appointment Management'
-},
-{
-  question: 'How do I add customers to the blacklist?',
-  answer: 'Go to Properties > Blacklist. Click the add new customer button and enter customer information or select from the existing customer list. Blacklisted customers cannot make an appointment.',
-  category: "Müşteri Yönetimi"
-},
-{
-  question: 'How does WhatsApp AI Agent work?',
-  answer: 'AI Agent works integrated with WhatsApp Business API and automatically responds to customer messages. You can determine the agent\'s capabilities by activating the appointment making, cancellation/change and FAQ answering features.',
-  category: 'AI ve Otomasyon'
-},
-{
-  question: 'What automations can I install?',
-  answer: "You can manage appointment reminders in WhatsApp Ayarları and violation notifications in Müşteri Yönetimi > Appointment No-Show Tracking. All messages are sent via WhatsApp.",
-  category: 'AI ve Otomasyon'
-},
-{
-  question: 'How can I create a campaign?',
-  answer: 'Click on the create new campaign button in the Marketing Automation section. Choose a customer segment (VIP, passive customers, frequent visitors), write your message and send it via WhatsApp.',
-  category: 'Marketing'
-},
-{
-  question: 'What are customer segments?',
-  answer: 'The system automatically groups your customers based on their behavior: VIP customers (₺3000+ spend), passive customers (3+ months absent), frequent visitors (2+ visits per month). You can send special campaigns to these segments.',
-  category: 'Marketing'
-},
-{
-  question: 'How does the loyalty program work?',
-  answer: "Müşteriler who earn points for every spending can use the accumulated points as a discount. You can edit the loyalty program settings, determine the point rate and minimum usage limit in the Campaigns section.",
-  category: 'Campaigns'
-},
-{
-  question: 'How to use the friend invitation program?',
-  answer: 'Your customers can share the invitation links they receive from the Campaigns section with their friends. For each successful invitation, both the inviter and the person receiving receive a reward.',
-  category: 'Campaigns'
-},
-{
-  question: 'How can I manage my website?',
-  answer: 'You can edit information such as salon name, slogan, description, social media links and gallery images from the Website Creator section. Changes go live immediately.',
-  category: 'Web Sitesi'
-},
-{
-  question: 'How do I view analytical reports?',
-  answer: 'Click on the Performance Analysis card from the Home section. You can view detailed metrics such as revenue trends, service distribution, employee performance and occupancy rate. Select the time period you want from the period selector.',
-  category: 'Raporlama'
-},
-{
-  question: 'How do I add a new employee?',
-  answer: "Go to Properties > Employee Management. Click the Ekle new employee button and enter the name, role, areas of expertise and working hours. Employees become selectable when creating an appointment.",
-  category: 'Employee Management'
-},
-{
-  question: 'How do I update service prices?',
-  answer: "Click on the service you want to update in the Properties > Hizmet Yönetimi section. Düzenle and save price, duration and description information. New prices take effect immediately.",
-  category: "Hizmet Yönetimi"
-},
-{
-  question: 'Can I manage more than one salon branch?',
-  answer: 'Yes, you can add multiple salons in your Enterprise plan and manage all your branches from a central panel. Separate employee, service and appointment management is possible for each branch.',
-  category: 'Hall Management'
-},
-{
-  question: 'How can I use customer notes?',
-  answer: 'You can add notes by going to customer details in the CRM section. These notes are used to store important information such as allergies, preferences, special requests, and are visible to all employees.',
-  category: "Müşteri Yönetimi"
-}];
-
+  {
+    question: 'Nasıl randevu oluşturabilirim?',
+    answer:
+      'Takvim sekmesinden tarih ve saati seçin, ardından müşteri, hizmet ve personel bilgilerini girerek randevu oluşturun. WhatsApp Yapay Zeka Asistanı da otomatik randevu oluşturabilir.',
+    category: 'Randevu Yönetimi'
+  },
+  {
+    question: 'Müşteri no-show durumunda ne yapmalıyım?',
+    answer:
+      'Randevuya gelmeyen müşteriler otomatik kaydedilir. CRM bölümünde müşteri detayından no-show sayısını görebilir, 3+ no-show yapanlar için kara liste önerisi alabilirsiniz.',
+    category: 'Randevu Yönetimi'
+  },
+  {
+    question: 'Müşterileri kara listeye nasıl eklerim?',
+    answer:
+      'Özellikler > Kara Liste bölümüne gidin. Yeni müşteri ekleyin veya mevcut müşterilerden seçin. Kara listedeki müşteriler randevu oluşturamaz.',
+    category: 'Müşteri Yönetimi'
+  },
+  {
+    question: 'WhatsApp Yapay Zeka Asistanı nasıl çalışır?',
+    answer:
+      'Yapay zeka asistanı WhatsApp Business API ile entegre çalışır ve mesajlara otomatik yanıt verir. Randevu alma, iptal/değişiklik ve SSS yanıtlarını ayarlayabilirsiniz.',
+    category: 'AI ve Otomasyon'
+  },
+  {
+    question: 'Hangi otomasyonları kullanabilirim?',
+    answer:
+      'WhatsApp Ayarları bölümünden randevu hatırlatmalarını, Müşteri Yönetimi > Randevu No-show Takibi bölümünden ihlal bildirimlerini yönetebilirsiniz.',
+    category: 'AI ve Otomasyon'
+  },
+  {
+    question: 'Kampanya nasıl oluşturabilirim?',
+    answer:
+      'Pazarlama Otomasyonu bölümünden yeni kampanya oluştur butonuna tıklayın. Segment seçin, mesajınızı yazın ve WhatsApp üzerinden gönderin.',
+    category: 'Pazarlama'
+  },
+  {
+    question: 'Müşteri segmentleri nedir?',
+    answer:
+      'Sistem müşterileri davranışlarına göre otomatik gruplar: VIP (₺3000+), pasif (3+ ay gelmeyen), sık gelen (ayda 2+ ziyaret). Segmentlere özel kampanya gönderebilirsiniz.',
+    category: 'Pazarlama'
+  },
+  {
+    question: 'Sadakat programı nasıl çalışır?',
+    answer:
+      'Müşteriler harcamaya göre puan kazanır ve bu puanları indirimde kullanır. Kampanyalar bölümünden puan oranı ve kullanım limitlerini düzenleyebilirsiniz.',
+    category: 'Kampanyalar'
+  },
+  {
+    question: 'Web sitemi nasıl yönetebilirim?',
+    answer:
+      'Web Sitesi Oluşturucu bölümünden salon adı, slogan, açıklama, sosyal medya bağlantıları ve galeri görsellerini düzenleyebilirsiniz.',
+    category: 'Web Sitesi'
+  },
+  {
+    question: 'Analitik raporları nasıl görüntülerim?',
+    answer:
+      'Ana sayfadaki Performans Analizi kartından ciro trendleri, hizmet dağılımı, personel performansı ve doluluk oranını görüntüleyebilirsiniz.',
+    category: 'Raporlama'
+  },
+  {
+    question: 'Yeni personel nasıl eklerim?',
+    answer:
+      'Özellikler > Personel Yönetimi bölümüne gidin, yeni personel ekleyin ve ad, rol, uzmanlık alanı ile çalışma saatlerini girin.',
+    category: 'Personel Yönetimi'
+  },
+  {
+    question: 'Hizmet fiyatlarını nasıl güncellerim?',
+    answer:
+      'Özellikler > Hizmet Yönetimi bölümünde ilgili hizmeti açıp fiyat, süre ve açıklama alanlarını düzenleyerek kaydedin.',
+    category: 'Hizmet Yönetimi'
+  },
+  {
+    question: 'Birden fazla şubeyi yönetebilir miyim?',
+    answer:
+      'Evet. Uygun planlarda birden fazla şubeyi tek panelden yönetebilir, her şube için ayrı personel/hizmet/randevu takibi yapabilirsiniz.',
+    category: 'Salon Yönetimi'
+  },
+  {
+    question: 'Müşteri notlarını nasıl kullanırım?',
+    answer:
+      'CRM bölümünde müşteri detayına not ekleyebilirsiniz. Alerji, tercih ve özel talepler gibi bilgiler ekip tarafından görülebilir.',
+    category: 'Müşteri Yönetimi'
+  }
+];
 
 const categories = [...new Set(faqData.map((item) => item.category))];
 
 export function HelpCenter({ onBack }: HelpCenterProps) {
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Tümü');
 
-  const filteredFAQs = selectedCategory === 'All' ?
-  faqData :
-  faqData.filter((item) => item.category === selectedCategory);
+  const filteredFAQs = selectedCategory === 'Tümü' ? faqData : faqData.filter((item) => item.category === selectedCategory);
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
-      {/* Header */}
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
         <Button variant="ghost" size="sm" onClick={onBack} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -115,25 +121,22 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
             <HelpCircle className="w-5 h-5 text-[var(--deep-indigo)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold">Help Center</h1>
-            <p className="text-sm text-muted-foreground">FAQ and support</p>
+            <h1 className="text-2xl font-semibold">Yardım Merkezi</h1>
+            <p className="text-sm text-muted-foreground">SSS ve destek</p>
           </div>
         </div>
       </div>
 
       <div className="p-4 space-y-5">
-        {/* Category Filter */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <button
-              onClick={() => setSelectedCategory('All')}
+              onClick={() => setSelectedCategory('Tümü')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-              selectedCategory === 'All' ?
-              'bg-[var(--rose-gold)] text-white' :
-              'bg-muted text-muted-foreground hover:bg-muted/70'}`
-              }>
-              
-              All ({faqData.length})
+                selectedCategory === 'Tümü' ? 'bg-[var(--rose-gold)] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+              }`}
+            >
+              Tümü ({faqData.length})
             </button>
             {categories.map((cat) => {
               const count = faqData.filter((item) => item.category === cat).length;
@@ -142,68 +145,57 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                  selectedCategory === cat ?
-                  'bg-[var(--rose-gold)] text-white' :
-                  'bg-muted text-muted-foreground hover:bg-muted/70'}`
-                  }>
-                  
+                    selectedCategory === cat ? 'bg-[var(--rose-gold)] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                  }`}
+                >
                   {cat} ({count})
-                </button>);
-
+                </button>
+              );
             })}
           </div>
         </motion.div>
 
-        {/* FAQ List */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.05 }}
-          className="space-y-2">
-          
-          {filteredFAQs.map((item, idx) =>
-          <Card key={idx} className="border-border/50">
+          className="space-y-2"
+        >
+          {filteredFAQs.map((item, idx) => (
+            <Card key={idx} className="border-border/50">
               <CardContent className="p-4">
-                <button
-                onClick={() => setExpandedItem(expandedItem === idx ? null : idx)}
-                className="w-full text-left">
-                
+                <button onClick={() => setExpandedItem(expandedItem === idx ? null : idx)} className="w-full text-left">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <p className="font-medium text-sm mb-1">{item.question}</p>
-                      {expandedItem !== idx &&
-                    <p className="text-xs text-[var(--rose-gold)]">{item.category}</p>
-                    }
+                      {expandedItem !== idx ? <p className="text-xs text-[var(--rose-gold)]">{item.category}</p> : null}
                     </div>
-                    {expandedItem === idx ?
-                  <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /> :
-
-                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                  }
+                    {expandedItem === idx ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                    )}
                   </div>
                 </button>
-                {expandedItem === idx &&
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.25 }}
-                className="mt-3 pt-3 border-t border-border">
-                
+                {expandedItem === idx ? (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="mt-3 pt-3 border-t border-border"
+                  >
                     <p className="text-sm text-muted-foreground leading-relaxed">{item.answer}</p>
                     <div className="mt-2">
-                      <span className="text-xs text-[var(--rose-gold)] bg-[var(--rose-gold)]/10 px-2 py-1 rounded-full">
-                        {item.category}
-                      </span>
+                      <span className="text-xs text-[var(--rose-gold)] bg-[var(--rose-gold)]/10 px-2 py-1 rounded-full">{item.category}</span>
                     </div>
                   </motion.div>
-              }
+                ) : null}
               </CardContent>
             </Card>
-          )}
+          ))}
         </motion.div>
 
-        {/* Contact Support */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
           <Card className="border-[var(--deep-indigo)]/20 bg-gradient-to-br from-[var(--deep-indigo)]/5 to-transparent">
             <CardContent className="p-5">
@@ -213,7 +205,7 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">Sorunuz mu var?</h3>
-                  <p className="text-xs text-muted-foreground">Contact our support team</p>
+                  <p className="text-xs text-muted-foreground">Destek ekibimizle iletişime geçin</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -223,13 +215,13 @@ export function HelpCenter({ onBack }: HelpCenterProps) {
                 </Button>
                 <Button variant="outline" className="w-full text-xs h-9">
                   <Mail className="w-3.5 h-3.5 mr-1.5" />
-                  Gönder Email
+                  E-posta Gönder
                 </Button>
               </div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
-    </div>);
-
+    </div>
+  );
 }

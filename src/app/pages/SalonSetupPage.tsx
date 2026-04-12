@@ -196,7 +196,7 @@ export function SalonSetupPage() {
       setMessage("Kaydedildi.");
       await load();
     } catch (err: any) {
-      setError(err?.message || "Kayit sırasında hata olustu.");
+      setError(err?.message || "Kayıt sırasında hata oluştu.");
     } finally {
       setSaving(false);
     }

@@ -103,7 +103,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
   };
 
   const handleDelete = (staffId: string) => {
-    if (confirm('Are you sure you want to delete this employee?')) {
+    if (confirm('Bu personeli silmek istediğinizden emin misiniz?')) {
       setStaffList(staffList.filter((s) => s.id !== staffId));
     }
   };
@@ -297,7 +297,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                   id="role"
                   value={formData.role || ''}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  placeholder="Ex: Hair Specialist" />
+                  placeholder="Örn: Saç Uzmanı" />
                 
               </div>
             </div>
@@ -373,7 +373,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                               </label>
                             </div>
 
-                            {/* Custom Pricing & Duration */}
+                            {/* Özel Fiyat ve Süre */}
                             {showCustomOptions &&
                           <div className="ml-9 space-y-2 p-3 bg-muted/30 rounded-lg">
                                 <div className="flex items-center gap-3">
@@ -390,7 +390,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                                 }} />
                               
                                   <Label htmlFor={`custom-price-${service.id}`} className="text-xs flex-1">
-                                    Custom Fiyat
+                                    Özel Fiyat
                                   </Label>
                                   {customPricingEnabled[service.id] &&
                               <Input
@@ -420,7 +420,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                                 }} />
                               
                                   <Label htmlFor={`custom-duration-${service.id}`} className="text-xs flex-1">
-                                    Custom Duration
+                                    Özel Süre
                                   </Label>
                                   {customDurationEnabled[service.id] &&
                               <Input

@@ -72,7 +72,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   const [statusLoading, setStatusLoading] = useState<boolean>(
     () => !(readSnapshot<ChakraStatusResponse>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10) || null)
   );
-  const [statusRefreshing, setStatusRefreshing] = useState(false);
+  const [statusYenileing, setStatusYenileing] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
 
   const [pluginToggleBusy, setPluginToggleBusy] = useState(false);
@@ -97,7 +97,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
   async function loadAll(refresh = false) {
     if (refresh) {
-      setStatusRefreshing(true);
+      setStatusYenileing(true);
     } else {
       setStatusLoading(true);
     }
@@ -121,7 +121,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
       setStatusError(error?.message || "WhatsApp ayarları alinamadi.");
     } finally {
       if (refresh) {
-        setStatusRefreshing(false);
+        setStatusYenileing(false);
       } else {
         setStatusLoading(false);
       }
@@ -179,7 +179,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
         })
       });
 
-      setPluginToggleFeedback(nextValue ? 'The connection has been activated.' : 'The connection has been disabled.');
+      setPluginToggleFeedback(nextValue ? 'Bağlantı etkinleştirildi.' : 'Bağlantı devre dışı bırakıldı.');
       setTimeout(() => setPluginToggleFeedback(null), 2200);
 
       await loadAll(true);
@@ -191,7 +191,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   };
 
   const connectionBadge = statusLoading ?
-  'Checking' :
+  'Kontrol ediliyor' :
   !isConnected ?
   'Setup gerekli' :
   pluginActive ?
@@ -204,7 +204,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   "Bağlantı pasif" :
   reminderEnabled ?
   'Aktif' :
-  'Closed';
+  'Kapalı';
 
   const agentBadge = !isConnected ?
   'Kilitli' :
@@ -212,7 +212,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   "Bağlantı pasif" :
   agentEnabled ?
   'Aktif' :
-  'Closed';
+  'Kapalı';
 
   return (
     <div className="h-full pb-20 overflow-y-auto">
@@ -243,7 +243,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
             <CardContent className="p-3 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
               <p className="text-sm text-amber-800 dark:text-amber-300">
-                WhatsApp connection is inactive. AI agent and appointment reminders are locked in this state.
+                WhatsApp bağlantısı pasif. Bu durumda yapay zeka asistanı ve randevu hatırlatmaları kilitlidir.
               </p>
             </CardContent>
           </Card> :
@@ -314,10 +314,10 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                 onClick={() => {
                   void loadAll(true);
                 }}
-                disabled={statusLoading || statusRefreshing}>
+                disabled={statusLoading || statusYenileing}>
                 
-                <RefreshCcw className={`w-4 h-4 mr-2 ${statusRefreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCcw className={`w-4 h-4 mr-2 ${statusYenileing ? 'animate-spin' : ''}`} />
+                Yenile
               </Button>
             </div>
           </CardContent>

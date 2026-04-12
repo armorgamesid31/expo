@@ -697,7 +697,7 @@ export function CustomersPage() {
             onClick={() => setShowCreateForm((prev) => !prev)}
             className="rounded-md border border-border px-3 py-1.5 text-xs">
             
-            {showCreateForm ? 'Close' : "Müşteri Ekle"}
+            {showCreateForm ? 'Kapat' : "Müşteri Ekle"}
           </button>
         </div>
 
@@ -828,7 +828,7 @@ export function CustomersPage() {
                   <p className="text-sm text-muted-foreground">@{selectedCustomer.customer.instagram.replace(/^@/, '')}</p> :
                   null}
                       <p className="text-xs text-muted-foreground">
-                        Oluşturulma: {new Date(selectedCustomer.customer.createdAt).toLocaleString('en-GB')}
+                        Oluşturulma: {new Date(selectedCustomer.customer.createdAt).toLocaleString('tr-TR')}
                       </p>
                     </div>
                     <button
@@ -907,7 +907,7 @@ export function CustomersPage() {
                       <p>
                         Kampanya izni:{' '}
                         <span className="text-foreground">
-                          {selectedCustomer.customer.acceptMarketing ? 'Open' : 'Closed'}
+                          {selectedCustomer.customer.acceptMarketing ? 'Açık' : 'Kapalı'}
                         </span>
                       </p>
                     </div>
@@ -1007,7 +1007,7 @@ export function CustomersPage() {
                 min="0"
                 step="0.01"
                 className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                placeholder={discountKind === 'PERCENT' ? 'Ex: 15' : 'Ex: 250'}
+                placeholder={discountKind === 'PERCENT' ? 'Örn: 15' : 'Örn: 250'}
                 value={discountValue}
                 onChange={(event) => setDiscountValue(event.target.value)} />
               
@@ -1072,7 +1072,7 @@ export function CustomersPage() {
                     onChange={(event) => setPackageTemplateIdToAssign(event.target.value)}
                     className="h-10 flex-1 rounded-md border border-border px-3 text-sm bg-background">
                     
-                        <option value="">Select template</option>
+                        <option value="">Şablon seçin</option>
                         {packageTemplates.
                     filter((template) => template.isActive).
                     map((template) =>
@@ -1102,7 +1102,7 @@ export function CustomersPage() {
                     }
                     className="h-10 rounded-md border border-border px-3 text-sm bg-background">
                     
-                        <option value="">Select package</option>
+                        <option value="">Paket seçin</option>
                         {customerPackages.map((item) =>
                     <option key={item.id} value={item.id}>
                             {item.name} ({item.status})
@@ -1117,7 +1117,7 @@ export function CustomersPage() {
                     className="h-10 rounded-md border border-border px-3 text-sm bg-background"
                     disabled={!selectedPackageForAdjust}>
                     
-                        <option value="">Select service</option>
+                        <option value="">Hizmet seçin</option>
                         {(selectedPackageForAdjust?.serviceBalances || []).map((balance) =>
                     <option key={balance.id} value={balance.serviceId}>
                             {balance.service?.name || `#${balance.serviceId}`} ({balance.remainingQuota}/{balance.initialQuota})
@@ -1188,7 +1188,7 @@ export function CustomersPage() {
                             {entry.actionType} • {entry.serviceName || '-'} • {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
                           </p>
                           <p className="text-muted-foreground">
-                            Bakiye: {entry.balanceAfter ?? '-'} • {new Date(entry.createdAt).toLocaleString('en-GB')}
+                            Bakiye: {entry.balanceAfter ?? '-'} • {new Date(entry.createdAt).toLocaleString('tr-TR')}
                           </p>
                         </div>
                 ) :
@@ -1235,7 +1235,7 @@ export function CustomersPage() {
                   null}
                             {appointment.customerReviewedAt ?
                   <p className="text-[11px] text-muted-foreground mt-1">
-                                {new Date(appointment.customerReviewedAt).toLocaleString('en-GB')}
+                                {new Date(appointment.customerReviewedAt).toLocaleString('tr-TR')}
                               </p> :
                   null}
                           </div> :

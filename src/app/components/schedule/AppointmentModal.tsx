@@ -235,10 +235,10 @@ export function AppointmentModal({ open, onClose }: AppointmentModalProps) {
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-red-700 dark:text-red-300">
-                    Time Conflict Detected
+                    Saat Çakışması Tespit Edildi
                   </p>
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                    {selectedStaff ? staff.find((s) => s.id === selectedStaff)?.name : 'Selected staff'} already has another appointment at this time. Please select a different time.
+                    {selectedStaff ? staff.find((s) => s.id === selectedStaff)?.name : 'Seçilen personel'} bu saatte başka bir randevuya sahip. Lütfen farklı bir saat seçin.
                   </p>
                 </div>
               </div>

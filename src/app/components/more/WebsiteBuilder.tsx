@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 
 interface WebsiteBuilderProps {
-  onBack: () => void;
+  onGeri: () => void;
 }
 
 interface GalleryImageItem {
@@ -65,7 +65,7 @@ function buildLocalWebsiteCopy(name: string, cityHint?: string) {
   };
 }
 
-export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
+export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
   const { apiFetch, bootstrap } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -253,9 +253,9 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
   return (
     <div className="h-full pb-20">
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
+        <button onClick={onGeri} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm">Geri</span>
         </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -264,7 +264,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
             </div>
             <div>
               <h1 className="text-xl font-semibold">Website Builder</h1>
-              <p className="text-xs text-muted-foreground">Manage your salon website</p>
+              <p className="text-xs text-muted-foreground">Salon web sitenizi yönetin</p>
             </div>
           </div>
           <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">
@@ -301,7 +301,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
 
           <Card className="border-border/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Salon Information</CardTitle>
+              <CardTitle className="text-sm">Salon Bilgileri</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
@@ -346,7 +346,7 @@ export function WebsiteBuilder({ onBack }: WebsiteBuilderProps) {
 
           <Card className="border-border/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Social Media & Contact</CardTitle>
+              <CardTitle className="text-sm">Sosyal Medya ve İletişim</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>

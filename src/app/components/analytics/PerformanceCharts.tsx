@@ -14,7 +14,7 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
 
   const periodLabels = {
-    week: 'Last 7 Days',
+    week: 'Son 7 Gün',
     month: 'February 2026',
     quarter: 'Q1 2026',
     year: '2026'
@@ -48,8 +48,8 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
             
               {period === 'week' && 'Hafta'}
               {period === 'month' && 'Ay'}
-              {period === 'quarter' && 'Quarter'}
-              {period === 'year' && 'Year'}
+              {period === 'quarter' && 'Çeyrek'}
+              {period === 'year' && 'Yıl'}
             </button>
           )}
         </div>
@@ -77,7 +77,7 @@ export function PerformanceCharts({ onBack }: PerformanceChartsProps) {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{staff.staffName}</p>
-                      <p className="text-xs text-muted-foreground">{staff.appointments} appointment</p>
+                      <p className="text-xs text-muted-foreground">{staff.appointments} randevu</p>
                     </div>
                   </div>
                   <div className="text-right">

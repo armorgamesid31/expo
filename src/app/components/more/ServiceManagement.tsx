@@ -96,7 +96,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
   };
 
   const handleDelete = (serviceId: string) => {
-    if (confirm('Are you sure you want to delete this service?')) {
+    if (confirm('Bu hizmeti silmek istediğinizden emin misiniz?')) {
       setServices(services.filter((s) => s.id !== serviceId));
     }
   };
@@ -284,7 +284,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="duration">Sure (dakika)</Label>
+                <Label htmlFor="duration">Süre (dakika)</Label>
                 <Input
                   id="duration"
                   type="number"

@@ -67,7 +67,7 @@ export function StaffTimeline({ onNavigate }: StaffTimelineProps) {
             </Button>
             <div className="text-center">
               <p className="font-semibold">Thursday, 26 February</p>
-              <p className="text-xs text-muted-foreground">Today</p>
+              <p className="text-xs text-muted-foreground">Bugün</p>
             </div>
             <Button variant="ghost" size="sm">
               <ChevronRight className="w-4 h-4" />

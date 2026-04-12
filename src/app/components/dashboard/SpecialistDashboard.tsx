@@ -19,7 +19,7 @@ export function SpecialistDashboard() {
       {/* Header */}
       <div className="pt-6 px-4">
         <h1 className="text-2xl font-semibold mb-1">Merhaba, {currentStaff.name}</h1>
-        <p className="text-muted-foreground text-sm">Are you ready to make today great?</p>
+        <p className="text-muted-foreground text-sm">Bugünü harika geçirmek için hazır mısın?</p>
       </div>
 
       {/* Next Client Card - Large Focus */}
@@ -29,7 +29,7 @@ export function SpecialistDashboard() {
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Next Müşteri</p>
+                  <p className="text-xs text-muted-foreground mb-1">Sıradaki Müşteri</p>
                   <h2 className="text-2xl font-semibold">{nextAppointment.customerName}</h2>
                 </div>
                 <div className="text-right">
@@ -76,7 +76,7 @@ export function SpecialistDashboard() {
               </div>
             </div>
             <p className="text-2xl font-bold text-[var(--deep-indigo)]">+{todayPoints}</p>
-            <p className="text-xs text-muted-foreground">Points earned today</p>
+            <p className="text-xs text-muted-foreground">Bugün kazanılan puan</p>
           </CardContent>
         </Card>
 
@@ -88,19 +88,19 @@ export function SpecialistDashboard() {
               </div>
             </div>
             <p className="text-2xl font-bold text-[var(--rose-gold)]">{myAppointments.length}</p>
-            <p className="text-xs text-muted-foreground">Today's Appointments</p>
+            <p className="text-xs text-muted-foreground">Bugünkü Randevular</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Monthly Goal Progress */}
+      {/* Aylık Hedef Progress */}
       <div className="px-4">
         <Card className="border-border/50">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-[var(--rose-gold)]" />
-                <span className="font-medium">Monthly Goal</span>
+                <span className="font-medium">Aylık Hedef</span>
               </div>
               <span className="text-sm text-muted-foreground">
                 ₺{monthlyProgress.toLocaleString()} / ₺{monthlyGoal.toLocaleString()}
@@ -113,7 +113,7 @@ export function SpecialistDashboard() {
               
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {Math.round(progressPercent)}% completed - Great job!
+              {Math.round(progressPercent)}% tamamlandı - Harika gidiyorsun!
             </p>
           </CardContent>
         </Card>
@@ -121,7 +121,7 @@ export function SpecialistDashboard() {
 
       {/* Daily Schedule Preview */}
       <div className="px-4">
-        <h2 className="text-lg font-semibold mb-3">Today's Schedule</h2>
+        <h2 className="text-lg font-semibold mb-3">Bugünkü Program</h2>
         <div className="space-y-2">
           {myAppointments.map((apt) =>
           <Card key={apt.id} className="border-border/50">

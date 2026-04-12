@@ -37,20 +37,20 @@ interface AutomationSetting {
 const initialAutomations: Automation[] = [
 {
   id: 'reminder-24h',
-  name: "Randevu Hatırlatması (24 Hours)",
-  description: 'Automatic reminder 24 hours before appointment',
+  name: "Randevu Hatırlatması (24 Saat)",
+  description: 'Randevudan 24 saat önce otomatik hatırlatma',
   icon: Bell,
   color: '#3B82F6',
   enabled: true,
   category: 'reminder',
-  timing: '24 hours ago',
-  details: 'Appointment date, time, service and employee information is sent to the customer via WhatsApp.',
+  timing: '24 saat önce',
+  details: 'Randevu tarihi, saati, hizmet ve personel bilgisi müşteriye WhatsApp üzerinden gönderilir.',
   settings: [
-  { key: 'timing', label: 'Shipping Time', type: 'select', value: '24h', options: [
-    { value: '48h', label: '48 hours ago' },
-    { value: '24h', label: '24 hours ago' },
-    { value: '12h', label: '12 hours ago' },
-    { value: '6h', label: '6 hours ago' }]
+  { key: 'timing', label: 'Gönderim Zamanı', type: 'select', value: '24h', options: [
+    { value: '48h', label: '48 saat önce' },
+    { value: '24h', label: '24 saat önce' },
+    { value: '12h', label: '12 saat önce' },
+    { value: '6h', label: '6 saat önce' }]
   },
   { key: 'includeDirections', label: "Yol Tarifi Ekle", type: 'toggle', value: true },
   { key: 'confirmButton', label: "Onay Butonu Ekle", type: 'toggle', value: true }]
@@ -58,78 +58,78 @@ const initialAutomations: Automation[] = [
 },
 {
   id: 'reminder-2h',
-  name: "Randevu Hatırlatması (2 Hours)",
-  description: 'Quick reminder 2 hours before the appointment',
+  name: "Randevu Hatırlatması (2 Saat)",
+  description: 'Randevudan 2 saat önce hızlı hatırlatma',
   icon: Clock,
   color: '#8B5CF6',
   enabled: true,
   category: 'reminder',
-  timing: '2 hours ago',
-  details: 'The customer is reminded of his appointment with a short WhatsApp message.',
+  timing: '2 saat önce',
+  details: 'Müşteriye kısa bir WhatsApp mesajıyla randevusu hatırlatılır.',
   settings: [
-  { key: 'timing', label: 'Shipping Time', type: 'select', value: '2h', options: [
-    { value: '3h', label: '3 hours ago' },
-    { value: '2h', label: '2 hours ago' },
-    { value: '1h', label: '1 hour ago' }]
+  { key: 'timing', label: 'Gönderim Zamanı', type: 'select', value: '2h', options: [
+    { value: '3h', label: '3 saat önce' },
+    { value: '2h', label: '2 saat önce' },
+    { value: '1h', label: '1 saat önce' }]
   }]
 
 },
 {
   id: 'directions',
-  name: 'Directions Message',
-  description: 'Salon location and directions before your appointment',
+  name: 'Yol Tarifi Mesajı',
+  description: 'Randevu öncesi salon konumu ve yol tarifi',
   icon: MapPin,
   color: '#22C55E',
   enabled: true,
   category: 'info',
-  timing: 'With reminder',
-  details: 'Directions are sent to the customer via a Google Maps link. The map URL from Hall Information is used.',
+  timing: 'Hatırlatma ile birlikte',
+  details: "Yol tarifi müşteriye Google Maps bağlantısı ile gönderilir. Harita URL'si Salon Bilgileri bölümünden alınır.",
   settings: [
-  { key: 'standalone', label: "Gönder as Separate Message", type: 'toggle', value: false },
+  { key: 'standalone', label: "Ayrı mesaj olarak gönder", type: 'toggle', value: false },
   { key: 'includeParking', label: "Otopark Bilgisi Ekle", type: 'toggle', value: true }]
 
 },
 {
   id: 'post-visit',
-  name: 'Post-Visit Thank You',
-  description: 'Thank you message after the appointment is completed',
+  name: 'Ziyaret Sonrası Teşekkür',
+  description: 'Randevu tamamlandıktan sonra teşekkür mesajı',
   icon: Star,
   color: '#F59E0B',
   enabled: true,
   category: 'feedback',
   timing: '2 saat sonra',
-  details: 'A thank you message and satisfaction survey are sent to the customer.',
+  details: 'Müşteriye teşekkür mesajı ve memnuniyet anketi gönderilir.',
   settings: [
-  { key: 'timing', label: 'Shipping Time', type: 'select', value: '2h_after', options: [
+  { key: 'timing', label: 'Gönderim Zamanı', type: 'select', value: '2h_after', options: [
     { value: '1h_after', label: '1 saat sonra' },
     { value: '2h_after', label: '2 saat sonra' },
-    { value: '24h_after', label: 'the next day' }]
+    { value: '24h_after', label: 'ertesi gün' }]
   },
-  { key: 'includeRating', label: 'Request Score Evaluation', type: 'toggle', value: true },
-  { key: 'includeRebookLink', label: 'Reappointment Link', type: 'toggle', value: true }]
+  { key: 'includeRating', label: 'Puan değerlendirmesi iste', type: 'toggle', value: true },
+  { key: 'includeRebookLink', label: 'Yeniden randevu bağlantısı', type: 'toggle', value: true }]
 
 },
 {
   id: 'no-show-warning',
-  name: 'No-Show Alert',
-  description: 'Automatic information for customers who miss appointments',
+  name: 'No-Show Uyarısı',
+  description: 'Randevusuna gelmeyen müşterilere otomatik bilgilendirme',
   icon: CalendarCheck,
   color: '#EF4444',
   enabled: true,
   category: 'reminder',
-  timing: '1 hour after no-show',
-  details: 'An information message is sent to the customer who does not attend the appointment. A blacklist warning is added to those who perform 3+ no-shows.',
+  timing: 'no-show sonrası 1 saat',
+  details: 'Randevuya gelmeyen müşteriye bilgilendirme mesajı gönderilir. 3+ no-show yapanlara kara liste uyarısı eklenir.',
   settings: [
-  { key: 'autoBlacklist', label: 'Auto Blacklist (3+ no-shows)', type: 'toggle', value: false },
-  { key: 'includeReschedule', label: 'Reappointment Link', type: 'toggle', value: true }]
+  { key: 'autoBlacklist', label: 'Otomatik Kara Liste (3+ no-show)', type: 'toggle', value: false },
+  { key: 'includeReschedule', label: 'Yeniden randevu bağlantısı', type: 'toggle', value: true }]
 
 }];
 
 
 const CATEGORY_LABELS: Record<string, string> = {
   reminder: "Hatırlatmalar",
-  feedback: 'Feedback',
-  info: 'Information'
+  feedback: 'Geri Bildirim',
+  info: 'Bilgilendirme'
 };
 
 const CATEGORY_ORDER = ['reminder', 'info', 'feedback'];
@@ -184,7 +184,7 @@ export function Automations({ onBack }: AutomationsProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold">Otomasyonlar</h1>
-            <p className="text-sm text-muted-foreground">Automated notifications and reminders</p>
+            <p className="text-sm text-muted-foreground">Otomatik bildirimler ve hatırlatmalar</p>
           </div>
         </div>
       </div>
@@ -210,7 +210,7 @@ export function Automations({ onBack }: AutomationsProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold text-[var(--rose-gold)]">847</p>
-                <p className="text-[10px] text-muted-foreground">Sent This Month</p>
+                <p className="text-[10px] text-muted-foreground">Bu Ay Gönderilen</p>
               </div>
             </CardContent>
           </Card>
@@ -283,14 +283,14 @@ export function Automations({ onBack }: AutomationsProps) {
             <div className="flex items-start gap-3">
               <MessageCircle className="w-5 h-5 text-[var(--deep-indigo)] shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-sm mb-1">Message Usage</h4>
+                <h4 className="font-semibold text-sm mb-1">Mesaj Kullanımı</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  WhatsApp messages are sent through Business API.
-                  Your monthly quota: <span className="font-semibold text-foreground">1.000 WhatsApp</span>
+                  WhatsApp mesajları Business API üzerinden gönderilir.
+                  Aylık kotanız: <span className="font-semibold text-foreground">1.000 WhatsApp</span>
                 </p>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">WhatsApp usage</span>
+                    <span className="text-muted-foreground">WhatsApp kullanımı</span>
                     <span className="font-medium">672 / 1.000</span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">

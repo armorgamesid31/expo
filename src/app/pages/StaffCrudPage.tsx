@@ -464,7 +464,7 @@ export function StaffCrudPage() {
           <div className="mx-auto mt-2 max-w-md rounded-2xl border border-border bg-background shadow-xl max-h-[calc(100dvh-16px)] flex flex-col overflow-hidden">
             <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
               <h2 className="text-lg font-semibold">{editingStaffId ? "Düzenle Employee" : 'New Employee'}</h2>
-              <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Close</button>
+              <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
             <form onSubmit={save} className="p-4 space-y-4 overflow-y-auto pb-20">
@@ -557,7 +557,7 @@ export function StaffCrudPage() {
                                     </select>
                                   </label>
                                   <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span>Custom fiyat</span>
+                                    <span>Özel fiyat</span>
                                     <ToggleSwitch
                                 checked={draft.useCustomPrice}
                                 onChange={(next) => updateDraftField(service.id, 'useCustomPrice', next)} />
@@ -573,12 +573,12 @@ export function StaffCrudPage() {
                               updateDraftField(service.id, 'customPrice', event.target.value)
                               }
                               className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
-                              placeholder="Ex: 180" /> :
+                              placeholder="Örn: 180" /> :
 
                             null}
 
                                   <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span>Custom duration</span>
+                                    <span>Özel süre</span>
                                     <ToggleSwitch
                                 checked={draft.useCustomDuration}
                                 onChange={(next) => updateDraftField(service.id, 'useCustomDuration', next)} />
@@ -594,7 +594,7 @@ export function StaffCrudPage() {
                               updateDraftField(service.id, 'customDuration', event.target.value)
                               }
                               className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
-                              placeholder="Ex: 75" /> :
+                              placeholder="Örn: 75" /> :
 
                             null}
                                 </div> :

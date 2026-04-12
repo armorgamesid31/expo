@@ -113,7 +113,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
                 className="flex-1 rounded-lg bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white"
                 onClick={() => setWarningModal(null)}>
                 
-                  Close
+                  Kapat
                 </Button>
                 {warningModal.actionText &&
               <Button

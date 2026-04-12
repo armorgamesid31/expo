@@ -10,14 +10,14 @@ import { useAuth } from '../../context/AuthContext';
 import { readSnapshot, writeSnapshot } from '../../lib/ui-cache';
 
 interface WhatsAppAgentProps {
-  onBack: () => void;
+  onGeri: () => void;
 }
 
 const conversations = [
 {
   id: 1,
   name: 'Ayse Yilmaz',
-  message: 'Can I make an appointment for Saturday?',
+  message: 'Cumartesi için randevu alabilir miyim?',
   time: '14:23',
   resolved: true,
   converted: true
@@ -25,7 +25,7 @@ const conversations = [
 {
   id: 2,
   name: 'Elif Demir',
-  message: 'What are your manicure prices?',
+  message: 'Manikür fiyatlarınız nedir?',
   time: '13:45',
   resolved: true,
   converted: false
@@ -41,7 +41,7 @@ const conversations = [
 {
   id: 4,
   name: 'Merve Sahin',
-  message: 'How long does hair dyeing take?',
+  message: 'Saç boyama ne kadar sürer?',
   time: '11:30',
   resolved: false,
   converted: false
@@ -51,7 +51,7 @@ const conversations = [
 const CHAKRA_STATUS_CACHE_KEY = 'chakra:status';
 const WHATSAPP_AGENT_SETTINGS_CACHE_KEY = 'whatsapp:agent-settings';
 
-export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
+export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
   const cachedStatus = readSnapshot<{connected?: boolean;isActive?: boolean;}>(CHAKRA_STATUS_CACHE_KEY, 1000 * 60 * 10);
@@ -86,7 +86,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
   const toneExamples: Record<typeof tone, string> = {
     friendly: '"Hello, let me help you right away. Shall we find a suitable time?"',
     professional: '"I have received your request. I can share a clear recommendation by checking the appropriate time period."',
-    balanced: '"I can check the available hours and immediately inform you of the most suitable appointment option."'
+    balanced: '"Uygun saatleri kontrol edip size en uygun randevu seçeneğini hemen iletebilirim."'
   };
 
   useEffect(() => {
@@ -239,9 +239,9 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
     <div className="h-full pb-20">
       {/* Header */}
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
+        <button onClick={onGeri} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm">Geri</span>
         </button>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
@@ -250,13 +250,13 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
           <div className="flex-1 flex items-start justify-between gap-3">
             <div>
               <h1 className="text-xl font-semibold">AI WhatsApp Agent</h1>
-              <p className="text-xs text-muted-foreground">Automated customer communication</p>
+              <p className="text-xs text-muted-foreground">Otomatik müşteri iletişimi</p>
             </div>
             <button
               type="button"
               onClick={() => navigate('/app/features/whatsapp-agent-faq')}
               className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground active:opacity-70 mt-0.5"
-              aria-label="Open AI agent standard FAQ screen">
+              aria-label="Yapay zeka asistanı standart SSS ekranını aç">
               
               <CircleHelp className="w-4 h-4" />
             </button>
@@ -371,7 +371,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
             <Card className="border-border/50">
               <CardContent className="p-3 text-center">
                 <p className="text-2xl font-bold text-[var(--rose-gold)]">{totalConversations}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">This Week</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Bu Hafta</p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
@@ -406,14 +406,14 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                   transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }} />
                 
               </div>
-              <p className="text-xs text-muted-foreground mt-2">{totalConversations} conversations, {Math.round(totalConversations * conversionRate / 100)} appointments were created</p>
+              <p className="text-xs text-muted-foreground mt-2">{totalConversations} konuşma, {Math.round(totalConversations * conversionRate / 100)} randevu oluşturuldu</p>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Recent Conversations */}
+        {/* Son Konuşmalar */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}>
-          <h2 className="font-semibold mb-3 px-1">Recent Conversations</h2>
+          <h2 className="font-semibold mb-3 px-1">Son Konuşmalar</h2>
           <div className="space-y-2">
             {conversations.map((conv) =>
             <Card key={conv.id} className="border-border/50">
@@ -484,7 +484,7 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                     <p className="text-sm font-medium">Emoji usage</p>
                     <p className="text-xs text-muted-foreground">Controls emoji density in responses.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('off');void saveSettings('emojiUsage', { emojiUsage: 'off' });}}>Closed</Button>
+                      <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('off');void saveSettings('emojiUsage', { emojiUsage: 'off' });}}>Kapalı</Button>
                       <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('low');void saveSettings('emojiUsage', { emojiUsage: 'low' });}}>Low</Button>
                       <Button type="button" variant={emojiUsage === 'normal' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('normal');void saveSettings('emojiUsage', { emojiUsage: 'normal' });}}>Normal</Button>
                     </div>
@@ -514,12 +514,12 @@ export function WhatsAppAgent({ onBack }: WhatsAppAgentProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">AI disclosure</p>
+                    <p className="text-sm font-medium">Yapay zeka bilgilendirmesi</p>
                     <p className="text-xs text-muted-foreground">Determines how often the agent identifies itself as AI in conversation.</p>
                     <div className="grid grid-cols-3 gap-2">
-                      <Button type="button" variant={aiDisclosure === 'always' ? 'default' : 'outline'} onClick={() => {setAiDisclosure('always');void saveSettings('aiDisclosure', { aiDisclosure: 'always' });}}>Always</Button>
-                      <Button type="button" variant={aiDisclosure === 'onQuestion' ? 'default' : 'outline'} onClick={() => {setAiDisclosure('onQuestion');void saveSettings('aiDisclosure', { aiDisclosure: 'onQuestion' });}}>If asked</Button>
-                      <Button type="button" variant={aiDisclosure === 'never' ? 'default' : 'outline'} onClick={() => {setAiDisclosure('never');void saveSettings('aiDisclosure', { aiDisclosure: 'never' });}}>Do not mention</Button>
+                      <Button type="button" variant={aiDisclosure === 'always' ? 'default' : 'outline'} onClick={() => {setAiDisclosure('always');void saveSettings('aiDisclosure', { aiDisclosure: 'always' });}}>Her zaman</Button>
+                      <Button type="button" variant={aiDisclosure === 'onQuestion' ? 'default' : 'outline'} onClick={() => {setAiDisclosure('onQuestion');void saveSettings('aiDisclosure', { aiDisclosure: 'onQuestion' });}}>Sorulursa</Button>
+                      <Button type="button" variant={aiDisclosure === 'never' ? 'default' : 'outline'} onClick={() => {setAiDisclosure('never');void saveSettings('aiDisclosure', { aiDisclosure: 'never' });}}>Belirtme</Button>
                     </div>
                     {savedField === 'aiDisclosure' ? <p className="text-[11px] text-green-600">Kaydedildi.</p> : null}
                   </div>

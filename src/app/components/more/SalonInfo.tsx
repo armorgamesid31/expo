@@ -104,7 +104,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Salon Information</h1>
+            <h1 className="text-2xl font-semibold">Salon Bilgileri</h1>
             <p className="text-sm text-muted-foreground">Business details and working hours</p>
           </div>
         </div>
@@ -213,7 +213,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="map-url">Google Maps Business Link</Label>
+                <Label htmlFor="map-url">Google Maps İşletme Bağlantısı</Label>
                 <Input
                   id="map-url"
                   value={salonData.mapUrl}
@@ -221,12 +221,12 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                   placeholder="https://maps.google.com/..." />
                 
                 <p className="text-xs text-muted-foreground">
-                  Sent to customers as directions in appointment reminders
+                  Randevu hatırlatmalarında müşterilere yol tarifi olarak gönderilir
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="salon-desc">Description</Label>
+                <Label htmlFor="salon-desc">Açıklama</Label>
                 <textarea
                   id="salon-desc"
                   value={salonData.description}
@@ -241,16 +241,16 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                   className="w-full">
                   
                   <Sparkles className="w-3 h-3 mr-2" />
-                  Improve with AI
+                  Yapay zeka ile iyileştir
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Working Hours */}
+        {/* Çalışma Saatleri */}
         <div>
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-1">Working Hours</h3>
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-1">Çalışma Saatleri</h3>
           <Card className="border-border/50">
             <CardContent className="p-4 space-y-2">
               {workingHours.map((wh, index) =>
@@ -283,7 +283,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
                     </div> :
 
                 <div className="flex-1">
-                      <Badge variant="secondary" className="text-xs text-muted-foreground">Closed</Badge>
+                      <Badge variant="secondary" className="text-xs text-muted-foreground">Kapalı</Badge>
                     </div>
                 }
                 </div>

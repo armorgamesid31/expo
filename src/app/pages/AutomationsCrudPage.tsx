@@ -522,15 +522,15 @@ export function AutomationsCrudPage() {
           {viewMode === 'reminder' ?
           "WhatsApp Hatırlatma Ayarları" :
           viewMode === 'attendance' ?
-          'Appointment No-show Tracking' :
+          'Randevu No-show Takibi' :
           'Otomasyonlar'}
         </h1>
         <p className="text-sm text-muted-foreground">
           {viewMode === 'reminder' ?
-          'Manage appointment reminder steps in one place' :
+          'Randevu hatırlatma adımlarını tek yerden yönetin' :
           viewMode === 'attendance' ?
-          'Manage violation rules and enforcement levels' :
-          'Automatically manage appointment communications'}
+          'İhlal kurallarını ve yaptırım seviyelerini yönetin' :
+          'Randevu iletişimlerini otomatik yönetin'}
         </p>
       </div>
 
@@ -560,7 +560,7 @@ export function AutomationsCrudPage() {
                     <div className="min-w-0">
                       <h3 className="text-base font-semibold leading-tight text-foreground">Randevu Hatırlatması</h3>
                       <p className="mt-1 text-sm leading-tight text-muted-foreground">
-                        Manage reminders for 2h, 24h, and 72h before appointments from one setting.
+                        Randevu öncesi 2s, 24s ve 72s hatırlatmaları tek ayardan yönetin.
                       </p>
 
                       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -595,7 +595,7 @@ export function AutomationsCrudPage() {
                   checked={reminderEnabled}
                   onClick={() => void handleReminderToggle()}
                   disabled={savingKey === 'reminder' || loading}
-                  ariaLabel={`Appointment reminder ${reminderEnabled ? 'disable' : 'enable'}`} />
+                  ariaLabel={`Randevu hatırlatmasını ${reminderEnabled ? 'kapat' : 'aç'}`} />
                 
                 </div>
               </CardContent>
@@ -613,9 +613,9 @@ export function AutomationsCrudPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold leading-tight text-foreground">Appointment No-show Tracking</h3>
+                    <h3 className="text-base font-semibold leading-tight text-foreground">Randevu No-show Takibi</h3>
                     <p className="mt-1 text-sm leading-tight text-muted-foreground">
-                      Manage late cancellation, late change, and missed appointment rules in one place.
+                      Geç iptal, geç değişiklik ve randevuya gelmeme kurallarını tek yerden yönetin.
                     </p>
 
                     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -642,7 +642,7 @@ export function AutomationsCrudPage() {
                 checked={attendanceEnabled}
                 onClick={() => void handleAttendanceToggle()}
                 disabled={savingKey === 'attendance' || loading}
-                ariaLabel={`No-show tracking ${attendanceEnabled ? 'disable' : 'enable'}`} />
+                ariaLabel={`No-show takibini ${attendanceEnabled ? 'kapat' : 'aç'}`} />
               
               </div>
             </CardContent>
@@ -663,15 +663,15 @@ export function AutomationsCrudPage() {
           <div className="space-y-3 py-2">
               <OptionRow
               icon={Clock3}
-              title="2 hour reminder"
-              description="A short reminder message is sent."
+              title="2 saatlik hatırlatma"
+              description="Kısa bir hatırlatma mesajı gönderilir."
               checked={editReminderConfig.enable2h}
               onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable2h: !prev.enable2h } : prev)}>
               
                 <OptionRow
                 icon={MapPin}
-                title="Location sending"
-                description="Salon location is added to the message."
+                title="Konum gönderimi"
+                description="Salon konumu mesaja eklenir."
                 checked={editReminderConfig.sendLocationAt2h}
                 onToggle={() =>
                 setEditReminderConfig((prev) => prev ? { ...prev, sendLocationAt2h: !prev.sendLocationAt2h } : prev)
@@ -681,15 +681,15 @@ export function AutomationsCrudPage() {
 
               <OptionRow
               icon={ShieldCheck}
-              title="24 hour reminder"
-              description="A reminder is sent to the customer the day before."
+              title="24 saatlik hatırlatma"
+              description="Müşteriye bir gün önce hatırlatma gönderilir."
               checked={editReminderConfig.enable24h}
               onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable24h: !prev.enable24h } : prev)}>
               
                 <OptionRow
                 icon={ShieldCheck}
-                title="Participation confirmation"
-                description="A participation confirmation step is added to the message."
+                title="Katılım onayı"
+                description="Mesaja katılım onayı adımı eklenir."
                 checked={editReminderConfig.requestConfirmationAt24h}
                 onToggle={() =>
                 setEditReminderConfig((prev) =>
@@ -701,8 +701,8 @@ export function AutomationsCrudPage() {
 
               <OptionRow
               icon={TriangleAlert}
-              title="72 hour reminder"
-              description="A general information message will be sent 3 days before the appointment."
+              title="72 saatlik hatırlatma"
+              description="Randevudan 3 gün önce genel bilgilendirme mesajı gönderilir."
               checked={editReminderConfig.enable72h}
               onToggle={() => setEditReminderConfig((prev) => prev ? { ...prev, enable72h: !prev.enable72h } : prev)} />
             
@@ -734,12 +734,12 @@ export function AutomationsCrudPage() {
           {editAttendanceConfig ?
           <div className="space-y-4 py-2">
               <div className="space-y-3">
-                <Label>Which statuses should count as violations?</Label>
+                <Label>Hangi durumlar ihlal sayılmalı?</Label>
 
                 <OptionRow
                 icon={UserRoundX}
-                title="missing an appointment"
-                description="If the customer does not come to the appointment time, a violation record is created."
+                title="Randevuya gelmeme"
+                description="Müşteri randevu saatine gelmezse ihlal kaydı oluşur."
                 checked={editAttendanceConfig.countMissedAppointments}
                 onToggle={() =>
                 setEditAttendanceConfig((prev) =>
@@ -760,7 +760,7 @@ export function AutomationsCrudPage() {
                 }>
                 
                   <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">How many hours before should a cancellation count as late?</Label>
+                    <Label className="text-xs text-muted-foreground">İptalin geç sayılması için kaç saat kala yapılmış olması gerekir?</Label>
                     <div className="flex items-center gap-2">
                       <Input
                       type="number"
@@ -779,7 +779,7 @@ export function AutomationsCrudPage() {
                 <OptionRow
                 icon={TriangleAlert}
                 title="late changes"
-                description="Time/date changes made shortly before the appointment will be considered a violation."
+                description="Randevuya kısa süre kala yapılan saat/tarih değişiklikleri ihlal sayılır."
                 checked={editAttendanceConfig.countLateReschedules}
                 onToggle={() =>
                 setEditAttendanceConfig((prev) =>
@@ -788,7 +788,7 @@ export function AutomationsCrudPage() {
                 }>
                 
                   <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">How many hours before should a reschedule count as late?</Label>
+                    <Label className="text-xs text-muted-foreground">Yeniden planlama kaç saat kala yapılırsa geç sayılsın?</Label>
                     <div className="flex items-center gap-2">
                       <Input
                       type="number"
@@ -806,7 +806,7 @@ export function AutomationsCrudPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>How long should violation records remain valid?</Label>
+                <Label>İhlal kayıtları ne kadar süre geçerli kalsın?</Label>
                 <Select
                 value={editAttendanceConfig.validityWindow}
                 onValueChange={(value) =>
@@ -829,7 +829,7 @@ export function AutomationsCrudPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>How should penalties be applied?</Label>
+                <Label>Yaptırımlar nasıl uygulansın?</Label>
                 <div className="space-y-2">
                   {ATTENDANCE_RANGES.map((range) =>
                 <div

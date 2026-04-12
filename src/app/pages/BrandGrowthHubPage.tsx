@@ -60,7 +60,7 @@ export function BrandGrowthHubPage() {
                   <Building2 className="h-5 w-5 text-[var(--rose-gold)]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Salon Information</p>
+                  <p className="text-sm font-semibold">Salon Bilgileri</p>
                   <p className="text-xs text-muted-foreground">Business identity, contact details, and working setup</p>
                 </div>
               </div>

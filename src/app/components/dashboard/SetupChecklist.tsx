@@ -27,8 +27,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
   const tasks: SetupTask[] = [
   {
     id: 'hours',
-    label: 'Working Hours',
-    description: 'Determine salon working hours',
+    label: 'Çalışma Saatleri',
+    description: 'Salon çalışma saatlerini belirleyin',
     done: false,
     rawDone: Boolean(checklist?.workingHours),
     navigateTo: '/app/salon-info',
@@ -36,7 +36,7 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
   },
   {
     id: 'address',
-    label: "Adres Information",
+    label: "Adres Bilgisi",
     description: "Salon adresi ekle",
     done: false,
     rawDone: Boolean(checklist?.address),
@@ -46,7 +46,7 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
   {
     id: 'phone',
     label: "Telefon Numarası",
-    description: 'Enter salon contact number',
+    description: 'Salon iletişim numarasını girin',
     done: false,
     rawDone: Boolean(checklist?.phone),
     navigateTo: '/app/salon-info',
@@ -55,7 +55,7 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
   {
     id: 'service',
     label: "Hizmet Ekle",
-    description: 'Define at least 1 service',
+    description: 'En az 1 hizmet tanımlayın',
     done: false,
     rawDone: Boolean(checklist?.service),
     navigateTo: '/app/services',
@@ -89,7 +89,7 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[var(--rose-gold)]" />
-            Required Setup Steps
+            Gerekli Kurulum Adımları
           </CardTitle>
           <span className="text-sm font-medium text-[var(--rose-gold)]">
             {completedCount}/{totalCount}
@@ -106,8 +106,8 @@ export function SetupChecklist({ onNavigate, checklist }: SetupChecklistProps) {
         </div>
         <p className="text-xs text-muted-foreground mt-2">
           {completedCount === totalCount ?
-          '🎉 All mandatory steps completed!' :
-          'Complete in order to start using the system'}
+          '🎉 Tüm zorunlu adımlar tamamlandı!' :
+          'Sistemi kullanmaya başlamak için adımları sırayla tamamlayın'}
         </p>
       </CardHeader>
       <CardContent className="space-y-2">

@@ -4,26 +4,26 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 import { Badge } from '../ui/badge';
 
 interface WhatsAppAgentFaqProps {
-  onBack: () => void;
+  onGeri: () => void;
 }
 
 const faqItems = [
   {
     id: 'faq-hours',
     tag: 'Mesai',
-    question: 'What does the agent do outside of working hours?',
+    question: 'Asistan çalışma saatleri dışında ne yapar?',
     answer: 'Receives out-of-hours messages with a polite greeting text, offers convenient hours to the customer, and assigns them to the morning shift.',
   },
   {
     id: 'faq-pricing',
     tag: 'Fiyat',
-    question: 'How does the agent answer pricing questions?',
+    question: 'Asistan fiyat sorularını nasıl yanıtlar?',
     answer: 'The system uses current prices from your active service list. If an unclear service name comes up, it asks a clarifying question.',
   },
   {
     id: 'faq-cancel',
     tag: 'Appointment',
-    question: 'What happens if the customer requests cancellation or postponement?',
+    question: 'Müşteri iptal veya erteleme isterse ne olur?',
     answer: 'The agent verifies the request, displays available new slots, and summarizes the transaction result in a single message to the client.',
   },
   {
@@ -41,20 +41,20 @@ const faqItems = [
   {
     id: 'faq-training',
     tag: 'Setup',
-    question: 'How to customize the answers according to our salon?',
+    question: 'Yanıtlar salonumuza göre nasıl özelleştirilir?',
     answer: 'When the salon information, services and expert list are kept up to date, the agent produces a response using this data based on the system prompt.',
   },
 ];
 
-export function WhatsAppAgentFaq({ onBack }: WhatsAppAgentFaqProps) {
+export function WhatsAppAgentFaq({ onGeri }: WhatsAppAgentFaqProps) {
   return (
     <div className="h-full pb-20 overflow-y-auto">
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
+        <button onClick={onGeri} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm">Geri</span>
         </button>
-        <h1 className="text-xl font-semibold">Standard FAQ</h1>
+        <h1 className="text-xl font-semibold">Standart SSS</h1>
         <p className="text-xs text-muted-foreground mt-1">Agent default knowledge base</p>
       </div>
 
