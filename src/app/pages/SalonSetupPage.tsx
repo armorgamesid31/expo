@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 const DAYS = [
 { key: 'MON', label: 'Pzt' },
 { key: 'TUE', label: 'Sal' },
-{ key: 'WED', label: 'Car' },
+{ key: 'WED', label: 'Çar' },
 { key: 'THU', label: 'Per' },
 { key: 'FRI', label: 'Cum' },
 { key: 'SAT', label: 'Cmt' },
@@ -111,7 +111,7 @@ export function SalonSetupPage() {
         normalizedQuestions.filter((item) => !presetKeys.has(item.question.toLowerCase()))
       );
     } catch (err: any) {
-      setError(err?.message || 'Could not fetch setup information.');
+      setError(err?.message || 'Kurulum bilgileri alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -209,8 +209,8 @@ export function SalonSetupPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Salon Setup</h1>
-        <p className="text-xs text-muted-foreground">You can complete required steps here.</p>
+        <h1 className="text-xl font-semibold">Salon Kurulumu</h1>
+        <p className="text-xs text-muted-foreground">Gerekli adımları buradan tamamlayabilirsiniz.</p>
       </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -233,7 +233,7 @@ export function SalonSetupPage() {
         </div>
 
         <div className="rounded-md border border-border p-3">
-          <p className="text-xs text-muted-foreground mb-2">Working days</p>
+          <p className="text-xs text-muted-foreground mb-2">Çalışma günleri</p>
           <div className="flex flex-wrap gap-2">
             {DAYS.map((day) => {
               const active = form.workingDays.includes(day.key);

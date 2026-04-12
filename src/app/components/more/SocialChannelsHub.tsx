@@ -20,7 +20,7 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
         </button>
         <h1 className="text-2xl font-semibold mt-2 mb-1">Sosyal Kanallar</h1>
         <p className="text-sm text-muted-foreground">
-          Instagram ve WhatsApp bağlantılarini tek alandan yönetin.
+          Instagram ve WhatsApp bağlantılarını tek alandan yönetin.
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export function SocialChannelsHub({ onBack }: SocialChannelsHubProps) {
               </div>
               <div>
                 <p className="text-sm font-semibold">WhatsApp</p>
-                <p className="text-xs text-muted-foreground">Bağlantı, bot ayarları ve ajan davranisi</p>
+                <p className="text-xs text-muted-foreground">Bağlantı, bot ayarları ve ajan davranışı</p>
               </div>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />

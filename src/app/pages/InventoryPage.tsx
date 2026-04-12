@@ -26,7 +26,7 @@ export function InventoryPage() {
       const response = await apiFetch<{items: InventoryItem[];}>('/api/admin/inventory/items');
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || "Envanter could not be retrieved.");
+      setError(err?.message || "Envanter verileri alınamadı.");
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ export function InventoryPage() {
       setForm({ name: '', category: '', unit: 'adet', currentStock: 0, minStock: 0 });
       await load();
     } catch (err: any) {
-      setError(err?.message || 'The product could not be added.');
+      setError(err?.message || 'Ürün eklenemedi.');
     } finally {
       setSaving(false);
     }
@@ -66,7 +66,7 @@ export function InventoryPage() {
       });
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Stock could not be updated.');
+      setError(err?.message || 'Stok güncellenemedi.');
     }
   };
 
@@ -107,7 +107,7 @@ export function InventoryPage() {
       </div>
 
       {!loading && !items.length ?
-      <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Envanter is empty.</div> :
+      <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Envanter boş.</div> :
       null}
     </div>);
 

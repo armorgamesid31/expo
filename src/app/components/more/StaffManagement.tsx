@@ -151,7 +151,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Personel Management</h1>
+            <h1 className="text-2xl font-semibold">Personel Yönetimi</h1>
             <p className="text-sm text-muted-foreground">Personel ve yetkiler</p>
           </div>
           <Button
@@ -168,7 +168,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
         <Alert className="mt-3 border-amber-500/50 bg-amber-500/10">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-sm text-amber-800">
-              To add staff, define at least one service first.
+              Personel eklemek için önce en az bir hizmet tanımlayın.
             </AlertDescription>
           </Alert>
         }
@@ -259,7 +259,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
               
                 <User className="w-8 h-8" style={{ color: 'var(--rose-gold)' }} />
               </div>
-              <p className="text-muted-foreground mb-4">Yok staff added yet</p>
+              <p className="text-muted-foreground mb-4">Henüz personel eklenmedi</p>
               <Button onClick={openAddDialog} style={{ backgroundColor: 'var(--rose-gold)', color: 'white' }}>
                 <Plus className="w-4 h-4 mr-1" />
                 İlk Personeli Ekle
@@ -274,7 +274,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>
-              {editingStaff ? "Düzenle Employee" : "Ekle New Employee"}
+              {editingStaff ? "Personeli Düzenle" : "Yeni Personel Ekle"}
             </DialogTitle>
           </DialogHeader>
 
@@ -326,7 +326,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
               <div className="flex items-center justify-between">
                 <Label>Hizmetler *</Label>
                 <span className="text-xs text-muted-foreground">
-                  {selectedServices.size} services selected
+                  {selectedServices.size} hizmet seçildi
                 </span>
               </div>
 
@@ -334,7 +334,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
               <Alert className="border-amber-500/50 bg-amber-500/10">
                   <AlertCircle className="h-4 w-4 text-amber-600" />
                   <AlertDescription className="text-xs text-amber-800">
-                    You must select at least one service
+                    En az bir hizmet seçmelisiniz
                   </AlertDescription>
                 </Alert>
               }

@@ -246,7 +246,7 @@ export function CustomersPage() {
       setCursor(response.nextCursor);
       setHasMore(response.hasMore);
     } catch (err: any) {
-      setError(err?.message || 'Could not load any more clients.');
+      setError(err?.message || 'Daha fazla müşteri yüklenemedi.');
     } finally {
       setLoadingMore(false);
     }
@@ -254,7 +254,7 @@ export function CustomersPage() {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setError('Full name is required.');
+      setError('Ad Soyad zorunludur.');
       return;
     }
     if (!phone.trim()) {
@@ -299,7 +299,7 @@ export function CustomersPage() {
       setAcceptMarketing(false);
       setShowCreateForm(false);
     } catch (err: any) {
-      setError(err?.message || "Müşteri oluşturulamadi.");
+      setError(err?.message || "Müşteri oluşturulamadı.");
     } finally {
       setCreating(false);
     }
@@ -331,7 +331,7 @@ export function CustomersPage() {
     }
     const parsedTemplateId = Number(packageTemplateIdToAssign);
     if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
-      setPackageError('Select a valid package template.');
+      setPackageError('Geçerli bir paket şablonu seçin.');
       return;
     }
 
@@ -365,19 +365,19 @@ export function CustomersPage() {
     const reason = packageAdjustReason.trim();
 
     if (!Number.isInteger(packageId) || packageId <= 0) {
-      setPackageError('Select a package.');
+      setPackageError('Bir paket seçin.');
       return;
     }
     if (!Number.isInteger(serviceId) || serviceId <= 0) {
-      setPackageError('Select a service.');
+      setPackageError('Bir hizmet seçin.');
       return;
     }
     if (!Number.isInteger(delta) || delta === 0) {
-      setPackageError('Delta must be a non-zero integer.');
+      setPackageError('Değişim miktarı sıfırdan farklı bir tam sayı olmalı.');
       return;
     }
     if (!reason) {
-      setPackageError("Neden is required.");
+      setPackageError("Neden alanı zorunludur.");
       return;
     }
 
@@ -396,9 +396,9 @@ export function CustomersPage() {
       setPackageAdjustDelta('');
       setPackageAdjustReason('');
       await loadCustomerPackageData(selectedCustomer.customer.id);
-      setPackageAssignSuccess('Manual adjustment applied.');
+      setPackageAssignSuccess('Manuel düzenleme uygulandı.');
     } catch (err: any) {
-      setPackageError(err?.message || 'Adjustment failed.');
+      setPackageError(err?.message || 'Düzenleme başarısız oldu.');
     } finally {
       setPackageAdjusting(false);
     }
@@ -436,7 +436,7 @@ export function CustomersPage() {
       setDiscountSuccess(null);
       await loadCustomerPackageData(customerId);
     } catch (err: any) {
-      setDetailError(err?.message || 'The customer profile could not be opened.');
+      setDetailError(err?.message || 'Müşteri profili açılamadı.');
     } finally {
       setDetailLoading(false);
     }
@@ -449,11 +449,11 @@ export function CustomersPage() {
 
     const parsedValue = Number(discountValue);
     if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
-      setDiscountError('Enter a valid discount value.');
+      setDiscountError('Geçerli bir indirim değeri girin.');
       return;
     }
     if (discountKind === 'PERCENT' && parsedValue > 100) {
-      setDiscountError('Percentage discount cannot exceed 100.');
+      setDiscountError('Yüzdelik indirim %100\'ü geçemez.');
       return;
     }
 
@@ -481,9 +481,9 @@ export function CustomersPage() {
       } :
       prev
       );
-      setDiscountSuccess('Discount saved.');
+      setDiscountSuccess('İndirim kaydedildi.');
     } catch (err: any) {
-      setDiscountError(err?.message || 'Discount could not be saved.');
+      setDiscountError(err?.message || 'İndirim kaydedilemedi.');
     } finally {
       setDiscountSaving(false);
     }
@@ -577,14 +577,14 @@ export function CustomersPage() {
       prev
       );
     } catch (err: any) {
-      setRiskError(err?.message || 'Participation rate could not be updated.');
+      setRiskError(err?.message || 'Katılım oranı güncellenemedi.');
     } finally {
       setRiskSaving(false);
     }
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-GB', {
+    return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
       currency: 'TRY',
       maximumFractionDigits: 0
@@ -602,9 +602,9 @@ export function CustomersPage() {
   };
 
   const riskLabelTr = (level: 'LOW' | 'MEDIUM' | 'HIGH') => {
-    if (level === 'HIGH') return 'High Risk';
-    if (level === 'MEDIUM') return 'Medium Risk';
-    return 'Low Risk';
+    if (level === 'HIGH') return 'Yüksek Risk';
+    if (level === 'MEDIUM') return 'Orta Risk';
+    return 'Düşük Risk';
   };
 
   const attendanceRatePercent = (noShowCount: number, totalBookings: number) => {
@@ -618,13 +618,13 @@ export function CustomersPage() {
   const appointmentStatusLabel = (status: string) => {
     switch (status) {
       case 'BOOKED':
-        return 'planned';
+        return 'planlandı';
       case 'COMPLETED':
-        return 'completed';
+        return 'tamamlandı';
       case 'CANCELLED':
         return "İptal";
       case 'NO_SHOW':
-        return 'No-show';
+        return 'Gelmedi';
       default:
         return status;
     }
@@ -644,14 +644,14 @@ export function CustomersPage() {
   };
 
   const formatDate = (date: string) =>
-  new Date(date).toLocaleDateString('en-GB', {
+  new Date(date).toLocaleDateString('tr-TR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
   });
 
   const formatTime = (date: string) =>
-  new Date(date).toLocaleTimeString('en-GB', {
+  new Date(date).toLocaleTimeString('tr-TR', {
     hour: '2-digit',
     minute: '2-digit'
   });
@@ -668,7 +668,7 @@ export function CustomersPage() {
             onClick={() => navigate('/app/automations?section=attendance')}
             className="rounded-md border border-border px-3 py-1.5 text-xs">
             
-            No-show Tracking
+            No-show Takibi
           </button>
           <button
             type="button"
@@ -766,7 +766,7 @@ export function CustomersPage() {
             </div>
             <p className="text-sm mt-1">{item.phone}</p>
             {item.instagram ? <p className="text-xs text-muted-foreground mt-1">@{item.instagram.replace(/^@/, '')}</p> : null}
-            <p className="text-xs text-muted-foreground mt-1">Appointment count: {item.appointmentCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">Randevu sayısı: {item.appointmentCount}</p>
           </button>
         )}
       </div>
@@ -784,7 +784,7 @@ export function CustomersPage() {
         disabled={loadingMore}
         className="w-full rounded-md border border-border bg-background px-4 py-2 text-sm disabled:opacity-60">
         
-          {loadingMore ? "Yükleniyor..." : 'Load More'}
+          {loadingMore ? "Yükleniyor..." : 'Daha Fazla Yükle'}
         </button> :
       null}
 
@@ -897,10 +897,10 @@ export function CustomersPage() {
 
               <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                       <p>
-                        Date of Birth:{' '}
+                        Doğum Tarihi:{' '}
                         <span className="text-foreground">
                           {selectedCustomer.customer.birthDate ?
-                    new Date(selectedCustomer.customer.birthDate).toLocaleDateString('en-GB') :
+                    new Date(selectedCustomer.customer.birthDate).toLocaleDateString('tr-TR') :
                     'Belirtilmedi'}
                         </span>
                       </p>
@@ -968,7 +968,7 @@ export function CustomersPage() {
                     <p className="text-[11px] text-muted-foreground mt-1">
                       No-show: {selectedCustomer.summary.noShowCount} / {selectedCustomer.summary.totalBookings}
                       {' • '}
-                      Attendance: %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
+                      Katılım: %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
                     </p>
                     {riskError ? <p className="text-[11px] text-red-500 mt-1">{riskError}</p> : null}
                   </div>
@@ -987,7 +987,7 @@ export function CustomersPage() {
                   'border-border'}`
                   }>
                   
-                      Percentage (%)
+                      Yüzdelik (%)
                     </button>
                     <button
                   type="button"
@@ -1027,7 +1027,7 @@ export function CustomersPage() {
                     checked={discountNotify}
                     onChange={(event) => setDiscountNotify(event.target.checked)} />
                   
-                      Gönder message notification
+                      Mesaj bildirimi gönder
                     </label>
                     {discountNotify ?
                 <textarea
@@ -1163,7 +1163,7 @@ export function CustomersPage() {
                             {item.name} <span className="text-xs text-muted-foreground">({item.status})</span>
                           </p>
                           <p className="text-[11px] text-muted-foreground">
-                            {item.expiresAt ? `Bitiş: ${new Date(item.expiresAt).toLocaleDateString('en-GB')}` : "Bitiş yok"}
+                            {item.expiresAt ? `Bitiş: ${new Date(item.expiresAt).toLocaleDateString('tr-TR')}` : "Bitiş yok"}
                           </p>
                           <div className="flex flex-wrap gap-1">
                             {item.serviceBalances.map((balance) =>

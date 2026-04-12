@@ -76,9 +76,9 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
     color: 'var(--rose-gold)'
   },
   {
-    title: 'Monthly Total',
+    title: 'Aylık Toplam',
     value: `₺${monthlyRevenue.toLocaleString('tr-TR')}`,
-    subtitle: `${completedAppointments}/${totalAppointments}randevu tamamlandı`,
+    subtitle: `${completedAppointments}/${totalAppointments} randevu tamamlandı`,
     icon: TrendingUp,
     color: 'var(--deep-indigo)'
   },

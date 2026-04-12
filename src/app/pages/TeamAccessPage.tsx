@@ -336,7 +336,7 @@ export function TeamAccessPage() {
           disabled={saving}
           className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60">
           
-            {saving ? "Kaydediliyor..." : `Kaydet ${roleLabel(activeRole)} Permissions`}
+            {saving ? "Kaydediliyor..." : `${roleLabel(activeRole)} Yetkilerini Kaydet`}
           </button>
         </div> :
       null}

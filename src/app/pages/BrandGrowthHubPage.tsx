@@ -15,7 +15,7 @@ export function BrandGrowthHubPage() {
       <div className="p-4">
         <h1 className="text-2xl font-semibold">Marka & Büyüme Merkezi</h1>
         <p className="text-sm text-muted-foreground mt-2">
-          You do not have permission to open brand and growth tools.
+          Marka ve büyüme araçlarını açmak için yetkiniz bulunmamaktadır.
         </p>
       </div>);
 
@@ -25,7 +25,7 @@ export function BrandGrowthHubPage() {
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-semibold">Marka & Büyüme Merkezi</h1>
       <p className="text-sm text-muted-foreground">
-        Control salon profile, website experience, and campaign operations from one hub.
+        Salon profilini, web sitesi deneyimini ve kampanya operasyonlarını tek bir merkezden kontrol edin.
       </p>
 
       <div className="space-y-3">
@@ -40,7 +40,7 @@ export function BrandGrowthHubPage() {
                 <MessageCircle className="h-5 w-5 text-[var(--deep-indigo)]" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Social Channels</p>
+                <p className="text-sm font-semibold">Sosyal Kanallar</p>
                 <p className="text-xs text-muted-foreground">Meta Direct ve WhatsApp bağlantı yönetimi</p>
               </div>
             </div>
@@ -61,7 +61,7 @@ export function BrandGrowthHubPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Salon Bilgileri</p>
-                  <p className="text-xs text-muted-foreground">Business identity, contact details, and working setup</p>
+                  <p className="text-xs text-muted-foreground">İşletme kimliği, iletişim bilgileri ve çalışma düzeni</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -82,7 +82,7 @@ export function BrandGrowthHubPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Web Sitesi Ayarları</p>
-                  <p className="text-xs text-muted-foreground">Online booking website content and presentation</p>
+                  <p className="text-xs text-muted-foreground">Online randevu web sitesi içeriği ve sunumu</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -102,8 +102,8 @@ export function BrandGrowthHubPage() {
                   <Megaphone className="h-5 w-5 text-[var(--rose-gold)]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Campaigns</p>
-                  <p className="text-xs text-muted-foreground">Promotions, targeting, and campaign performance</p>
+                  <p className="text-sm font-semibold">Kampanyalar</p>
+                  <p className="text-xs text-muted-foreground">Promosyonlar, hedefleme ve kampanya performansı</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />

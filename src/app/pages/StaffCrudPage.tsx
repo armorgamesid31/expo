@@ -164,7 +164,7 @@ export function StaffCrudPage() {
       setServices(servicesRes.items || []);
       setCategories((categoriesRes.items || []).sort((a, b) => a.effectiveOrder - b.effectiveOrder || a.id - b.id));
     } catch (err: any) {
-      setError(err?.message || 'Could not retrieve employee data.');
+      setError(err?.message || 'Personel verileri alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -274,7 +274,7 @@ export function StaffCrudPage() {
       if (draft.useCustomPrice) {
         const parsed = Number(draft.customPrice);
         if (!Number.isFinite(parsed) || parsed < 0) {
-          throw new Error(`${service.name} has an invalid custom price.`);
+          throw new Error(`${service.name} geçersiz bir özel fiyata sahip.`);
         }
         customPrice = parsed;
       }
@@ -283,7 +283,7 @@ export function StaffCrudPage() {
       if (draft.useCustomDuration) {
         const parsed = Number(draft.customDuration);
         if (!Number.isFinite(parsed) || parsed <= 0) {
-          throw new Error(`${service.name} has an invalid custom duration.`);
+          throw new Error(`${service.name} geçersiz bir özel süreye sahip.`);
         }
         customDuration = Math.round(parsed);
       }
@@ -345,21 +345,21 @@ export function StaffCrudPage() {
       setModalOpen(false);
       setEditingStaffId(null);
     } catch (err: any) {
-      setError(err?.message || 'The employee could not be registered.');
+      setError(err?.message || 'Personel kaydedilemedi.');
     } finally {
       setSaving(false);
     }
   };
 
   const deleteStaff = async (item: StaffItem) => {
-    const ok = window.confirm(`${item.name} Do you want to delete this record?`);
+    const ok = window.confirm(`${item.name} kaydını silmek istiyor musunuz??`);
     if (!ok) return;
 
     try {
       await apiFetch(`/api/admin/staff/${item.id}`, { method: 'DELETE' });
       setStaff((prev) => prev.filter((entry) => entry.id !== item.id));
     } catch (err: any) {
-      setError(err?.message || 'The employee could not be deleted.');
+      setError(err?.message || 'Personel silinemedi.');
     }
   };
 
@@ -367,7 +367,7 @@ export function StaffCrudPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Personel Management</h1>
+          <h1 className="text-2xl font-semibold">Personel Yönetimi</h1>
           <p className="text-sm text-muted-foreground">Personel ve hizmet yetkileri</p>
         </div>
         <button
@@ -397,7 +397,7 @@ export function StaffCrudPage() {
 
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold leading-tight truncate">{item.name}</p>
-                  <p className="text-sm text-muted-foreground truncate">{item.title || 'Title not specified'}</p>
+                  <p className="text-sm text-muted-foreground truncate">{item.title || 'Ünvan belirtilmedi'}</p>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -463,7 +463,7 @@ export function StaffCrudPage() {
       <div className="fixed inset-0 z-[90] bg-black/40 p-4">
           <div className="mx-auto mt-2 max-w-md rounded-2xl border border-border bg-background shadow-xl max-h-[calc(100dvh-16px)] flex flex-col overflow-hidden">
             <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{editingStaffId ? "Düzenle Employee" : 'New Employee'}</h2>
+              <h2 className="text-lg font-semibold">{editingStaffId ? "Personel Düzenle" : "Yeni Personel"}</h2>
               <button type="button" onClick={closeModal} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
@@ -479,7 +479,7 @@ export function StaffCrudPage() {
                 </label>
 
                 <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">Title (optional)</span>
+                  <span className="text-muted-foreground">Ünvan (isteğe bağlı)</span>
                   <input
                   value={form.title}
                   onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
@@ -500,7 +500,7 @@ export function StaffCrudPage() {
               <div className="rounded-xl border border-border p-3 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium">Hizmetler *</p>
-                  <span className="text-xs text-muted-foreground">{selectedServiceCount} services selected</span>
+                  <span className="text-xs text-muted-foreground">{selectedServiceCount} hizmet seçildi</span>
                 </div>
 
                 <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1">

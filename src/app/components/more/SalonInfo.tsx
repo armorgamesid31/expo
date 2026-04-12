@@ -11,7 +11,7 @@ interface SalonInfoProps {
   onBack: () => void;
 }
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
 const COUNTRIES = [
 { code: 'TR', name: 'Turkey', flag: '🇹🇷', format: '(XXX) XXX XX XX', example: '(5XX) XXX XX XX' },
@@ -35,7 +35,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
     name: 'Beauty Workshop',
     phone: '(538) 111 22 33',
     address: 'Nisantasi Mah. Valikonagi Cad. No:42/A, Sisli/Istanbul',
-    description: 'In the heart of Nisantasi, we offer professional beauty services with 15 years of experience.',
+    description: 'Nişantaşı\'nın kalbinde, 15 yıllık tecrübemizle profesyonel güzellik hizmetleri sunuyoruz.',
     mapUrl: 'https://maps.google.com/?q=Nisantasi+Istanbul',
     logoUrl: ''
   });
@@ -89,7 +89,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
 
   const handleAIEnhance = async () => {
     // Simulate AI enhancement
-    const enhanced = salonData.description + 'Our expert team offers you a special care experience with state-of-the-art equipment and premium products.';
+    const enhanced = salonData.description + ' Uzman ekibimiz, en son teknoloji ekipmanlar ve premium ürünlerle size özel bir bakım deneyimi sunuyor.';
     setSalonData({ ...salonData, description: enhanced });
   };
 
@@ -105,7 +105,7 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold">Salon Bilgileri</h1>
-            <p className="text-sm text-muted-foreground">Business details and working hours</p>
+            <p className="text-sm text-muted-foreground">İşletme detayları ve çalışma saatleri</p>
           </div>
         </div>
       </div>
@@ -126,10 +126,10 @@ export function SalonInfo({ onBack }: SalonInfoProps) {
               <div className="flex-1">
                 <Button variant="outline" size="sm" className="w-full">
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Logo
+                  Logo Yükle
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Recommended size: 512x512px
+                  Önerilen boyut: 512x512 piksel
                 </p>
               </div>
             </div>

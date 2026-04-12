@@ -34,9 +34,9 @@ interface WebsiteContentResponse {
 }
 
 const defaultGalleryImages: GalleryImageItem[] = [
-{ id: 'seed-1', label: 'Hair Coloring', emoji: '💇‍♀️' },
-{ id: 'seed-2', label: 'Manicure', emoji: '💅' },
-{ id: 'seed-3', label: 'Skin Care', emoji: '✨' },
+{ id: 'seed-1', label: 'Saç Boyama', emoji: '💇‍♀️' },
+{ id: 'seed-2', label: 'Manikür', emoji: '💅' },
+{ id: 'seed-3', label: 'Cilt Bakımı', emoji: '✨' },
 { id: 'seed-4', label: 'Salon', emoji: '🌸' }];
 
 
@@ -54,14 +54,14 @@ function normalizeInstagram(value: string) {
 
 function buildLocalWebsiteCopy(name: string, cityHint?: string) {
   const salonName = name.trim() || 'Salonunuz';
-  const city = cityHint?.trim() || 'in your city';
+  const city = cityHint?.trim() || 'şehrinizde';
 
   return {
-    heroText: `${salonName} take care of yourself with`,
-    tagline: `${city} professional beauty experience`,
+    heroText: `${salonName} ile kendinize vakit ayırın`,
+    tagline: `${city} profesyonel güzellik deneyimi`,
     description:
-    `${salonName}, with its expert team hair, skin, and care delivers reliable results in its services. ` +
-    'The hygienic salon environment turns every visit into a pleasant experience with quality products and personalized touches.'
+    `${salonName}, uzman ekibiyle saç, cilt ve bakım hizmetlerinde güvenilir sonuçlar sunar. ` +
+    'Hijyenik salon ortamı, kaliteli ürünler ve kişiye özel dokunuşlarla her ziyareti keyifli bir deneyime dönüştürür.'
   };
 }
 
@@ -74,13 +74,13 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
   const [status, setStatus] = useState<{type: 'success' | 'error';message: string;} | null>(null);
 
   const [salonName, setSalonName] = useState('Beauté Salon');
-  const [tagline, setTagline] = useState('Discover Your Beauty');
+  const [tagline, setTagline] = useState('Güzelliğinizi Keşfedin');
   const [description, setDescription] = useState(
-    "A special beauty experience where luxury and comfort meet in the heart of Istanbul. Feel special with our expert team."
+    "İstanbul'un kalbinde lüks ve konforun buluştuğu özel bir güzellik deneyimi. Uzman ekibimizle kendinizi özel hissedin."
   );
   const [instagram, setInstagram] = useState('@beautesalon');
   const [whatsapp, setWhatsapp] = useState('+90 532 123 4567');
-  const [heroText, setHeroText] = useState('Professional Care, Personal Touch');
+  const [heroText, setHeroText] = useState('Profesyonel Bakım, Kişisel Dokunuş');
   const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(defaultGalleryImages);
 
   useEffect(() => {
@@ -95,8 +95,8 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
         }
 
         setSalonName(response.salon.name || bootstrap?.salon?.name || salonName);
-        setTagline(response.salon.tagline || 'Discover Your Beauty');
-        setHeroText(response.salon.heroText || response.salon.tagline || 'Professional Care, Personal Touch');
+        setTagline(response.salon.tagline || 'Güzelliğinizi Keşfedin');
+        setHeroText(response.salon.heroText || response.salon.tagline || 'Profesyonel Bakım, Kişisel Dokunuş');
         setDescription(response.salon.about || description);
         setInstagram(response.salon.instagramUrl || '@beautesalon');
         setWhatsapp(response.salon.whatsappPhone || '+90 532 123 4567');
@@ -105,7 +105,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
           setGalleryImages(
             response.gallery.map((image) => ({
               id: `db-${image.id}`,
-              label: image.altText || 'Hall Image',
+              label: image.altText || 'Salon Görseli',
               imageUrl: image.imageUrl
             }))
           );
@@ -115,7 +115,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       } catch (error) {
         console.error('Website content load failed:', error);
         if (mounted) {
-          setStatus({ type: 'error', message: 'The website content could not be loaded. Default content is used.' });
+          setStatus({ type: 'error', message: 'Web sitesi içeriği yüklenemedi. Varsayılan içerik kullanılıyor.' });
         }
       } finally {
         if (mounted) {
@@ -161,14 +161,14 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       setHeroText(result.generated.heroText);
       setTagline(result.generated.tagline);
       setDescription(result.generated.description);
-      setStatus({ type: 'success', message: 'New text suggestions were produced.' });
+      setStatus({ type: 'success', message: 'Yeni metin önerileri oluşturuldu.' });
     } catch (error) {
       console.warn('Website generate endpoint failed, using local fallback:', error);
       const fallback = buildLocalWebsiteCopy(salonName, bootstrap?.salon?.city || undefined);
       setHeroText(fallback.heroText);
       setTagline(fallback.tagline);
       setDescription(fallback.description);
-      setStatus({ type: 'success', message: 'Local replacement text suggestions were generated.' });
+      setStatus({ type: 'success', message: 'Yerel yedek metin önerileri oluşturuldu.' });
     } finally {
       setIsGenerating(false);
     }
@@ -192,10 +192,10 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
         })
       });
 
-      setStatus({ type: 'success', message: 'Website content has been saved and published.' });
+      setStatus({ type: 'success', message: 'Web sitesi içeriği kaydedildi ve yayınlandı.' });
     } catch (error) {
       console.error('Website content save failed:', error);
-      setStatus({ type: 'error', message: 'An error occurred during saveme. Please try again.' });
+      setStatus({ type: 'error', message: 'Kaydetme sırasında bir hata oluştu. Lütfen tekrar deneyin.' });
     } finally {
       setIsSaving(false);
     }
@@ -243,7 +243,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       setStatus({ type: 'success', message: "Fotoğraf eklendi. Kaydet ile yayınlayabilirsiniz." });
     };
     reader.onerror = () => {
-      setStatus({ type: 'error', message: 'The photo could not be read.' });
+      setStatus({ type: 'error', message: 'Fotoğraf okunamadı.' });
     };
 
     reader.readAsDataURL(file);
@@ -305,7 +305,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Salon Name</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Salon Adı</label>
                 <input
                   value={salonName}
                   onChange={(e) => setSalonName(e.target.value)}
@@ -323,7 +323,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                 
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Hero Title</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Ana Başlık</label>
                 <input
                   value={heroText}
                   onChange={(e) => setHeroText(e.target.value)}
@@ -332,7 +332,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                 
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Description</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Açıklama</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -352,7 +352,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
                   <Instagram className="w-3.5 h-3.5 text-pink-500" />
-                  Instagram Account
+                  Instagram Hesabı
                 </label>
                 <input
                   value={instagram}
@@ -364,7 +364,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5 block">
                   <MessageCircle className="w-3.5 h-3.5 text-green-500" />
-                  WhatsApp Number
+                  WhatsApp Numarası
                 </label>
                 <input
                   value={whatsapp}
@@ -380,7 +380,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Camera className="w-4 h-4" />
-                Gallery Images
+                Galeri Görselleri
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -426,8 +426,8 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   <Sparkles className="w-5 h-5 text-[var(--rose-gold)]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Generate Content with AI</p>
-                  <p className="text-xs text-muted-foreground">Generate automatic text for your salon</p>
+                  <p className="text-sm font-medium">Yapay Zeka ile İçerik Oluştur</p>
+                  <p className="text-xs text-muted-foreground">Salonunuz için otomatik metin oluşturun</p>
                 </div>
                 <button
                   type="button"
@@ -437,7 +437,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   disabled={isGenerating}
                   className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed">
                   
-                  {isGenerating ? 'Being produced...' : 'produce'}
+                  {isGenerating ? 'Oluşturuluyor...' : 'Oluştur'}
                 </button>
               </div>
             </CardContent>

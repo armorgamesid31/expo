@@ -15,14 +15,14 @@ import type {
 const EVENTS = [
 { key: 'HANDOVER_REQUIRED', label: 'Handover gerekli' },
 { key: 'HANDOVER_REMINDER', label: 'Handover tekrar' },
-{ key: 'SAME_DAY_APPOINTMENT_CHANGE', label: "Ayni gun randevu değişikliği" },
-{ key: 'END_OF_DAY_MISSING_DATA', label: "Gun sonu eksık veri" },
-{ key: 'DAILY_MANAGER_REPORT', label: 'Gunluk rapor' }] as
+{ key: 'SAME_DAY_APPOINTMENT_CHANGE', label: "Aynı gün randevu değişikliği" },
+{ key: 'END_OF_DAY_MISSING_DATA', label: "Gün sonu eksik veri" },
+{ key: 'DAILY_MANAGER_REPORT', label: 'Günlük rapor' }] as
 const;
 
 const PUSH_SOUND_TESTS = [
 { scenario: 'APPOINTMENT_NEW', label: 'Yeni randevu sesi' },
-{ scenario: 'BOOKING_CHANGE', label: "Değişıklik sesi" },
+{ scenario: 'BOOKING_CHANGE', label: "Değişiklik sesi" },
 { scenario: 'REPORT', label: 'Rapor sesi' },
 { scenario: 'HANDOVER', label: 'Handover sesi' }] as
 const;
@@ -32,7 +32,7 @@ const PERMISSION_LABELS: Record<LocalPushPermissionState, string> = {
   denied: "İzin reddedildi",
   prompt: "İzin bekleniyor",
   'prompt-with-rationale': "Ek açıklama gerekli",
-  unsupported: 'Sadece native cihazda calisir'
+  unsupported: 'Sadece native cihazda çalışır'
 };
 
 type EventKey = (typeof EVENTS)[number]['key'];
@@ -164,7 +164,7 @@ export function NotificationSettingsPage() {
 
       setTestMessage(
         result.scheduled ?
-        `${result.delaySeconds} saniyelik gecikmeli ${result.scenario || input.scenario} testi planlandi. Simdi uygulamayi arka plana al.` :
+        `${result.delaySeconds} saniyelik gecikmeli ${result.scenario || input.scenario} testi planlandı. Şimdi uygulamayı arka plana al.` :
         `Test sonucu: SENT ${result.pushDeliverySummary.SENT}, FAILED ${result.pushDeliverySummary.FAILED}, SKIPPED ${result.pushDeliverySummary.SKIPPED}`
       );
       await loadPushStatus();
@@ -213,18 +213,18 @@ export function NotificationSettingsPage() {
           <div className="flex items-center justify-between gap-3">
             <span>Backend bildirim sağlayıcısı</span>
             <span className="font-medium">
-              {pushStatus?.providerConfigured ? `Hazir (${pushStatus.providerSource})` : "Hazir değil"}
+              {pushStatus?.providerConfigured ? `Hazır (${pushStatus.providerSource})` : "Hazır değil"}
             </span>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <span>Aktif cihaz kaydi</span>
+            <span>Aktif cihaz kaydı</span>
             <span className="font-medium">{pushStatus?.activeDeviceCount ?? 0}</span>
           </div>
         </div>
 
         {pushStatus?.providerError ?
         <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600">
-            Provider hatasi: {pushStatus.providerError}
+            Sağlayıcı hatası: {pushStatus.providerError}
           </p> :
         null}
 
@@ -285,7 +285,7 @@ export function NotificationSettingsPage() {
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <label className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium">Tum bildirimler</span>
+          <span className="text-sm font-medium">Tüm bildirimler</span>
           <input
             type="checkbox"
             checked={masterEnabled}

@@ -31,7 +31,7 @@ export function BlacklistPage() {
       );
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || 'Could not get blacklist.');
+      setError(err?.message || 'Kara liste alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ export function BlacklistPage() {
       });
       setItems((prev) => prev.map((current) => current.id === item.id ? response.item : current));
     } catch (err: any) {
-      setError(err?.message || 'Register could not be updated.');
+      setError(err?.message || 'Kayıt güncellenemedi.');
     }
   };
 
@@ -118,7 +118,7 @@ export function BlacklistPage() {
         )}
       </div>
 
-      {!loading && !items.length ? <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Blacklist is empty.</div> : null}
+      {!loading && !items.length ? <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Kara liste boş.</div> : null}
     </div>);
 
 }

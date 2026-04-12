@@ -5,27 +5,27 @@ const EVENTS = [
 {
   key: 'HANDOVER_REQUIRED',
   title: "Müşteri salon desteğine ihtiyaç duyuyor",
-  description: "Gönders an alert when AI hands the conversation to your team."
+  description: "Yapay zeka konuşmayı ekibinize devrettiğinde bir uyarı gönderir."
 },
 {
   key: 'HANDOVER_REMINDER',
   title: "Devir hatırlatması",
-  description: 'Repeats reminders while handover is still pending.'
+  description: 'Devir işlemi beklerken hatırlatmaları tekrarlar.'
 },
 {
   key: 'SAME_DAY_APPOINTMENT_CHANGE',
-  title: 'Same-Day Appointment Changes',
-  description: 'Notifies new bookings, updates, and cancellations for today.'
+  title: 'Aynı Gün Randevu Değişiklikleri',
+  description: 'Bugün için yeni rezervasyonları, güncellemeleri ve iptalleri bildirir.'
 },
 {
   key: 'END_OF_DAY_MISSING_DATA',
-  title: 'End-of-Day Missing Data',
-  description: 'Reminds the team when check-in or payment info is missing.'
+  title: 'Gün Sonu Eksik Veri',
+  description: 'Giriş veya ödeme bilgileri eksik olduğunda ekibe hatırlatır.'
 },
 {
   key: 'DAILY_MANAGER_REPORT',
-  title: "Daily Yönetici Report",
-  description: "Gönders the daily summary after closing."
+  title: "Günlük Yönetici Raporu",
+  description: "Kapanıştan sonra günlük özeti gönderir."
 }] as
 const;
 
@@ -72,7 +72,7 @@ export function NotificationRoleMatrixPage() {
         });
       } catch (err: any) {
         if (!active) return;
-        setError(err?.message || 'Notification settings could not be loaded.');
+        setError(err?.message || 'Bildirim ayarları yüklenemedi.');
       } finally {
         if (active) setLoading(false);
       }
@@ -111,9 +111,9 @@ export function NotificationRoleMatrixPage() {
         method: 'PUT',
         body: JSON.stringify(policy)
       });
-      setSavedMessage('Notification settings saved.');
+      setSavedMessage('Bildirim ayarları kaydedildi.');
     } catch (err: any) {
-      setError(err?.message || 'Notification settings could not be saved.');
+      setError(err?.message || 'Bildirim ayarları kaydedilemedi.');
     } finally {
       setSaving(false);
     }
@@ -121,9 +121,9 @@ export function NotificationRoleMatrixPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Notification Rules</h1>
+      <h1 className="text-2xl font-semibold">Bildirim Kuralları</h1>
       <p className="text-sm text-muted-foreground">
-        Choose which team roles receive each notification type.
+        Her bildirim türünü hangi ekip rollerinin alacağını seçin.
       </p>
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -146,14 +146,14 @@ export function NotificationRoleMatrixPage() {
                     onClick={() => setAllForEvent(eventItem.key, true)}
                     className="h-7 px-2 rounded-md border border-border text-[11px]">
                     
-                      Enable all
+                      Hepsini aç
                     </button>
                     <button
                     type="button"
                     onClick={() => setAllForEvent(eventItem.key, false)}
                     className="h-7 px-2 rounded-md border border-border text-[11px]">
                     
-                      Disable all
+                      Hepsini kapat
                     </button>
                   </div>
                 </div>
@@ -180,7 +180,7 @@ export function NotificationRoleMatrixPage() {
           <div className="rounded-xl border border-border bg-card p-3 space-y-3">
             <p className="text-sm font-semibold">Devir hatırlatma kuralları</p>
             <p className="text-xs text-muted-foreground">
-              If handover stays active, reminders are repeated with these limits.
+              Devir işlemi aktif kalırsa hatırlatmalar bu limitlerle tekrarlanır.
             </p>
             <label className="flex items-center justify-between text-sm">
               <span>Hatırlatma aralığı (dk)</span>

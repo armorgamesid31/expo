@@ -70,10 +70,10 @@ const ATTENDANCE_RANGES: Array<{key: AttendanceRangeKey;label: string;}> = [
 
 
 const PENALTY_ACTION_OPTIONS: Array<{value: AttendancePenaltyAction;label: string;}> = [
-{ value: 'normal', label: 'no warning' },
-{ value: 'simple_warning', label: 'Simple warning' },
-{ value: 'possible_block', label: 'Blockable warning' },
-{ value: 'manual_approval', label: 'Salon pre-approval' },
+{ value: 'normal', label: 'uyarı yok' },
+{ value: 'simple_warning', label: 'Basit uyarı' },
+{ value: 'possible_block', label: 'Engellenebilir uyarı' },
+{ value: 'manual_approval', label: 'Salon ön onayı' },
 { value: 'full_block', label: 'Tam engel' }];
 
 
@@ -81,8 +81,8 @@ const VALIDITY_OPTIONS: Array<{value: ValidityWindow;label: string;}> = [
 { value: '1m', label: '1 ay' },
 { value: '3m', label: '3 ay' },
 { value: '6m', label: '6 ay' },
-{ value: '1y', label: '1 year' },
-{ value: 'unlimited', label: 'Unlimited' }];
+{ value: '1y', label: '1 yıl' },
+{ value: 'unlimited', label: 'Sınırsız' }];
 
 
 const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
@@ -336,7 +336,7 @@ export function AutomationsCrudPage() {
       const response = await apiFetch<{items: AutomationItem[];}>('/api/admin/automations');
       setItems(response.items || []);
     } catch (err: any) {
-      setError(err?.message || 'Automations could not be retrieved.');
+      setError(err?.message || 'Otomasyonlar alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -370,13 +370,13 @@ export function AutomationsCrudPage() {
 
   const reminderBadges: string[] = [];
   if (reminderConfig.enable2h) {
-    reminderBadges.push(reminderConfig.sendLocationAt2h ? '2 hours before + location' : '2 hours before');
+    reminderBadges.push(reminderConfig.sendLocationAt2h ? '2 saat önce + konum' : '2 saat önce');
   }
   if (reminderConfig.enable24h) {
-    reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 hours before + participation confirmation' : '24 hours before');
+    reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 saat önce + katılım onayı' : '24 saat önce');
   }
   if (reminderConfig.enable72h) {
-    reminderBadges.push('72 hours before information');
+    reminderBadges.push('72 saat önce bilgilendirme');
   }
 
   const enabledNotificationEventCount = Object.values(attendanceConfig.notificationEvents).filter(Boolean).length;
@@ -415,12 +415,12 @@ export function AutomationsCrudPage() {
       await upsertRule({
         key: REMINDER_KEY,
         name: "Randevu Hatırlatması",
-        description: 'Appointment reminder automation at 2 hours, 24 hours and 72 hours before',
+        description: 'Randevudan 2 saat, 24 saat ve 72 saat önce hatırlatma otomasyonu',
         isEnabled: !reminderEnabled,
         config: reminderConfig
       });
     } catch (err: any) {
-      setError(err?.message || 'Appointment reminder could not be updated.');
+      setError(err?.message || 'Randevu hatırlatması güncellenemedi.');
     } finally {
       setSavingKey(null);
     }
@@ -433,13 +433,13 @@ export function AutomationsCrudPage() {
     try {
       await upsertRule({
         key: ATTENDANCE_KEY,
-        name: 'Appointment No-show Tracking',
-        description: 'Tracks appointment violations and enforces sanction rules',
+        name: 'Randevu Gelmeme Takibi',
+        description: 'Randevu ihlallerini takip eder ve yaptırım kurallarını uygular',
         isEnabled: !attendanceEnabled,
         config: attendanceConfig
       });
     } catch (err: any) {
-      setError(err?.message || 'No-show tracking could not be updated.');
+      setError(err?.message || 'No-show takibi güncellenemedi.');
     } finally {
       setSavingKey(null);
     }
@@ -473,13 +473,13 @@ export function AutomationsCrudPage() {
       await upsertRule({
         key: REMINDER_KEY,
         name: "Randevu Hatırlatması",
-        description: 'Appointment reminder automation at 2 hours, 24 hours and 72 hours before',
+        description: 'Randevudan 2 saat, 24 saat ve 72 saat önce hatırlatma otomasyonu',
         isEnabled: reminderEnabled,
         config: editReminderConfig
       });
       closeDialog();
     } catch (err: any) {
-      setError(err?.message || 'Appointment reminder settings could not be saved.');
+      setError(err?.message || 'Randevu hatırlatma ayarları kaydedilemedi.');
     } finally {
       setSavingKey(null);
     }
@@ -620,10 +620,10 @@ export function AutomationsCrudPage() {
 
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                        Validity: {validityLabel(attendanceConfig.validityWindow)}
+                        Geçerlilik: {validityLabel(attendanceConfig.validityWindow)}
                       </span>
                       <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                        Notification: {enabledNotificationEventCount} statuses
+                        Bildirim: {enabledNotificationEventCount} durum
                       </span>
                     </div>
 
@@ -750,7 +750,7 @@ export function AutomationsCrudPage() {
 
                 <OptionRow
                 icon={CalendarX2}
-                title="late cancellations"
+                title="geç iptaller"
                 description="Randevuya çok kısa süre kala yapılan iptaller ihlal sayılır."
                 checked={editAttendanceConfig.countLateCancellations}
                 onToggle={() =>
@@ -778,7 +778,7 @@ export function AutomationsCrudPage() {
 
                 <OptionRow
                 icon={TriangleAlert}
-                title="late changes"
+                title="geç değişiklikler"
                 description="Randevuya kısa süre kala yapılan saat/tarih değişiklikleri ihlal sayılır."
                 checked={editAttendanceConfig.countLateReschedules}
                 onToggle={() =>

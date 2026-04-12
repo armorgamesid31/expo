@@ -80,7 +80,7 @@ export function AnalyticsPage() {
     });
 
     if (!resolved.range) {
-      setRangeError(resolved.error || 'The time range is invalid.');
+      setRangeError(resolved.error || 'Zaman aralığı geçersiz.');
       setLoading(false);
       return;
     }
@@ -105,7 +105,7 @@ export function AnalyticsPage() {
       setOverview(analytics);
       writeSnapshot(cacheKey, analytics);
     } catch (err: any) {
-      setError(err?.message || 'Analytical data could not be retrieved.');
+      setError(err?.message || 'Analitik veriler alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -170,6 +170,7 @@ export function AnalyticsPage() {
   const addTemplate = async (event: FormEvent) => {
     event.preventDefault();
     if (!templateName.trim()) {
+      setError('Şablon adı zorunludur.');
       return;
     }
 
@@ -181,7 +182,7 @@ export function AnalyticsPage() {
       setTemplates((prev) => [response.item, ...prev]);
       setTemplateName('');
     } catch (err: any) {
-      setError(err?.message || 'The report template could not be saved.');
+      setError(err?.message || 'Rapor şablonu kaydedilemedi.');
     }
   };
 
@@ -234,7 +235,7 @@ export function AnalyticsPage() {
     <div className="p-4 space-y-4 pb-24">
       <div>
         <h1 className="text-xl font-semibold">Analitik</h1>
-        <p className="text-xs text-muted-foreground">Track salon performance on a single screen.</p>
+        <p className="text-xs text-muted-foreground">Salon performansını tek ekrandan takip edin.</p>
       </div>
 
       <AnalyticsRangeSelector
@@ -423,13 +424,13 @@ export function AnalyticsPage() {
       null}
 
       <form className="space-y-2 rounded-xl border border-border bg-card p-3" onSubmit={addTemplate}>
-        <p className="text-sm font-medium">Report Templates</p>
+        <p className="text-sm font-medium">Rapor Şablonları</p>
         <input
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="şablon adı"
+          placeholder="Şablon adı"
           value={templateName}
-          onChange={(e) => setTemplateName(e.target.value)} />
-        
+          onChange={(e) => setTemplateName(e.target.value)}
+        />
         <button type="submit" className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white">
           Şablon Ekle
         </button>

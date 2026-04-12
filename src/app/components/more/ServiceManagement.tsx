@@ -244,7 +244,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
               {isExpanded && categoryServices.length === 0 &&
               <CardContent className="p-8 text-center">
                   <p className="text-sm text-muted-foreground">
-                    Yok services in this category yet
+                    Bu kategoride henüz hizmet yok.
                   </p>
                   <Button
                   variant="outline"
@@ -253,7 +253,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                   onClick={() => openAddDialog(category)}>
                   
                     <Plus className="w-4 h-4 mr-1" />
-                    Ilk Hizmeti Ekle
+                    İlk Hizmeti Ekle
                   </Button>
                 </CardContent>
               }
@@ -356,7 +356,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                 
               </div>
               <p className="text-xs text-muted-foreground">
-                Etkinse müşteriler bu hizmette tercih ettigi uzmani secebilir.
+                Etkinse müşteriler bu hizmette tercih ettiği uzmanı seçebilir.
               </p>
             </div>
           </div>

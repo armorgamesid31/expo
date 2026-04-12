@@ -76,19 +76,19 @@ function statusToStep(status: AdminImportBatch['status']) {
 function asConflictTypeLabel(type: AdminImportConflict['type']) {
   switch (type) {
     case 'MISSING_PHONE':
-      return 'Missing phone';
+      return 'Telefon numarası eksik';
     case 'INVALID_PHONE':
-      return 'Invalid phone';
+      return 'Geçersiz telefon numarası';
     case 'SERVICE_UNMATCHED':
       return "Hizmet eşleşmedi";
     case 'STAFF_UNMATCHED':
       return "Personel eşleşmedi";
     case 'APPOINTMENT_OVERLAP':
-      return 'Appointment overlap';
+      return 'Randevu çakışması';
     case 'OUT_OF_RANGE_DATE':
-      return 'Out of range date';
+      return 'Tarih aralık dışında';
     default:
-      return 'Validation error';
+      return 'Doğrulama hatası';
   }
 }
 
@@ -144,7 +144,7 @@ export function DataImportWizardPage() {
     });
 
     if (presign.upload.mode !== 'PRESIGNED_PUT' || !presign.upload.uploadUrl) {
-      throw new Error('R2 presign is not configured on backend.');
+      throw new Error('R2 presign backend tarafında yapılandırılmamış.');
     }
 
     const uploadResponse = await fetch(presign.upload.uploadUrl, {
@@ -153,7 +153,7 @@ export function DataImportWizardPage() {
       body: file
     });
     if (!uploadResponse.ok) {
-      throw new Error(`Upload failed for ${file.name}`);
+      throw new Error(`${file.name} için yükleme başarısız.`);
     }
 
     await apiFetch(`/api/admin/imports/${batchId}/files/complete`, {
@@ -176,9 +176,9 @@ export function DataImportWizardPage() {
       setPreview(null);
       setReport(null);
       setConflictEdits({});
-      toast.success('Import batch created');
+      toast.success('İçe aktarma grubu oluşturuldu');
     } catch (error: any) {
-      toast.error(error?.message || 'Batch could not be created');
+      toast.error(error?.message || 'Grup oluşturulamadı');
     } finally {
       setIsLoading(false);
     }
@@ -210,10 +210,10 @@ export function DataImportWizardPage() {
       for (const file of Array.from(files)) {
         await uploadSingleFile(batch.id, file);
       }
-      toast.success('Files uploaded and queued');
+      toast.success('Dosyalar yüklendi ve kuyruğa alındı');
       await handleRefresh();
     } catch (error: any) {
-      toast.error(error?.message || 'Upload failed');
+      toast.error(error?.message || 'Yükleme başarısız');
     } finally {
       setIsUploading(false);
     }
@@ -278,10 +278,10 @@ export function DataImportWizardPage() {
 
         })
       });
-      toast.success('Conflict decision saved');
+      toast.success('Conflict kararı kaydedildi');
       await handleRefresh();
     } catch (error: any) {
-      toast.error(error?.message || 'Conflict could not be saved');
+      toast.error(error?.message || 'Conflict kaydedilemedi');
     }
   };
 
@@ -292,10 +292,10 @@ export function DataImportWizardPage() {
       await apiFetch(`/api/admin/imports/${batch.id}/commit`, {
         method: 'POST'
       });
-      toast.success('Commit started');
+      toast.success('Kaydetme işlemi başlatıldı');
       await handleRefresh();
     } catch (error: any) {
-      toast.error(error?.message || 'Commit failed');
+      toast.error(error?.message || 'Kaydetme işlemi başarısız oldu');
     } finally {
       setIsCommitting(false);
     }

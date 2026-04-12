@@ -52,31 +52,31 @@ interface ConnectUrlResponse {
 const initialState: MetaDirectState = {
   instagram: {
     status: 'not_connected',
-    message: 'Waiting for connection start.',
+    message: 'Bağlantı başlangıcı bekleniyor.',
     updatedAt: Date.now()
   }
 };
 
 const productionChecklist = [
 {
-  title: 'OAuth redirect URI',
+  title: 'OAuth yönlendirme URI',
   detail: "Geri çağrı URL'sinin Meta ve uygulama ortam ayarlarında birebir aynı olduğundan emin olun."
 },
 {
-  title: 'Required permissions',
-  detail: 'Confirm Instagram business permissions are enabled in app configuration.'
+  title: 'Gerekli izinler',
+  detail: 'Uygulama yapılandırmasında Instagram işletme izinlerinin etkinleştirildiğini onaylayın.'
 },
 {
-  title: 'Webhook verification',
-  detail: 'Verify webhook callback URL and verify token values are in sync.'
+  title: 'Webhook doğrulaması',
+  detail: 'Webhook geri çağırma URL\'sini ve doğrulama jetonu değerlerinin senkronize olduğunu doğrulayın.'
 },
 {
-  title: 'Webhook event subscriptions',
-  detail: 'Subscribe Instagram messaging events needed for inbox delivery.'
+  title: 'Webhook olay abonelikleri',
+  detail: 'Gelen kutusu teslimatı için gereken Instagram mesajlaşma etkinliklerine abone olun.'
 },
 {
-  title: 'Token health monitoring',
-  detail: 'Run probe after connection and monitor status diagnostics regularly.'
+  title: 'Jeton sağlık izleme',
+  detail: 'Bağlantıdan sonra probe çalıştırın ve durum tanılama bilgilerini düzenli olarak izleyin.'
 }];
 
 
@@ -116,7 +116,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
         }
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Meta Direct status request failed.';
+      const message = error instanceof Error ? error.message : 'Meta Direct durum isteği başarısız oldu.';
       setGlobalError(message);
     } finally {
       setIsLoading(false);
@@ -147,8 +147,8 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
           typeof payload.message === 'string' && payload.message.trim() ?
           payload.message :
           success ?
-          'Callback received.' :
-          'Callback failed.',
+          'Geri çağırma (callback) alındı.' :
+          'Geri çağırma (callback) başarısız oldu.',
           updatedAt: Date.now()
         }
       }));
@@ -170,8 +170,8 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
       status: 'preparing',
       message:
       intent === 'REPLACE_CONNECTION' ?
-      'Preparing account replacement flow...' :
-      'Preparing OAuth URL and state token...',
+      'Hesap değiştirme akışı hazırlanıyor...' :
+      'OAuth URL ve durum jetonu hazırlanıyor...',
       updatedAt: Date.now()
     });
 
@@ -184,12 +184,12 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
 
       const url = data?.authorizeUrl || '';
       if (!url) {
-        throw new Error('OAuth URL is empty.');
+        throw new Error('OAuth URL\'si boş.');
       }
 
       const popup = window.open(url, 'meta-direct-instagram', 'width=620,height=780');
       if (!popup) {
-        throw new Error('Popup blocked. Please allow popups for this site and try again.');
+        throw new Error('Popup engellendi. Lütfen bu site için popuplara izin verin ve tekrar deneyin.');
       }
       clearPopupPoll();
       popupPollRef.current = window.setInterval(() => {
@@ -200,7 +200,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
       }, 1000);
       setInstagram({
         status: 'oauth_opened',
-        message: 'OAuth window opened. Waiting for callback...',
+        message: 'OAuth penceresi açıldı. Geri çağırma bekleniyor...',
         updatedAt: Date.now()
       });
     } catch (error) {
@@ -217,7 +217,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   const runProbe = async () => {
     setInstagram({
       status: 'preparing',
-      message: 'Running probe call to validate permission usage...',
+      message: 'İzin kullanımını doğrulamak için probe çağrısı yapılıyor...',
       updatedAt: Date.now()
     });
 
@@ -230,7 +230,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
 
       await refreshStatus();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Probe failed.';
+      const message = error instanceof Error ? error.message : 'Probe başarısız oldu.';
       setInstagram({
         status: 'failed',
         message,
@@ -249,7 +249,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
       });
       await refreshStatus();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Disconnect failed.';
+      const message = error instanceof Error ? error.message : 'Bağlantı kesme (disconnect) başarısız oldu.';
       setGlobalError(message);
     }
   };
@@ -257,10 +257,10 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
   const channel = state.instagram;
   const isConnected = channel.status === 'connected';
   const steps = [
-  { key: 'preparing', label: 'Start connection' },
+  { key: 'preparing', label: 'Bağlantıyı Başlat' },
   { key: 'oauth_opened', label: 'OAuth Açıldı' },
-  { key: 'callback_received', label: 'Receive callback' },
-  { key: 'connected', label: 'Finalize token' }] as
+  { key: 'callback_received', label: 'Callback al' },
+  { key: 'connected', label: 'Jetonu tamamla' }] as
   const;
   const activeIndex = steps.findIndex((item) => item.key === channel.status);
   const statusBadgeClass = useMemo(() => {
@@ -276,9 +276,9 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
     if (channel.status === 'connected') return "Bağlı";
     if (channel.status === 'degraded') return "Uyarılarla bağlı";
     if (channel.status === 'failed') return "Bağlantı başarısız";
-    if (channel.status === 'oauth_opened') return 'OAuth in progress';
-    if (channel.status === 'callback_received') return 'Callback received';
-    if (channel.status === 'preparing') return 'Preparing';
+    if (channel.status === 'oauth_opened') return 'OAuth devam ediyor';
+    if (channel.status === 'callback_received') return 'Callback alındı';
+    if (channel.status === 'preparing') return 'Hazırlanıyor';
     return "Bağlı değil";
   }, [channel.status]);
   const updatedAtText = useMemo(() => {
@@ -337,7 +337,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
           <section className="rounded-2xl border border-border bg-background/90 p-4 space-y-4">
             <div className="space-y-1">
               <p className="text-sm font-semibold">Bağlantı Akışı</p>
-              <p className="text-xs text-muted-foreground">Step-by-step state for production onboarding.</p>
+              <p className="text-xs text-muted-foreground">Canlıya alım için adım adım durumlar.</p>
             </div>
             <div className="space-y-2">
               {steps.map((step, index) => {
@@ -364,7 +364,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Button type="button" onClick={startConnect} disabled={isLoading}>
-                {isConnected ? 'Reconnect Instagram' : "Bağlantıyı Başlat"}
+                {isConnected ? 'Instagram\'ı Tekrar Bağla' : "Bağlantıyı Başlat"}
               </Button>
               {isConnected ?
               <Button
@@ -372,14 +372,14 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
                 variant="outline"
                 onClick={() => {
                   const ok = window.confirm(
-                    "Instagram hesabini değiştirmek istediginize emin misiniz? Yeni bağlantı kurulunca eski kimlik pasif olur."
+                    "Instagram hesabını değiştirmek istediğinize emin misiniz? Yeni bağlantı kurulunca eski kimlik pasif olur."
                   );
                   if (!ok) return;
                   void startConnect('REPLACE_CONNECTION');
                 }}
                 disabled={isLoading}>
                 
-                  Hesabi Değiştir
+                  Hesabı Değiştir
                 </Button> :
 
               <Button type="button" variant="outline" onClick={refreshStatus} disabled={isLoading}>
@@ -411,7 +411,7 @@ export function MetaDirectSetup({ onBack }: MetaDirectSetupProps) {
             <div className="mt-4 rounded-lg border border-border/60 bg-muted/10 p-3">
               <p className="text-sm font-medium">Connector Scope</p>
               <p className="text-xs text-muted-foreground mt-1">
-                This screen runs live `/api/app/meta-direct/*` endpoints and affects production inbox connectivity.
+                Bu ekran canlı /api/app/meta-direct/* uç noktalarını çalıştırır ve canlı gelen kutusu bağlantısını etkiler.
               </p>
             </div>
           </section>

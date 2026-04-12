@@ -83,7 +83,7 @@ interface ChannelHealthPayload {
 function formatTs(value: string): string {
   const dt = new Date(value);
   if (Number.isNaN(dt.getTime())) return value;
-  return dt.toLocaleString('en-GB', {
+  return dt.toLocaleString('tr-TR', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -93,10 +93,10 @@ function formatTs(value: string): string {
 
 function getPreview(item: ConversationItem): string {
   if (item.lastMessageText && item.lastMessageText.trim()) return item.lastMessageText.trim();
-  if (item.lastMessageType === 'image') return '[Image]';
-  if (item.lastMessageType === 'audio') return '[Audio]';
+  if (item.lastMessageType === 'image') return '[Görsel]';
+  if (item.lastMessageType === 'audio') return '[Ses]';
   if (item.lastMessageType === 'video') return '[Video]';
-  if (item.lastMessageType === 'handover_request') return '[Handover Requested]';
+  if (item.lastMessageType === 'handover_request') return '[Temsilci Devri İstendi]';
   return `[${item.lastMessageType}]`;
 }
 
@@ -106,7 +106,7 @@ function formatRelativeTime(value: string): string {
   const now = Date.now();
   const diffMs = now - dt.getTime();
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return 'now';
+  if (diffMin < 1) return 'şimdi';
   if (diffMin < 60) return `${diffMin}m`;
   const diffHour = Math.floor(diffMin / 60);
   if (diffHour < 24) return `${diffHour}h`;
@@ -131,7 +131,7 @@ function conversationDisplayName(item: Pick<ConversationItem, 'customerName' | '
   if (item.customerName && item.customerName.trim()) return item.customerName.trim();
   const username = normalizeUsername(item.profileUsername);
   if (username) return `@${username}`;
-  return `User ${item.conversationKey}`;
+  return `Kullanıcı ${item.conversationKey}`;
 }
 
 function initialsFromLabel(value: string): string {
@@ -170,10 +170,10 @@ function automationBadgeClass(mode: AutomationMode): string {
 }
 
 function automationLabel(mode: AutomationMode): string {
-  if (mode === 'HUMAN_PENDING') return 'Human Pending';
+  if (mode === 'HUMAN_PENDING') return 'İnsan Bekleniyor';
   if (mode === 'HUMAN_ACTIVE') return "Human Aktif";
-  if (mode === 'MANUAL_ALWAYS') return 'Manual Always';
-  if (mode === 'AUTO_RESUME_PENDING') return 'Auto Resume';
+  if (mode === 'MANUAL_ALWAYS') return 'Her Zaman Manuel';
+  if (mode === 'AUTO_RESUME_PENDING') return 'Otomatik Devam';
   return 'Auto';
 }
 
@@ -463,11 +463,11 @@ export function ConversationsPage() {
         }
       );
       setReplyText('');
-      setActionInfo('Reply sent successfully.');
+      setActionInfo('Yanıt başarıyla gönderildi.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
       await loadKonuşmalar();
     } catch (err: any) {
-      setError(err?.message || 'Reply could not be sent.');
+      setError(err?.message || 'Yanıt gönderilemedi.');
     } finally {
       setSendingReply(false);
     }
@@ -486,11 +486,11 @@ export function ConversationsPage() {
           body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' })
         }
       );
-      setActionInfo(response?.alreadyRequested ? 'This conversation is already under human handover.' : 'Handover request created.');
+      setActionInfo(response?.alreadyRequested ? 'Bu konuşma zaten bir temsilci tarafından devralınmış.' : 'Temsilciye devretme talebi oluşturuldu.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
       await loadKonuşmalar();
     } catch (err: any) {
-      setError(err?.message || 'Handover request failed.');
+      setError(err?.message || 'Temsilciye devretme talebi başarısız oldu.');
     } finally {
       setSendingHandover(false);
     }
@@ -506,11 +506,11 @@ export function ConversationsPage() {
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/resume-auto`,
         { method: 'POST' }
       );
-      setActionInfo('AI automation resumed for this conversation.');
+      setActionInfo('Bu konuşmada yapay zeka otomasyonu yeniden başlatıldı.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
       await loadKonuşmalar();
     } catch (err: any) {
-      setError(err?.message || 'Resume action failed.');
+      setError(err?.message || 'Devralma işlemi başarısız oldu.');
     } finally {
       setSendingResume(false);
     }
@@ -590,7 +590,7 @@ export function ConversationsPage() {
             quickFilter === filter ? 'bg-muted text-foreground' : 'text-muted-foreground'}`
             }>
             
-              {filter === 'all' ? 'All' : filter === 'unread' ? 'Unread' : 'Handover'}
+              {filter === 'all' ? 'Hepsi' : filter === 'unread' ? 'Okunmamış' : 'Temsilci'}
             </button>
           )}
         </div>
@@ -599,14 +599,14 @@ export function ConversationsPage() {
       {channelBlocked ?
       <div className="rounded-2xl border border-border bg-background p-6">
           <p className="text-base font-semibold">
-            {channelView === 'INSTAGRAM' ? "Instagram bağlantısi gerekli" : "WhatsApp bağlantısi gerekli"}
+            {channelView === 'INSTAGRAM' ? "Instagram bağlantısı gerekli" : "WhatsApp bağlantısı gerekli"}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             {selectedChannelHealth?.message || "Bu kanal için sohbetleri görmek önce bağlantı kurulmasını gerektirir."}
           </p>
           {selectedChannelHealth?.missingRequirements?.length ?
         <div className="mt-3 text-xs text-muted-foreground">
-              Eksıkler: {selectedChannelHealth.missingRequirements.join(', ')}
+              Eksikler: {selectedChannelHealth.missingRequirements.join(', ')}
             </div> :
         null}
           <Button
@@ -626,15 +626,15 @@ export function ConversationsPage() {
           <div className="rounded-2xl border border-border bg-background p-3 space-y-3">
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
-                <p className="text-[10px] uppercase text-muted-foreground">Threads</p>
+                <p className="text-[10px] uppercase text-muted-foreground">Sohbetler</p>
                 <p className="text-base font-semibold leading-tight">{filteredKonuşmalar.length}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
-                <p className="text-[10px] uppercase text-muted-foreground">Unread</p>
+                <p className="text-[10px] uppercase text-muted-foreground">Okunmamış</p>
                 <p className="text-base font-semibold leading-tight">{unreadTotal}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
-                <p className="text-[10px] uppercase text-muted-foreground">Handover</p>
+                <p className="text-[10px] uppercase text-muted-foreground">Temsilci</p>
                 <p className="text-base font-semibold leading-tight">{handoverTotal}</p>
               </div>
             </div>
@@ -655,7 +655,7 @@ export function ConversationsPage() {
               </div> :
           filteredKonuşmalar.length === 0 ?
           <p className="py-8 text-center text-xs text-muted-foreground">
-                {selectedChannelHealth ? "Bağlı kanalda henuz konuşma yok." : "Bu filtreye uygun konuşma yok."}
+                {selectedChannelHealth ? "Bağlı kanalda henüz konuşma yok." : "Bu filtreye uygun konuşma yok."}
               </p> :
 
           <div className="max-h-[66vh] space-y-2 overflow-y-auto pr-1">
@@ -704,7 +704,7 @@ export function ConversationsPage() {
                       item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
                       }>
                       
-                          {item.identityLinked ? 'Linked' : 'Unlinked'}
+                          {item.identityLinked ? 'Bağlı' : 'Bağlı Değil'}
                         </span>
                       </div>
                     </button>);
@@ -752,7 +752,7 @@ export function ConversationsPage() {
                       selectedConversation.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
                       }>
                       
-                          {selectedConversation.identityLinked ? 'Linked profile' : 'Not linked'}
+                          {selectedConversation.identityLinked ? 'Bağlı profil' : 'Bağlı değil'}
                         </span>
                       </div>
                     </div>
@@ -760,11 +760,11 @@ export function ConversationsPage() {
                   <div className="flex items-center gap-2">
                     {handoverInProgress ?
                 <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
-                        {sendingResume ? 'Resuming...' : 'Resume AI'}
+                        {sendingResume ? 'Devam ediliyor...' : 'AI\'yı Yeniden Başlat'}
                       </Button> :
                 null}
                     <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
-                      {sendingHandover ? 'Requesting...' : handoverInProgress ? "Handover Aktif" : 'Request Handover'}
+                      {sendingHandover ? 'Talep ediliyor...' : handoverInProgress ? "Handover Aktif" : 'Temsilciye Aktar'}
                     </Button>
                   </div>
                 </div>
@@ -789,7 +789,7 @@ export function ConversationsPage() {
                 const isOutbound = msg.direction === 'outbound';
                 const isSystem = msg.direction === 'system';
                 const senderLabel = isSystem ?
-                'System' :
+                'Sistem' :
                 isOutbound ?
                 msg.outboundSourceLabel || 'Salon' :
                 "Müşteri";

@@ -24,22 +24,22 @@ export function SettingsScreen({
   {
     title: "Hesap ve İşletme",
     items: [
-    { icon: User, label: "Profil Bilgileri", description: "Kişisel bilgiler ve fotograf", color: "var(--rose-gold)" },
+    { icon: User, label: "Profil Bilgileri", description: "Kişisel bilgiler ve fotoğraf", color: "var(--rose-gold)" },
     { icon: Palette, label: "Görünüm", description: "Tema ve yazı tipi", color: "var(--deep-indigo)", isThemeToggle: true },
-    { icon: Shield, label: "Guvenlik", description: "Şifre ve iki aşamalı dogrulama", color: "var(--rose-gold)" }]
+    { icon: Shield, label: "Güvenlik", description: "Şifre ve iki aşamalı doğrulama", color: "var(--rose-gold)" }]
 
   },
   {
     title: "Bildirimler",
     items: [
-    { icon: Bell, label: "Bildirim Kutusu", description: "Uygulama ici uyarilar", color: "var(--deep-indigo)", onClick: onOpenNotificationsInbox },
-    { icon: Smartphone, label: "Bildirim Ayarları", description: "Push ve event tercihleri", color: "var(--rose-gold)", onClick: onOpenNotificationSettings }]
+    { icon: Bell, label: "Bildirim Kutusu", description: "Uygulama içi uyarılar", color: "var(--deep-indigo)", onClick: onOpenNotificationsInbox },
+    { icon: Smartphone, label: "Bildirim Ayarları", description: "Push ve etkinlik tercihleri", color: "var(--rose-gold)", onClick: onOpenNotificationSettings }]
 
   },
   {
     title: "Destek",
     items: [
-    { icon: HelpCircle, label: "Yardim Merkezi", description: "Sık sorulan sorular", color: "var(--deep-indigo)", onClick: onShowHelpCenter }]
+    { icon: HelpCircle, label: "Yardım Merkezi", description: "Sık sorulan sorular", color: "var(--deep-indigo)", onClick: onShowHelpCenter }]
 
   }];
 
@@ -104,7 +104,7 @@ export function SettingsScreen({
           </Button>
           <div className="mt-4 text-center">
             <p className="text-[10px] text-muted-foreground">Salon OS Enterprise v3.2.0</p>
-            <p className="text-[10px] text-muted-foreground/60 mt-1">Gelistirici: Figma Make AI</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1">Geliştirici: Figma Make AI</p>
           </div>
         </div>
       </div>

@@ -118,7 +118,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
       writeSnapshot(WHATSAPP_AUTOMATIONS_CACHE_KEY, automationsResponse.items || []);
       writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, agentResponse.settings || {});
     } catch (error: any) {
-      setStatusError(error?.message || "WhatsApp ayarları alinamadi.");
+      setStatusError(error?.message || "WhatsApp ayarları alınamadı.");
     } finally {
       if (refresh) {
         setStatusYenileing(false);
@@ -138,7 +138,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
 
   const openReplaceFlow = () => {
     const ok = window.confirm(
-      "WhatsApp numarasini değiştirmek istediginize emin misiniz? Yeni numara baglaninca eski kimlik pasiflestirilir."
+      "WhatsApp numarasını değiştirmek istediğinize emin misiniz? Yeni numara bağlanınca eski kimlik pasifleştirilir."
     );
     if (!ok) return;
     navigate('/app/features/whatsapp-setup', { state: { navDirection: 'forward', replaceConnection: true } });
@@ -159,12 +159,12 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
     setPluginToggleFeedback(null);
 
     if (!status?.pluginId) {
-      setPluginToggleError('You must first initiate the connection.');
+      setPluginToggleError('Önce bağlantıyı başlatmalısınız.');
       return;
     }
 
     if (!isConnected) {
-      setPluginToggleError('Complete WhatsApp connection first.');
+      setPluginToggleError('Önce WhatsApp bağlantısını tamamlayın.');
       return;
     }
 
@@ -193,7 +193,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
   const connectionBadge = statusLoading ?
   'Kontrol ediliyor' :
   !isConnected ?
-  'Setup gerekli' :
+  'Kurulum gerekli' :
   pluginActive ?
   'Aktif' :
   'Pasif';
@@ -259,7 +259,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                 <div className="min-w-0">
                   <p className="text-base font-semibold leading-tight">WhatsApp Bağlantısı</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Complete setup and manage connection status here.
+                    Kurulumu tamamlayın ve bağlantı durumunu buradan yönetin.
                   </p>
                 </div>
               </div>
@@ -284,7 +284,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                   Bağlantı durumu
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  When disabled, AI and reminder flows over WhatsApp do not run.
+                  Devre dışı bırakıldığında, WhatsApp üzerinden yapay zeka ve hatırlatma akışları çalışmaz.
                 </p>
               </div>
               <Switch
@@ -305,7 +305,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
               </Button>
               {isConnected ?
               <Button type="button" variant="outline" onClick={openReplaceFlow}>
-                  Numarayi Değiştir
+                  Numarayı Değiştir
                 </Button> :
               null}
               <Button
@@ -332,7 +332,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                 </div>
                 <div className="min-w-0">
                   <p className="text-base font-semibold leading-tight">Randevu Hatırlatma Ayarları</p>
-                  <p className="text-sm text-muted-foreground mt-1">Randevudan 2 ve 24 saat önce gönderim adımlarini yönetin.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Randevudan 2 ve 24 saat önce gönderim adımlarını yönetin.</p>
                 </div>
               </div>
               <span
@@ -353,13 +353,13 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                 2 saat önce + konum
               </span>
               <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                24 saat önce hatırlatma + katılım onayi
+                24 saat önce hatırlatma + katılım onayı
               </span>
             </div>
 
             <Button type="button" variant="outline" onClick={openReminderSettings} disabled={integrationLocked}>
               {integrationLocked ? <Lock className="w-4 h-4 mr-2" /> : <Settings2 className="w-4 h-4 mr-2" />}
-              {!isConnected ? "Önce WhatsApp bağlantısini tamamlayin" : !pluginActive ? "Önce bağlantıyi aktifleştirin" : "Hatırlatma Ayarlarıni Ac"}
+              {!isConnected ? "Önce WhatsApp bağlantısını tamamlayın" : !pluginActive ? "Önce bağlantıyı aktifleştirin" : "Hatırlatma Ayarlarını Aç"}
             </Button>
           </CardContent>
         </Card>
@@ -372,8 +372,8 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                   <Bot className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-base font-semibold leading-tight">Yapay Zeka WhatsApp Asistani</p>
-                  <p className="text-sm text-muted-foreground mt-1">SSS, ton ve davranis kurallarini yönetin.</p>
+                  <p className="text-base font-semibold leading-tight">Yapay Zeka WhatsApp Asistanı</p>
+                  <p className="text-sm text-muted-foreground mt-1">SSS, ton ve davranış kurallarını yönetin.</p>
                 </div>
               </div>
               <span
@@ -397,7 +397,7 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
               className={integrationLocked ? '' : 'bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white'}>
               
               {integrationLocked ? <Lock className="w-4 h-4 mr-2" /> : <ChevronRight className="w-4 h-4 mr-2" />}
-              {!isConnected ? "Önce WhatsApp bağlantısini tamamlayin" : !pluginActive ? "Önce bağlantıyi aktifleştirin" : "Yapay Zeka Asistan Ayarlarıni Ac"}
+              {!isConnected ? "Önce WhatsApp bağlantısını tamamlayın" : !pluginActive ? "Önce bağlantıyı aktifleştirin" : "Yapay Zeka Asistan Ayarlarını Aç"}
             </Button>
           </CardContent>
         </Card>

@@ -33,7 +33,7 @@ const conversations = [
 {
   id: 3,
   name: 'Zeynep Kaya',
-  message: 'Thursday appointmentmu iptal etmek istiyorum',
+  message: 'Perşembe randevumu iptal etmek istiyorum',
   time: '12:10',
   resolved: true,
   converted: false
@@ -140,12 +140,12 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
     setToggleFeedback(null);
 
     if (!chakraConnected) {
-      setToggleError('Complete WhatsApp connection first.');
+      setToggleError('Önce WhatsApp bağlantısını tamamlayın.');
       return;
     }
 
     if (!chakraPluginActive) {
-      setToggleError('WhatsApp connection is inactive. You must activate the connection first.');
+      setToggleError('WhatsApp bağlantısı pasif. Önce bağlantıyı aktif etmelisiniz.');
       return;
     }
 
@@ -169,8 +169,8 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
 
       setToggleFeedback(
         nextValue ?
-        'AI agent activated.' :
-        'AI agent has been disabled.'
+        'Yapay zeka ajanı aktifleştirildi.' :
+        'Yapay zeka ajanı devre dışı bırakıldı.'
       );
       writeSnapshot(WHATSAPP_AGENT_SETTINGS_CACHE_KEY, {
         isEnabled: nextValue,
@@ -188,7 +188,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
     } catch (error) {
       console.error('WhatsApp agent toggle failed:', error);
       setAgentEnabled(previous);
-      setToggleError('Activity status could not be updated. Please try again.');
+      setToggleError('Aktiflik durumu güncellenemedi. Lütfen tekrar deneyin.');
     } finally {
       setTogglingAgent(false);
     }
@@ -314,11 +314,11 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                         }>
                         
                         {!chakraConnected ?
-                        "Bağlı değil — Setup required" :
+                        "Bağlı değil — Kurulum gerekli" :
                         !chakraPluginActive ?
-                        'WhatsApp disabled — Open the connection from manage' :
+                        'WhatsApp pasif — Bağlantıyı yönetimden açın' :
                         agentEnabled ?
-                        "Aktif — Replying to messages" :
+                        "Aktif — Mesajlara yanıt veriyor" :
                         'Pasif'}
                       </span>
                     </div>
@@ -348,7 +348,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
               <XCircle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm text-amber-800 dark:text-amber-300">
-                  WhatsApp connection is inactive. Aktifleştir the connection first for the AI agent to run.
+                  WhatsApp bağlantısı pasif. Yapay zeka ajanının çalışması için önce bağlantıyı aktifleştirin.
                 </p>
                 <Button
                 type="button"
@@ -377,13 +377,13 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
             <Card className="border-border/50">
               <CardContent className="p-3 text-center">
                 <p className="text-2xl font-bold text-green-600">%{conversionRate}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Conversion</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Dönüşüm</p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
               <CardContent className="p-3 text-center">
                 <p className="text-2xl font-bold text-[var(--deep-indigo)]">{resolvedByBot}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Bot Resolved</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Bot Çözümü</p>
               </CardContent>
             </Card>
           </div>
@@ -394,7 +394,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-[var(--rose-gold)]" />
-                  Appointment Conversion Rate
+                  Randevu Dönüşüm Oranı
                 </span>
                 <span className="text-sm font-bold text-[var(--rose-gold)]">%{conversionRate}</span>
               </div>
@@ -426,7 +426,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium truncate">{conv.name}</p>
                         {conv.converted &&
-                      <Badge variant="secondary" className="bg-green-500/10 text-green-700 text-[10px] py-0 h-4">Appointment</Badge>
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-700 text-[10px] py-0 h-4">Randevu</Badge>
                       }
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{conv.message}</p>
@@ -456,8 +456,8 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
               <Card className="border-border/50">
                 <CardContent className="p-3 space-y-4">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Conversation tone</p>
-                    <p className="text-xs text-muted-foreground">The overall style the agent uses while talking to customers.</p>
+                    <p className="text-sm font-medium">Konuşma tonu</p>
+                    <p className="text-xs text-muted-foreground">Müşterilerle konuşurken ajanın kullandığı genel stil.</p>
                     <div className="grid grid-cols-2 gap-2">
                       <Button type="button" variant={tone === 'friendly' ? 'default' : 'outline'} onClick={() => {setTone('friendly');void saveSettings('tone', { tone: 'friendly' });}}>Sıcak ve Dostça</Button>
                       <Button type="button" variant={tone === 'professional' ? 'default' : 'outline'} onClick={() => {setTone('professional');void saveSettings('tone', { tone: 'professional' });}}>Profesyonel</Button>
@@ -470,8 +470,8 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Response length</p>
-                    <p className="text-xs text-muted-foreground">Controls whether responses to customers are short or detailed.</p>
+                    <p className="text-sm font-medium">Yanıt uzunluğu</p>
+                    <p className="text-xs text-muted-foreground">Müşterilere verilen yanıtların kısa mı yoksa detaylı mı olacağını kontrol eder.</p>
                     <div className="grid grid-cols-3 gap-2">
                       <Button type="button" variant={answerLength === 'short' ? 'default' : 'outline'} onClick={() => {setAnswerLength('short');void saveSettings('answerLength', { answerLength: 'short' });}}>Kısa</Button>
                       <Button type="button" variant={answerLength === 'medium' ? 'default' : 'outline'} onClick={() => {setAnswerLength('medium');void saveSettings('answerLength', { answerLength: 'medium' });}}>Orta</Button>
@@ -481,8 +481,8 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Emoji usage</p>
-                    <p className="text-xs text-muted-foreground">Controls emoji density in responses.</p>
+                    <p className="text-sm font-medium">Emoji kullanımı</p>
+                    <p className="text-xs text-muted-foreground">Yanıtlardaki emoji yoğunluğunu kontrol eder.</p>
                     <div className="grid grid-cols-3 gap-2">
                       <Button type="button" variant={emojiUsage === 'off' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('off');void saveSettings('emojiUsage', { emojiUsage: 'off' });}}>Kapalı</Button>
                       <Button type="button" variant={emojiUsage === 'low' ? 'default' : 'outline'} onClick={() => {setEmojiUsage('low');void saveSettings('emojiUsage', { emojiUsage: 'low' });}}>Düşük</Button>
@@ -492,8 +492,8 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Booking guidance level</p>
-                    <p className="text-xs text-muted-foreground">Determines how actively the customer is guided to booking during conversation.</p>
+                    <p className="text-sm font-medium">Rezervasyon yönlendirme seviyesi</p>
+                    <p className="text-xs text-muted-foreground">Konuşma sırasında müşterinin rezervasyona ne kadar aktif yönlendirileceğini belirler.</p>
                     <div className="grid grid-cols-3 gap-2">
                       <Button type="button" variant={bookingGuidance === 'low' ? 'default' : 'outline'} onClick={() => {setBookingGuidance('low');void saveSettings('bookingGuidance', { bookingGuidance: 'low' });}}>Düşük</Button>
                       <Button type="button" variant={bookingGuidance === 'medium' ? 'default' : 'outline'} onClick={() => {setBookingGuidance('medium');void saveSettings('bookingGuidance', { bookingGuidance: 'medium' });}}>Orta</Button>
@@ -503,8 +503,8 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Human handover threshold</p>
-                    <p className="text-xs text-muted-foreground">Determines how early the agent hands over to human staff in cases of dissatisfaction risk, complex requests, or complaints.</p>
+                    <p className="text-sm font-medium">İnsan temsilciye devir eşiği</p>
+                    <p className="text-xs text-muted-foreground">Memnuniyetsizlik riski, karmaşık talepler veya şikayetler durumunda ajanın insan personele ne kadar erken devredeceğini belirler.</p>
                     <div className="grid grid-cols-3 gap-2">
                       <Button type="button" variant={handoverThreshold === 'early' ? 'default' : 'outline'} onClick={() => {setHandoverThreshold('early');void saveSettings('handoverThreshold', { handoverThreshold: 'early' });}}>Erken Devir</Button>
                       <Button type="button" variant={handoverThreshold === 'balanced' ? 'default' : 'outline'} onClick={() => {setHandoverThreshold('balanced');void saveSettings('handoverThreshold', { handoverThreshold: 'balanced' });}}>Dengeli</Button>
@@ -515,7 +515,7 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Yapay zeka bilgilendirmesi</p>
-                    <p className="text-xs text-muted-foreground">Determines how often the agent identifies itself as AI in conversation.</p>
+                    <p className="text-xs text-muted-foreground">Ajanın konuşma sırasında kendini ne sıklıkla yapay zeka olarak tanıtacağını belirler.</p>
                     <div className="grid grid-cols-3 gap-2">
                       <Button type="button" variant={aiDisclosure === 'always' ? 'default' : 'outline'} onClick={() => {setAiDisclosure('always');void saveSettings('aiDisclosure', { aiDisclosure: 'always' });}}>Her zaman</Button>
                       <Button type="button" variant={aiDisclosure === 'onQuestion' ? 'default' : 'outline'} onClick={() => {setAiDisclosure('onQuestion');void saveSettings('aiDisclosure', { aiDisclosure: 'onQuestion' });}}>Sorulursa</Button>
@@ -537,8 +537,8 @@ export function WhatsAppAgent({ onGeri }: WhatsAppAgentProps) {
             <div className="flex items-center gap-3 relative z-10">
               <Zap className="w-6 h-6 text-white" />
               <div className="text-white">
-                <p className="font-semibold text-sm">Connect Agent to WhatsApp</p>
-                <p className="text-xs text-white/70 mt-0.5">Verify your number +90 544 xxx xxxx</p>
+                <p className="font-semibold text-sm">Ajanı WhatsApp'a Bağla</p>
+                <p className="text-xs text-white/70 mt-0.5">Numaranızı doğrulayın +90 544 xxx xxxx</p>
               </div>
               <ChevronRight className="w-5 h-5 text-white/60 ml-auto" />
             </div>

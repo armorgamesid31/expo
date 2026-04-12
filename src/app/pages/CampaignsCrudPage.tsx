@@ -94,7 +94,7 @@ interface CampaignDraft {
 const WEEKDAY_OPTIONS: Array<{value: string;label: string;}> = [
 { value: 'MON', label: 'Pzt' },
 { value: 'TUE', label: 'Sal' },
-{ value: 'WED', label: 'Wed' },
+{ value: 'WED', label: 'Çar' },
 { value: 'THU', label: 'Per' },
 { value: 'FRI', label: 'Cum' },
 { value: 'SAT', label: 'Cts' },
@@ -122,7 +122,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   key: 'loyalty',
   name: "Sadakat Kampanyası",
   type: 'LOYALTY',
-  bullets: ['Puan sistemi', 'Reappointment incentive'],
+  bullets: ['Puan sistemi', 'Yeniden randevu teşviki'],
   icon: Award,
   config: {
     pointsPerVisit: 1,
@@ -132,25 +132,25 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   fields: [
   { key: 'pointsPerVisit', label: 'Her ziyarette puan', type: 'number', valueKind: 'number', min: 1, step: 1 },
-  { key: 'rewardThreshold', label: 'Number of visits for rewards', type: 'number', valueKind: 'number', min: 1, step: 1 },
+  { key: 'rewardThreshold', label: 'Ödül için ziyaret sayısı', type: 'number', valueKind: 'number', min: 1, step: 1 },
   {
     key: 'rewardType',
     label: 'Reward tipi',
     type: 'select',
     valueKind: 'string',
     options: [
-    { value: 'discount_percent', label: 'percent discount' },
+    { value: 'discount_percent', label: 'Yüzdelik indirim' },
     { value: 'fixed_amount', label: 'Sabit tutar' }]
 
   },
-  { key: 'rewardValue', label: 'Reward value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
+  { key: 'rewardValue', label: 'Ödül değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }]
 
 },
 {
   key: 'multi-service',
   name: "Çoklu Hizmet İndirimi",
   type: 'MULTI_SERVICE_DISCOUNT',
-  bullets: ['2+ servicete campaign', 'Enlarge cart'],
+  bullets: ['2+ hizmette kampanya', 'Sepeti büyütme'],
   icon: Users,
   config: {
     minServiceCount: 2,
@@ -162,7 +162,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   { key: 'minServiceCount', label: 'Minimum hizmet sayisi', type: 'number', valueKind: 'number', min: 2, step: 1 },
   {
     key: 'discountType',
-    label: 'Discount type',
+    label: 'İndirim tipi',
     type: 'select',
     valueKind: 'string',
     options: [
@@ -178,7 +178,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     valueKind: 'string',
     options: [
     { value: 'same_appointment', label: 'aynı randevu' },
-    { value: 'same_day', label: 'same days' }]
+    { value: 'same_day', label: 'aynı gün' }]
 
   }]
 
@@ -187,7 +187,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   key: 'referral',
   name: "Arkadaşını Getir Kampanyası",
   type: 'REFERRAL',
-  bullets: ['Fixed/Percent reward', 'İlk randevu tetikleme kuralı'],
+  bullets: ['Sabit/Yüzdelik ödül', 'İlk randevu tetikleme kuralı'],
   icon: UserPlus,
   config: {
     rewardType: 'discount_percent',
@@ -199,7 +199,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   fields: [
   {
     key: 'rewardType',
-    label: 'Discount type',
+    label: 'İndirim tipi',
     type: 'select',
     valueKind: 'string',
     options: [
@@ -209,7 +209,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   {
     key: 'referrerRewardValue',
-    label: 'Inviter reward',
+    label: 'Davet eden ödülü',
     type: 'number',
     valueKind: 'number',
     min: 1,
@@ -217,7 +217,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   {
     key: "referredMüşteriRewardValue",
-    label: 'newcomer award',
+    label: 'Yeni gelen ödülü',
     type: 'number',
     valueKind: 'number',
     min: 1,
@@ -225,7 +225,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   {
     key: 'activationTiming',
-    label: 'When should it be activated?',
+    label: 'Ne zaman aktif olsun?',
     type: 'select',
     valueKind: 'string',
     options: [
@@ -235,7 +235,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   {
     key: 'combineWithWelcomeCampaign',
-    label: 'Combine with first time customer campaign?',
+    label: 'İlk müşteri kampanyası ile birleştirilsin mi?',
     type: 'select',
     valueKind: 'boolean',
     options: [
@@ -249,7 +249,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   key: 'birthday',
   name: "Doğum Günü Kampanyası",
   type: 'BIRTHDAY',
-  bullets: ['Fixed/Percentage discount', 'Short usage duration'],
+  bullets: ['Sabit/Yüzdelik indirim', 'Kısa kullanım süresi'],
   icon: Gift,
   config: {
     discountType: 'discount_percent',
@@ -270,7 +270,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
   {
     key: 'validDaysAfterBirthday',
-    label: 'Validity after birthday (days)',
+    label: 'Doğum gününden sonra geçerlilik (gün)',
     type: 'number',
     valueKind: 'number',
     min: 1,
@@ -282,7 +282,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   key: 'winback',
   name: "Geri Kazanım Kampanyası",
   type: 'WINBACK',
-  bullets: ['30-60 days pasif customer hedefi', 'Tek seferlik teklif'],
+  bullets: ['30-60 gün pasif müşteri hedefi', 'Tek seferlik teklif'],
   icon: Bell,
   config: {
     inactiveDaysThreshold: 30,
@@ -292,7 +292,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   fields: [
   {
     key: 'inactiveDaysThreshold',
-    label: 'passivity threshold',
+    label: 'Pasiflik eşiği',
     type: 'select',
     valueKind: 'number',
     options: [
@@ -318,7 +318,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   key: 'welcome',
   name: 'İlk Randevuya Hoş Geldin',
   type: 'WELCOME_FIRST_VISIT',
-  bullets: ['Fixed/Percentage discount', 'Use with arknamebring'],
+  bullets: ['Sabit/Yüzdelik indirim', 'Arkadaş tavsiyesi ile birleştirme'],
   icon: Calendar,
   config: {
     discountType: 'discount_percent',
@@ -328,7 +328,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   fields: [
   {
     key: 'discountType',
-    label: 'Discount type',
+    label: 'İndirim tipi',
     type: 'select',
     valueKind: 'string',
     options: [
@@ -339,7 +339,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
   {
     key: 'combineWithReferralCampaign',
-    label: 'Should it be combined with the Bring Your Arkname campaign?',
+    label: 'Arkadaşını Getir kampanyası ile birleştirilsin mi?',
     type: 'select',
     valueKind: 'boolean',
     options: [
@@ -351,9 +351,9 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
 },
 {
   key: 'off-peak',
-  name: 'Filling Empty Hours',
+  name: 'Boş Saatleri Doldurma',
   type: 'OFF_PEAK_FILL',
-  bullets: ['Day selection', 'Time selection', 'Fixed/Percentage discount'],
+  bullets: ['Gün seçimi', 'Saat seçimi', 'Sabit/Yüzdelik indirim'],
   icon: Clock3,
   config: {
     weekdays: ['MON', 'TUE', 'WED', 'THU'],
@@ -365,28 +365,28 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   fields: [
   {
     key: 'weekdays',
-    label: 'Valid days',
+    label: 'Geçerli günler',
     type: 'multi-select',
     valueKind: 'stringArray',
     options: WEEKDAY_OPTIONS
   },
   {
     key: 'startHour',
-    label: 'start time',
+    label: 'Başlangıç saati',
     type: 'select',
     valueKind: 'string',
     options: TIME_OPTIONS
   },
   {
     key: 'endHour',
-    label: 'end time',
+    label: 'Bitiş saati',
     type: 'select',
     valueKind: 'string',
     options: TIME_OPTIONS
   },
   {
     key: 'discountType',
-    label: 'Discount type',
+    label: 'İndirim tipi',
     type: 'select',
     valueKind: 'string',
     options: [
@@ -551,7 +551,7 @@ export function CampaignsCrudPage() {
       const response = await apiFetch<{items: CampaignItem[];}>('/api/admin/campaigns');
       setItems(response.items || []);
     } catch (err: any) {
-      setError(err?.message || 'Campaigns cannot be received.');
+      setError(err?.message || 'Kampanyalar alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -683,7 +683,7 @@ export function CampaignsCrudPage() {
     }
     const template = templateByType(detailDraft.type);
     if (!template) {
-      setDetailError('The editing field is not defined for this campaign type.');
+      setDetailError('Bu kampanya türü için düzenleme alanı tanımlanmamış.');
       return;
     }
 

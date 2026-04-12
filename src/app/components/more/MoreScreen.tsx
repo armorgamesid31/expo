@@ -26,7 +26,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
   {
     icon: Settings,
     label: "Ayarlar",
-    description: 'Theme, notifications, and account preferences',
+    description: 'Tema, bildirimler ve hesap tercihleri',
     action: () => {
       if (onOpenSettings) {
         onOpenSettings();
@@ -48,7 +48,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
     featureKey: 'team.management',
     icon: UserCog,
     label: "Ekip Yönetimi",
-    description: 'Employees, team users, roles, and access',
+    description: 'Çalışanlar, ekip üyeleri, roller ve erişim',
     action: () => onNavigate('team-management'),
     color: 'var(--deep-indigo)'
   },
@@ -56,7 +56,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
     featureKey: 'brand.growth.hub',
     icon: Megaphone,
     label: 'Marka & Büyüme Merkezi',
-    description: 'Salon profile, website, and campaigns in one place',
+    description: 'Salon profili, web sitesi ve kampanyalar tek bir yerde',
     action: () => onNavigate('brand-growth-hub'),
     color: 'var(--rose-gold)'
   },
@@ -64,7 +64,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
     featureKey: 'analytics.view',
     icon: BarChart3,
     label: "Analitik",
-    description: 'Business performance and trends',
+    description: 'İş performansı ve trendler',
     action: () => onNavigate('analytics'),
     color: 'var(--deep-indigo)'
   }];
@@ -133,8 +133,8 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       }
 
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Features</h1>
-        <p className="text-sm text-muted-foreground">Management tools and advanced modules</p>
+        <h1 className="text-2xl font-semibold mb-1">Özellikler</h1>
+        <p className="text-sm text-muted-foreground">Yönetim araçları ve gelişmiş modüller</p>
       </div>
 
       <div className="p-4 space-y-8">
@@ -168,7 +168,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
 
         {/* Management Tools — Top */}
         <div>
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Management Tools</h3>
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-1">Yönetim Araçları</h3>
           <div className="grid grid-cols-2 gap-3">
             {managementTools.
             filter((item) => isFeatureVisible ? isFeatureVisible((item as any).featureKey || '') : true).

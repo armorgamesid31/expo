@@ -355,11 +355,11 @@ export function InstagramInboxPage() {
         body: JSON.stringify({ text: replyText.trim() })
       });
       setReplyText('');
-      setActionInfo('Reply sent successfully.');
+      setActionInfo('Yanıt başarıyla gönderildi.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
-      setError(err?.message || 'Reply could not be sent.');
+      setError(err?.message || 'Yanıt gönderilemedi.');
     } finally {
       setSendingReply(false);
     }
@@ -379,11 +379,11 @@ export function InstagramInboxPage() {
           body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' })
         }
       );
-      setActionInfo(response?.alreadyRequested ? 'This conversation is already under human handover.' : 'Handover request created.');
+      setActionInfo(response?.alreadyRequested ? 'Bu konuşma zaten bir temsilci tarafından devralınmış.' : 'Temsilciye devretme talebi oluşturuldu.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
-      setError(err?.message || 'Handover request failed.');
+      setError(err?.message || 'Temsilciye devretme talebi başarısız oldu.');
     } finally {
       setSendingHandover(false);
     }
@@ -489,14 +489,14 @@ export function InstagramInboxPage() {
                           item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
                           }>
                           
-                            {item.identityLinked ? 'Linked' : 'Unlinked'}
+                            {item.identityLinked ? 'Bağlı' : 'Bağlı Değil'}
                           </span>
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
                       <div className="mt-2 flex items-center justify-between">
                         <p className="text-[10px] text-muted-foreground">{formatTs(item.lastEventTimestamp)}</p>
-                        <span className="text-[10px] text-muted-foreground">{item.messageCount} msg</span>
+                        <span className="text-[10px] text-muted-foreground">{item.messageCount} msj</span>
                       </div>
                     </button>);
 
@@ -543,15 +543,15 @@ export function InstagramInboxPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {selectedConversation.hasHandoverRequest ?
-                  <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Handover requested</span> :
+                  <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Devir talep edildi</span> :
                   null}
                     {handoverInProgress ?
                   <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
-                        {sendingResume ? 'Resuming...' : 'Resume AI'}
+                        {sendingResume ? 'Devam ediliyor...' : 'AI\'yı Yeniden Başlat'}
                       </Button> :
                   null}
                     <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
-                      {sendingHandover ? 'Requesting...' : handoverInProgress ? "Handover Aktif" : 'Request Handover'}
+                      {sendingHandover ? 'Talep ediliyor...' : handoverInProgress ? "Handover Aktif" : 'Temsilciye Aktar'}
                     </Button>
                   </div>
                 </div>

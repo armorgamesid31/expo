@@ -108,7 +108,7 @@ export function PackagesPage() {
   const submitTemplate = async () => {
     const normalizedName = name.trim();
     if (!normalizedName) {
-      setError('Template name is required.');
+      setError('Şablon adı zorunludur.');
       return;
     }
 
@@ -132,7 +132,7 @@ export function PackagesPage() {
     }
 
     if (validityDays && (!Number.isInteger(Number(validityDays)) || Number(validityDays) <= 0)) {
-      setError('Validity days must be a positive integer.');
+      setError('Geçerlilik günü pozitif bir tam sayı olmalı.');
       return;
     }
 
@@ -156,19 +156,19 @@ export function PackagesPage() {
           method: 'PUT',
           body: JSON.stringify(payload)
         });
-        setSuccess('Template updated.');
+        setSuccess('Şablon güncellendi.');
       } else {
         await apiFetch<{item: PackageTemplateItem;}>('/api/admin/package-templates', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
-        setSuccess('Template created.');
+        setSuccess('Şablon oluşturuldu.');
       }
 
       resetForm();
       await loadData();
     } catch (err: any) {
-      setError(err?.message || 'Template could not be saved.');
+      setError(err?.message || 'Şablon kaydedilemedi.');
     } finally {
       setSaving(false);
     }
@@ -178,7 +178,7 @@ export function PackagesPage() {
     <div className="p-4 space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">Paket Yönetimi</h1>
-        <p className="text-sm text-muted-foreground mt-1">Define service-based package templates (quota per service).</p>
+        <p className="text-sm text-muted-foreground mt-1">Hizmet bazlı paket şablonlarını (hizmet başına kota) tanımlayın.</p>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-3">
@@ -284,7 +284,7 @@ export function PackagesPage() {
               className="h-10 rounded-md border border-border text-xs"
               disabled={rows.length <= 1}>
               
-                Remove
+                Kaldır
               </button>
             </div>
           )}
@@ -304,7 +304,7 @@ export function PackagesPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-        <p className="text-sm font-semibold">Existing Templates</p>
+        <p className="text-sm font-semibold">Mevcut Şablonlar</p>
         {loading ? <p className="text-sm text-muted-foreground">Şablonlar yükleniyor...</p> : null}
         {!loading && templates.length === 0 ? <p className="text-sm text-muted-foreground">Henüz şablon yok.</p> : null}
 
@@ -322,7 +322,7 @@ export function PackagesPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {template.isActive ? "Aktif" : "Pasif"} • {template.scopeType} •{' '}
-              {template.validityDays ? `${template.validityDays} days` : "Bitiş yok"}
+              {template.validityDays ? `${template.validityDays} gün` : "Bitiş yok"}
             </p>
             <div className="flex flex-wrap gap-1">
               {template.services.map((service) =>

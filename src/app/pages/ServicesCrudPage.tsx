@@ -232,7 +232,7 @@ export function ServicesCrudPage() {
         return { [first.id]: true };
       });
     } catch (err: any) {
-      setError(err?.message || 'Data could not be retrieved.');
+      setError(err?.message || 'Veriler alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -378,11 +378,11 @@ export function ServicesCrudPage() {
     const price = Number(serviceForm.price);
     const categoryId = Number(serviceForm.categoryId);
     if (!Number.isFinite(duration) || duration <= 0) {
-      setError('Duration must be a positive number.');
+      setError('Süre pozitif bir sayı olmalıdır.');
       return;
     }
     if (!Number.isFinite(price) || price < 0) {
-      setError('The price must be zero or positive.');
+      setError('Fiyat sıfır veya pozitif olmalıdır.');
       return;
     }
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
@@ -489,7 +489,7 @@ export function ServicesCrudPage() {
     if (categoryBufferEnabled) {
       const bufferMinutes = Number(categoryForm.bufferMinutes);
       if (!Number.isInteger(bufferMinutes) || bufferMinutes < 0) {
-        setError('Preparation time must be zero or a positive integer.');
+        setError('Hazırlık süresi sıfır veya pozitif bir tam sayı olmalıdır.');
         return;
       }
       updates.bufferMinutes = bufferMinutes;
@@ -578,7 +578,7 @@ export function ServicesCrudPage() {
   };
 
   const deleteService = async (item: ServiceItem) => {
-    const ok = window.confirm(`${item.name} Do you want to delete this service?`);
+    const ok = window.confirm(`${item.name} hizmetini silmek istiyor musunuz?`);
     if (!ok) return;
 
     try {
@@ -617,18 +617,18 @@ export function ServicesCrudPage() {
     event.preventDefault();
 
     if (!groupForm.name.trim()) {
-      setError('Grup adı is required.');
+      setError('Grup adı zorunludur.');
       return;
     }
 
     const capacity = Number(groupForm.capacity);
     const preparationMinutes = Number(groupForm.preparationMinutes);
     if (!Number.isInteger(capacity) || capacity <= 0) {
-      setError('Group capacity must be a positive integer.');
+      setError('Grup kapasitesi pozitif bir tam sayı olmalıdır.');
       return;
     }
     if (!Number.isInteger(preparationMinutes) || preparationMinutes < 0) {
-      setError('Preparation time must be zero or a positive integer.');
+      setError('Hazırlık süresi sıfır veya pozitif bir tam sayı olmalıdır.');
       return;
     }
 
@@ -660,7 +660,7 @@ export function ServicesCrudPage() {
       setEditingGroup(null);
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Group could not be saved.');
+      setError(err?.message || 'Grup kaydedilemedi.');
     } finally {
       setSaving(false);
     }
@@ -705,7 +705,7 @@ export function ServicesCrudPage() {
       });
       setServices((prev) => prev.map((row) => row.id === item.id ? { ...row, isActive: next } : row));
     } catch (err: any) {
-      setError(err?.message || 'The service status could not be updated.');
+      setError(err?.message || 'Hizmet durumu güncellenemedi.');
     }
   };
 
@@ -717,7 +717,7 @@ export function ServicesCrudPage() {
       });
       setGroups((prev) => prev.map((item) => item.id === group.id ? { ...item, isActive: next } : item));
     } catch (err: any) {
-      setError(err?.message || 'Group status could not be updated.');
+      setError(err?.message || 'Grup durumu güncellenemedi.');
     }
   };
 

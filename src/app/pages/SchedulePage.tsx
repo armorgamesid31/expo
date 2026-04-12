@@ -89,13 +89,13 @@ function readScheduleSnapshot(date: Date): ScheduleSnapshot | null {
 }
 
 function statusLabel(status: UIAppointmentStatus | string) {
-  if (status === 'COMPLETED') return 'Completed';
+  if (status === 'COMPLETED') return 'Tamamlandı';
   if (status === 'CANCELLED') return "İptal Edildi";
-  if (status === 'NO_SHOW') return 'No-show';
-  if (status === 'CONFIRMED') return 'Confirmed';
+  if (status === 'NO_SHOW') return 'Gelmedi';
+  if (status === 'CONFIRMED') return 'Onaylandı';
   if (status === 'UPDATED') return "Güncellendi";
-  if (status === 'MIXED') return 'Mixed statuses';
-  return 'Booked';
+  if (status === 'MIXED') return 'Karışık Durumlar';
+  return 'Rezerve';
 }
 
 function statusClass(status: UIAppointmentStatus | string) {
@@ -143,10 +143,10 @@ type CheckoutLineDraft = {
 };
 
 function paymentMethodLabel(method: PaymentMethod) {
-  if (method === 'CASH') return 'Cash';
-  if (method === 'CARD') return 'Card';
-  if (method === 'TRANSFER') return 'Transfer';
-  return 'Other';
+  if (method === 'CASH') return 'Nakit';
+  if (method === 'CARD') return 'Kart';
+  if (method === 'TRANSFER') return 'Havale/EFT';
+  return 'Diğer';
 }
 
 function paymentMethodIcon(method: PaymentMethod) {
@@ -438,7 +438,7 @@ export function SchedulePage() {
         services: servicesResponse.items
       });
     } catch (err: any) {
-      setError(err?.message || "Takvim verileri alinamadi.");
+      setError(err?.message || "Takvim verileri alınamadı.");
     } finally {
       setLoading(false);
       setWaitlistLoading(false);
@@ -598,12 +598,12 @@ export function SchedulePage() {
 
   const submitCreate = async () => {
     if (!form.time) {
-      setCreateError('Time selection is mandatory.');
+      setCreateError('Saat seçimi zorunludur.');
       return;
     }
 
     if (selectedServiceIds.length === 0) {
-      setCreateError('You must select at least one service.');
+      setCreateError('En az bir hizmet seçmelisiniz.');
       return;
     }
 
@@ -620,12 +620,12 @@ export function SchedulePage() {
 
       const options = serviceStaffOptions[serviceId] || [];
       if (options.length === 0) {
-        setCreateError(`${service.name} Yok suitable specialist found for`);
+        setCreateError(`${service.name} için uygun uzman bulunamadı.`);
         return;
       }
 
       if (service.requiresSpecialist && options.length > 1 && !selectedStaffByService[serviceId]) {
-        setCreateError(`${service.name} You must select a specialist for`);
+        setCreateError(`${service.name} için bir uzman seçmelisiniz.`);
         return;
       }
     }
@@ -672,11 +672,11 @@ export function SchedulePage() {
     const idempotent = events.filter((item) => item.type === 'IDEMPOTENT').length;
 
     const parts: string[] = [];
-    if (consumed) parts.push(`${consumed} service usage applied`);
-    if (restored) parts.push(`${restored} service usage restored`);
-    if (skippedExpired) parts.push(`${skippedExpired} skipped (expired package)`);
-    if (skippedNoEligible) parts.push(`${skippedNoEligible} skipped (no eligible package)`);
-    if (idempotent) parts.push(`${idempotent} already processed`);
+    if (consumed) parts.push(`${consumed} hizmet kullanımı uygulandı`);
+    if (restored) parts.push(`${restored} hizmet kullanımı iade edildi`);
+    if (skippedExpired) parts.push(`${skippedExpired} atlandı (süresi dolmuş paket)`);
+    if (skippedNoEligible) parts.push(`${skippedNoEligible} atlandı (uygun paket yok)`);
+    if (idempotent) parts.push(`${idempotent} zaten işlenmiş`);
     return parts.join(' • ');
   };
 
@@ -919,7 +919,7 @@ export function SchedulePage() {
     if (!rescheduleSelection) return;
     const parsed = new Date(`${rescheduleSelection.date}T${rescheduleSelection.time}:00`);
     if (Number.isNaN(parsed.getTime())) {
-      setRescheduleSelection((prev) => prev ? { ...prev, error: 'Please choose a valid date and time.' } : prev);
+      setRescheduleSelection((prev) => prev ? { ...prev, error: 'Lütfen geçerli bir tarih ve saat seçin.' } : prev);
       return;
     }
 
@@ -936,12 +936,12 @@ export function SchedulePage() {
 
       const error =
       preview.hasConflicts && preview.conflicts.length ?
-      preview.conflicts[0].reason || 'Selected slot is not available.' :
+      preview.conflicts[0].reason || 'Seçilen saat uygun değil.' :
       null;
       setRescheduleSelection((prev) => prev ? { ...prev, preview, loading: false, error } : prev);
     } catch (err: any) {
       setRescheduleSelection((prev) =>
-      prev ? { ...prev, loading: false, error: err?.message || 'Reschedule preview failed.' } : prev
+      prev ? { ...prev, loading: false, error: err?.message || 'Yeniden planlama önizlemesi başarısız oldu.' } : prev
       );
     }
   };
@@ -1146,7 +1146,7 @@ export function SchedulePage() {
     if (!rescheduleSelection) return;
     const parsed = new Date(`${rescheduleSelection.date}T${rescheduleSelection.time}:00`);
     if (Number.isNaN(parsed.getTime())) {
-      setRescheduleSelection((prev) => prev ? { ...prev, error: 'Please choose a valid date and time.' } : prev);
+      setRescheduleSelection((prev) => prev ? { ...prev, error: 'Lütfen geçerli bir tarih ve saat seçin.' } : prev);
       return;
     }
 
@@ -1156,7 +1156,7 @@ export function SchedulePage() {
     }
     if (rescheduleSelection.preview.hasConflicts) {
       setRescheduleSelection((prev) =>
-      prev ? { ...prev, error: prev.preview?.conflicts?.[0]?.reason || 'Selected slot has conflicts.' } : prev
+      prev ? { ...prev, error: prev.preview?.conflicts?.[0]?.reason || 'Seçilen saatte çakışma var.' } : prev
       );
       return;
     }
@@ -1165,7 +1165,7 @@ export function SchedulePage() {
     for (const item of needsManualItems) {
       if (!rescheduleSelection.assignments[item.appointmentId]) {
         setRescheduleSelection((prev) =>
-        prev ? { ...prev, error: `Please select a specialist for ${item.serviceName}.` } : prev
+        prev ? { ...prev, error: `${item.serviceName} için lütfen bir uzman seçin.` } : prev
         );
         return;
       }
@@ -1204,7 +1204,7 @@ export function SchedulePage() {
       setRescheduleSelection(null);
       setStatusFeedback(`${(committed.items || []).length} randevu başarıyla yeniden planlandı.`);
     } catch (err: any) {
-      const message = err?.message || 'Reschedule failed.';
+      const message = err?.message || 'Yeniden planlama başarısız oldu.';
       setStatusFeedback(message);
       setRescheduleSelection((prev) => prev ? { ...prev, loading: false, error: message } : prev);
     } finally {
@@ -1296,14 +1296,14 @@ export function SchedulePage() {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Appointments</h1>
+        <h1 className="text-2xl font-semibold">Randevular</h1>
         <button
           type="button"
           onClick={() => void openCreateModal()}
           className="inline-flex items-center gap-2 rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-sm font-semibold text-white">
           
           <Plus className="h-4 w-4" />
-          New Appointment
+          Yeni Randevu
         </button>
       </div>
 
@@ -1316,7 +1316,7 @@ export function SchedulePage() {
           }>
           
           <CalendarDays className="h-3.5 w-3.5" />
-          Calendar
+          Takvim
         </button>
         <button
           type="button"
@@ -1393,14 +1393,14 @@ export function SchedulePage() {
                       {item.timeWindowStart} - {item.timeWindowEnd} • {item.source === 'ADMIN' ? "Salon ekledi" : "Müşteri ekledi"}
                     </p>
                     {item.allowNearbyMatches ?
-                <p className="text-[11px] text-muted-foreground">Nearby tolerance: ±{item.nearbyToleranceMinutes} min</p> :
+                <p className="text-[11px] text-muted-foreground">Yakınlık toleransı: ±{item.nearbyToleranceMinutes} dk</p> :
                 null}
                   </div>
                   <div className="text-right">
                     <span className="rounded-full border border-border px-2 py-1 text-[11px] font-semibold">{item.status}</span>
                     {item.latestOffer ?
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                        Offer: {item.latestOffer.slotStartTime} - {item.latestOffer.slotEndTime} • {item.latestOffer.status}
+                        Teklif: {item.latestOffer.slotStartTime} - {item.latestOffer.slotEndTime} • {item.latestOffer.status}
                       </p> :
                 null}
                   </div>
@@ -1410,7 +1410,7 @@ export function SchedulePage() {
                 const serviceMeta = services.find((entry) => entry.id === service.serviceId);
                 return (
                   <span key={`${item.id}-${service.serviceId}-${index}`} className="rounded-full border border-border bg-card px-2 py-1 text-[11px]">
-                        {serviceMeta?.name || `Service #${service.serviceId}`}
+                        {serviceMeta?.name || `Hizmet #${service.serviceId}`}
                       </span>);
 
               })}
@@ -1423,7 +1423,7 @@ export function SchedulePage() {
                 onClick={() => void sendManualWaitlistOffer(item.id)}
                 className="rounded-lg border border-emerald-300/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-700 disabled:opacity-50">
                 
-                    {waitlistBusyId === item.id ? 'Working...' : "Gönder Offer"}
+                    {waitlistBusyId === item.id ? 'İşleniyor...' : "Teklif Gönder"}
                   </button>
                   <button
                 type="button"
@@ -1453,7 +1453,7 @@ export function SchedulePage() {
                   {staff.map((member) =>
                 <div key={member.id} className="border-r border-border px-2 py-2" style={{ width: COLUMN_WIDTH }}>
                       <p className="text-xs font-semibold truncate">{member.name}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">{member.title || 'Specialist'}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{member.title || 'Uzman'}</p>
                     </div>
                 )}
                   {!staff.length ?
@@ -1547,7 +1547,7 @@ export function SchedulePage() {
                       <p className="text-[11px] text-muted-foreground">{statusLabel(groupStatus)}</p>
                       {groupStatus === 'COMPLETED' ?
                   <p className="text-[11px] text-muted-foreground mt-1">
-                          Payment: {groupPayment ? paymentMethodLabel(groupPayment) : 'Not recorded'}
+                          Ödeme: {groupPayment ? paymentMethodLabel(groupPayment) : 'Kaydedilmedi'}
                         </p> :
                   null}
                     </div>
@@ -1555,7 +1555,7 @@ export function SchedulePage() {
                   <div className="mt-2 text-xs text-muted-foreground">
                     <p>{serviceNames.join(', ')}</p>
                     <p>{staffNames.join(', ')}</p>
-                    <p className="mt-1 text-foreground font-medium">Total: {formatPrice(group.totalPrice)}</p>
+                    <p className="mt-1 text-foreground font-medium">Toplam: {formatPrice(group.totalPrice)}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {APPOINTMENT_STATUS_ACTIONS.map((status) =>
@@ -1627,7 +1627,7 @@ export function SchedulePage() {
           onClick={(event) => event.stopPropagation()}>
           
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Appointment Details</h2>
+              <h2 className="text-lg font-semibold">Randevu Detayları</h2>
               <button type="button" onClick={() => setSelectedAppointmentGroup(null)} className="text-sm text-muted-foreground">
                 Kapat
               </button>
@@ -1640,7 +1640,7 @@ export function SchedulePage() {
               </div>
               <div className="rounded-lg border border-border p-3 space-y-1">
                 <p>
-                  <span className="text-muted-foreground">Time:</span>{' '}
+                  <span className="text-muted-foreground">Saat:</span>{' '}
                   {format(new Date(selectedAppointmentGroup.startTime), 'HH:mm')} -{' '}
                   {format(new Date(selectedAppointmentGroup.endTime), 'HH:mm')}
                 </p>
@@ -1649,7 +1649,7 @@ export function SchedulePage() {
                   {statusLabel(deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus))}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Total price:</span> {formatPrice(selectedAppointmentGroup.totalPrice)}
+                   <span className="text-muted-foreground">Toplam fiyat:</span> {formatPrice(selectedAppointmentGroup.totalPrice)}
                 </p>
               </div>
 
@@ -1744,14 +1744,14 @@ export function SchedulePage() {
           className="mx-auto mt-16 max-w-sm rounded-2xl border border-border bg-background p-4 shadow-xl"
           onClick={(event) => event.stopPropagation()}>
           
-            <h3 className="text-lg font-semibold">Reschedule Appointment</h3>
+            <h3 className="text-lg font-semibold">Randevuyu Yeniden Planla</h3>
             <p className="mt-1 text-xs text-muted-foreground">
               Yeni başlangıç tarih/saati seçin. İlişkili hizmetler birlikte taşınacaktır.
             </p>
 
             <div className="mt-4 space-y-3">
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Date</span>
+                <span className="text-muted-foreground">Tarih</span>
                 <input
                 type="date"
                 value={rescheduleSelection.date}
@@ -1771,7 +1771,7 @@ export function SchedulePage() {
               
               </label>
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Time</span>
+                <span className="text-muted-foreground">Saat</span>
                 <input
                 type="time"
                 value={rescheduleSelection.time}
@@ -1794,7 +1794,7 @@ export function SchedulePage() {
 
             <div className="mt-3 rounded-lg border border-border bg-card/70 p-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Suggested Slots</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Önerilen Saatler</p>
                 {rescheduleSelection.suggestionsLoading ?
               <span className="text-[11px] text-muted-foreground">Yükleniyor...</span> :
               null}
@@ -1815,7 +1815,7 @@ export function SchedulePage() {
                   preview: slot.preview,
                   error:
                   slot.preview.hasConflicts && slot.preview.conflicts.length ?
-                  slot.preview.conflicts[0].reason || 'Selected slot is not available.' :
+                  slot.preview.conflicts[0].reason || 'Seçilen saat uygun değil.' :
                   null
                 } :
                 prev
@@ -1829,7 +1829,7 @@ export function SchedulePage() {
                 
                       <div className="font-semibold">{slot.time}</div>
                       <div className="mt-0.5 text-[11px] text-muted-foreground">
-                        {slot.requiresManualSelection ? 'Specialist choice may be needed' : 'Ready to use'}
+                        {slot.requiresManualSelection ? 'Uzman seçimi gerekebilir' : 'Müsait'}
                       </div>
                     </button>
               )}
@@ -1849,7 +1849,7 @@ export function SchedulePage() {
             }}
             className="mt-3 h-10 w-full rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50">
             
-              {rescheduleSelection.loading ? 'Checking...' : 'Check Availability'}
+              {rescheduleSelection.loading ? 'Kontrol ediliyor...' : 'Uygunluğu Kontrol Et'}
             </button>
 
             {rescheduleSelection.error ?
@@ -1874,7 +1874,7 @@ export function SchedulePage() {
                       </div>
                       {item.needsManualChoice ?
                   <div className="mt-1">
-                          <p className="text-[11px] text-muted-foreground">Preferred specialist is unavailable. Choose one:</p>
+                          <p className="text-[11px] text-muted-foreground">Tercih edilen uzman müsait değil. Birini seçin:</p>
                           <div className="mt-1 flex flex-wrap gap-1.5">
                             {availableCandidates.map((candidate) =>
                       <button
@@ -1907,7 +1907,7 @@ export function SchedulePage() {
                         </div> :
                   selectedStaffId ?
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                          Specialist: {item.candidates.find((candidate) => candidate.staffId === selectedStaffId)?.name || `#${selectedStaffId}`}
+                          Uzman: {item.candidates.find((candidate) => candidate.staffId === selectedStaffId)?.name || `#${selectedStaffId}`}
                         </p> :
                   null}
                     </div>);
@@ -1933,7 +1933,7 @@ export function SchedulePage() {
               }}
               className="h-10 flex-1 rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50">
               
-                {rescheduleSelection.loading ? "Kaydediliyor..." : 'Confirm Reschedule'}
+                {rescheduleSelection.loading ? "Kaydediliyor..." : 'Planlamayı Onayla'}
               </button>
             </div>
           </div>
@@ -1958,7 +1958,7 @@ export function SchedulePage() {
               onClick={() => setCheckoutModal((prev) => prev ? { ...prev, mode: 'GROUP' } : prev)}
               className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'GROUP' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}>
               
-                Group (Default)
+                Grup (Varsayılan)
               </button>
               <button
               type="button"
@@ -1966,13 +1966,13 @@ export function SchedulePage() {
               onClick={() => setCheckoutModal((prev) => prev ? { ...prev, mode: 'SPLIT' } : prev)}
               className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'SPLIT' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}>
               
-                Advanced Split
+                Gelişmiş Ayrıştırma
               </button>
             </div>
 
             {checkoutModal.mode === 'GROUP' ?
           <div className="mt-3">
-                <label className="block text-xs text-muted-foreground mb-1">Group close type</label>
+                <label className="block text-xs text-muted-foreground mb-1">Grup kapatma türü</label>
                 <select
               value={checkoutGroupCloseType}
               onChange={(event) => setCheckoutGroupCloseType(event.target.value as CheckoutCloseType)}
@@ -2131,10 +2131,10 @@ export function SchedulePage() {
             {checkoutSummary ?
           <div className="mt-2 rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground space-y-1">
                 <p className="font-medium text-foreground">Ödeme Özeti</p>
-                <p>Total lines: {checkoutSummary.total}</p>
-                <p>Single payment: {checkoutSummary.singlePayment}</p>
-                <p>Use existing package: {checkoutSummary.existingPackage}</p>
-                <p>Sell new package: {checkoutSummary.sellNewPackage}</p>
+                <p>Toplam satır: {checkoutSummary.total}</p>
+                <p>Tek ödeme: {checkoutSummary.singlePayment}</p>
+                <p>Mevcut paket kullanımı: {checkoutSummary.existingPackage}</p>
+                <p>Yeni paket satışı: {checkoutSummary.sellNewPackage}</p>
               </div> :
           null}
 
@@ -2211,7 +2211,7 @@ export function SchedulePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">From</span>
+                  <span className="text-muted-foreground">Başlangıç</span>
                   <input
                   type="time"
                   value={waitlistForm.timeWindowStart}
@@ -2220,7 +2220,7 @@ export function SchedulePage() {
                 
                 </label>
                 <label className="block text-sm space-y-1">
-                  <span className="text-muted-foreground">To</span>
+                  <span className="text-muted-foreground">Bitiş</span>
                   <input
                   type="time"
                   value={waitlistForm.timeWindowEnd}
@@ -2238,9 +2238,9 @@ export function SchedulePage() {
                 className="mt-1" />
               
                 <span className="text-sm">
-                  <span className="font-medium">Nearby time is okay too</span>
+                  <span className="font-medium">Yakın saatler de uygun</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                    If enabled, the matcher can also offer a slot up to 60 minutes earlier or later after trying the exact window first.
+                    Etkinleştirilirse, tam saat aralığı denendikten sonra 60 dakika öncesine veya sonrasına kadar olan saatler de teklif edilebilir.
                   </span>
                 </span>
               </label>
@@ -2261,7 +2261,7 @@ export function SchedulePage() {
                       
                         <span className="text-sm flex-1">
                           <span className="font-medium">{service.name}</span>
-                          <span className="text-muted-foreground"> • {service.duration} min</span>
+                          <span className="text-muted-foreground"> • {service.duration} dk</span>
                         </span>
                       </label>);
 
@@ -2300,7 +2300,7 @@ export function SchedulePage() {
             })}
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Note</span>
+                <span className="text-muted-foreground">Not</span>
                 <textarea
                 value={waitlistForm.notes}
                 onChange={(event) => setWaitlistForm((prev) => ({ ...prev, notes: event.target.value }))}
@@ -2328,7 +2328,7 @@ export function SchedulePage() {
       <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">New Appointment</h2>
+              <h2 className="text-lg font-semibold">Yeni Randevu</h2>
               <button type="button" onClick={closeCreateModal} className="text-sm text-muted-foreground">
                 Kapat
               </button>
@@ -2345,7 +2345,7 @@ export function SchedulePage() {
                     <option value="">Yeni Müşteri / Manuel Gir</option>
                   {customers.map((customer) =>
                 <option key={customer.id} value={customer.id}>
-                      {customer.name || 'Anonymous'} • {customer.phone}
+                      {customer.name || 'İsimsiz'} • {customer.phone}
                     </option>
                 )}
                 </select>
@@ -2389,8 +2389,8 @@ export function SchedulePage() {
                       
                         <span className="text-sm flex-1">
                           <span className="font-medium">{service.name}</span>
-                          <span className="text-muted-foreground"> • {service.duration} min</span>
-                          {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Specialist required</span> : null}
+                          <span className="text-muted-foreground"> • {service.duration} dk</span>
+                          {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Uzman gerekli</span> : null}
                         </span>
                       </label>);
 
@@ -2414,7 +2414,7 @@ export function SchedulePage() {
                   null}
 
                     {!loadingOptions && options.length === 1 ?
-                  <p className="text-xs text-muted-foreground">Ataed specialist: {options[0].name}</p> :
+                  <p className="text-xs text-muted-foreground">Atanan uzman: {options[0].name}</p> :
                   null}
 
                     {!loadingOptions && options.length > 1 ?
@@ -2438,7 +2438,7 @@ export function SchedulePage() {
             })}
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Start Time</span>
+                <span className="text-muted-foreground">Başlangıç Saati</span>
                 <input
                 type="time"
                 value={form.time}
@@ -2448,7 +2448,7 @@ export function SchedulePage() {
               </label>
 
               <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Note (optional)</span>
+                <span className="text-muted-foreground">Not (isteğe bağlı)</span>
                 <textarea
                 value={form.notes}
                 onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
@@ -2469,7 +2469,7 @@ export function SchedulePage() {
               </button>
 
               <p className="text-[11px] text-muted-foreground">
-                We automatically check availability for each selected service.
+                Her seçilen hizmet için uygunluğu otomatik olarak kontrol ediyoruz.
               </p>
             </div>
           </div>
