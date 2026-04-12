@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { BottomNav } from '../layout/BottomNav';
@@ -142,6 +142,7 @@ function backTargetFromPathname(pathname: string): string | null {
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const navType = useNavigationType();
   const { bootstrap, logout } = useAuth();
   const previousPathRef = useRef(location.pathname);
   const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
@@ -165,7 +166,9 @@ export function AppLayout() {
     (location.state as {navDirection?: string;}).navDirection as string :
     null;
 
-    if (explicitDirection === 'back') {
+    if (navType === 'POP') {
+      setTransitionDirection(-1);
+    } else if (explicitDirection === 'back') {
       setTransitionDirection(-1);
     } else if (explicitDirection === 'forward') {
       setTransitionDirection(1);
@@ -202,7 +205,13 @@ export function AppLayout() {
             {backTarget ?
             <button
               type="button"
-              onClick={() => navigate(backTarget, { state: { navDirection: 'back' } })}
+              onClick={() => {
+                if (window.history.length > 2) {
+                  navigate(-1);
+                } else {
+                  navigate(backTarget, { state: { navDirection: 'back' } });
+                }
+              }}
               className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground"
               aria-label="Geri">
               

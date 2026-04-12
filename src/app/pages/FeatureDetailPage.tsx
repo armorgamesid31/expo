@@ -21,11 +21,15 @@ export function FeatureDetailPage() {
   const location = useLocation();
 
   const onBack = () => {
-    const fromPath = (location.state as any)?.from;
-    if (fromPath) {
-      navigate(fromPath, { state: { navDirection: 'back' } });
+    if (window.history.length > 2) {
+      navigate(-1);
     } else {
-      navigate('/app/features', { state: { navDirection: 'back' } });
+      const fromPath = (location.state as any)?.from;
+      if (fromPath) {
+        navigate(fromPath, { state: { navDirection: 'back' } });
+      } else {
+        navigate('/app/features', { state: { navDirection: 'back' } });
+      }
     }
   };
 
