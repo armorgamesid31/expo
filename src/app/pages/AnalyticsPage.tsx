@@ -426,7 +426,7 @@ export function AnalyticsPage() {
         <p className="text-sm font-medium">Report Templates</p>
         <input
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="template name"
+          placeholder="şablon adı"
           value={templateName}
           onChange={(e) => setTemplateName(e.target.value)} />
         

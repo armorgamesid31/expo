@@ -2085,7 +2085,7 @@ export function SchedulePage() {
                 value={checkoutNewPackagePrice}
                 onChange={(event) => setCheckoutNewPackagePrice(event.target.value)}
                 className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                placeholder="Price (optional)"
+                placeholder="Fiyat (isteğe bağlı)"
                 type="number"
                 min="0"
                 step="0.01" />
@@ -2094,7 +2094,7 @@ export function SchedulePage() {
                 value={checkoutNewPackageQuota}
                 onChange={(event) => setCheckoutNewPackageQuota(event.target.value)}
                 className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                placeholder="Quota per service"
+                placeholder="Hizmet başına kota"
                 type="number"
                 min="1"
                 step="1" />
@@ -2305,7 +2305,7 @@ export function SchedulePage() {
                 value={waitlistForm.notes}
                 onChange={(event) => setWaitlistForm((prev) => ({ ...prev, notes: event.target.value }))}
                 className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                placeholder="Optional note..." />
+                placeholder="İsteğe bağlı not..." />
               
               </label>
 
@@ -2359,7 +2359,7 @@ export function SchedulePage() {
                 value={form.customerName}
                 onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
                 className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                placeholder="For example: Ayse Yilmaz" />
+                placeholder="Örneğin: Ayşe Yılmaz" />
               
               </label>
 
@@ -2453,7 +2453,7 @@ export function SchedulePage() {
                 value={form.notes}
                 onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
                 className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                placeholder="Optional note..." />
+                placeholder="İsteğe bağlı not..." />
               
               </label>
 

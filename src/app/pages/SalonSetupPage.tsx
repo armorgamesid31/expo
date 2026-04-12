@@ -217,19 +217,19 @@ export function SalonSetupPage() {
       {message ? <p className="text-sm text-green-600">{message}</p> : null}
 
       <form className="space-y-3" onSubmit={handleSubmit}>
-        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Salon name" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
+        <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Salon adı" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Adres" value={form.address} onChange={(e) => setForm((prev) => ({ ...prev, address: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="WhatsApp telefonu" value={form.whatsappPhone} onChange={(e) => setForm((prev) => ({ ...prev, whatsappPhone: e.target.value }))} />
 
         <div className="grid grid-cols-2 gap-2">
-          <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="City" value={form.city} onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))} />
-          <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Country code" value={form.countryCode} onChange={(e) => setForm((prev) => ({ ...prev, countryCode: e.target.value.toUpperCase() }))} />
+          <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Şehir" value={form.city} onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))} />
+          <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Ülke kodu" value={form.countryCode} onChange={(e) => setForm((prev) => ({ ...prev, countryCode: e.target.value.toUpperCase() }))} />
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} max={23} placeholder="Opening" value={form.workStartHour} onChange={(e) => setForm((prev) => ({ ...prev, workStartHour: Number(e.target.value) }))} />
-          <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} max={23} placeholder="Closing" value={form.workEndHour} onChange={(e) => setForm((prev) => ({ ...prev, workEndHour: Number(e.target.value) }))} />
-          <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={5} max={120} step={5} placeholder="Slot" value={form.slotInterval} onChange={(e) => setForm((prev) => ({ ...prev, slotInterval: Number(e.target.value) }))} />
+          <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} max={23} placeholder="Açılış" value={form.workStartHour} onChange={(e) => setForm((prev) => ({ ...prev, workStartHour: Number(e.target.value) }))} />
+          <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} max={23} placeholder="Kapanış" value={form.workEndHour} onChange={(e) => setForm((prev) => ({ ...prev, workEndHour: Number(e.target.value) }))} />
+          <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={5} max={120} step={5} placeholder="Aralık" value={form.slotInterval} onChange={(e) => setForm((prev) => ({ ...prev, slotInterval: Number(e.target.value) }))} />
         </div>
 
         <div className="rounded-md border border-border p-3">

@@ -239,7 +239,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     id="ref-name"
                     value={referralForm.name}
                     onChange={(e) => setReferralForm({ ...referralForm, name: e.target.value })}
-                    placeholder="Ex: Bahar Bring a Friend" />
+                    placeholder="Örn: Arkadaşını Getir" />
                   
                     </div>
 
@@ -311,7 +311,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     id="loy-name"
                     value={loyaltyForm.name}
                     onChange={(e) => setLoyaltyForm({ ...loyaltyForm, name: e.target.value })}
-                    placeholder="Ex: VIP Loyalty Program" />
+                    placeholder="Örn: VIP Sadakat Programı" />
                   
                     </div>
 
@@ -348,7 +348,7 @@ export function Campaigns({ onBack }: CampaignsProps) {
                     id="loy-reward"
                     value={loyaltyForm.rewardValue}
                     onChange={(e) => setLoyaltyForm({ ...loyaltyForm, rewardValue: e.target.value })}
-                    placeholder="₺100 off or Free manicure" />
+                    placeholder="100₺ indirim veya bedava manikür" />
                   
                       <p className="text-xs text-muted-foreground">
                         Reward earned when customer reaches required points

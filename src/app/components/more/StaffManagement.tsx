@@ -287,7 +287,7 @@ export function StaffManagement({ onBack }: StaffManagementProps) {
                   id="name"
                   value={formData.name || ''}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="For example: Ayse Yilmaz" />
+                  placeholder="Örneğin: Ayşe Yılmaz" />
                 
               </div>
 

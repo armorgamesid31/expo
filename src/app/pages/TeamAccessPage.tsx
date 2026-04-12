@@ -208,7 +208,7 @@ export function TeamAccessPage() {
             <input
             value={createForm.email}
             onChange={(e) => setCreateForm((prev) => ({ ...prev, email: e.target.value }))}
-            placeholder="Email"
+            placeholder="E-posta"
             className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm" />
           
             <input

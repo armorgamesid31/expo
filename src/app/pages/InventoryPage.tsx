@@ -83,7 +83,7 @@ export function InventoryPage() {
         <input className="col-span-2 rounded-md border border-border px-3 py-2 text-sm" placeholder="Ürün adı" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
         <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Kategori" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
         <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Birim" value={form.unit} onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))} />
-        <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} placeholder="starting stock" value={form.currentStock} onChange={(e) => setForm((prev) => ({ ...prev, currentStock: Number(e.target.value) }))} />
+        <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} placeholder="başlangıç stoku" value={form.currentStock} onChange={(e) => setForm((prev) => ({ ...prev, currentStock: Number(e.target.value) }))} />
         <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} placeholder="Min stok" value={form.minStock} onChange={(e) => setForm((prev) => ({ ...prev, minStock: Number(e.target.value) }))} />
         <button type="submit" disabled={saving} className="col-span-2 rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? "Ekleniyor..." : "Ürün Ekle"}</button>
       </form>

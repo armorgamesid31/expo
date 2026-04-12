@@ -310,7 +310,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   value={salonName}
                   onChange={(e) => setSalonName(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Your salon name" />
+                  placeholder="Salon adınız" />
                 
               </div>
               <div>
@@ -319,7 +319,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   value={tagline}
                   onChange={(e) => setTagline(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Your salon's motto" />
+                  placeholder="Salonunuzun sloganı" />
                 
               </div>
               <div>
@@ -328,7 +328,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   value={heroText}
                   onChange={(e) => setHeroText(e.target.value)}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Home page title" />
+                  placeholder="Ana sayfa başlığı" />
                 
               </div>
               <div>
@@ -338,7 +338,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all resize-none"
-                  placeholder="Brief description of your salon" />
+                  placeholder="Salonunuzun kısa açıklaması" />
                 
               </div>
             </CardContent>

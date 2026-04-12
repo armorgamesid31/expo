@@ -278,7 +278,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                 id="name"
                 value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Orn: Kesim ve Sekillendirme" />
+                placeholder="Örn: Kesim ve Şekillendirme" />
               
             </div>
 
@@ -333,7 +333,7 @@ export function ServiceManagement({ onBack }: ServiceManagementProps) {
                 onValueChange={(value: ServiceCategory) => setFormData({ ...formData, category: value })}>
                 
                   <SelectTrigger>
-                    <SelectValue placeholder="Kategori sec" />
+                    <SelectValue placeholder="Kategori seç" />
                   </SelectTrigger>
                   <SelectContent>
                     {sortedCategories.map((cat) =>

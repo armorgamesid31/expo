@@ -195,7 +195,7 @@ export function PackagesPage() {
           value={name}
           onChange={(event) => setName(event.target.value)}
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Template name" />
+          placeholder="Şablon adı" />
         
 
         <div className="grid grid-cols-2 gap-2">
@@ -225,7 +225,7 @@ export function PackagesPage() {
             step="0.01"
             onChange={(event) => setPrice(event.target.value)}
             className="w-full rounded-md border border-border px-3 py-2 text-sm"
-            placeholder="Price (optional)" />
+            placeholder="Fiyat (isteğe bağlı)" />
           
           <input
             value={validityDays}
@@ -234,7 +234,7 @@ export function PackagesPage() {
             step="1"
             onChange={(event) => setValidityDays(event.target.value)}
             className="w-full rounded-md border border-border px-3 py-2 text-sm"
-            placeholder="Validity days" />
+            placeholder="Geçerlilik günü" />
           
         </div>
 
@@ -242,7 +242,7 @@ export function PackagesPage() {
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[80px]"
-          placeholder="Notes (optional)" />
+          placeholder="Notlar (isteğe bağlı)" />
         
 
         <div className="space-y-2 rounded-md border border-border p-2">
@@ -275,7 +275,7 @@ export function PackagesPage() {
               min="1"
               step="1"
               className="h-10 rounded-md border border-border px-2 text-sm"
-              placeholder="Quota" />
+              placeholder="Kota" />
             
 
               <button

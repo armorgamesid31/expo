@@ -210,7 +210,7 @@ export function MarketingAutomation({ onGeri }: MarketingAutomationProps) {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={4}
-                  placeholder="Hello {{name}}, we missed you! This month we have a special offer via WhatsApp..."
+                  placeholder="Merhaba {{name}}, seni özledik! Bu ay WhatsApp üzerinden özel bir teklifimiz var..."
                   className="w-full bg-muted/40 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all resize-none" />
                 
                     <p className="text-[10px] text-muted-foreground mt-1">{"{{name}}"} variable is filled automatically</p>
