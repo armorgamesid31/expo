@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, Fragment } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from 'react';
 import { addDays, addMinutes, endOfDay, format, formatISO, startOfDay, subDays } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { Banknote, CalendarDays, CircleHelp, CreditCard, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
@@ -358,7 +358,7 @@ export function SchedulePage() {
             {
               id: 0,
               appointmentId: item.id,
-              serviceId: item.service.id,
+              serviceId: item.service?.id,
               status: item.status,
               orderIndex: 0,
               service: item.service
@@ -369,8 +369,8 @@ export function SchedulePage() {
             key: `${item.id}:${line.id || 0}`,
             appointmentId: item.id,
             appointmentLineId: line.id && line.id > 0 ? line.id : null,
-            serviceId: line.serviceId || item.service.id,
-            serviceName: line.service?.name || item.service.name,
+            serviceId: line.serviceId || item.service?.id,
+            serviceName: line.service?.name || item.service?.name,
             startTime: item.startTime
           });
         }
@@ -1477,7 +1477,7 @@ export function SchedulePage() {
 
                 <div className="flex flex-1">
                   {staff.map((member) => {
-                    const rows = appointments.filter((item) => item.staff.id === member.id);
+                    const rows = appointments.filter((item) => item.staff?.id === member.id);
                     return (
                       <div key={member.id} className="relative border-r border-border" style={{ width: COLUMN_WIDTH, height: timelineHeight }}>
                         {timeSlots.map((hour) =>
@@ -1499,11 +1499,11 @@ export function SchedulePage() {
                                 appointmentDisplayStatus
                               )}`}
                               style={{ top: block.top, height: block.height }}
-                              title={`${appointment.customerName} • ${appointment.service.name} • ${statusLabel(appointmentDisplayStatus)}`}
+                              title={`${appointment.customerName} • ${appointment.service?.name} • ${statusLabel(appointmentDisplayStatus)}`}
                               onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}>
 
                               <p className="font-semibold truncate">{appointment.customerName}</p>
-                              <p className="truncate text-muted-foreground">{appointment.service.name}</p>
+                              <p className="truncate text-muted-foreground">{appointment.service?.name}</p>
                               <p className="text-[10px] text-muted-foreground mt-1">{timeRange}</p>
                             </div>);
 
@@ -1525,8 +1525,8 @@ export function SchedulePage() {
               const start = format(new Date(group.startTime), 'HH:mm');
               const end = format(new Date(group.endTime), 'HH:mm');
               const groupStatus = deriveGroupStatus(group.items, getDisplayStatus);
-              const serviceNames = Array.from(new Set(group.items.map((item) => item.service.name)));
-              const staffNames = Array.from(new Set(group.items.map((item) => item.staff.name)));
+              const serviceNames = Array.from(new Set(group.items.map((item) => item.service?.name)));
+              const staffNames = Array.from(new Set(group.items.map((item) => item.staff?.name)));
               const groupPayment = group.items.every((item) => item.paymentMethod === group.items[0].paymentMethod) ?
                 group.items[0].paymentMethod as PaymentMethod | null | undefined :
                 null;
@@ -1657,11 +1657,11 @@ export function SchedulePage() {
                 {selectedAppointmentGroup.items.map((item) =>
                   <div key={item.id} className="rounded-md border border-border/70 p-2">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{item.service.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatPrice(item.service.price || 0)}</p>
+                      <p className="text-sm font-medium">{item.service?.name}</p>
+                      <p className="text-xs text-muted-foreground">{formatPrice(item.service?.price || 0)}</p>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(item.startTime), 'HH:mm')} - {format(new Date(item.endTime), 'HH:mm')} • {item.staff.name}
+                      {format(new Date(item.startTime), 'HH:mm')} - {format(new Date(item.endTime), 'HH:mm')} • {item.staff?.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {statusLabel(getDisplayStatus(item))}
