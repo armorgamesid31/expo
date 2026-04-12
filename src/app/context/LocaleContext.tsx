@@ -216,10 +216,8 @@ const TR_TO_EN = Object.fromEntries(
 ) as Record<string, string>;
 
 function detectInitialLocale(): AppLocale {
-  if (typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('tr')) {
-    return 'tr';
-  }
-  return 'en';
+  // Product decision: Turkish-first rollout.
+  return 'tr';
 }
 
 function escapeRegExp(value: string): string {
@@ -348,7 +346,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       try {
         const stored = await Preferences.get({ key: LOCALE_PREF_KEY });
         const savedLocale = stored.value === 'tr' || stored.value === 'en' ? stored.value : null;
-        const nextLocale = (savedLocale ?? detectInitialLocale()) as AppLocale;
+        // Force Turkish as default even when legacy stored value is "en".
+        const nextLocale = (savedLocale === 'tr' ? 'tr' : detectInitialLocale()) as AppLocale;
         if (mounted) {
           setLocaleState(nextLocale);
         }
