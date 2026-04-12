@@ -95,16 +95,16 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
 
     (async () => {
       try {
-        const [content, catRows] = await Promise.all([
+        const [content, catResponse] = await Promise.all([
           apiFetch<WebsiteContentResponse>('/api/admin/website/content'),
-          apiFetch<ServiceCategory[]>('/api/admin/service-categories')
+          apiFetch<{ items: ServiceCategory[] }>('/api/admin/service-categories')
         ]);
 
         if (!mounted) {
           return;
         }
 
-        setCategories(catRows || []);
+        setCategories(catResponse?.items || []);
         setSalonName(content.salon.name || bootstrap?.salon?.name || salonName);
         setTagline(content.salon.tagline || 'Discover Your Beauty');
         setHeroText(content.salon.heroText || content.salon.tagline || 'Professional Care, Personal Touch');
