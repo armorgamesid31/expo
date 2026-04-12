@@ -360,6 +360,30 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
             </CardContent>
           </Card>
 
+          <Card className="border-[var(--rose-gold)]/30 bg-gradient-to-r from-[var(--rose-gold)]/5 to-transparent shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[var(--rose-gold)]/10 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-[var(--rose-gold)]" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">AI ile Üret</p>
+                  <p className="text-xs text-muted-foreground">Profesyonel tanıtım metinleri üretin</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleGenerate();
+                  }}
+                  disabled={isGenerating}
+                  className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed shadow-sm">
+
+                  {isGenerating ? 'Üretiliyor...' : 'Üret'}
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-border/50">
             <CardHeader className="pb-3 px-4 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -432,29 +456,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-[var(--rose-gold)]/30 bg-gradient-to-r from-[var(--rose-gold)]/5 to-transparent">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[var(--rose-gold)]/10 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-[var(--rose-gold)]" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Generate Content with AI</p>
-                  <p className="text-xs text-muted-foreground">Generate automatic text for your salon</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleGenerate();
-                  }}
-                  disabled={isGenerating}
-                  className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed">
 
-                  {isGenerating ? 'Being produced...' : 'produce'}
-                </button>
-              </div>
-            </CardContent>
-          </Card>
 
           <button
             type="button"
