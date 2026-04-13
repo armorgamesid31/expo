@@ -1,107 +1,54 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { BottomNav } from '../layout/BottomNav';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigator } from '../../context/NavigatorContext';
 
-type TransitionKind = 'slide-x' | 'slide-y' | 'fade-lift' | 'soft-scale' | 'fade';
-
-function transitionKindFromPathname(pathname: string): TransitionKind {
-  if (pathname.startsWith('/app/features')) return 'slide-x';
-  if (pathname.startsWith('/app/schedule')) return 'slide-y';
-  if (pathname.startsWith('/app/conversations')) return 'soft-scale';
-  if (pathname.startsWith('/app/dashboard')) return 'fade-lift';
-  if (pathname.startsWith('/app/settings')) return 'fade';
-  if (pathname.startsWith('/app/notifications')) return 'soft-scale';
-  if (pathname.startsWith('/app/notification-settings')) return 'fade';
-  if (pathname.startsWith('/app/notification-role-matrix')) return 'soft-scale';
-  if (pathname.startsWith('/app/team-access')) return 'soft-scale';
-  if (pathname.startsWith('/app/team-management')) return 'soft-scale';
-  if (
-  pathname.startsWith('/app/customers') ||
-  pathname.startsWith('/app/analytics') ||
-  pathname.startsWith('/app/inventory') ||
-  pathname.startsWith('/app/campaigns') ||
-  pathname.startsWith('/app/automations') ||
-  pathname.startsWith('/app/instagram-inbox') ||
-  pathname.startsWith('/app/blacklist') ||
-  pathname.startsWith('/app/salon-info') ||
-  pathname.startsWith('/app/services') ||
-  pathname.startsWith('/app/staff') ||
-  pathname.startsWith('/app/data-import') ||
-  pathname.startsWith('/app/operations-studio') ||
-  pathname.startsWith('/app/brand-growth-hub'))
-  {
-    return 'soft-scale';
+function transitionMotionByKind(vector: number) {
+  // Vector 1: Slide Content RIGHT (New from Left) - Used for Forward Tabs / Up Hierarchy
+  // Vector -1: Slide Content LEFT (New from Right) - Used for Forward Hierarchy / Back Tabs
+  if (vector === 0) {
+    return {
+      initial: { opacity: 1 },
+      animate: { opacity: 1 },
+      exit: { opacity: 1 },
+      transition: { duration: 0 }
+    };
   }
-  return 'slide-x';
-}
 
-function transitionMotionByKind(kind: TransitionKind, direction: 1 | -1) {
-  switch (kind) {
-    case 'slide-x':
-      return {
-        initial: { x: direction === 1 ? 36 : -36, opacity: 0 },
-        animate: { x: 0, opacity: 1 },
-        exit: { x: direction === 1 ? -28 : 28, opacity: 0 },
-        transition: { duration: 0.36, ease: [0.22, 1, 0.36, 1] }
-      };
-    case 'slide-y':
-      return {
-        initial: { y: direction === 1 ? 28 : -20, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        exit: { y: direction === 1 ? -18 : 20, opacity: 0 },
-        transition: { duration: 0.34, ease: [0.22, 1, 0.36, 1] }
-      };
-    case 'fade-lift':
-      return {
-        initial: { y: 14, opacity: 0 },
-        animate: { y: 0, opacity: 1 },
-        exit: { y: -10, opacity: 0 },
-        transition: { duration: 0.32, ease: [0.25, 1, 0.5, 1] }
-      };
-    case 'soft-scale':
-      return {
-        initial: { scale: 0.985, y: 8, opacity: 0 },
-        animate: { scale: 1, y: 0, opacity: 1 },
-        exit: { scale: 0.992, y: -8, opacity: 0 },
-        transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] }
-      };
-    case 'fade':
-    default:
-      return {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-        transition: { duration: 0.3, ease: 'easeInOut' }
-      };
-  }
+  return {
+    initial: { 
+      x: vector === 1 ? '-100%' : '100%', 
+      opacity: 1
+    },
+    animate: { 
+      x: 0, 
+      opacity: 1
+    },
+    exit: { 
+      x: vector === 1 ? '100%' : '-100%', 
+      opacity: 1
+    },
+    transition: { 
+      duration: 0.35, 
+      ease: [0.33, 1, 0.68, 1] 
+    }
+  };
 }
 
 function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/schedule')) return 'schedule';
   if (pathname.startsWith('/app/conversations')) return 'conversations';
-  if (pathname.startsWith('/app/customers')) return 'settings';
-  if (pathname.startsWith('/app/analytics')) return 'settings';
-  if (pathname.startsWith('/app/inventory')) return 'settings';
-  if (pathname.startsWith('/app/campaigns')) return 'settings';
-  if (pathname.startsWith('/app/automations')) return 'settings';
-  if (pathname.startsWith('/app/instagram-inbox')) return 'settings';
-  if (pathname.startsWith('/app/blacklist')) return 'settings';
-  if (pathname.startsWith('/app/salon-info')) return 'settings';
-  if (pathname.startsWith('/app/services')) return 'settings';
-  if (pathname.startsWith('/app/staff')) return 'settings';
-  if (pathname.startsWith('/app/data-import')) return 'settings';
-  if (pathname.startsWith('/app/operations-studio')) return 'settings';
-  if (pathname.startsWith('/app/brand-growth-hub')) return 'settings';
-  if (pathname.startsWith('/app/features')) return 'settings';
-  if (pathname.startsWith('/app/settings')) return 'settings';
-  if (pathname.startsWith('/app/notification-settings')) return 'settings';
-  if (pathname.startsWith('/app/notifications')) return 'settings';
-  if (pathname.startsWith('/app/notification-role-matrix')) return 'settings';
-  if (pathname.startsWith('/app/team-access')) return 'settings';
-  if (pathname.startsWith('/app/team-management')) return 'settings';
+  const settingsRoutes = [
+    '/app/customers', '/app/analytics', '/app/inventory', '/app/campaigns', 
+    '/app/automations', '/app/instagram-inbox', '/app/blacklist', '/app/salon-info', 
+    '/app/services', '/app/staff', '/app/data-import', '/app/operations-studio', 
+    '/app/brand-growth-hub', '/app/features', '/app/settings', '/app/notification-settings',
+    '/app/notifications', '/app/notification-role-matrix', '/app/team-access', '/app/team-management'
+  ];
+  if (settingsRoutes.some(route => pathname.startsWith(route))) return 'settings';
   return 'dashboard';
 }
 
@@ -116,21 +63,11 @@ function backTargetFromPathname(pathname: string): string | null {
   if (pathname.startsWith('/app/notifications')) return '/app/settings';
 
   const featureModuleRoutes = [
-  '/app/customers',
-  '/app/analytics',
-  '/app/inventory',
-  '/app/campaigns',
-  '/app/automations',
-  '/app/instagram-inbox',
-  '/app/blacklist',
-  '/app/salon-info',
-  '/app/services',
-  '/app/staff',
-  '/app/data-import',
-  '/app/team-management',
-  '/app/operations-studio',
-  '/app/brand-growth-hub'];
-
+    '/app/customers', '/app/analytics', '/app/inventory', '/app/campaigns', 
+    '/app/automations', '/app/instagram-inbox', '/app/blacklist', '/app/salon-info', 
+    '/app/services', '/app/staff', '/app/data-import', '/app/team-management', 
+    '/app/operations-studio', '/app/brand-growth-hub'
+  ];
 
   if (featureModuleRoutes.some((route) => pathname.startsWith(route))) {
     return '/app/features';
@@ -142,9 +79,8 @@ function backTargetFromPathname(pathname: string): string | null {
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const navType = useNavigationType();
+  const { direction } = useNavigator();
   const { bootstrap, logout } = useAuth();
-  const previousPathRef = useRef(location.pathname);
 
   const activeTab = tabFromPathname(location.pathname);
   let backTarget = backTargetFromPathname(location.pathname);
@@ -154,113 +90,78 @@ export function AppLayout() {
     backTarget = fromState;
   }
 
-  const explicitDirection =
-    typeof (location.state as {navDirection?: unknown;} | null)?.navDirection === 'string' ?
-    (location.state as {navDirection?: string;}).navDirection as string :
-    null;
-
-  let currentTransitionDirection: 1 | -1 = 1;
-  if (navType === 'POP') {
-    currentTransitionDirection = -1;
-  } else if (explicitDirection === 'back') {
-    currentTransitionDirection = -1;
-  } else if (explicitDirection === 'forward') {
-    currentTransitionDirection = 1;
-  } else {
-    const previousDepth = previousPathRef.current.split('/').filter(Boolean).length;
-    const currentDepth = location.pathname.split('/').filter(Boolean).length;
-    currentTransitionDirection = currentDepth < previousDepth ? -1 : 1;
-  }
-
-  const transitionKind = transitionKindFromPathname(location.pathname);
-  const transitionMotion = transitionMotionByKind(transitionKind, currentTransitionDirection);
-
-  useEffect(() => {
-    previousPathRef.current = location.pathname;
-  }, [location.pathname]);
+  const transitionMotion = transitionMotionByKind(direction);
 
   const handleTabChange = (tab: string) => {
-    if (tab === 'schedule') {
-      navigate('/app/schedule', { state: { navDirection: 'forward' } });
-      return;
-    }
-    if (tab === 'conversations') {
-      navigate('/app/conversations', { state: { navDirection: 'forward' } });
-      return;
-    }
-    if (tab === 'settings') {
-      navigate('/app/features', { state: { navDirection: 'forward' } });
-      return;
-    }
-    navigate('/app/dashboard', { state: { navDirection: 'forward' } });
+    const routeMap: Record<string, string> = {
+      schedule: '/app/schedule',
+      conversations: '/app/conversations',
+      settings: '/app/features',
+      dashboard: '/app/dashboard'
+    };
+    navigate(routeMap[tab] || '/app/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-[var(--luxury-bg)]">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
-        <div className="relative flex items-center justify-between px-4 py-3">
-          <div className="w-8">
-            {backTarget ?
-            <button
-              type="button"
-              onClick={() => {
-                if (window.history.length > 2) {
-                  navigate(-1);
-                } else {
-                  navigate(backTarget, { state: { navDirection: 'back' } });
-                }
-              }}
-              className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground"
-              aria-label="Geri">
-              
-                <ChevronLeft className="h-4 w-4" />
-              </button> :
-            null}
+    <div className="min-h-screen bg-background overflow-x-hidden relative">
+      <header className="fixed top-0 left-0 right-0 z-40 glass-panel border-b border-border safe-top">
+        <div className="relative flex items-center justify-between px-4 h-14">
+          <div className="w-10">
+            {backTarget && (
+              <button
+                type="button"
+                onClick={() => window.history.length > 2 ? navigate(-1) : navigate(backTarget!, { state: { navDirection: 'back' } })}
+                className="h-9 w-9 grid place-items-center rounded-xl glass-card transition-all active:scale-90"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+            )}
           </div>
 
-          <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center">
+          <div className="flex flex-col items-center">
             <img
               src="https://cdn.kedyapp.com/kedylogo_koyu.png"
               alt="Kedy Logo"
-              className="h-[36px] w-auto dark:hidden"
-              loading="eager" />
-            
+              className="h-8 w-auto dark:hidden"
+            />
             <img
-              src="https://cdn.kedyapp.com/kedylogo_beyaztürüncu.png"
+              src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
               alt="Kedy Logo"
-              className="hidden h-[36px] w-auto dark:block"
-              loading="eager" />
-            
-            <p className="text-[10px] leading-tight text-muted-foreground">
+              className="hidden h-8 w-auto dark:block"
+            />
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mt-0.5">
               {bootstrap?.salon?.name || 'Kedy App'}
-            </p>
+            </span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground">
-            
-            Çıkış
-          </button>
+          <div className="w-10 flex justify-end">
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground transition-all active:scale-90 hover:text-destructive"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="pb-20 overflow-x-hidden">
-        <AnimatePresence initial={false} mode="wait">
+      <main className="pt-20 pb-24 overflow-x-hidden min-h-screen relative">
+        <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={location.pathname}
             initial={transitionMotion.initial}
             animate={transitionMotion.animate}
             exit={transitionMotion.exit}
-            transition={transitionMotion.transition}>
-            
+            transition={transitionMotion.transition}
+            className="w-full h-full"
+          >
             <Outlet />
           </motion.div>
         </AnimatePresence>
       </main>
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
-    </div>);
-
+    </div>
+  );
 }

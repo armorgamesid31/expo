@@ -17,6 +17,11 @@ import type {
   '../types/mobile-api';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
+// Modular Components
+import { CalendarSkeleton, ListSkeleton } from '../components/schedule/ScheduleSkeletons';
+import { AppointmentCard } from '../components/schedule/AppointmentCard';
+import { CheckoutDrawer } from '../components/schedule/CheckoutDrawer';
+
 interface StaffItem {
   id: number;
   name: string;
@@ -107,7 +112,7 @@ function statusClass(status: UIAppointmentStatus | string) {
   if (status === 'CONFIRMED') return 'border-l-2 border-sky-500 bg-sky-500/12';
   if (status === 'UPDATED') return 'border-l-2 border-violet-500 bg-violet-500/12';
   if (status === 'MIXED') return 'border-l-2 border-indigo-500 bg-indigo-500/12';
-  return 'border-l-2 border-[var(--rose-gold)] bg-[var(--rose-gold)]/14';
+  return 'border-l-2 border-[var(--primary)] bg-[var(--primary)]/14';
 }
 
 function combineDateTime(date: Date, timeValue: string): string {
@@ -1309,13 +1314,15 @@ export function SchedulePage() {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <>
+      <div id="kedy-app-schedule-root" className="min-h-screen bg-background">
+        <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Randevular</h1>
         <button
           type="button"
           onClick={() => void openCreateModal()}
-          className="inline-flex items-center gap-2 rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-sm font-semibold text-white">
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-primary-dark px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300">
 
           <Plus className="h-4 w-4" />
           Yeni Randevu
@@ -1326,7 +1333,7 @@ export function SchedulePage() {
         <button
           type="button"
           onClick={() => setViewMode('calendar')}
-          className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium ${viewMode === 'calendar' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'}`
+          className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-300 ${viewMode === 'calendar' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted font-medium'}`
           }>
 
           <CalendarDays className="h-3.5 w-3.5" />
@@ -1335,7 +1342,7 @@ export function SchedulePage() {
         <button
           type="button"
           onClick={() => setViewMode('list')}
-          className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium ${viewMode === 'list' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'}`
+          className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-300 ${viewMode === 'list' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted font-medium'}`
           }>
 
           <List className="h-3.5 w-3.5" />
@@ -1366,8 +1373,14 @@ export function SchedulePage() {
         </button>
       </div>
 
-      {loading ? <p className="text-sm text-muted-foreground">Takvim yükleniyor...</p> : null}
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {loading && viewMode === 'calendar' && <CalendarSkeleton />}
+      {loading && viewMode === 'list' && <ListSkeleton />}
+      
+      {error && (
+        <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
+          {error}
+        </div>
+      )}
       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -1386,7 +1399,7 @@ export function SchedulePage() {
             <button
               type="button"
               onClick={() => void openWaitlistModal()}
-              className="rounded-lg bg-[var(--rose-gold)] px-3 py-2 text-xs font-semibold text-white">
+              className="rounded-lg bg-[var(--primary)] px-3 py-2 text-xs font-semibold text-white">
 
               Bekleme Listesi Ekle
             </button>
@@ -1502,26 +1515,22 @@ export function SchedulePage() {
                         {rows.map((appointment) => {
                           const block = getAppointmentStyle(appointment.startTime, appointment.endTime);
                           const appointmentDisplayStatus = getDisplayStatus(appointment);
-                          const timeRange = `${format(new Date(appointment.startTime), 'HH:mm')} - ${format(
-                            new Date(appointment.endTime),
-                            'HH:mm'
-                          )}`;
-
+                          
                           return (
-                            <div
+                            <AppointmentCard
                               key={appointment.id}
-                              className={`absolute left-1 right-1 rounded-lg px-2 py-2 text-[11px] shadow-sm cursor-pointer ${statusClass(
-                                appointmentDisplayStatus
-                              )}`}
+                              viewMode="calendar"
+                              customerName={appointment.customerName}
+                              customerPhone={appointment.customerPhone || ''}
+                              startTime={appointment.startTime}
+                              endTime={appointment.endTime}
+                              totalPrice={appointment.service?.price || 0}
+                              status={appointmentDisplayStatus as any}
+                              serviceNames={[appointment.service?.name || 'Hizmet']}
                               style={{ top: block.top, height: block.height }}
-                              title={`${appointment.customerName} • ${appointment.service?.name} • ${statusLabel(appointmentDisplayStatus)}`}
-                              onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}>
-
-                              <p className="font-semibold truncate">{appointment.customerName}</p>
-                              <p className="truncate text-muted-foreground">{appointment.service?.name}</p>
-                              <p className="text-[10px] text-muted-foreground mt-1">{timeRange}</p>
-                            </div>);
-
+                              onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}
+                            />
+                          );
                         })}
                       </div>);
 
@@ -1532,99 +1541,29 @@ export function SchedulePage() {
           </div>
         </div> :
 
-        <div className="rounded-2xl border border-border bg-card p-3 space-y-2">
-          {groupedAppointments.length === 0 ?
-            <p className="text-sm text-muted-foreground">Bu gün için randevu yok.</p> :
-
-            groupedAppointments.map((group) => {
-              const start = format(new Date(group.startTime), 'HH:mm');
-              const end = format(new Date(group.endTime), 'HH:mm');
-              const groupStatus = deriveGroupStatus(group.items, getDisplayStatus);
-              const serviceNames = Array.from(new Set(group.items.map((item) => item.service?.name)));
-              const staffNames = Array.from(new Set(group.items.map((item) => item.staff?.name)));
-              const groupPayment = group.items.every((item) => item.paymentMethod === group.items[0].paymentMethod) ?
-                group.items[0].paymentMethod as PaymentMethod | null | undefined :
-                null;
-
-              return (
-                <div
+        <div className="space-y-4">
+          {groupedAppointments.length === 0 ? (
+            <div className="glass-card p-8 rounded-2xl border-dashed border-2 text-center text-muted-foreground">
+              Bu gün için randevu bulunmuyor.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {groupedAppointments.map((group) => (
+                <AppointmentCard
                   key={group.key}
-                  className={`rounded-lg border p-3 cursor-pointer ${statusClass(groupStatus)}`}
-                  onClick={() => setSelectedAppointmentGroup(group)}>
-
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold">{group.customerName}</p>
-                      <p className="text-xs text-muted-foreground">{group.customerPhone}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs font-semibold">{start} - {end}</p>
-                      <p className="text-[11px] text-muted-foreground">{statusLabel(groupStatus)}</p>
-                      {groupStatus === 'COMPLETED' ?
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          Ödeme: {groupPayment ? paymentMethodLabel(groupPayment) : 'Kaydedilmedi'}
-                        </p> :
-                        null}
-                    </div>
-                  </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    <p>{serviceNames.join(', ')}</p>
-                    <p>{staffNames.join(', ')}</p>
-                    <p className="mt-1 text-foreground font-medium">Toplam: {formatPrice(group.totalPrice)}</p>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {APPOINTMENT_STATUS_ACTIONS.map((status) =>
-                      <button
-                        key={status}
-                        type="button"
-                        disabled={
-                          statusBusy ||
-                          groupStatus !== 'MIXED' && groupStatus === status ||
-                          statusUpdatingId === group.items[0]?.id
-                        }
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          requestStatusChange(group.items.map((item) => item.id), status);
-                        }}
-                        className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${groupStatus !== 'MIXED' && groupStatus === status ?
-                            'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
-                            'border-border'}`
-                        }>
-
-                        {statusLabel(status)}
-                      </button>
-                    )}
-                    {groupStatus === 'BOOKED' || groupStatus === 'CONFIRMED' || groupStatus === 'UPDATED' ?
-                      <button
-                        type="button"
-                        disabled={statusBusy || statusUpdatingId === group.items[0]?.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          requestStatusChange(group.items.map((item) => item.id), 'COMPLETED');
-                        }}
-                        className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] disabled:opacity-50">
-
-                        Tamamla ve Ödeme Al
-                      </button> :
-                      null}
-                    {groupStatus === 'COMPLETED' || groupStatus === 'MIXED' ?
-                      <button
-                        type="button"
-                        disabled={statusBusy || statusUpdatingId === group.items[0]?.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          requestPaymentSelection(group.items.map((item) => item.id));
-                        }}
-                        className="rounded-md border border-border px-2 py-1 text-[11px] disabled:opacity-50">
-
-                        Ödemeyi Güncelle
-                      </button> :
-                      null}
-                  </div>
-                </div>);
-
-            })
-          }
+                  viewMode="list"
+                  customerName={group.customerName}
+                  customerPhone={group.customerPhone}
+                  startTime={group.startTime}
+                  endTime={group.endTime}
+                  totalPrice={group.totalPrice}
+                  status={deriveGroupStatus(group.items, getDisplayStatus) as any}
+                  serviceNames={Array.from(new Set(group.items.map(item => item.service?.name || 'Hizmet')))}
+                  onClick={() => setSelectedAppointmentGroup(group)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       }
 
@@ -1705,7 +1644,7 @@ export function SchedulePage() {
                   }}
                   className={`rounded-md border px-2 py-1 text-[11px] disabled:opacity-50 ${deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) !== 'MIXED' &&
                       deriveGroupStatus(selectedAppointmentGroup.items, getDisplayStatus) === status ?
-                      'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+                      'border-[var(--primary)] bg-[var(--primary)]/10' :
                       'border-border'}`
                   }>
 
@@ -1835,7 +1774,7 @@ export function SchedulePage() {
                         )
                       }
                       className={`rounded-lg border px-3 py-2 text-left text-xs ${rescheduleSelection.time === slot.time ?
-                          'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+                          'border-[var(--primary)] bg-[var(--primary)]/10' :
                           'border-border bg-background'}`
                       }>
 
@@ -1907,7 +1846,7 @@ export function SchedulePage() {
                                   )
                                 }
                                 className={`rounded-md border px-2 py-1 text-[11px] ${selectedStaffId === candidate.staffId ?
-                                    'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' :
+                                    'border-[var(--primary)] bg-[var(--primary)]/10' :
                                     'border-border'}`
                                 }>
 
@@ -1943,235 +1882,31 @@ export function SchedulePage() {
                   void commitRescheduleSelection();
                 }}
                 className="h-10 flex-1 rounded-lg border border-violet-400/40 bg-violet-500/10 text-sm font-medium text-violet-700 disabled:opacity-50">
-
                 {rescheduleSelection.loading ? "Kaydediliyor..." : 'Değişikliği Onayla'}
               </button>
             </div>
           </div>
         </div> :
         null}
-
-      {checkoutModal ?
-        <div className="fixed inset-0 z-[60] bg-black/45 p-4" onClick={() => !statusBusy ? setCheckoutModal(null) : undefined}>
-          <div
-            className="mx-auto mt-8 max-w-xl rounded-2xl border border-border bg-background p-4 shadow-xl"
-            onClick={(event) => event.stopPropagation()}>
-
-            <h3 className="text-lg font-semibold">Tamamla ve Ödeme Al</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Varsayılan grup modu tüm satırları aynı yöntemle kapatır. Gerekirse satır bazlı mod açabilirsiniz.
-            </p>
-
-            <div className="mt-3 inline-flex rounded-lg border border-border bg-card p-1">
-              <button
-                type="button"
-                disabled={checkoutSubmitting}
-                onClick={() => setCheckoutModal((prev) => prev ? { ...prev, mode: 'GROUP' } : prev)}
-                className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'GROUP' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}>
-
-                Grup (Varsayılan)
-              </button>
-              <button
-                type="button"
-                disabled={checkoutSubmitting}
-                onClick={() => setCheckoutModal((prev) => prev ? { ...prev, mode: 'SPLIT' } : prev)}
-                className={`rounded-md px-3 py-1.5 text-xs ${checkoutModal.mode === 'SPLIT' ? 'bg-[var(--rose-gold)]/15 text-[var(--rose-gold)]' : 'text-muted-foreground'}`}>
-
-                Gelişmiş Ayırma
-              </button>
-            </div>
-
-            {checkoutModal.mode === 'GROUP' ?
-              <div className="mt-3">
-                <label className="block text-xs text-muted-foreground mb-1">Grup kapatma türü</label>
-                <select
-                  value={checkoutGroupCloseType}
-                  onChange={(event) => setCheckoutGroupCloseType(event.target.value as CheckoutCloseType)}
-                  className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
-
-                  <option value="SINGLE_PAYMENT">Tek Ödeme</option>
-                  <option value="USE_EXISTING_PACKAGE">Mevcut Paketi Kullan</option>
-                  <option value="SELL_NEW_PACKAGE">Yeni Paket Sat</option>
-                </select>
-              </div> :
-              null}
-
-            <div className="mt-4 space-y-2 max-h-[48vh] overflow-y-auto pr-1">
-              {getCheckoutTargets(checkoutModal.appointmentIds).map((target) => {
-                const draft = checkoutLineDrafts[target.key] || { closeType: 'SINGLE_PAYMENT', paymentMethod: 'CASH', customerPackageId: '' };
-                const effectiveCloseType = checkoutModal.mode === 'GROUP' ? checkoutGroupCloseType : draft.closeType;
-                return (
-                  <div key={target.key} className="rounded-lg border border-border p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{target.serviceName}</p>
-                      <p className="text-xs text-muted-foreground">{format(new Date(target.startTime), 'HH:mm')}</p>
-                    </div>
-                    {checkoutModal.mode === 'SPLIT' ?
-                      <select
-                        value={draft.closeType}
-                        onChange={(event) =>
-                          setCheckoutLineDrafts((prev) => ({
-                            ...prev,
-                            [target.key]: {
-                              ...(prev[target.key] || draft),
-                              closeType: event.target.value as CheckoutCloseType
-                            }
-                          }))
-                        }
-                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
-
-                        <option value="SINGLE_PAYMENT">Tek Ödeme</option>
-                        <option value="USE_EXISTING_PACKAGE">Mevcut Paketi Kullan</option>
-                        <option value="SELL_NEW_PACKAGE">Yeni Paket Sat</option>
-                      </select> :
-                      null}
-                    {effectiveCloseType === 'SINGLE_PAYMENT' ?
-                      <select
-                        value={checkoutModal.mode === 'GROUP' ? checkoutGroupPaymentMethod : draft.paymentMethod}
-                        onChange={(event) => {
-                          const method = event.target.value as PaymentMethod;
-                          if (checkoutModal.mode === 'GROUP') {
-                            setCheckoutGroupPaymentMethod(method);
-                          } else {
-                            setCheckoutLineDrafts((prev) => ({
-                              ...prev,
-                              [target.key]: {
-                                ...(prev[target.key] || draft),
-                                paymentMethod: method
-                              }
-                            }));
-                          }
-                        }}
-                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
-
-                        {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) =>
-                          <option key={method} value={method}>
-                            {paymentMethodLabel(method)}
-                          </option>
-                        )}
-                      </select> :
-                      null}
-                    {effectiveCloseType === 'USE_EXISTING_PACKAGE' ?
-                      <select
-                        value={checkoutModal.mode === 'GROUP' ? checkoutGroupPackageId : draft.customerPackageId}
-                        onChange={(event) => {
-                          if (checkoutModal.mode === 'GROUP') {
-                            setCheckoutGroupPackageId(event.target.value);
-                          } else {
-                            setCheckoutLineDrafts((prev) => ({
-                              ...prev,
-                              [target.key]: {
-                                ...(prev[target.key] || draft),
-                                customerPackageId: event.target.value
-                              }
-                            }));
-                          }
-                        }}
-                        className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
-
-                        <option value="">Aktif paket seçin</option>
-                        {checkoutCustomerPackages.map((pkg) =>
-                          <option key={pkg.id} value={String(pkg.id)}>
-                            {pkg.name}
-                          </option>
-                        )}
-                      </select> :
-                      null}
-                  </div>);
-
-              })}
-            </div>
-
-            {(checkoutModal.mode === 'GROUP' ? checkoutGroupCloseType === 'SELL_NEW_PACKAGE' : getCheckoutTargets(checkoutModal.appointmentIds).some((target) => checkoutLineDrafts[target.key]?.closeType === 'SELL_NEW_PACKAGE')) ?
-              <div className="mt-3 rounded-lg border border-border p-3 space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Yeni Paket Satışı</p>
-                <input
-                  value={checkoutNewPackageName}
-                  onChange={(event) => setCheckoutNewPackageName(event.target.value)}
-                  className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                  placeholder="Paket adı" />
-
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    value={checkoutNewPackagePrice}
-                    onChange={(event) => setCheckoutNewPackagePrice(event.target.value)}
-                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                    placeholder="Fiyat (isteğe bağlı)"
-                    type="number"
-                    min="0"
-                    step="0.01" />
-
-                  <input
-                    value={checkoutNewPackageQuota}
-                    onChange={(event) => setCheckoutNewPackageQuota(event.target.value)}
-                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
-                    placeholder="Hizmet başına kota"
-                    type="number"
-                    min="1"
-                    step="1" />
-
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={checkoutNewPackageScopeType}
-                    onChange={(event) => setCheckoutNewPackageScopeType(event.target.value === 'POOL' ? 'POOL' : 'SINGLE_SERVICE')}
-                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
-
-                    <option value="SINGLE_SERVICE">Tek Hizmet</option>
-                    <option value="POOL">Pool</option>
-                  </select>
-                  <select
-                    value={checkoutNewPackagePaymentMethod}
-                    onChange={(event) => setCheckoutNewPackagePaymentMethod(event.target.value as PaymentMethod)}
-                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs">
-
-                    {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as const).map((method) =>
-                      <option key={method} value={method}>
-                        {paymentMethodLabel(method)}
-                      </option>
-                    )}
-                  </select>
-                </div>
-              </div> :
-              null}
-
-            {checkoutPackagesLoading ? <p className="mt-2 text-xs text-muted-foreground">Aktif paketler yükleniyor...</p> : null}
-            {checkoutPackageError ?
-              <p className="mt-2 rounded-lg border border-red-300/40 bg-red-500/10 px-3 py-2 text-xs text-red-700">{checkoutPackageError}</p> :
-              null}
-            {checkoutSummary ?
-              <div className="mt-2 rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground">Ödeme Özeti</p>
-                <p>Toplam satır: {checkoutSummary.total}</p>
-                <p>Tek ödeme: {checkoutSummary.singlePayment}</p>
-                <p>Mevcut paketi kullan: {checkoutSummary.existingPackage}</p>
-                <p>Yeni paket sat: {checkoutSummary.sellNewPackage}</p>
-              </div> :
-              null}
-
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                disabled={statusBusy}
-                onClick={() => setCheckoutModal(null)}
-                className="h-10 flex-1 rounded-lg border border-border text-sm text-muted-foreground disabled:opacity-50">
-
-                İptal
-              </button>
-              <button
-                type="button"
-                disabled={statusBusy || checkoutSubmitting}
-                onClick={() => {
-                  void submitCheckout();
-                }}
-                className="h-10 flex-1 rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-sm font-medium text-emerald-700 disabled:opacity-50">
-
-                {checkoutSubmitting ? "İşleniyor..." : "Ödemeyi Onayla"}
-              </button>
-            </div>
-          </div>
-        </div> :
-        null}
+      {checkoutModal && (
+        <CheckoutDrawer
+          isOpen={!!checkoutModal}
+          onClose={() => setCheckoutModal(null)}
+          customerName={appointmentById[checkoutModal.appointmentIds[0]]?.customerName || 'Müşteri'}
+          totalAmount={getCheckoutTargets(checkoutModal.appointmentIds).reduce((acc, t) => acc + (appointmentById[t.appointmentId]?.service?.price || 0), 0)}
+          items={getCheckoutTargets(checkoutModal.appointmentIds).map(t => ({
+            key: t.key,
+            serviceName: t.serviceName,
+            price: appointmentById[t.appointmentId]?.service?.price || 0
+          }))}
+          isSubmitting={checkoutSubmitting}
+          onConfirm={(method, type) => {
+            setCheckoutGroupPaymentMethod(method);
+            setCheckoutGroupCloseType(type);
+            void submitCheckout();
+          }}
+        />
+      )}
 
       {waitlistOpen ?
         <div className="fixed inset-0 z-40 bg-black/35 p-4">
@@ -2326,7 +2061,7 @@ export function SchedulePage() {
                 type="button"
                 onClick={() => void submitWaitlistCreate()}
                 disabled={waitlistSaving}
-                className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
+                className="w-full h-11 rounded-lg bg-[var(--primary)] text-white font-semibold disabled:opacity-70">
 
                 {waitlistSaving ? "Kaydediliyor..." : "Bekleme Listesi Kaydı Oluştur"}
               </button>
@@ -2401,7 +2136,7 @@ export function SchedulePage() {
                         <span className="text-sm flex-1">
                           <span className="font-medium">{service.name}</span>
                           <span className="text-muted-foreground"> • {service.duration} dk</span>
-                          {service.requiresSpecialist ? <span className="text-xs text-[var(--rose-gold)]"> • Uzman gereklidir</span> : null}
+                          {service.requiresSpecialist ? <span className="text-xs text-[var(--primary)]"> • Uzman gereklidir</span> : null}
                         </span>
                       </label>);
 
@@ -2474,7 +2209,7 @@ export function SchedulePage() {
                 type="button"
                 onClick={() => void submitCreate()}
                 disabled={saving}
-                className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
+                className="w-full h-11 rounded-lg bg-[var(--primary)] text-white font-semibold disabled:opacity-70">
 
                 {saving ? "Kaydediliyor..." : "Randevu Oluştur"}
               </button>
@@ -2486,6 +2221,9 @@ export function SchedulePage() {
           </div>
         </div> :
         null}
-    </div>);
+        </div>
+      </div>
+    </>
+  );
 
 }

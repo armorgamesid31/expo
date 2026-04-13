@@ -2,28 +2,19 @@
 @import './tailwind.css';
 @import './theme.css';
 
-/* Custom Scrollbar Styles for Luxury Theme */
+/* Custom Scrollbar Styles */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--rose-gold) transparent;
+  scrollbar-color: var(--primary) transparent;
 }
 
 *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
+  width: 4px;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--rose-gold);
+  background: var(--primary);
   border-radius: 10px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--rose-gold-dark);
 }
 
 /* Safe area for mobile */
@@ -31,18 +22,42 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+}
+
 /* Smooth transitions */
 * {
-  transition-property: background-color, border-color, color;
-  transition-duration: 150ms;
-  transition-timing-function: ease-in-out;
+  transition-property: background-color, border-color, color, transform, opacity, box-shadow;
+  transition-duration: 250ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Active scale effect */
-.active\:scale-98:active {
-  transform: scale(0.98);
+/* Interactive Effects */
+.press-scale {
+  transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
-.active\:scale-95:active {
-  transform: scale(0.95);
+.press-scale:active {
+  transform: scale(0.96);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px -5px var(--primary);
 }

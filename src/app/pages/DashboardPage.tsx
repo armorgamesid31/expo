@@ -81,7 +81,7 @@ export function DashboardPage() {
       'service-management': '/app/services',
       'staff-management': '/app/staff',
     };
-    navigate(mapping[target] || target || '/app/dashboard');
+    navigate(mapping[target] || target || '/app/dashboard', { state: { navDirection: 'forward' } });
   };
 
   useEffect(() => {

@@ -3,6 +3,7 @@ import { BarChart3, Sparkles, AlertTriangle, X, UserCog, CheckCircle2, Circle, L
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
+import { useNavigator } from '../../context/NavigatorContext';
 
 interface MoreScreenProps {
   isDarkMode: boolean;
@@ -13,6 +14,7 @@ interface MoreScreenProps {
 }
 
 export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSettings, isFeatureVisible }: MoreScreenProps) {
+  const { isBackAction } = useNavigator();
   const [warningModal, setWarningModal] = useState<{
     title: string;
     message: string;
@@ -140,7 +142,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       <div className="p-4 space-y-8">
         {/* Profile Card Summary */}
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={isBackAction ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}>
 
@@ -177,9 +179,13 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
                 return (
                   <motion.div
                     key={idx}
-                    initial={{ opacity: 0, x: -16 }}
+                    initial={isBackAction ? false : { opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.05 * idx, ease: [0.22, 1, 0.36, 1] }}>
+                    transition={{ 
+                      duration: 0.3, 
+                      delay: isBackAction ? 0 : 0.05 * idx, 
+                      ease: [0.22, 1, 0.36, 1] 
+                    }}>
 
                     <Card
                       className="border-border/50 cursor-pointer hover:border-[var(--rose-gold)]/50 transition-all active:scale-98 shadow-sm"

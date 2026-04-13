@@ -33,6 +33,7 @@ import { OperationsStudioPage } from './pages/OperationsStudioPage';
 import { BrandGrowthHubPage } from './pages/BrandGrowthHubPage';
 import { DataImportWizardPage } from './pages/DataImportWizardPage';
 import { LocaleProvider } from './context/LocaleContext';
+import { NavigatorProvider } from './context/NavigatorContext';
 import { resolvePushAppPath } from './lib/push-routing';
 import { setPushEventHandlers } from './lib/push-notifications';
 
@@ -259,7 +260,9 @@ export default function App() {
         <ThemeBootstrap />
         <BrowserRouter>
           <PushNotificationBridge />
-          <AppRoutes />
+          <NavigatorProvider>
+            <AppRoutes />
+          </NavigatorProvider>
         </BrowserRouter>
         <Toaster position="top-center" richColors />
       </AuthProvider>

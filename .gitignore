@@ -4,3 +4,6 @@ dist/
 .env
 android/
 ios/
+.npm_cache/
+bin/
+.env.local

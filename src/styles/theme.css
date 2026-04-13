@@ -4,99 +4,99 @@
   --font-size: 16px;
   --font-heading: "Sofia Pro", "Avenir Next", "Inter", sans-serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --background: #f7f6f6;
-  --foreground: #242426;
-  --card: #ffffff;
-  --card-foreground: #242426;
-  --popover: #ffffff;
-  --popover-foreground: #242426;
-  --primary: #f47a20;
-  --primary-foreground: #f7f6f6;
-  --secondary: #00b8ff;
-  --secondary-foreground: #242426;
-  --muted: #eceaea;
-  --muted-foreground: #5b5b5d;
-  --accent: #a1c742;
-  --accent-foreground: #242426;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(36, 36, 38, 0.12);
+  
+  /* Official Kedy Brand Colors */
+  --background: #F8F8F8; /* Platinum White base */
+  --foreground: #1A1A1A; /* Deep Graphite */
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  
+  --primary: #1A1A1A; /* Brand Main Color */
+  --primary-foreground: #F8F8F8;
+  
+  --secondary: #F07122; /* Brand Accent Color (Energy Orange) */
+  --secondary-foreground: #FFFFFF;
+  
+  --muted: #F1F1F1;
+  --muted-foreground: #666666;
+  
+  --accent: #F07122; /* Energy Orange accent */
+  --accent-foreground: #FFFFFF;
+  
+  --destructive: #E11D48;
+  --destructive-foreground: #FFFFFF;
+  
+  --border: rgba(36, 36, 38, 0.08);
   --input: transparent;
-  --input-background: #ffffff;
-  --switch-background: #d5d5d8;
+  --input-background: #FFFFFF;
+  --switch-background: #D5D5D8;
+  
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #00b8ff;
+  --ring: #00B8FF;
 
-  /* App palette aliases used by existing components */
-  --rose-gold: #f47a20;
-  --rose-gold-light: #00b8ff;
-  --rose-gold-dark: #f47a20;
-  --deep-indigo: #00b8ff;
-  --deep-indigo-light: #00b8ff;
-  --luxury-bg: #f7f6f6;
+  /* App palette aliases */
+  --rose-gold: #F47A20;
+  --rose-gold-light: #FF9F5A;
+  --rose-gold-dark: #D46610;
+  --deep-indigo: #00B8FF;
+  --deep-indigo-light: #4DCEFF;
+  --luxury-bg: #F7F6F6;
   --luxury-card: #FFFFFF;
 
-  --chart-1: #f47a20;
-  --chart-2: #00b8ff;
-  --chart-3: #a1c742;
+  /* Glassmorphism & Depth */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+
+  --chart-1: #F47A20;
+  --chart-2: #00B8FF;
+  --chart-3: #A1C742;
   --chart-4: #242426;
-  --chart-5: #00b8ff;
-  --radius: 0.625rem;
-  --sidebar: #f7f6f6;
-  --sidebar-foreground: #242426;
-  --sidebar-primary: #f47a20;
-  --sidebar-primary-foreground: #f7f6f6;
-  --sidebar-accent: #a1c742;
-  --sidebar-accent-foreground: #242426;
-  --sidebar-border: rgba(36, 36, 38, 0.12);
-  --sidebar-ring: #00b8ff;
+  --chart-5: #6B7280;
+  --radius: 0.875rem; /* Increased for friendlier look */
 }
 
 .dark {
-  --background: #242426;
-  --foreground: #f7f6f6;
-  --card: #2f2f31;
-  --card-foreground: #f7f6f6;
-  --popover: #2f2f31;
-  --popover-foreground: #f7f6f6;
-  --primary: #f47a20;
-  --primary-foreground: #242426;
-  --secondary: #00b8ff;
-  --secondary-foreground: #f7f6f6;
-  --muted: #373739;
-  --muted-foreground: #b7b7bb;
-  --accent: #a1c742;
-  --accent-foreground: #242426;
-  --destructive: #ef4444;
-  --destructive-foreground: #f7f6f6;
-  --border: rgba(247, 246, 246, 0.14);
-  --input: #373739;
-  --ring: #00b8ff;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
+  --background: #0A0A0A; /* Pure Luxury Black */
+  --foreground: #F8F8F8;
+  --card: #141414; /* Deep Graphite Card */
+  --card-foreground: #F8F8F8;
+  --popover: #141414;
+  --popover-foreground: #F8F8F8;
+  
+  --primary: #F07122; /* High-visibility action color for dark mode */
+  --primary-foreground: #0A0A0A;
+  
+  --secondary: #00B8FF;
+  --secondary-foreground: #F7F6F6;
+  
+  --muted: #2F2F31;
+  --muted-foreground: #B7B7BB;
+  
+  --accent: #F07122;
+  --accent-foreground: #0A0A0A;
+  
+  --destructive: #F43F5E;
+  --destructive-foreground: #F8F8F8;
+  
+  --border: rgba(248, 248, 248, 0.08);
+  --input: #1F1F1F;
+  --ring: #F07122;
+  
+  --luxury-bg: #0A0A0A;
+  --luxury-card: #141414;
 
-  --rose-gold: #f47a20;
-  --rose-gold-light: #f47a20;
-  --rose-gold-dark: #f47a20;
-  --deep-indigo: #00b8ff;
-  --deep-indigo-light: #00b8ff;
-  --luxury-bg: #242426;
-  --luxury-card: #2f2f31;
-
-  --chart-1: #f47a20;
-  --chart-2: #00b8ff;
-  --chart-3: #a1c742;
-  --chart-4: #f7f6f6;
-  --chart-5: #00b8ff;
-  --sidebar: #242426;
-  --sidebar-foreground: #f7f6f6;
-  --sidebar-primary: #f47a20;
-  --sidebar-primary-foreground: #242426;
-  --sidebar-accent: #a1c742;
-  --sidebar-accent-foreground: #242426;
-  --sidebar-border: rgba(247, 246, 246, 0.14);
-  --sidebar-ring: #00b8ff;
+  /* Dark Glassmorphism */
+  --glass-bg: rgba(20, 20, 20, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  
+  --sidebar: #0A0A0A;
+  --sidebar-foreground: #F8F8F8;
 }
 
 @theme inline {
