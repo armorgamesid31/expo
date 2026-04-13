@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Award, Bell, Calendar, Clock3, Gift, Pencil, Trash2, UserPlus, Users } from 'lucide-react';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Award, Bell, Calendar, Clock3, Gift, Pencil, Trash2, UserPlus, Users, Sparkles, History } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -94,7 +95,7 @@ interface CampaignDraft {
 const WEEKDAY_OPTIONS: Array<{ value: string; label: string; }> = [
   { value: 'MON', label: 'Pzt' },
   { value: 'TUE', label: 'Sal' },
-  { value: 'WED', label: 'Wed' },
+  { value: 'WED', label: 'Çar' },
   { value: 'THU', label: 'Per' },
   { value: 'FRI', label: 'Cum' },
   { value: 'SAT', label: 'Cts' },
@@ -122,7 +123,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     key: 'loyalty',
     name: "Sadakat Kampanyası",
     type: 'LOYALTY',
-    bullets: ['Puan sistemi', 'Reappointment incentive'],
+    bullets: ['Puan sistemi', 'Yeniden randevu teşviki'],
     icon: Award,
     config: {
       pointsPerVisit: 1,
@@ -132,25 +133,25 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     },
     fields: [
       { key: 'pointsPerVisit', label: 'Her ziyarette puan', type: 'number', valueKind: 'number', min: 1, step: 1 },
-      { key: 'rewardThreshold', label: 'Number of visits for rewards', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'rewardThreshold', label: 'Ödül için ziyaret sayısı', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'rewardType',
-        label: 'Reward tipi',
+        label: 'Ödül tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'discount_percent', label: 'yüzde indirim' },
           { value: 'fixed_amount', label: 'Sabit tutar' }]
 
       },
-      { key: 'rewardValue', label: 'Reward value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
+      { key: 'rewardValue', label: 'Ödül değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }]
 
   },
   {
     key: 'multi-service',
     name: "Çoklu Hizmet İndirimi",
     type: 'MULTI_SERVICE_DISCOUNT',
-    bullets: ['2+ servicete campaign', 'Enlarge cart'],
+    bullets: ['2+ hizmette kampanya', 'Sepeti büyüt'],
     icon: Users,
     config: {
       minServiceCount: 2,
@@ -159,18 +160,18 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       appliesTo: 'same_appointment'
     },
     fields: [
-      { key: 'minServiceCount', label: 'Minimum hizmet sayisi', type: 'number', valueKind: 'number', min: 2, step: 1 },
+      { key: 'minServiceCount', label: 'Minimum Hizmet Sayısı', type: 'number', valueKind: 'number', min: 2, step: 1 },
       {
         key: 'discountType',
-        label: 'Discount type',
+        label: 'İndirim tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'discount_percent', label: 'yüzde indirim' },
           { value: 'fixed_amount', label: 'Sabit tutar' }]
 
       },
-      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'İndirim Değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'appliesTo',
         label: 'Uygulama tipi',
@@ -178,7 +179,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         valueKind: 'string',
         options: [
           { value: 'same_appointment', label: 'aynı randevu' },
-          { value: 'same_day', label: 'same days' }]
+          { value: 'same_day', label: 'aynı gün' }]
 
       }]
 
@@ -187,7 +188,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     key: 'referral',
     name: "Arkadaşını Getir Kampanyası",
     type: 'REFERRAL',
-    bullets: ['Fixed/Percent reward', 'İlk randevu tetikleme kuralı'],
+    bullets: ['Sabit/Yüzde ödül', 'İlk randevu tetikleme kuralı'],
     icon: UserPlus,
     config: {
       rewardType: 'discount_percent',
@@ -199,25 +200,25 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'rewardType',
-        label: 'Discount type',
+        label: 'İndirim tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'discount_percent', label: 'yüzde indirim' },
           { value: 'fixed_amount', label: 'Sabit tutar' }]
 
       },
       {
         key: 'referrerRewardValue',
-        label: 'Inviter reward',
+        label: 'Davet eden ödülü',
         type: 'number',
         valueKind: 'number',
         min: 1,
         step: 1
       },
       {
-        key: "referredMüşteriRewardValue",
-        label: 'newcomer award',
+        key: 'referredCustomerRewardValue',
+        label: 'Yeni Gelen Ödülü',
         type: 'number',
         valueKind: 'number',
         min: 1,
@@ -225,7 +226,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       },
       {
         key: 'activationTiming',
-        label: 'When should it be activated?',
+        label: 'Ne zaman aktif edilmeli?',
         type: 'select',
         valueKind: 'string',
         options: [
@@ -235,11 +236,11 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       },
       {
         key: 'combineWithWelcomeCampaign',
-        label: 'Combine with first time customer campaign?',
+        label: 'İlk kez gelen müşteri kampanyasıyla birleştirilsin mi?',
         type: 'select',
         valueKind: 'boolean',
         options: [
-          { value: 'false', label: 'No' },
+          { value: 'false', label: 'Hayır' },
           { value: 'true', label: 'Evet' }]
 
       }]
@@ -249,7 +250,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     key: 'birthday',
     name: "Doğum Günü Kampanyası",
     type: 'BIRTHDAY',
-    bullets: ['Fixed/Percentage discount', 'Short usage duration'],
+    bullets: ['Sabit/Yüzde indirim', 'Kısa kullanım süresi'],
     icon: Gift,
     config: {
       discountType: 'discount_percent',
@@ -259,18 +260,18 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'discountType',
-        label: 'Discount type',
+        label: 'İndirim tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'discount_percent', label: 'yüzde indirim' },
           { value: 'fixed_amount', label: 'Sabit tutar' }]
 
       },
-      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'indirim değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
-        key: 'validDaysAfterBirthday',
-        label: 'Validity after birthday (days)',
+        key: 'validityWindow',
+        label: 'Doğum Gününden Sonra Geçerlilik (Gün)',
         type: 'number',
         valueKind: 'number',
         min: 1,
@@ -282,7 +283,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     key: 'winback',
     name: "Geri Kazanım Kampanyası",
     type: 'WINBACK',
-    bullets: ['30-60 days pasif customer hedefi', 'Tek seferlik teklif'],
+    bullets: ['30-60 gün pasif müşteri hedefi', 'Tek seferlik teklif'],
     icon: Bell,
     config: {
       inactiveDaysThreshold: 30,
@@ -292,13 +293,13 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'inactiveDaysThreshold',
-        label: 'passivity threshold',
+        label: 'pasiflik eşiği',
         type: 'select',
         valueKind: 'number',
         options: [
-          { value: '30', label: '30 days' },
-          { value: '45', label: '45 days' },
-          { value: '60', label: '60 days' }]
+          { value: '30', label: '30 gün' },
+          { value: '45', label: '45 gün' },
+          { value: '60', label: '60 gün' }]
 
       },
       {
@@ -307,18 +308,18 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'discount_percent', label: 'yüzde indirim' },
           { value: 'fixed_amount', label: 'Sabit tutar' }]
 
       },
-      { key: 'offerValue', label: 'bid value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
+      { key: 'offerValue', label: 'teklif değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }]
 
   },
   {
     key: 'welcome',
     name: 'İlk Randevuya Hoş Geldin',
     type: 'WELCOME_FIRST_VISIT',
-    bullets: ['Fixed/Percentage discount', 'Use with arknamebring'],
+    bullets: ['Sabit/Yüzde indirim', 'Arkadaşını getir ile kullanın'],
     icon: Calendar,
     config: {
       discountType: 'discount_percent',
@@ -328,22 +329,22 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'discountType',
-        label: 'Discount type',
+        label: 'İndirim tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'discount_percent', label: 'yüzde indirim' },
           { value: 'fixed_amount', label: 'Sabit tutar' }]
 
       },
-      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'indirim değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'combineWithReferralCampaign',
-        label: 'Should it be combined with the Bring Your Arkname campaign?',
+        label: 'Arkadaşını Getir kampanyasıyla birleştirilsin mi?',
         type: 'select',
         valueKind: 'boolean',
         options: [
-          { value: 'false', label: 'No' },
+          { value: 'false', label: 'Hayır' },
           { value: 'true', label: 'Evet' }]
 
       }]
@@ -351,9 +352,9 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   },
   {
     key: 'off-peak',
-    name: 'Filling Empty Hours',
+    name: 'Boş Saatleri Doldurma',
     type: 'OFF_PEAK_FILL',
-    bullets: ['Day selection', 'Time selection', 'Fixed/Percentage discount'],
+    bullets: ['Gün seçimi', 'Saat seçimi', 'Sabit/Yüzde indirim'],
     icon: Clock3,
     config: {
       weekdays: ['MON', 'TUE', 'WED', 'THU'],
@@ -365,36 +366,36 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'weekdays',
-        label: 'Valid days',
+        label: 'Geçerli günler',
         type: 'multi-select',
         valueKind: 'stringArray',
         options: WEEKDAY_OPTIONS
       },
       {
         key: 'startHour',
-        label: 'start time',
+        label: 'Başlangıç Saati',
         type: 'select',
         valueKind: 'string',
         options: TIME_OPTIONS
       },
       {
         key: 'endHour',
-        label: 'end time',
+        label: 'Bitiş Saati',
         type: 'select',
         valueKind: 'string',
         options: TIME_OPTIONS
       },
       {
         key: 'discountType',
-        label: 'Discount type',
+        label: 'İndirim tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'percent discount' },
+          { value: 'discount_percent', label: 'yüzde indirim' },
           { value: 'fixed_amount', label: 'Sabit tutar' }]
 
       },
-      { key: 'discountValue', label: 'discount value', type: 'number', valueKind: 'number', min: 1, step: 1 }]
+      { key: 'discountValue', label: 'İndirim Değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }]
 
   }];
 
@@ -551,7 +552,7 @@ export function CampaignsCrudPage() {
       const response = await apiFetch<{ items: CampaignItem[]; }>('/api/admin/campaigns');
       setItems(response.items || []);
     } catch (err: any) {
-      setError(err?.message || 'Campaigns cannot be received.');
+      setError(err?.message || 'Kampanyalar alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -683,7 +684,7 @@ export function CampaignsCrudPage() {
     }
     const template = templateByType(detailDraft.type);
     if (!template) {
-      setDetailError('The editing field is not defined for this campaign type.');
+      setDetailError('Bu kampanya türü için düzenleme alanı tanımlanmamış.');
       return;
     }
 
@@ -844,8 +845,8 @@ export function CampaignsCrudPage() {
   return (
     <div className="h-full overflow-y-auto bg-[var(--luxury-bg)] pb-20">
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Campaigns</h1>
-        <p className="text-sm text-muted-foreground">Yeni bir kampanya oluştürün ve performansı detaylı takip edin.</p>
+        <h1 className="text-2xl font-semibold mb-1">Kampanyalar</h1>
+        <p className="text-sm text-muted-foreground">Yeni bir kampanya oluşturun ve performansı detaylı takip edin.</p>
       </div>
 
       <div className="p-4 space-y-4">
@@ -900,75 +901,96 @@ export function CampaignsCrudPage() {
           </div> :
           null}
 
-        <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Aktif Campaigns</p>
-
-        {loading ?
-          <Card className="border border-border bg-card">
-            <CardContent className="p-4 text-sm text-muted-foreground">Yükleniyor...</CardContent>
-          </Card> :
-          null}
-
-        {!loading && activeItems.length === 0 ?
-          <Card className="border border-dashed border-border bg-card">
-            <CardContent className="p-4 text-center text-sm text-muted-foreground">Aktif campaign yok.</CardContent>
-          </Card> :
-          null}
-
-        {!loading && activeItems.length > 0 ?
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2].map(i => (
+              <Card key={i} className="border border-border bg-card">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-5 w-1/3" />
+                    <Skeleton className="h-5 w-12 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-10 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : activeItems.length === 0 ? (
+          <EmptyState 
+            icon={Sparkles}
+            title="Aktif Kampanya Yok"
+            description="Şu an aktif bir kampanya bulunmuyor. Yeni bir tane oluşturarak satışlarınızı artırabilirsiniz."
+          />
+        ) : (
           <div className="space-y-2">
-            {activeItems.map((item) =>
-              <Card key={item.id} className="border border-border bg-card">
+            {activeItems.map((item) => (
+              <Card key={item.id} className="border border-border bg-card hover:shadow-sm transition-shadow">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium text-foreground">{displayCampaignName(item)}</p>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full border text-green-700 border-green-300 bg-green-50">
+                    <p className="font-semibold text-foreground text-sm">{displayCampaignName(item)}</p>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border text-emerald-700 border-emerald-200 bg-emerald-50">
                       Aktif
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-[11px] text-muted-foreground mt-1">
                     {formatDateLabel(item.startsAt || null)} - {formatDateLabel(item.endsAt || null)}
                   </p>
-                  <Button variant="outline" className="mt-2 w-full" onClick={() => void openDetail(item)}>
-                    <Pencil className="w-4 h-4" />
+                  <Button variant="outline" size="sm" className="mt-2 w-full text-xs h-9" onClick={() => void openDetail(item)}>
+                    <Pencil className="w-3.5 h-3.5 mr-2" />
                     Detay ve Düzenle
                   </Button>
                 </CardContent>
               </Card>
-            )}
-          </div> :
-          null}
+            ))}
+          </div>
+        )}
 
-        <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Firstki Campaigns</p>
+        <div className="pt-4 pb-2">
+          <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase px-1">Önceki Kampanyalar</p>
+        </div>
 
-        {!loading && previousItems.length === 0 ?
-          <Card className="border border-dashed border-border bg-card">
-            <CardContent className="p-4 text-center text-sm text-muted-foreground">Firstki campaign yok.</CardContent>
-          </Card> :
-          null}
-
-        {!loading && previousItems.length > 0 ?
+        {loading ? (
           <div className="space-y-2">
-            {previousItems.map((item) =>
-              <Card key={item.id} className="border border-border bg-card">
+            {[1].map(i => (
+              <Card key={i} className="border border-border bg-card opacity-60">
+                <CardContent className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-1/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : previousItems.length === 0 ? (
+          <EmptyState 
+            icon={History}
+            title="Geçmiş Kaydı Yok"
+            description="Tamamlanmış bir kampanya geçmişi henüz bulunmuyor."
+            className="py-6"
+          />
+        ) : (
+          <div className="space-y-2">
+            {previousItems.map((item) => (
+              <Card key={item.id} className="border border-border bg-card opacity-80">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium text-foreground">{displayCampaignName(item)}</p>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full border text-muted-foreground border-border bg-muted/40">
-                      History
+                    <p className="font-medium text-foreground text-sm">{displayCampaignName(item)}</p>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border text-muted-foreground border-border bg-muted/40">
+                      Geçmiş
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-[11px] text-muted-foreground mt-1">
                     {formatDateLabel(item.startsAt || null)} - {formatDateLabel(item.endsAt || null)}
                   </p>
-                  <Button variant="outline" className="mt-2 w-full" onClick={() => void openDetail(item)}>
-                    <Pencil className="w-4 h-4" />
+                  <Button variant="outline" size="sm" className="mt-2 w-full text-xs h-9" onClick={() => void openDetail(item)}>
+                    <Pencil className="w-3.5 h-3.5 mr-2" />
                     Detay ve Düzenle
                   </Button>
                 </CardContent>
               </Card>
-            )}
-          </div> :
-          null}
+            ))}
+          </div>
+        )}
       </div>
 
       <Dialog open={Boolean(createDraft)} onOpenChange={(open) => !open ? setCreateDraft(null) : null}>
@@ -992,7 +1014,7 @@ export function CampaignsCrudPage() {
 
                 </div>
                 <div className="space-y-1.5">
-                  <Label>End date</Label>
+                  <Label>Bitiş Tarihi</Label>
                   <Input
                     type="date"
                     value={createDraft.endsAt}
@@ -1100,17 +1122,17 @@ export function CampaignsCrudPage() {
               {detailMetrics ?
                 <Card className="border border-border bg-card">
                   <CardContent className="p-3 space-y-3">
-                    <p className="text-sm font-semibold">Performance Summary</p>
+                    <p className="text-sm font-semibold">Performans Özeti</p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div className="rounded-md border border-border p-2">
-                        <p className="text-xs text-muted-foreground">Appointment</p>
+                        <p className="text-xs text-muted-foreground">Randevu</p>
                         <p className="text-lg font-semibold">{detailMetrics.current.appointmentCount}</p>
                         <p className={cn('text-xs', getDeltaClassName(detailMetrics.deltas.appointmentPercent))}>
                           %{detailMetrics.deltas.appointmentPercent}
                         </p>
                       </div>
                       <div className="rounded-md border border-border p-2">
-                        <p className="text-xs text-muted-foreground">New customer</p>
+                        <p className="text-xs text-muted-foreground">Yeni müşteri</p>
                         <p className="text-lg font-semibold">{detailMetrics.current.newCustomerCount}</p>
                         <p className={cn('text-xs', getDeltaClassName(detailMetrics.deltas.newCustomerPercent))}>
                           %{detailMetrics.deltas.newCustomerPercent}
@@ -1145,7 +1167,7 @@ export function CampaignsCrudPage() {
 
                 </div>
                 <div className="space-y-1.5">
-                  <Label>End date</Label>
+                  <Label>Bitiş Tarihi</Label>
                   <Input
                     type="date"
                     value={detailDraft.endsAt}
@@ -1245,7 +1267,7 @@ export function CampaignsCrudPage() {
               onClick={() => void publishDetail()}
               disabled={deletingDetail || savingDetail || !detailDraft?.id}>
 
-              Yayinla
+              Yayınla
             </Button>
             <Button
               variant="outline"

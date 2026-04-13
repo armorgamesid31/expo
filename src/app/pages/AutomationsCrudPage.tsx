@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Input } from '../components/ui/input';
 import { cn } from '../components/ui/utils';
 import { useSearchParams } from 'react-router-dom';
+import { Skeleton } from '../components/ui/skeleton';
 
 interface AutomationItem {
   id: number;
@@ -70,10 +71,10 @@ const ATTENDANCE_RANGES: Array<{ key: AttendanceRangeKey; label: string; }> = [
 
 
 const PENALTY_ACTION_OPTIONS: Array<{ value: AttendancePenaltyAction; label: string; }> = [
-  { value: 'normal', label: 'no warning' },
-  { value: 'simple_warning', label: 'Simple warning' },
-  { value: 'possible_block', label: 'Blockable warning' },
-  { value: 'manual_approval', label: 'Salon pre-approval' },
+  { value: 'normal', label: 'uyarı yok' },
+  { value: 'simple_warning', label: 'Basit uyarı' },
+  { value: 'possible_block', label: 'Engel uyarısı' },
+  { value: 'manual_approval', label: 'Salon ön onayı' },
   { value: 'full_block', label: 'Tam engel' }];
 
 
@@ -81,8 +82,8 @@ const VALIDITY_OPTIONS: Array<{ value: ValidityWindow; label: string; }> = [
   { value: '1m', label: '1 ay' },
   { value: '3m', label: '3 ay' },
   { value: '6m', label: '6 ay' },
-  { value: '1y', label: '1 year' },
-  { value: 'unlimited', label: 'Unlimited' }];
+  { value: '1y', label: '1 yıl' },
+  { value: 'unlimited', label: 'Sınırsız' }];
 
 
 const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
@@ -336,7 +337,7 @@ export function AutomationsCrudPage() {
       const response = await apiFetch<{ items: AutomationItem[]; }>('/api/admin/automations');
       setItems(response.items || []);
     } catch (err: any) {
-      setError(err?.message || 'Automations could not be retrieved.');
+      setError(err?.message || 'Otomasyonlar alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -370,13 +371,13 @@ export function AutomationsCrudPage() {
 
   const reminderBadges: string[] = [];
   if (reminderConfig.enable2h) {
-    reminderBadges.push(reminderConfig.sendLocationAt2h ? '2 hours before + location' : '2 hours before');
+    reminderBadges.push(reminderConfig.sendLocationAt2h ? '2 saat önce + konum' : '2 saat önce');
   }
   if (reminderConfig.enable24h) {
-    reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 hours before + participation confirmation' : '24 hours before');
+    reminderBadges.push(reminderConfig.requestConfirmationAt24h ? '24 saat önce + katılım onayı' : '24 saat önce');
   }
   if (reminderConfig.enable72h) {
-    reminderBadges.push('72 hours before information');
+    reminderBadges.push('72 saat önce bilgilendirme');
   }
 
   const enabledNotificationEventCount = Object.values(attendanceConfig.notificationEvents).filter(Boolean).length;
@@ -415,12 +416,12 @@ export function AutomationsCrudPage() {
       await upsertRule({
         key: REMINDER_KEY,
         name: "Randevu Hatırlatması",
-        description: 'Appointment reminder automation at 2 hours, 24 hours and 72 hours before',
+        description: '2 saat, 24 saat ve 72 saat öncesi otomatik WhatsApp hatırlatma mesajları.',
         isEnabled: !reminderEnabled,
         config: reminderConfig
       });
     } catch (err: any) {
-      setError(err?.message || 'Appointment reminder could not be updated.');
+      setError(err?.message || 'Randevu hatırlatması güncellenemedi.');
     } finally {
       setSavingKey(null);
     }
@@ -433,13 +434,13 @@ export function AutomationsCrudPage() {
     try {
       await upsertRule({
         key: ATTENDANCE_KEY,
-        name: 'Appointment No-show Tracking',
-        description: 'Tracks appointment violations and enforces sanction rules',
+        name: 'Randevu Gelmedi Takibi',
+        description: 'Randevu ihlallerini takip eder ve yaptırım kurallarını uygular.',
         isEnabled: !attendanceEnabled,
         config: attendanceConfig
       });
     } catch (err: any) {
-      setError(err?.message || 'No-show tracking could not be updated.');
+      setError(err?.message || 'No-show takibi güncellenemedi.');
     } finally {
       setSavingKey(null);
     }
@@ -473,13 +474,13 @@ export function AutomationsCrudPage() {
       await upsertRule({
         key: REMINDER_KEY,
         name: "Randevu Hatırlatması",
-        description: 'Appointment reminder automation at 2 hours, 24 hours and 72 hours before',
+        description: '2 saat, 24 saat ve 72 saat öncesi otomatik WhatsApp hatırlatma mesajları.',
         isEnabled: reminderEnabled,
         config: editReminderConfig
       });
       closeDialog();
     } catch (err: any) {
-      setError(err?.message || 'Appointment reminder settings could not be saved.');
+      setError(err?.message || 'Randevu hatırlatma ayarları kaydedilemedi.');
     } finally {
       setSavingKey(null);
     }
@@ -502,8 +503,8 @@ export function AutomationsCrudPage() {
     try {
       await upsertRule({
         key: ATTENDANCE_KEY,
-        name: 'Appointment No-show Tracking',
-        description: 'Tracks appointment violations and enforces sanction rules',
+        name: 'Randevu Gelmedi Takibi',
+        description: 'Randevu ihlallerini takip eder ve yaptırım kurallarını uygular.',
         isEnabled: attendanceEnabled,
         config: sanitized
       });
@@ -522,7 +523,7 @@ export function AutomationsCrudPage() {
           {viewMode === 'reminder' ?
             "WhatsApp Hatırlatma Ayarları" :
             viewMode === 'attendance' ?
-              'Randevu No-show Takibi' :
+              'Randevu Gelmedi Takibi' :
               'Otomasyonlar'}
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -613,17 +614,17 @@ export function AutomationsCrudPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold leading-tight text-foreground">Randevu No-show Takibi</h3>
+                    <h3 className="text-base font-semibold leading-tight text-foreground">Randevu Gelmedi Takibi</h3>
                     <p className="mt-1 text-sm leading-tight text-muted-foreground">
                       Geç iptal, geç değişiklik ve randevuya gelmeme kurallarını tek yerden yönetin.
                     </p>
 
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                        Validity: {validityLabel(attendanceConfig.validityWindow)}
+                        Geçerlilik: {validityLabel(attendanceConfig.validityWindow)}
                       </span>
                       <span className="inline-flex rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
-                        Notification: {enabledNotificationEventCount} statuses
+                        Bildirim: {enabledNotificationEventCount} durum
                       </span>
                     </div>
 
@@ -642,7 +643,7 @@ export function AutomationsCrudPage() {
                   checked={attendanceEnabled}
                   onClick={() => void handleAttendanceToggle()}
                   disabled={savingKey === 'attendance' || loading}
-                  ariaLabel={`No-show takibini ${attendanceEnabled ? 'kapat' : 'aç'}`} />
+                  ariaLabel={`Gelmedi takibini ${attendanceEnabled ? 'kapat' : 'aç'}`} />
 
               </div>
             </CardContent>
@@ -728,7 +729,7 @@ export function AutomationsCrudPage() {
           aria-describedby={undefined}>
 
           <DialogHeader>
-            <DialogTitle>No-show Takip Ayarları</DialogTitle>
+            <DialogTitle>Gelmedi Takip Ayarları</DialogTitle>
           </DialogHeader>
 
           {editAttendanceConfig ?
@@ -750,7 +751,7 @@ export function AutomationsCrudPage() {
 
                 <OptionRow
                   icon={CalendarX2}
-                  title="late cancellations"
+                  title="Geç iptaller"
                   description="Randevuya çok kısa süre kala yapılan iptaller ihlal sayılır."
                   checked={editAttendanceConfig.countLateCancellations}
                   onToggle={() =>
@@ -778,7 +779,7 @@ export function AutomationsCrudPage() {
 
                 <OptionRow
                   icon={TriangleAlert}
-                  title="late changes"
+                  title="Geç değişiklikler"
                   description="Randevuya kısa süre kala yapılan saat/tarih değişiklikleri ihlal sayılır."
                   checked={editAttendanceConfig.countLateReschedules}
                   onToggle={() =>
@@ -894,7 +895,7 @@ export function AutomationsCrudPage() {
                         'border-border text-muted-foreground hover:border-border/80'
                     )}>
 
-                    Gec iptallerde gönder
+                    Geç iptallerde gönder
                   </button>
 
                   <button
@@ -919,7 +920,7 @@ export function AutomationsCrudPage() {
                         'border-border text-muted-foreground hover:border-border/80'
                     )}>
 
-                    Gec değişikliklerde gönder
+                    Geç değişikliklerde gönder
                   </button>
 
                   <button
@@ -944,7 +945,7 @@ export function AutomationsCrudPage() {
                         'border-border text-muted-foreground hover:border-border/80'
                     )}>
 
-                    Gelmedigi randevularda gönder
+                    Gelinmeyen randevularda gönder
                   </button>
                 </div>
               </div>

@@ -121,7 +121,7 @@ export function DashboardPage() {
     const resolved = resolveSingleDayRange(dateInput);
 
     if (!resolved.range) {
-      setRangeError(resolved.error || 'The time range is invalid.');
+      setRangeError(resolved.error || 'Zaman aralığı geçersiz.');
       return;
     }
 

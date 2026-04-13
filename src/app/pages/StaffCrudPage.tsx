@@ -75,9 +75,6 @@ function formatPrice(value: number) {
 function ToggleSwitch({
   checked,
   onChange
-
-
-
 }: { checked: boolean; onChange: (next: boolean) => void; }) {
   return (
     <button
@@ -87,13 +84,10 @@ function ToggleSwitch({
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-[var(--rose-gold)]' : 'bg-muted-foreground/25'}`
       }>
-
       <span
         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`
         } />
-
     </button>);
-
 }
 
 export function StaffCrudPage() {
@@ -272,7 +266,7 @@ export function StaffCrudPage() {
       if (draft.useCustomPrice) {
         const parsed = Number(draft.customPrice);
         if (!Number.isFinite(parsed) || parsed < 0) {
-          throw new Error(`${service.name} has an invalid custom price.`);
+          throw new Error(`${service.name} için geçersiz özel fiyat.`);
         }
         customPrice = parsed;
       }
@@ -281,7 +275,7 @@ export function StaffCrudPage() {
       if (draft.useCustomDuration) {
         const parsed = Number(draft.customDuration);
         if (!Number.isFinite(parsed) || parsed <= 0) {
-          throw new Error(`${service.name} has an invalid custom duration.`);
+          throw new Error(`${service.name} için geçersiz özel süre.`);
         }
         customDuration = Math.round(parsed);
       }
@@ -297,7 +291,7 @@ export function StaffCrudPage() {
     event.preventDefault();
 
     if (!form.name.trim()) {
-      setError('Full name is required.');
+      setError('Ad Soyad zorunludur.');
       return;
     }
 
@@ -343,21 +337,21 @@ export function StaffCrudPage() {
       setModalOpen(false);
       setEditingStaffId(null);
     } catch (err: any) {
-      setError(err?.message || 'The employee could not be registered.');
+      setError(err?.message || "Personel kaydedilemedi.");
     } finally {
       setSaving(false);
     }
   };
 
   const deleteStaff = async (item: StaffItem) => {
-    const ok = window.confirm(`${item.name} Do you want to delete this record?`);
+    const ok = window.confirm(`${item.name} isimli personeli silmek istediğinize emin misiniz?`);
     if (!ok) return;
 
     try {
       await apiFetch(`/api/admin/staff/${item.id}`, { method: 'DELETE' });
       setStaff((prev) => prev.filter((entry) => entry.id !== item.id));
     } catch (err: any) {
-      setError(err?.message || 'The employee could not be deleted.');
+      setError(err?.message || 'Personel silinemedi.');
     }
   };
 
@@ -365,14 +359,13 @@ export function StaffCrudPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Personel Management</h1>
+          <h1 className="text-2xl font-semibold">Personel Yönetimi</h1>
           <p className="text-sm text-muted-foreground">Personel ve hizmet yetkileri</p>
         </div>
         <button
           type="button"
           onClick={openCreate}
           className="h-10 px-4 rounded-lg bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 shrink-0">
-
           <Plus className="h-4 w-4" />
           Ekle
         </button>
@@ -389,13 +382,12 @@ export function StaffCrudPage() {
                 <div
                   className="h-11 w-11 rounded-full flex items-center justify-center text-white"
                   style={{ backgroundColor: toHexColor(item.themeColor, item.id) }}>
-
                   <UserRound className="h-5 w-5" />
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold leading-tight truncate">{item.name}</p>
-                  <p className="text-sm text-muted-foreground truncate">{item.title || 'Title not specified'}</p>
+                  <p className="text-sm text-muted-foreground truncate">{item.title || 'Unvan belirtilmedi'}</p>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -404,7 +396,6 @@ export function StaffCrudPage() {
                     onClick={() => openEdit(item)}
                     className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
                     title="Düzenle">
-
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
@@ -412,7 +403,6 @@ export function StaffCrudPage() {
                     onClick={() => void deleteStaff(item)}
                     className="h-8 w-8 grid place-items-center rounded-md text-red-500 hover:bg-red-50"
                     title="Sil">
-
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -428,11 +418,9 @@ export function StaffCrudPage() {
                           'bg-[var(--rose-gold)]/10 text-[var(--rose-gold)] border border-[var(--rose-gold)]/35' :
                           'bg-muted text-muted-foreground'}`
                       }>
-
                       {service.name}
                       {hasCustom ? ` • ${service.effectiveDuration} dk • ${formatPrice(service.effectivePrice)}` : ''}
                     </span>);
-
                 })}
                 {item.services.length > 6 ?
                   <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs bg-muted text-muted-foreground">
@@ -472,7 +460,6 @@ export function StaffCrudPage() {
                     value={form.name}
                     onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                     className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-
                 </label>
 
                 <label className="block text-sm space-y-1">
@@ -481,7 +468,6 @@ export function StaffCrudPage() {
                     value={form.title}
                     onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
                     className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-
                 </label>
               </div>
 
@@ -491,7 +477,6 @@ export function StaffCrudPage() {
                   value={form.phone}
                   onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
                   className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-
               </label>
 
               <div className="rounded-xl border border-border p-3 space-y-3">
@@ -504,7 +489,6 @@ export function StaffCrudPage() {
                   {groupedServices.map((group) =>
                     <div key={group.key}>
                       <p className="text-xs font-semibold tracking-wide text-muted-foreground mb-2 uppercase">{group.title}</p>
-
                       <div className="space-y-2">
                         {group.items.map((service) => {
                           const draft = serviceDrafts[service.id] || {
@@ -524,13 +508,11 @@ export function StaffCrudPage() {
                                   checked={draft.selected}
                                   onChange={(event) => toggleServiceSelected(service.id, event.target.checked)}
                                   className="mt-1" />
-
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
                                     <span
                                       className="inline-block h-3.5 w-3.5 rounded-sm"
                                       style={{ backgroundColor: colorBySeed(service.id) }} />
-
                                     <p className="text-sm font-medium leading-tight">{service.name}</p>
                                   </div>
                                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -547,7 +529,6 @@ export function StaffCrudPage() {
                                       value={draft.gender}
                                       onChange={(event) => updateDraftField(service.id, 'gender', event.target.value)}
                                       className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm">
-
                                       <option value="female">Kadın</option>
                                       <option value="male">Erkek</option>
                                       <option value="other">Uniseks</option>
@@ -558,7 +539,6 @@ export function StaffCrudPage() {
                                     <ToggleSwitch
                                       checked={draft.useCustomPrice}
                                       onChange={(next) => updateDraftField(service.id, 'useCustomPrice', next)} />
-
                                   </div>
                                   {draft.useCustomPrice ?
                                     <input
@@ -571,7 +551,6 @@ export function StaffCrudPage() {
                                       }
                                       className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
                                       placeholder="Örn: 180" /> :
-
                                     null}
 
                                   <div className="flex items-center justify-between gap-2 text-xs">
@@ -579,7 +558,6 @@ export function StaffCrudPage() {
                                     <ToggleSwitch
                                       checked={draft.useCustomDuration}
                                       onChange={(next) => updateDraftField(service.id, 'useCustomDuration', next)} />
-
                                   </div>
                                   {draft.useCustomDuration ?
                                     <input
@@ -592,12 +570,10 @@ export function StaffCrudPage() {
                                       }
                                       className="w-full h-9 rounded-md border border-border bg-card px-2 text-sm"
                                       placeholder="Örn: 75" /> :
-
                                     null}
                                 </div> :
                                 null}
                             </div>);
-
                         })}
                       </div>
                     </div>
@@ -609,7 +585,6 @@ export function StaffCrudPage() {
                   type="submit"
                   disabled={saving}
                   className="w-full h-11 rounded-lg bg-[var(--rose-gold)] text-white font-semibold disabled:opacity-70">
-
                   {saving ? "Kaydediliyor..." : editingStaffId ? "Güncelle" : "Ekle"}
                 </button>
               </div>
@@ -618,5 +593,4 @@ export function StaffCrudPage() {
         </div> :
         null}
     </div>);
-
 }

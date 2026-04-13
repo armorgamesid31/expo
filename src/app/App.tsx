@@ -82,13 +82,13 @@ function PushNotificationBridge() {
 
     setPushEventHandlers({
       onPushReceived: (notification) => {
-        const title = notification.title || 'New notification';
-        const body = notification.body || 'Open the app to review the details.';
+        const title = notification.title || 'Yeni bildirim';
+        const body = notification.body || 'Detayları incelemek için uygulamayı açın.';
 
         toast(title, {
           description: body,
           action: {
-            label: 'Open',
+            label: 'Aç',
             onClick: () => {
               void openNotification(notification.data || null);
             }

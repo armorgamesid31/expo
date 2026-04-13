@@ -247,7 +247,7 @@ export function CustomersPage() {
       setCursor(response.nextCursor);
       setHasMore(response.hasMore);
     } catch (err: any) {
-      setError(err?.message || 'Could not load any more clients.');
+      setError(err?.message || 'Daha fazla müşteri yüklenemedi.');
     } finally {
       setLoadingMore(false);
     }
@@ -255,7 +255,7 @@ export function CustomersPage() {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setError('Full name is required.');
+      setError('Ad Soyad zorunludur.');
       return;
     }
     if (!phone.trim()) {
@@ -332,7 +332,7 @@ export function CustomersPage() {
     }
     const parsedTemplateId = Number(packageTemplateIdToAssign);
     if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
-      setPackageError('Select a valid package template.');
+      setPackageError('Geçerli bir paket şablonu seçin.');
       return;
     }
 
@@ -366,19 +366,19 @@ export function CustomersPage() {
     const reason = packageAdjustReason.trim();
 
     if (!Number.isInteger(packageId) || packageId <= 0) {
-      setPackageError('Select a package.');
+      setPackageError('Bir paket seçin.');
       return;
     }
     if (!Number.isInteger(serviceId) || serviceId <= 0) {
-      setPackageError('Select a service.');
+      setPackageError('Bir hizmet seçin.');
       return;
     }
     if (!Number.isInteger(delta) || delta === 0) {
-      setPackageError('Delta must be a non-zero integer.');
+      setPackageError('Miktar sıfırdan farklı bir tam sayı olmalıdır.');
       return;
     }
     if (!reason) {
-      setPackageError("Neden is required.");
+      setPackageError("Neden gereklidir.");
       return;
     }
 
@@ -608,6 +608,27 @@ export function CustomersPage() {
     return 'Düşük Risk';
   };
 
+  const packageStatusLabel = (status: string) => {
+    switch (status) {
+      case 'ACTIVE': return 'AKTİF';
+      case 'EXPIRED': return 'SÜRESİ DOLDU';
+      case 'CANCELLED': return 'İPTAL EDİLDİ';
+      case 'DEPLETED': return 'TÜKENDİ';
+      default: return status;
+    }
+  };
+
+  const packageActionLabel = (action: string) => {
+    switch (action) {
+      case 'CONSUME': return 'Kullanım';
+      case 'CANCEL': return 'İptal';
+      case 'ADJUST': return 'Düzeltme';
+      case 'REFUND': return 'İade';
+      case 'PURCHASE': return 'Satın Alım';
+      default: return action;
+    }
+  };
+
   const attendanceRatePercent = (noShowCount: number, totalBookings: number) => {
     if (!totalBookings || totalBookings <= 0) {
       return 0;
@@ -625,7 +646,7 @@ export function CustomersPage() {
       case 'CANCELLED':
         return "İptal";
       case 'NO_SHOW':
-        return 'No-show';
+        return 'Gelmedi';
       default:
         return status;
     }
@@ -669,7 +690,7 @@ export function CustomersPage() {
             onClick={() => navigate('/app/automations?section=attendance')}
             className="rounded-md border border-border px-3 py-1.5 text-xs">
 
-            No-show Takibi
+            Gelmedi Takibi
           </button>
           <button
             type="button"
@@ -898,11 +919,11 @@ export function CustomersPage() {
 
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                       <p>
-                        Date of Birth:{' '}
+                        Doğum Tarihi:{' '}
                         <span className="text-foreground">
                           {selectedCustomer.customer.birthDate ?
-                            new Date(selectedCustomer.customer.birthDate).toLocaleDateString('en-GB') :
-                            'Belirtilmedi'}
+                            new Date(selectedCustomer.customer.birthDate).toLocaleDateString('tr-TR') :
+                            'Girilmedi'}
                         </span>
                       </p>
                       <p>
@@ -935,7 +956,7 @@ export function CustomersPage() {
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-3">
-                    <p className="text-xs text-muted-foreground">No-show Skoru</p>
+                    <p className="text-xs text-muted-foreground">Gelmedi Skoru</p>
                     <div className="flex items-center justify-between gap-2 mt-1">
                       <span className="text-lg font-semibold">{selectedCustomer.summary.noShowRiskScore}</span>
                       <div className="flex items-center gap-2">
@@ -967,9 +988,9 @@ export function CustomersPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1">
-                      No-show: {selectedCustomer.summary.noShowCount} / {selectedCustomer.summary.totalBookings}
+                      Gelmedi: {selectedCustomer.summary.noShowCount} / {selectedCustomer.summary.totalBookings}
                       {' • '}
-                      Attendance: %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
+                      Katılım: %{attendanceRatePercent(selectedCustomer.summary.noShowCount, selectedCustomer.summary.totalBookings).toFixed(0)}
                     </p>
                     {riskError ? <p className="text-[11px] text-red-500 mt-1">{riskError}</p> : null}
                   </div>
@@ -987,7 +1008,7 @@ export function CustomersPage() {
                           'border-border'}`
                       }>
 
-                      Percentage (%)
+                      Yüzde (%)
                     </button>
                     <button
                       type="button"
@@ -1104,7 +1125,7 @@ export function CustomersPage() {
                         <option value="">Paket seçin</option>
                         {customerPackages.map((item) =>
                           <option key={item.id} value={item.id}>
-                            {item.name} ({item.status})
+                            {item.name} ({packageStatusLabel(item.status)})
                           </option>
                         )}
                       </select>
@@ -1159,7 +1180,7 @@ export function CustomersPage() {
                       customerPackages.map((item) =>
                         <div key={item.id} className="rounded-md border border-border p-2.5 space-y-1.5">
                           <p className="text-sm font-medium">
-                            {item.name} <span className="text-xs text-muted-foreground">({item.status})</span>
+                            {item.name} <span className="text-xs text-muted-foreground">({packageStatusLabel(item.status)})</span>
                           </p>
                           <p className="text-[11px] text-muted-foreground">
                             {item.expiresAt ? `Bitiş: ${new Date(item.expiresAt).toLocaleDateString('tr-TR')}` : "Bitiş yok"}
@@ -1184,7 +1205,7 @@ export function CustomersPage() {
                       packageLedger.slice(0, 12).map((entry) =>
                         <div key={entry.id} className="text-[11px] border-b border-border/60 pb-1 last:border-b-0">
                           <p className="font-medium">
-                            {entry.actionType} • {entry.serviceName || '-'} • {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
+                            {packageActionLabel(entry.actionType)} • {entry.serviceName || '-'} • {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
                           </p>
                           <p className="text-muted-foreground">
                             Bakiye: {entry.balanceAfter ?? '-'} • {new Date(entry.createdAt).toLocaleString('tr-TR')}

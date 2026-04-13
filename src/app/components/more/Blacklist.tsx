@@ -43,7 +43,7 @@ const initialBlacklist: BlacklistEntry[] = [
   id: 'bl2',
   name: 'Gizem Polat',
   phone: '+90 539 222 3344',
-  reason: 'Rude behavior towards employees. Failure to comply with salon rules.',
+  reason: 'Çalışanlara karşı kaba davranış. Salon kurallarına uyulmaması.',
   date: '2026-02-03',
   noShowCount: 1
 },
@@ -51,7 +51,7 @@ const initialBlacklist: BlacklistEntry[] = [
   id: 'bl3',
   name: 'Cem Yildiz',
   phone: '+90 540 333 4455',
-  reason: 'He left the hall without paying. Does not respond to payment requests.',
+  reason: 'Ödeme yapmadan salondan ayrıldı. Ödeme isteklerine yanıt vermiyor.',
   date: '2025-12-20',
   noShowCount: 2
 }];
@@ -136,8 +136,8 @@ export function Blacklist({ onBack }: BlacklistProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold">Blacklist</h1>
-            <p className="text-sm text-muted-foreground">Blocked customers and settings</p>
+            <h1 className="text-2xl font-semibold">Kara Liste</h1>
+            <p className="text-sm text-muted-foreground">Engellenen müşteriler ve ayarlar</p>
           </div>
           {activeTab === 'list' &&
           <Button
@@ -165,7 +165,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
             }>
             
             <ShieldBan className="w-4 h-4 inline mr-2" />
-            Blacklist
+            Kara Liste
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -292,7 +292,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                     <p className="text-xs text-muted-foreground leading-relaxed">{entry.reason}</p>
                     {(entry.noShowCount || 0) > 0 &&
                 <Badge variant="secondary" className="mt-2 text-[10px] bg-red-500/10 text-red-600">
-                        {entry.noShowCount} times missed
+                        {entry.noShowCount} kez gelmedi
                       </Badge>
                 }
                   </div>
@@ -319,12 +319,12 @@ export function Blacklist({ onBack }: BlacklistProps) {
       <div className="p-4 space-y-4">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-sm">Automatic Blocking</CardTitle>
+              <CardTitle className="text-sm">Otomatik Engelleme</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Label className="text-sm font-medium">Automatic Blacklist</Label>
+                  <Label className="text-sm font-medium">Otomatik Kara Liste</Label>
                   <p className="text-xs text-muted-foreground mt-1">
                     Belirlenen no-show sayısına ulaşan müşterileri otomatik engelle
                   </p>
@@ -337,7 +337,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
 
               {settings.autoBlock &&
             <div className="space-y-2 pl-4 border-l-2 border-muted">
-                  <Label className="text-xs">No-Show Threshold</Label>
+                  <Label className="text-xs">No-Show Eşiği</Label>
                   <select
                 value={settings.noShowThreshold}
                 onChange={(e) => setSettings({ ...settings, noShowThreshold: parseInt(e.target.value) })}
@@ -358,12 +358,12 @@ export function Blacklist({ onBack }: BlacklistProps) {
 
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-sm">Appointment Restrictions</CardTitle>
+              <CardTitle className="text-sm">Randevu Kısıtlamaları</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <Label className="text-sm font-medium">Block Online Appointments</Label>
+                  <Label className="text-sm font-medium">Online Randevuları Engelle</Label>
                   <p className="text-xs text-muted-foreground mt-1">
                     Kara listedeki müşteriler online randevu alamaz
                   </p>
@@ -391,14 +391,14 @@ export function Blacklist({ onBack }: BlacklistProps) {
 
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-sm">Notifications</CardTitle>
+              <CardTitle className="text-sm">Bildirimler</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <Label className="text-sm font-medium">Personeli Bilgilendir</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Notify all staff when a new blacklist entry is added
+                    Yeni bir kara liste kaydı eklendiğinde tüm personeli bilgilendir
                   </p>
                 </div>
                 <Switch
@@ -478,7 +478,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bl-noshow">No-show Count</Label>
+              <Label htmlFor="bl-noshow">No-show Sayısı</Label>
               <Input
                 id="bl-noshow"
                 type="number"
@@ -495,7 +495,7 @@ export function Blacklist({ onBack }: BlacklistProps) {
                 value={formData.reason || ''}
                 onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                 rows={3}
-                placeholder="Explain the reason for blocking..."
+                placeholder="Engelleme sebebini açıklayın..."
                 className="w-full bg-transparent rounded-lg px-3 py-2 text-sm outline-none border border-input focus:ring-2 focus:ring-[var(--rose-gold)]/30 resize-none" />
               
             </div>

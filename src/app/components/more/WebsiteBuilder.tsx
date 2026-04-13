@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEventHandler } from 'react';
-import { ArrowLeft, Globe, Instagram, MessageCircle, Camera, Check, Sparkles, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Globe, Instagram, MessageCircle, Camera, Check, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 
 interface WebsiteBuilderProps {
@@ -41,9 +41,9 @@ interface WebsiteContentResponse {
 }
 
 const defaultGalleryImages: GalleryImageItem[] = [
-  { id: 'seed-1', label: 'Hair Coloring', emoji: '💇‍♀️' },
-  { id: 'seed-2', label: 'Manicure', emoji: '💅' },
-  { id: 'seed-3', label: 'Skin Care', emoji: '✨' },
+  { id: 'seed-1', label: 'Saç Boyama', emoji: '💇‍♀️' },
+  { id: 'seed-2', label: 'Manikür', emoji: '💅' },
+  { id: 'seed-3', label: 'Cilt Bakımı', emoji: '✨' },
   { id: 'seed-4', label: 'Salon', emoji: '🌸' }];
 
 
@@ -61,16 +61,29 @@ function normalizeInstagram(value: string) {
 
 function buildLocalWebsiteCopy(name: string, cityHint?: string) {
   const salonName = name.trim() || 'Salonunuz';
-  const city = cityHint?.trim() || 'in your city';
+  const city = cityHint?.trim() || 'şehrinizde';
 
   return {
-    heroText: `${salonName} take care of yourself with`,
-    tagline: `${city} professional beauty experience`,
+    heroText: `${salonName} ile kendinize vakit ayırın`,
+    tagline: `${city} profesyonel güzellik deneyimi`,
     description:
-      `${salonName}, with its expert team hair, skin, and care delivers reliable results in its services. ` +
-      'The hygienic salon environment turns every visit into a pleasant experience with quality products and personalized touches.'
+      `${salonName}, uzman ekibi ve kaliteli hizmet anlayışıyla saç, cilt ve vücut bakımında güvenilir sonuçlar sunar. ` +
+      'Hijyenik salon ortamımız, kaliteli ürünler ve kişiye özel dokunuşlarla her ziyaretinizi keyifli bir deneyime dönüştürür.'
   };
 }
+
+const ShimmerOverlay = () => (
+  <motion.div
+    initial={{ x: '-100%' }}
+    animate={{ x: '100%' }}
+    transition={{
+      repeat: Infinity,
+      duration: 1.5,
+      ease: "linear",
+    }}
+    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent z-[1]"
+  />
+);
 
 export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
   const { apiFetch, bootstrap } = useAuth();
@@ -80,12 +93,12 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string; } | null>(null);
 
-  const [salonName, setSalonName] = useState('Beauté Salon');
-  const [tagline, setTagline] = useState('Discover Your Beauty');
+  const [salonName, setSalonName] = useState('Güzellik Salonu');
+  const [tagline, setTagline] = useState('Güzelliğinizi Keşfedin');
   const [description, setDescription] = useState(
-    "A special beauty experience where luxury and comfort meet in the heart of Istanbul. Feel special with our expert team."
+    "Lüks ve konforun buluştuğu özel bir güzellik deneyimi. Uzman ekibimizle kendinizi özel hissedin."
   );
-  const [heroText, setHeroText] = useState('Professional Care, Personal Touch');
+  const [heroText, setHeroText] = useState('Profesyonel Bakım, Kişisel Dokunuş');
   const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(defaultGalleryImages);
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -106,15 +119,15 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
 
         setCategories(catResponse?.items || []);
         setSalonName(content.salon.name || bootstrap?.salon?.name || salonName);
-        setTagline(content.salon.tagline || 'Discover Your Beauty');
-        setHeroText(content.salon.heroText || content.salon.tagline || 'Professional Care, Personal Touch');
+        setTagline(content.salon.tagline || 'Güzelliğinizi Keşfedin');
+        setHeroText(content.salon.heroText || content.salon.tagline || 'Profesyonel Bakım, Kişisel Dokunuş');
         setDescription(content.salon.about || description);
 
         if (content.gallery.length > 0) {
           setGalleryImages(
             content.gallery.map((image) => ({
               id: `db-${image.id}`,
-              label: image.altText || 'Hall Image',
+              label: image.altText || 'Salon Görseli',
               imageUrl: image.imageUrl,
               categoryId: image.categoryId
             }))
@@ -125,7 +138,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       } catch (error) {
         console.error('Website data load failed:', error);
         if (mounted) {
-          setStatus({ type: 'error', message: 'The website content could not be loaded. Default content is used.' });
+          setStatus({ type: 'error', message: 'Web sitesi içeriği yüklenemedi. Varsayılan içerik kullanılıyor.' });
         }
       } finally {
         if (mounted) {
@@ -179,14 +192,14 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       setHeroText(result.generated.heroText);
       setTagline(result.generated.tagline);
       setDescription(result.generated.description);
-      setStatus({ type: 'success', message: 'New text suggestions were produced.' });
+      setStatus({ type: 'success', message: 'Yeni metin önerileri oluşturuldu.' });
     } catch (error) {
       console.warn('Website generate endpoint failed, using local fallback:', error);
       const fallback = buildLocalWebsiteCopy(salonName, bootstrap?.salon?.city || undefined);
       setHeroText(fallback.heroText);
       setTagline(fallback.tagline);
       setDescription(fallback.description);
-      setStatus({ type: 'success', message: 'Local replacement text suggestions were generated.' });
+      setStatus({ type: 'success', message: 'Yerel yedek metin önerileri oluşturuldu.' });
     } finally {
       setIsGenerating(false);
     }
@@ -208,10 +221,10 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
         })
       });
 
-      setStatus({ type: 'success', message: 'Website content has been saved and published.' });
+      setStatus({ type: 'success', message: 'Web sitesi içeriği kaydedildi ve yayınlandı.' });
     } catch (error) {
       console.error('Website content save failed:', error);
-      setStatus({ type: 'error', message: 'An error occurred during saveme. Please try again.' });
+      setStatus({ type: 'error', message: 'Kaydetme sırasında bir hata oluştu. Lütfen tekrar deneyin.' });
     } finally {
       setIsSaving(false);
     }
@@ -260,7 +273,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
       setStatus({ type: 'success', message: "Fotoğraf eklendi. Kaydet ile yayınlayabilirsiniz." });
     };
     reader.onerror = () => {
-      setStatus({ type: 'error', message: 'The photo could not be read.' });
+      setStatus({ type: 'error', message: 'Fotoğraf okunamadı.' });
     };
 
     reader.readAsDataURL(file);
@@ -280,12 +293,12 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
               <Globe className="w-5 h-5 text-[var(--deep-indigo)]" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">Website Builder</h1>
+              <h1 className="text-xl font-semibold">Web Sitesi Oluşturucu</h1>
               <p className="text-xs text-muted-foreground">Salon web sitenizi yönetin</p>
             </div>
           </div>
           <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">
-            Live
+            Yayında
           </Badge>
         </div>
       </div>
@@ -321,7 +334,7 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Salon Name</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Salon Adı</label>
                 <input
                   value={salonName}
                   onChange={(e) => setSalonName(e.target.value)}
@@ -329,43 +342,125 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                   placeholder="Salon adınız" />
 
               </div>
-              <div>
+              <div className="relative">
                 <label className="text-xs text-muted-foreground mb-1 block">Slogan</label>
-                <input
-                  value={tagline}
-                  onChange={(e) => setTagline(e.target.value)}
-                  className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Salonunuzun sloganı" />
-
+                <div className="relative overflow-hidden rounded-lg">
+                  <AnimatePresence mode="wait">
+                    {isGenerating ? (
+                      <motion.div
+                        key="shimmer-tagline"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-[42px] w-full bg-muted/60 relative overflow-hidden"
+                      >
+                        <ShimmerOverlay />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key={tagline}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <input
+                          value={tagline}
+                          onChange={(e) => setTagline(e.target.value)}
+                          className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
+                          placeholder="Salonunuzun sloganı" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Hero Title</label>
-                <input
-                  value={heroText}
-                  onChange={(e) => setHeroText(e.target.value)}
-                  className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
-                  placeholder="Ana sayfa başlığı" />
 
+              <div className="relative">
+                <label className="text-xs text-muted-foreground mb-1 block">Ana Başlık</label>
+                <div className="relative overflow-hidden rounded-lg">
+                  <AnimatePresence mode="wait">
+                    {isGenerating ? (
+                      <motion.div
+                        key="shimmer-hero"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-[42px] w-full bg-muted/60 relative overflow-hidden"
+                      >
+                        <ShimmerOverlay />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key={heroText}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.1 }}
+                      >
+                        <input
+                          value={heroText}
+                          onChange={(e) => setHeroText(e.target.value)}
+                          className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all"
+                          placeholder="Ana sayfa başlığı" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Description</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all resize-none"
-                  placeholder="Salonunuzun kısa açıklaması" />
 
+              <div className="relative">
+                <label className="text-xs text-muted-foreground mb-1 block">Açıklama</label>
+                <div className="relative overflow-hidden rounded-lg">
+                  <AnimatePresence mode="wait">
+                    {isGenerating ? (
+                      <motion.div
+                        key="shimmer-desc"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-[80px] w-full bg-muted/60 relative overflow-hidden"
+                      >
+                        <ShimmerOverlay />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key={description}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.2 }}
+                      >
+                        <textarea
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          rows={3}
+                          className="w-full bg-muted/40 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--rose-gold)]/30 border border-border transition-all resize-none"
+                          placeholder="Salonunuzun kısa açıklaması" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-[var(--rose-gold)]/30 bg-gradient-to-r from-[var(--rose-gold)]/5 to-transparent shadow-sm">
+          <motion.div
+            animate={isGenerating ? {
+              boxShadow: [
+                "0 0 0px 0px rgba(var(--rose-gold-rgb), 0)",
+                "0 0 15px 2px rgba(var(--rose-gold-rgb), 0.3)",
+                "0 0 0px 0px rgba(var(--rose-gold-rgb), 0)"
+              ]
+            } : {}}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className={`border rounded-xl transition-all ${isGenerating ? 'border-[var(--rose-gold)]/50 bg-[var(--rose-gold)]/5' : 'border-[var(--rose-gold)]/30 bg-gradient-to-r from-[var(--rose-gold)]/5 to-transparent'}`}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[var(--rose-gold)]/10 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-[var(--rose-gold)]" />
-                </div>
+                <motion.div 
+                  animate={isGenerating ? { rotate: 360 } : {}}
+                  transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                  className="w-10 h-10 rounded-xl bg-[var(--rose-gold)]/10 flex items-center justify-center"
+                >
+                  <Sparkles className={`w-5 h-5 text-[var(--rose-gold)] ${isGenerating ? 'animate-pulse' : ''}`} />
+                </motion.div>
                 <div className="flex-1">
                   <p className="text-sm font-medium">AI ile Üret</p>
                   <p className="text-xs text-muted-foreground">Profesyonel tanıtım metinleri üretin</p>
@@ -376,19 +471,24 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
                     void handleGenerate();
                   }}
                   disabled={isGenerating}
-                  className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed shadow-sm">
+                  className="px-3 py-1.5 bg-[var(--rose-gold)] text-white rounded-lg text-xs font-medium active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed shadow-sm flex items-center gap-2">
 
-                  {isGenerating ? 'Üretiliyor...' : 'Üret'}
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Üretiliyor...
+                    </>
+                  ) : 'Üret'}
                 </button>
               </div>
             </CardContent>
-          </Card>
+          </motion.div>
 
           <Card className="border-border/50">
             <CardHeader className="pb-3 px-4 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Camera className="w-4 h-4" />
-                Gallery Images
+                Galeri Görselleri
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">

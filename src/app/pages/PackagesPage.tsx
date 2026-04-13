@@ -321,7 +321,7 @@ export function PackagesPage() {
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              {template.isActive ? "Aktif" : "Pasif"} • {template.scopeType} •{' '}
+              {template.isActive ? "Aktif" : "Pasif"} • {template.scopeType === 'POOL' ? 'Havuz' : 'Tek Hizmet'} •{' '}
               {template.validityDays ? `${template.validityDays} gün` : "Bitiş yok"}
             </p>
             <div className="flex flex-wrap gap-1">

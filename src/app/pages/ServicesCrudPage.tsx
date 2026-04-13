@@ -139,7 +139,7 @@ function formatGenderLabel(genders?: string[] | null) {
   const labels: string[] = [];
   if (normalized.includes('female')) labels.push('Kadın');
   if (normalized.includes('male')) labels.push('Erkek');
-  if (normalized.includes('other')) labels.push('Unisex');
+  if (normalized.includes('other')) labels.push('Üniseks');
   return labels.join(' • ');
 }
 
@@ -573,7 +573,7 @@ export function ServicesCrudPage() {
   };
 
   const deleteService = async (item: ServiceItem) => {
-    const ok = window.confirm(`${item.name} Bu hizmeti silmek istediğinize emin misiniz?`);
+    const ok = window.confirm(`"${item.name}" hizmetini silmek istediğinize emin misiniz?`);
     if (!ok) return;
 
     try {
@@ -859,7 +859,7 @@ export function ServicesCrudPage() {
         <div className="fixed inset-0 z-40 bg-black/35 p-4">
           <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">{editingService ? "Hizmeti Düzenle" : "New Hizmet Ekle"}</h2>
+              <h2 className="text-lg font-semibold">{editingService ? "Hizmeti Düzenle" : "Yeni Hizmet Ekle"}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
             </div>
 
@@ -1096,7 +1096,7 @@ export function ServicesCrudPage() {
                           +
                         </button>
                       </div>
-                      <p className="text-xs text-muted-foreground">Configured in 5-minute steps.</p>
+                      <p className="text-xs text-muted-foreground">5 dakikalık adımlarla yapılandırılır.</p>
                     </div> :
                     null}
                 </div>
@@ -1351,7 +1351,7 @@ export function ServicesCrudPage() {
             </div>
 
             <p className="text-xs text-muted-foreground mb-3">
-              Gruplarla hizmet setleri oluştürün; kapasiteyi ve sıralı planlamayı grup bazında yönetin.
+              Gruplarla hizmet setleri oluşturun; kapasiteyi ve sıralı planlamayı grup bazında yönetin.
             </p>
 
             <button

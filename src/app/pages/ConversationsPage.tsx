@@ -83,7 +83,7 @@ interface ChannelHealthPayload {
 function formatTs(value: string): string {
   const dt = new Date(value);
   if (Number.isNaN(dt.getTime())) return value;
-  return dt.toLocaleString('en-GB', {
+  return dt.toLocaleString('tr-TR', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -93,10 +93,10 @@ function formatTs(value: string): string {
 
 function getPreview(item: ConversationItem): string {
   if (item.lastMessageText && item.lastMessageText.trim()) return item.lastMessageText.trim();
-  if (item.lastMessageType === 'image') return '[Image]';
-  if (item.lastMessageType === 'audio') return '[Audio]';
+  if (item.lastMessageType === 'image') return '[Görüntü]';
+  if (item.lastMessageType === 'audio') return '[Ses]';
   if (item.lastMessageType === 'video') return '[Video]';
-  if (item.lastMessageType === 'handover_request') return '[Handover Requested]';
+  if (item.lastMessageType === 'handover_request') return '[Devir İstendi]';
   return `[${item.lastMessageType}]`;
 }
 
@@ -131,7 +131,7 @@ function conversationDisplayName(item: Pick<ConversationItem, 'customerName' | '
   if (item.customerName && item.customerName.trim()) return item.customerName.trim();
   const username = normalizeUsername(item.profileUsername);
   if (username) return `@${username}`;
-  return `User ${item.conversationKey}`;
+  return `Kullanıcı ${item.conversationKey}`;
 }
 
 function initialsFromLabel(value: string): string {
@@ -169,10 +169,10 @@ function automationBadgeClass(mode: AutomationMode): string {
 }
 
 function automationLabel(mode: AutomationMode): string {
-  if (mode === 'HUMAN_PENDING') return 'İnsan Beklemede';
-  if (mode === 'HUMAN_ACTIVE') return "İnsan Aktif";
+  if (mode === 'HUMAN_PENDING') return 'Temsilci Bekleniyor';
+  if (mode === 'HUMAN_ACTIVE') return "Temsilci Devrede";
   if (mode === 'MANUAL_ALWAYS') return 'Her Zaman Manuel';
-  if (mode === 'AUTO_RESUME_PENDING') return 'Otomatik Devam';
+  if (mode === 'AUTO_RESUME_PENDING') return 'Otomasyon Başlayacak';
   return 'Otomatik';
 }
 
@@ -482,10 +482,10 @@ export function ConversationsPage() {
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/handover`,
         {
           method: 'POST',
-          body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' })
+          body: JSON.stringify({ note: 'Salon personeli tarafından canlı destek istendi.' })
         }
       );
-      setActionInfo(response?.alreadyRequested ? 'Bu konuşma zaten insan devrinde.' : 'Devir isteği oluşturuldu.');
+      setActionInfo(response?.alreadyRequested ? 'Bu görüşme zaten canlı destek modunda.' : 'Canlı destek talebi iletildi.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
       await loadKonuşmalar();
     } catch (err: any) {
@@ -505,11 +505,11 @@ export function ConversationsPage() {
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/resume-auto`,
         { method: 'POST' }
       );
-      setActionInfo('Yapay zeka otomasyonu bu konuşma için devam ettirildi.');
+      setActionInfo('Yapay zeka otomasyonu tekrar devreye alındı.');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey);
       await loadKonuşmalar();
     } catch (err: any) {
-      setError(err?.message || 'Devam etme işlemi başarısız oldu.');
+      setError(err?.message || 'Otomasyon başlatılamadı.');
     } finally {
       setSendingResume(false);
     }
@@ -586,7 +586,7 @@ export function ConversationsPage() {
               className={`rounded-lg px-3 py-1.5 text-xs font-medium ${quickFilter === filter ? 'bg-muted text-foreground' : 'text-muted-foreground'}`
               }>
 
-              {filter === 'all' ? 'Hepsi' : filter === 'unread' ? 'Okunmamış' : 'İnsan Devri'}
+              {filter === 'all' ? 'Hepsi' : filter === 'unread' ? 'Okunmamış' : 'Canlı Destek'}
             </button>
           )}
         </div>
@@ -595,14 +595,14 @@ export function ConversationsPage() {
       {channelBlocked ?
         <div className="rounded-2xl border border-border bg-background p-6">
           <p className="text-base font-semibold">
-            {channelView === 'INSTAGRAM' ? "Instagram bağlantısi gerekli" : "WhatsApp bağlantısi gerekli"}
+            {channelView === 'INSTAGRAM' ? "Instagram bağlantısı gerekli" : "WhatsApp bağlantısı gerekli"}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             {selectedChannelHealth?.message || "Bu kanal için sohbetleri görmek önce bağlantı kurulmasını gerektirir."}
           </p>
           {selectedChannelHealth?.missingRequirements?.length ?
             <div className="mt-3 text-xs text-muted-foreground">
-              Eksıkler: {selectedChannelHealth.missingRequirements.join(', ')}
+              Eksikler: {selectedChannelHealth.missingRequirements.join(', ')}
             </div> :
             null}
           <Button
@@ -630,7 +630,7 @@ export function ConversationsPage() {
                 <p className="text-base font-semibold leading-tight">{unreadTotal}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-muted/30 px-2 py-2">
-                <p className="text-[10px] uppercase text-muted-foreground">İnsan Devri</p>
+                <p className="text-[10px] uppercase text-muted-foreground">Canlı Destek</p>
                 <p className="text-base font-semibold leading-tight">{handoverTotal}</p>
               </div>
             </div>
@@ -651,7 +651,7 @@ export function ConversationsPage() {
               </div> :
               filteredKonuşmalar.length === 0 ?
                 <p className="py-8 text-center text-xs text-muted-foreground">
-                  {selectedChannelHealth ? "Bağlı kanalda henuz konuşma yok." : "Bu filtreye uygun konuşma yok."}
+                  {selectedChannelHealth ? "Bağlı kanalda henüz konuşma yok." : "Bu filtreye uygun konuşma yok."}
                 </p> :
 
                 <div className="max-h-[66vh] space-y-2 overflow-y-auto pr-1">
@@ -695,10 +695,10 @@ export function ConversationsPage() {
                             {automationLabel(normalizeAutomationMode(item.automationMode))}
                           </span>
                           <span
-                            className={`rounded px-1.5 py-0.5 text-[10px] ${item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
+                            className={`text-[10px] px-1.5 py-0.5 rounded ${item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
                             }>
 
-                            {item.identityLinked ? 'Bağlı' : 'Bağlı Değil'}
+                            {item.identityLinked ? 'Bağlı' : 'Bağlı değil'}
                           </span>
                         </div>
                       </button>);
@@ -751,13 +751,16 @@ export function ConversationsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {selectedConversation.hasHandoverRequest ?
+                      <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Temsilci bekleniyor.</span> :
+                      null}
                     {handoverInProgress ?
                       <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
-                        {sendingResume ? 'Devam ettiriliyor...' : "YZ'yi Devam Ettir"}
+                        {sendingResume ? 'Devam ettiriliyor...' : "Otomasyonu Başlat"}
                       </Button> :
                       null}
                     <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
-                      {sendingHandover ? 'İsteniyor...' : handoverInProgress ? "Devir Aktif" : 'İnsan Devri İste'}
+                      {sendingHandover ? 'İsteniyor...' : handoverInProgress ? "Temsilci Devrede" : 'Temsilciye Aktar'}
                     </Button>
                   </div>
                 </div>
@@ -829,7 +832,7 @@ export function ConversationsPage() {
                   </div>
                   {!canReply ?
                     <p className="mt-2 text-[11px] text-muted-foreground">
-                      WhatsApp için manuel cevap su an kapalı. Handover ile AI akışını kontrol edebilirsin.
+                      WhatsApp için manuel cevap şu an kapalı. Handover ile AI akışını kontrol edebilirsin.
                     </p> :
                     null}
                 </div>

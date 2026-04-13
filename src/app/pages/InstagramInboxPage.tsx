@@ -123,10 +123,10 @@ function automationBadgeClass(mode: AutomationMode): string {
 }
 
 function automationLabel(mode: AutomationMode): string {
-  if (mode === 'HUMAN_PENDING') return 'İnsan Bekleniyor';
-  if (mode === 'HUMAN_ACTIVE') return 'İnsan Aktif';
+  if (mode === 'HUMAN_PENDING') return 'Temsilci Bekleniyor';
+  if (mode === 'HUMAN_ACTIVE') return 'Temsilci Devrede';
   if (mode === 'MANUAL_ALWAYS') return 'Her Zaman Manuel';
-  if (mode === 'AUTO_RESUME_PENDING') return 'Otomatik Devam Bekliyor';
+  if (mode === 'AUTO_RESUME_PENDING') return 'Otomasyon Başlayacak';
   return 'Otomatik';
 }
 
@@ -354,11 +354,11 @@ export function InstagramInboxPage() {
         body: JSON.stringify({ text: replyText.trim() })
       });
       setReplyText('');
-      setActionInfo('Reply sent successfully.');
+      setActionInfo('Yanıt başarıyla gönderildi.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
-      setError(err?.message || 'Reply could not be sent.');
+      setError(err?.message || 'Yanıt gönderilemedi.');
     } finally {
       setSendingReply(false);
     }
@@ -375,14 +375,14 @@ export function InstagramInboxPage() {
         `/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/handover`,
         {
           method: 'POST',
-          body: JSON.stringify({ note: 'Manual takeover requested by salon staff.' })
+          body: JSON.stringify({ note: 'Salon personeli tarafından canlı destek istendi.' })
         }
       );
-      setActionInfo(response?.alreadyRequested ? 'This conversation is already under human handover.' : 'Handover request created.');
+      setActionInfo(response?.alreadyRequested ? 'Bu görüşme zaten canlı destek modunda.' : 'Canlı destek talebi iletildi.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
-      setError(err?.message || 'Handover request failed.');
+      setError(err?.message || 'Devir isteği başarısız oldu.');
     } finally {
       setSendingHandover(false);
     }
@@ -398,11 +398,11 @@ export function InstagramInboxPage() {
       await apiFetch(`/api/admin/instagram-inbox/conversations/${encodeURIComponent(selectedKey)}/resume-auto`, {
         method: 'POST'
       });
-      setActionInfo('Bu konuşmada yapay zeka otomasyonu yeniden başlatıldı.');
+      setActionInfo('Bu konuşmada yapay zeka otomasyonu tekrar devreye alındı.');
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
-      setError(err?.message || 'Devralma işlemi başarısız oldu.');
+      setError(err?.message || 'Otomasyon başlatılamadı.');
     } finally {
       setSendingResume(false);
     }
@@ -429,7 +429,7 @@ export function InstagramInboxPage() {
               DM'leri görüntüleyin, manuel yanıt gönderin ve yapay zeka konuşmalarını personele devredin.
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Otomatik yanıtlar kullanılabilir. Tüm konuşmalarda canlı temsilciye devretme mümkündür.
+              Otomatik yanıtlar kullanılabilir. Tüm konuşmalarda canlı destek temsilcisine devretme mümkündür.
             </p>
           </div>
           <Button type="button" size="sm" variant="outline" onClick={() => void loadConversations()} disabled={loadingConversations}>
@@ -480,20 +480,20 @@ export function InstagramInboxPage() {
                             <span
                               className={`text-[10px] px-1.5 py-0.5 rounded ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
 
-                              {automationLabel(normalizeAutomationMode(item.automationMode))}
+                               {automationLabel(normalizeAutomationMode(item.automationMode))}
                             </span>
                             <span
                               className={`text-[10px] px-1.5 py-0.5 rounded ${item.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
                               }>
 
-                              {item.identityLinked ? 'Linked' : 'Unlinked'}
+                              {item.identityLinked ? 'Bağlı' : 'Bağlı değil'}
                             </span>
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
                         <div className="mt-2 flex items-center justify-between">
                           <p className="text-[10px] text-muted-foreground">{formatTs(item.lastEventTimestamp)}</p>
-                          <span className="text-[10px] text-muted-foreground">{item.messageCount} msg</span>
+                          <span className="text-[10px] text-muted-foreground">{item.messageCount} mesaj</span>
                         </div>
                       </button>);
 
@@ -524,7 +524,7 @@ export function InstagramInboxPage() {
                       <p className="text-sm font-semibold">
                         {conversationDisplayName(selectedConversation)}
                       </p>
-                      <p className="text-xs text-muted-foreground">Key: {selectedConversation.conversationKey}</p>
+                      <p className="text-xs text-muted-foreground">Kod: {selectedConversation.conversationKey}</p>
                       {(() => {
                         const username = normalizeUsername(selectedConversation.profileUsername);
                         return username ?
@@ -540,15 +540,15 @@ export function InstagramInboxPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {selectedConversation.hasHandoverRequest ?
-                      <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Handover requested</span> :
+                      <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Temsilci bekleniyor.</span> :
                       null}
                     {handoverInProgress ?
                       <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
-                        {sendingResume ? 'Resuming...' : 'Resume AI'}
+                        {sendingResume ? 'Devam ettiriliyor...' : 'Otomasyonu Başlat'}
                       </Button> :
                       null}
                     <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
-                      {sendingHandover ? 'Requesting...' : handoverInProgress ? "Handover Aktif" : 'Request Handover'}
+                      {sendingHandover ? 'İsteniyor...' : handoverInProgress ? "Temsilci Devrede" : 'Temsilciye Aktar'}
                     </Button>
                   </div>
                 </div>

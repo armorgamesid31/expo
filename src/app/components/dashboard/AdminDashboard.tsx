@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { SetupChecklist } from './SetupChecklist';
+import { Skeleton } from '../ui/skeleton';
 
 interface AdminDashboardProps {
   onNavigate?: (screen: string) => void;
@@ -118,80 +119,100 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 px-4">
-        {stats.map((stat, index) => {
+        {analytics ? stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="border-border/50 overflow-hidden">
+            <Card key={index} className="border-border/50 overflow-hidden hover:shadow-sm transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${stat.color}20` }}>
 
-                    <Icon className="w-5 h-5" style={{ color: stat.color }} />
+                    <Icon className="w-5 h-5 transition-transform group-hover:scale-110" style={{ color: stat.color }} />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">{stat.title}</p>
-                  <p className="text-2xl font-semibold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.title}</p>
+                  <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+                  <p className="text-[10px] text-muted-foreground line-clamp-1">{stat.subtitle}</p>
                 </div>
               </CardContent>
             </Card>);
 
-        })}
+        }) : [1, 2, 3, 4].map((i) => (
+          <Card key={i} className="border-border/50 overflow-hidden">
+            <CardContent className="p-4 space-y-3">
+              <Skeleton className="w-10 h-10 rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-6 w-1/2" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Salon Pulse Chart */}
       <div className="px-4">
-        <Card className="border-border/50">
+        <Card className="border-border/50 overflow-hidden">
           <CardHeader className="pb-4">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[var(--rose-gold)] animate-pulse" />
               Salon Nabzı - Bu Hafta
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={weekData}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--rose-gold)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="var(--rose-gold)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid key="grid" strokeDasharray="3 3" opacity={0.1} />
-                <XAxis
-                  key="xaxis"
-                  dataKey="label"
-                  tick={{ fontSize: 12 }}
-                  stroke="var(--muted-foreground)" />
+            {!analytics ? (
+              <div className="h-[200px] flex items-end gap-2 pb-2">
+                {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                  <Skeleton key={i} className="flex-1" style={{ height: `${20 + Math.random() * 60}%` }} />
+                ))}
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={weekData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--rose-gold)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--rose-gold)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid key="grid" strokeDasharray="3 3" opacity={0.1} />
+                  <XAxis
+                    key="xaxis"
+                    dataKey="label"
+                    tick={{ fontSize: 10, fontWeight: 600 }}
+                    stroke="var(--muted-foreground)" />
 
-                <YAxis
-                  key="yaxis"
-                  tick={{ fontSize: 12 }}
-                  stroke="var(--muted-foreground)" />
+                  <YAxis
+                    key="yaxis"
+                    tick={{ fontSize: 10, fontWeight: 600 }}
+                    stroke="var(--muted-foreground)" />
 
-                <Tooltip
-                  key="tooltip"
-                  contentStyle={{
-                    backgroundColor: 'var(--card)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px'
-                  }}
-                  formatter={(value: any) => [`₺${Number(value || 0).toLocaleString('tr-TR')}`, 'Ciro']} />
+                  <Tooltip
+                    key="tooltip"
+                    contentStyle={{
+                      backgroundColor: 'var(--card)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                    }}
+                    formatter={(value: any) => [`₺${Number(value || 0).toLocaleString('tr-TR')}`, 'Ciro']} />
 
-                <Area
-                  key="area-revenue"
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="var(--rose-gold)"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorRevenue)" />
+                  <Area
+                    key="area-revenue"
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="var(--rose-gold)"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorRevenue)" />
 
-              </AreaChart>
-            </ResponsiveContainer>
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>

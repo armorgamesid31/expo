@@ -76,19 +76,19 @@ function statusToStep(status: AdminImportBatch['status']) {
 function asConflictTypeLabel(type: AdminImportConflict['type']) {
   switch (type) {
     case 'MISSING_PHONE':
-      return 'Missing phone';
+      return 'Telefon numarası eksik';
     case 'INVALID_PHONE':
-      return 'Invalid phone';
+      return 'Geçersiz telefon formatsız';
     case 'SERVICE_UNMATCHED':
       return "Hizmet eşleşmedi";
     case 'STAFF_UNMATCHED':
       return "Personel eşleşmedi";
     case 'APPOINTMENT_OVERLAP':
-      return 'Appointment overlap';
+      return 'Randevu çakışması';
     case 'OUT_OF_RANGE_DATE':
-      return 'Out of range date';
+      return 'Geçersiz tarih aralığı';
     default:
-      return 'Validation error';
+      return 'Doğrulama hatası';
   }
 }
 
@@ -176,9 +176,9 @@ export function DataImportWizardPage() {
       setPreview(null);
       setReport(null);
       setConflictEdits({});
-      toast.success('Import batch created');
+      toast.success('Veri aktarım paketi oluşturuldu');
     } catch (error: any) {
-      toast.error(error?.message || 'Batch could not be created');
+      toast.error(error?.message || 'Paket oluşturulamadı');
     } finally {
       setIsLoading(false);
     }
@@ -210,10 +210,10 @@ export function DataImportWizardPage() {
       for (const file of Array.from(files)) {
         await uploadSingleFile(batch.id, file);
       }
-      toast.success('Files uploaded and queued');
+      toast.success('Dosyalar yüklendi ve işleme alındı');
       await handleRefresh();
     } catch (error: any) {
-      toast.error(error?.message || 'Upload failed');
+      toast.error(error?.message || 'Yükleme başarısız');
     } finally {
       setIsUploading(false);
     }
@@ -278,10 +278,10 @@ export function DataImportWizardPage() {
 
         })
       });
-      toast.success('Conflict decision saved');
+      toast.success('Çakışma kararı kaydedildi');
       await handleRefresh();
     } catch (error: any) {
-      toast.error(error?.message || 'Conflict could not be saved');
+      toast.error(error?.message || 'Karar kaydedilemedi');
     }
   };
 
@@ -292,10 +292,10 @@ export function DataImportWizardPage() {
       await apiFetch(`/api/admin/imports/${batch.id}/commit`, {
         method: 'POST'
       });
-      toast.success('Commit started');
+      toast.success('Veri aktarımı başlatıldı');
       await handleRefresh();
     } catch (error: any) {
-      toast.error(error?.message || 'Commit failed');
+      toast.error(error?.message || 'Aktarım başarısız');
     } finally {
       setIsCommitting(false);
     }
@@ -327,7 +327,7 @@ export function DataImportWizardPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-[var(--deep-indigo)] px-3 py-2 text-sm text-white disabled:opacity-60">
 
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
-            Yeni Batch
+            Yeni Paket
           </button>
           <button
             type="button"
@@ -356,7 +356,12 @@ export function DataImportWizardPage() {
                       'border-border bg-background text-muted-foreground'}`
                 }>
 
-                {step}
+                {step === 'UPLOAD' ? 'Yükleme' :
+                 step === 'PROCESS' ? 'İşleme' :
+                 step === 'REVIEW' ? 'İnceleme' :
+                 step === 'PREVIEW' ? 'Önizleme' :
+                 step === 'COMMIT' ? 'Aktarım' :
+                 step === 'REPORT' ? 'Rapor' : step}
               </div>);
 
           })}
@@ -534,7 +539,7 @@ export function DataImportWizardPage() {
                         }
                         className="rounded-md border border-border px-3 py-2 text-xs">
 
-                        Ignore işaretle
+                        Yoksay olarak işaretle
                       </button>
                     </div>
                   </div>);

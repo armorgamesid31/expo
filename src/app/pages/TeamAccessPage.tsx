@@ -168,7 +168,6 @@ export function TeamAccessPage() {
           Erişim ayarlarını yönetmek için yetkiniz yok.
         </p>
       </div>);
-
   }
 
   return (
@@ -182,7 +181,6 @@ export function TeamAccessPage() {
             type="button"
             onClick={() => setTab('users')}
             className={`rounded-md px-3 py-1.5 text-xs font-medium ${tab === 'users' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'}`}>
-
             Ekip Kullanıcıları
           </button> :
           null}
@@ -191,7 +189,6 @@ export function TeamAccessPage() {
             type="button"
             onClick={() => setTab('roles')}
             className={`rounded-md px-3 py-1.5 text-xs font-medium ${tab === 'roles' ? 'bg-[var(--rose-gold)] text-white' : 'text-muted-foreground'}`}>
-
             Roller ve Yetkiler
           </button> :
           null}
@@ -226,7 +223,6 @@ export function TeamAccessPage() {
                 }))
               }
               className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm">
-
               {ROLES.map((role) =>
                 <option key={role} value={role}>
                   {roleLabel(role)}
@@ -244,7 +240,6 @@ export function TeamAccessPage() {
               onClick={() => void createUser()}
               disabled={saving}
               className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60">
-
               {saving ? "Kaydediliyor..." : "Kullanıcı Oluştur"}
             </button>
           </div>
@@ -267,7 +262,6 @@ export function TeamAccessPage() {
                     value={item.role}
                     onChange={(e) => void updateUser(item, { role: e.target.value as AccessUserItem['role'] })}
                     className="h-8 rounded-md border border-border bg-background px-2 text-xs">
-
                     {ROLES.map((role) =>
                       <option key={role} value={role}>
                         {roleLabel(role)}
@@ -278,7 +272,6 @@ export function TeamAccessPage() {
                     type="button"
                     onClick={() => void updateUser(item, { isActive: !item.isActive })}
                     className="h-8 rounded-md border border-border px-2 text-xs">
-
                     {item.isActive ? "Pasifleştir" : "Aktifleştir"}
                   </button>
                 </div>
@@ -301,7 +294,6 @@ export function TeamAccessPage() {
                 type="button"
                 onClick={() => setActiveRole(role)}
                 className={`h-8 rounded-full border px-3 text-xs ${activeRole === role ? 'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10' : 'border-border'}`}>
-
                 {roleLabel(role)}
               </button>
             )}
@@ -323,9 +315,7 @@ export function TeamAccessPage() {
                       checked={enabled}
                       onChange={() => toggleRolePermission(item.key)}
                       className="h-4 w-4" />
-
                   </label>);
-
               })}
             </div>
           )}
@@ -335,11 +325,9 @@ export function TeamAccessPage() {
             onClick={() => void saveRole()}
             disabled={saving}
             className="w-full h-10 rounded-lg bg-[var(--rose-gold)] text-white text-sm font-semibold disabled:opacity-60">
-
-            {saving ? "Kaydediliyor..." : `Kaydet ${roleLabel(activeRole)} Permissions`}
+            {saving ? "Kaydediliyor..." : `${roleLabel(activeRole)} Yetkilerini Kaydet`}
           </button>
         </div> :
         null}
     </div>);
-
 }

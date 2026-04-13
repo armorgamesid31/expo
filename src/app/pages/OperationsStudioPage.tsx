@@ -17,7 +17,7 @@ export function OperationsStudioPage() {
       <div className="p-4">
         <h1 className="text-2xl font-semibold">Operasyon Stüdyosu</h1>
         <p className="text-sm text-muted-foreground mt-2">
-          You do not have permission to open operations tools.
+          Operasyon araçlarını açmak için yetkiniz bulunmamaktadır.
         </p>
       </div>);
 
@@ -86,7 +86,7 @@ export function OperationsStudioPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Paket Yönetimi</p>
-                  <p className="text-xs text-muted-foreground">Templates, quotas, and customer package balances</p>
+                  <p className="text-xs text-muted-foreground">Şablonlar, kotalar ve müşteri paket bakiyeleri</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -107,7 +107,7 @@ export function OperationsStudioPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Envanter</p>
-                  <p className="text-xs text-muted-foreground">Stock items, movements, and adjustments</p>
+                  <p className="text-xs text-muted-foreground">Stok kalemleri, hareketler ve ayarlamalar</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -119,7 +119,7 @@ export function OperationsStudioPage() {
           <button
             type="button"
             onClick={() => navigate('/app/data-import', { state: { navDirection: 'forward' } })}
-            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+            className="w-full rounded-xl border border-border bg-card p-4 text-left hover:shadow-md transition-all active:scale-[0.98]">
 
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -128,7 +128,7 @@ export function OperationsStudioPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Veri Aktarımı</p>
-                  <p className="text-xs text-muted-foreground">CSV, Excel, PDF ve foto dosyalarından toplu import</p>
+                  <p className="text-xs text-muted-foreground">CSV, Excel ve diğer dosyalardan toplu veri yükleme</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />

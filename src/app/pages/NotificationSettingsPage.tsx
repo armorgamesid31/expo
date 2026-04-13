@@ -82,7 +82,7 @@ export function NotificationSettingsPage() {
       }));
       setError(null);
     } catch (err: any) {
-      setError(err?.message || 'Bildirim tercihleri alinamadi.');
+      setError(err?.message || 'Bildirim tercihleri alınamadı.');
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,7 @@ export function NotificationSettingsPage() {
       setTestMessage(
         result.scheduled ?
           `${result.delaySeconds} saniyelik gecikmeli ${result.scenario || input.scenario} testi planlandi. Simdi uygulamayi arka plana al.` :
-          `Test sonucu: SENT ${result.pushDeliverySummary.SENT}, FAILED ${result.pushDeliverySummary.FAILED}, SKIPPED ${result.pushDeliverySummary.SKIPPED}`
+          `Test sonucu: GÖNDERİLDİ ${result.pushDeliverySummary.SENT}, HATA ${result.pushDeliverySummary.FAILED}, ATLADI ${result.pushDeliverySummary.SKIPPED}`
       );
       await loadPushStatus();
     } catch (err: any) {
@@ -287,7 +287,7 @@ export function NotificationSettingsPage() {
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <label className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium">Tum bildirimler</span>
+          <span className="text-sm font-medium">Tüm bildirimler</span>
           <input
             type="checkbox"
             checked={masterEnabled}

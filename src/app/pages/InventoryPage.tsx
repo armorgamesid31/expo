@@ -1,5 +1,11 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Package, Plus, Minus, AlertTriangle, Boxes, Search } from 'lucide-react';
+import { Skeleton } from '../components/ui/skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Card, CardContent } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 
 interface InventoryItem {
   id: number;
@@ -26,7 +32,7 @@ export function InventoryPage() {
       const response = await apiFetch<{ items: InventoryItem[]; }>('/api/admin/inventory/items');
       setItems(response.items);
     } catch (err: any) {
-      setError(err?.message || "Envanter could not be retrieved.");
+      setError(err?.message || "Envanter verileri alınamadı.");
     } finally {
       setLoading(false);
     }
@@ -52,7 +58,7 @@ export function InventoryPage() {
       setForm({ name: '', category: '', unit: 'adet', currentStock: 0, minStock: 0 });
       await load();
     } catch (err: any) {
-      setError(err?.message || 'The product could not be added.');
+      setError(err?.message || 'Kayıt eklenemedi.');
     } finally {
       setSaving(false);
     }
@@ -66,49 +72,163 @@ export function InventoryPage() {
       });
       await load();
     } catch (err: any) {
-      setError(err?.message || 'Stock could not be updated.');
+      setError(err?.message || 'Stok güncellenemedi.');
     }
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold">Envanter</h1>
-        <p className="text-xs text-muted-foreground">Stok create/read + hareket dayscelleme aktif.</p>
+    <div className="h-full overflow-y-auto bg-[var(--luxury-bg)] pb-24">
+      <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
+        <h1 className="text-2xl font-semibold mb-1">Envanter</h1>
+        <p className="text-sm text-muted-foreground">Ürün stoklarını ve sarf malzemelerini yönetin.</p>
       </div>
 
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
-
-      <form className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3" onSubmit={createItem}>
-        <input className="col-span-2 rounded-md border border-border px-3 py-2 text-sm" placeholder="Ürün adı" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
-        <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Kategori" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
-        <input className="rounded-md border border-border px-3 py-2 text-sm" placeholder="Birim" value={form.unit} onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))} />
-        <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} placeholder="başlangıç stoku" value={form.currentStock} onChange={(e) => setForm((prev) => ({ ...prev, currentStock: Number(e.target.value) }))} />
-        <input className="rounded-md border border-border px-3 py-2 text-sm" type="number" min={0} placeholder="Min stok" value={form.minStock} onChange={(e) => setForm((prev) => ({ ...prev, minStock: Number(e.target.value) }))} />
-        <button type="submit" disabled={saving} className="col-span-2 rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">{saving ? "Ekleniyor..." : "Ürün Ekle"}</button>
-      </form>
-
-      {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
-
-      <div className="space-y-2">
-        {items.map((item) =>
-          <div key={item.id} className="rounded-lg border border-border p-3">
-            <div className="flex items-center justify-between">
-              <p className="font-medium">{item.name}</p>
-              <span className={`text-xs ${item.lowStock ? 'text-red-500' : 'text-green-600'}`}>{item.lowStock ? 'Düşük stok' : 'Normal'}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">{item.category || 'Genel'} • {item.currentStock} {item.unit} (min {item.minStock})</p>
-            <div className="mt-2 flex gap-2">
-              <button type="button" onClick={() => void adjust(item.id, 'OUT')} className="rounded-md border border-border px-2 py-1 text-xs">-1</button>
-              <button type="button" onClick={() => void adjust(item.id, 'IN')} className="rounded-md border border-border px-2 py-1 text-xs">+1</button>
-            </div>
+      <div className="p-4 space-y-6">
+        {error ? (
+          <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm italic">
+            {error}
           </div>
-        )}
+        ) : null}
+
+        {/* Create Form */}
+        <section>
+          <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3 px-1">YENİ ÜRÜN EKLE</h2>
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <form className="grid grid-cols-2 gap-3" onSubmit={createItem}>
+                <div className="col-span-2">
+                  <Input 
+                    placeholder="Ürün Adı" 
+                    value={form.name} 
+                    onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} 
+                  />
+                </div>
+                <Input 
+                  placeholder="Kategori" 
+                  value={form.category} 
+                  onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} 
+                />
+                <Input 
+                  placeholder="Birim (örn: adet, ml)" 
+                  value={form.unit} 
+                  onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))} 
+                />
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground ml-1 uppercase">Mevcut Stok</label>
+                  <Input 
+                    type="number" 
+                    min={0} 
+                    value={form.currentStock} 
+                    onChange={(e) => setForm((prev) => ({ ...prev, currentStock: Number(e.target.value) }))} 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground ml-1 uppercase">Kritik Seviye</label>
+                  <Input 
+                    type="number" 
+                    min={0} 
+                    value={form.minStock} 
+                    onChange={(e) => setForm((prev) => ({ ...prev, minStock: Number(e.target.value) }))} 
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  disabled={saving} 
+                  className="col-span-2 bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)] text-white"
+                >
+                  {saving ? "Ekleniyor..." : "Ürün Kaydet"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Inventory List */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase mb-3 px-1">STOKTAKİ ÜRÜNLER</h2>
+          
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-24 rounded-2xl border border-border/50 bg-card p-4 space-y-3">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-5 w-1/3" />
+                    <Skeleton className="h-4 w-16 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-1/2" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-12" />
+                    <Skeleton className="h-8 w-12" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : items.length > 0 ? (
+            <div className="space-y-2">
+              {items.map((item) => (
+                <Card key={item.id} className="border-border/50 overflow-hidden hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                          item.lowStock ? "bg-red-500/10 text-red-600" : "bg-emerald-500/10 text-emerald-600"
+                        )}>
+                          <Package className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">{item.name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{item.category || 'Genel Kategori'}</p>
+                        </div>
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full",
+                        item.lowStock ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
+                      )}>
+                        {item.lowStock ? 'Kritik Seviye' : 'Stabil'}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex items-end justify-between">
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-tight">GÜNCEL DURUM</p>
+                        <p className="text-lg font-bold">
+                          {item.currentStock} <span className="text-sm font-normal text-muted-foreground">{item.unit}</span>
+                          <span className="text-[10px] font-normal text-muted-foreground ml-2">(Sınır: {item.minStock})</span>
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 w-10 p-0 border-border/50"
+                          onClick={() => void adjust(item.id, 'OUT')}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 w-10 p-0 border-border/50"
+                          onClick={() => void adjust(item.id, 'IN')}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <EmptyState 
+              icon={Boxes}
+              title="Envanter Boş"
+              description="Henüz hiçbir stok kalemi eklenmemiş. Yukarıdaki formu kullanarak ilk ürününüzü ekleyebilirsiniz."
+            />
+          )}
+        </section>
       </div>
-
-      {!loading && !items.length ?
-        <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">Envanter is empty.</div> :
-        null}
-    </div>);
-
-}
+    </div>
+  );
+}
