@@ -61,3 +61,29 @@
 .hover-glow:hover {
   box-shadow: 0 0 20px -5px var(--primary);
 }
+
+/* Global Button & Input Focus Styles */
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary-hover);
+  border-color: var(--primary-muted);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--input-focus-ring) !important;
+}
+
+.max-w-container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}

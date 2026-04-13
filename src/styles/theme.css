@@ -86,8 +86,13 @@
   
   --border: rgba(248, 248, 248, 0.08);
   --input: #1F1F1F;
+  --input-background: #141414;
+  --input-focus: rgba(240, 113, 34, 0.2);
   --ring: #F07122;
   
+  --secondary: #27272A; /* Better contrast for secondary actions */
+  --secondary-foreground: #F8F8F8;
+
   --luxury-bg: #0A0A0A;
   --luxury-card: #141414;
 

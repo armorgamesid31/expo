@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Award, DollarSign, TrendingUp } from 'lucide-react';
+import { Award, BarChart3, DollarSign, TrendingUp } from 'lucide-react';
+import { EmptyState } from '../components/ui/EmptyState';
 import {
   Area,
   AreaChart,
@@ -316,7 +317,13 @@ export function AnalyticsPage() {
 
               })}
               {!overview.staffPerformance?.length ?
-                <p className="text-xs text-muted-foreground">Henüz personel performans verisi yok.</p> :
+                <div className="py-4">
+                  <EmptyState 
+                    icon={Award} 
+                    title="Veri Bekleniyor" 
+                    description="Personel performansı için tamamlanmış randevular gerekiyor." 
+                  />
+                </div> :
                 null}
             </div>
           </div>
@@ -435,14 +442,24 @@ export function AnalyticsPage() {
         <button type="submit" className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white">
           Şablon Ekle
         </button>
-        <div className="space-y-1">
-          {templates.map((template) =>
-            <div key={template.id} className="text-xs text-muted-foreground">
-              #{template.id} {template.name}
+          {!templates.length ? (
+            <div className="py-6 border-t border-border/50">
+              <EmptyState 
+                icon={BarChart3} 
+                title="Şablon Yok" 
+                description="Özelleştirilmiş rapor şablonlarınızı burada saklayabilirsiniz." 
+              />
+            </div>
+          ) : (
+            <div className="space-y-1 mt-3">
+              {templates.map((template) => (
+                <div key={template.id} className="text-xs p-2 rounded-lg bg-muted/30 text-muted-foreground flex justify-between items-center group">
+                  <span>#{template.id} {template.name}</span>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity">Detay</span>
+                </div>
+              ))}
             </div>
           )}
-          {!templates.length ? <p className="text-xs text-muted-foreground">Henüz şablon yok.</p> : null}
-        </div>
       </form>
     </div>);
 

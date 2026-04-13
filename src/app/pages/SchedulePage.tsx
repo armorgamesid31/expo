@@ -21,6 +21,7 @@ import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 import { CalendarSkeleton, ListSkeleton } from '../components/schedule/ScheduleSkeletons';
 import { AppointmentCard } from '../components/schedule/AppointmentCard';
 import { CheckoutDrawer } from '../components/schedule/CheckoutDrawer';
+import { FloatingLabelInput } from '../components/ui/FloatingLabelInput';
 
 interface StaffItem {
   id: number;
@@ -1354,22 +1355,22 @@ export function SchedulePage() {
         <button
           type="button"
           onClick={() => setActiveDate((prev) => addDays(prev, -1))}
-          className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground">
-
-          <ChevronLeft className="h-4 w-4" />
+          className="h-11 w-11 grid place-items-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-colors active:scale-95"
+          aria-label="Önceki Gün">
+          <ChevronLeft className="h-5 w-5" />
         </button>
 
-        <div className="text-center">
-          <p className="font-semibold capitalize">{dateText}</p>
-          <p className="text-xs text-muted-foreground">{isToday ? 'Bugün' : format(activeDate, 'dd.MM.yyyy')}</p>
+        <div className="text-center flex-1">
+          <p className="font-bold text-sm capitalize">{dateText}</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{isToday ? 'Bugün' : format(activeDate, 'dd.MM.yyyy')}</p>
         </div>
 
         <button
           type="button"
           onClick={() => setActiveDate((prev) => addDays(prev, 1))}
-          className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground">
-
-          <ChevronRight className="h-4 w-4" />
+          className="h-11 w-11 grid place-items-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-colors active:scale-95"
+          aria-label="Sonraki Gün">
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
 
@@ -1937,23 +1938,20 @@ export function SchedulePage() {
 
               {loadingCustomers ? <p className="text-xs text-muted-foreground">Müşteriler yükleniyor...</p> : null}
 
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Müşteri Adı</span>
-                <input
-                  value={waitlistForm.customerName}
-                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerName: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
+              <FloatingLabelInput
+                label="Müşteri Adı"
+                value={waitlistForm.customerName}
+                onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerName: event.target.value }))}
+                placeholder="Örn: Ayşe Yılmaz"
+              />
 
-              </label>
-
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Müşteri Telefonu</span>
-                <input
-                  value={waitlistForm.customerPhone}
-                  onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm" />
-
-              </label>
+              <FloatingLabelInput
+                label="Müşteri Telefonu"
+                type="tel"
+                value={waitlistForm.customerPhone}
+                onChange={(event) => setWaitlistForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
+                placeholder="05xx xxx xx xx"
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm space-y-1">
@@ -2099,25 +2097,20 @@ export function SchedulePage() {
 
               {loadingCustomers ? <p className="text-xs text-muted-foreground">Müşteriler yükleniyor...</p> : null}
 
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Müşteri Adı</span>
-                <input
-                  value={form.customerName}
-                  onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  placeholder="Örneğin: Ayşe Yılmaz" />
+              <FloatingLabelInput
+                label="Müşteri Adı"
+                value={form.customerName}
+                onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
+                placeholder="Örnek: Ayşe Yılmaz"
+              />
 
-              </label>
-
-              <label className="block text-sm space-y-1">
-                <span className="text-muted-foreground">Müşteri Telefonu</span>
-                <input
-                  value={form.customerPhone}
-                  onChange={(event) => setForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
-                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm"
-                  placeholder="05xx xxx xx xx" />
-
-              </label>
+              <FloatingLabelInput
+                label="Müşteri Telefonu"
+                type="tel"
+                value={form.customerPhone}
+                onChange={(event) => setForm((prev) => ({ ...prev, customerPhone: event.target.value }))}
+                placeholder="05xx xxx xx xx"
+              />
 
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Hizmetler (birden fazla seçebilirsiniz)</p>

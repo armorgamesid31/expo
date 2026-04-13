@@ -102,7 +102,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
       <header className="fixed top-0 left-0 right-0 z-40 glass-panel border-b border-border safe-top">
-        <div className="relative flex items-center justify-between px-4 h-14">
+        <div className="max-w-screen-xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between">
           <div className="w-10">
             {backTarget && (
               <button
@@ -144,21 +144,27 @@ export function AppLayout() {
       </header>
 
       <main className="pt-20 pb-24 overflow-x-hidden min-h-screen relative">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div
-            key={location.pathname}
-            initial={transitionMotion.initial}
-            animate={transitionMotion.animate}
-            exit={transitionMotion.exit}
-            transition={transitionMotion.transition}
-            className="w-full h-full"
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        <div className="max-w-screen-xl mx-auto px-4 lg:px-8">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={location.pathname}
+              initial={transitionMotion.initial}
+              animate={transitionMotion.animate}
+              exit={transitionMotion.exit}
+              transition={transitionMotion.transition}
+              className="w-full h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </main>
 
-      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
+        <div className="w-full max-w-screen-xl pointer-events-auto">
+          <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        </div>
+      </div>
     </div>
   );
 }

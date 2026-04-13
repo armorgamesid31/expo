@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
-import { toast } from 'sonner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthGuard } from './components/app-shell/AuthGuard';
 import { AppLayout } from './components/app-shell/AppLayout';
-import { Toaster } from './components/ui/sonner';
+import { ToastProvider, useToasts } from './context/ToastContext';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SchedulePage } from './pages/SchedulePage';
@@ -64,6 +63,7 @@ function ThemeBootstrap() {
 function PushNotificationBridge() {
   const navigate = useNavigate();
   const { apiFetch, isAuthenticated } = useAuth();
+  const { showToast } = useToasts();
 
   useEffect(() => {
     const openNotification = async (payload: Record<string, unknown> | null | undefined) => {
@@ -86,15 +86,7 @@ function PushNotificationBridge() {
         const title = notification.title || 'Yeni bildirim';
         const body = notification.body || 'Detayları incelemek için uygulamayı açın.';
 
-        toast(title, {
-          description: body,
-          action: {
-            label: 'Aç',
-            onClick: () => {
-              void openNotification(notification.data || null);
-            }
-          }
-        });
+        showToast(title, 'info');
       },
       onPushAction: (action) => {
         void openNotification(action.notification.data || null);
@@ -104,7 +96,7 @@ function PushNotificationBridge() {
     return () => {
       setPushEventHandlers({});
     };
-  }, [apiFetch, isAuthenticated, navigate]);
+  }, [apiFetch, isAuthenticated, navigate, showToast]);
 
   return null;
 }
@@ -256,16 +248,16 @@ function AppRoutes() {
 export default function App() {
   return (
     <LocaleProvider>
-      <AuthProvider>
-        <ThemeBootstrap />
-        <BrowserRouter>
-          <PushNotificationBridge />
-          <NavigatorProvider>
-            <AppRoutes />
-          </NavigatorProvider>
-        </BrowserRouter>
-        <Toaster position="top-center" richColors />
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <ThemeBootstrap />
+          <BrowserRouter>
+            <PushNotificationBridge />
+            <NavigatorProvider>
+              <AppRoutes />
+            </NavigatorProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
     </LocaleProvider>);
-
 }

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { Search, UserPlus, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToasts } from '../context/ToastContext';
+import { FloatingLabelInput } from '../components/ui/FloatingLabelInput';
+import { EmptyState } from '../components/ui/EmptyState';
 import type {
   AdminCustomerItem,
   AdminCustomersResponse,
@@ -115,6 +118,7 @@ interface CustomersListSnapshot {
 export function CustomersPage() {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToasts();
   const [initialListSnapshot] = useState<CustomersListSnapshot | null>(
     () => readSnapshot<CustomersListSnapshot>(CUSTOMERS_LIST_CACHE_KEY, 1000 * 60 * 10)
   );
@@ -299,8 +303,8 @@ export function CustomersPage() {
       setBirthDate('');
       setAcceptMarketing(false);
       setShowCreateForm(false);
-    } catch (err: any) {
-      setError(err?.message || "Müşteri oluşturulamadi.");
+      showToast(`${name.trim()} müşterisi başarıyla oluşturuldu.`, 'success');
+      setName('');
     } finally {
       setCreating(false);
     }
@@ -702,13 +706,15 @@ export function CustomersPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-3">
+      <div className="relative">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+          <Search className="h-4 w-4" />
+        </div>
         <input
-          className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Ad, telefon veya Instagram ile ara"
+          className="w-full rounded-xl border border-border bg-input-background pl-10 pr-3 py-3 text-sm focus:ring-4 focus:ring-input-focus focus:border-primary transition-all"
+          placeholder="Ad, telefon veya Instagram..."
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)} />
-
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-2">
@@ -724,30 +730,36 @@ export function CustomersPage() {
         </div>
 
         {showCreateForm ?
-          <div className="space-y-2">
-            <input
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Ad Soyad"
+          <div className="space-y-4 pt-2">
+            <FloatingLabelInput
+              id="cust-name"
+              label="Ad Soyad"
               value={name}
-              onChange={(event) => setName(event.target.value)} />
-
-            <input
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Telefon"
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <FloatingLabelInput
+              id="cust-phone"
+              label="Telefon"
               value={phone}
-              onChange={(event) => setPhone(event.target.value)} />
-
-            <input
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              placeholder="Instagram (isteğe bağlı)"
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+            <FloatingLabelInput
+              id="cust-ig"
+              label="Instagram"
               value={instagram}
-              onChange={(event) => setInstagram(event.target.value)} />
-
-            <input
-              type="date"
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              value={birthDate}
-              onChange={(event) => setBirthDate(event.target.value)} />
+              onChange={(e) => setInstagram(e.target.value)}
+            />
+            <div className="space-y-1.5">
+              <label htmlFor="cust-birth" className="text-xs font-medium text-muted-foreground ml-1">Doğum Tarihi</label>
+              <input
+                id="cust-birth"
+                type="date"
+                className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-sm focus:ring-4 focus:ring-input-focus focus:border-primary transition-all"
+                value={birthDate}
+                onChange={(event) => setBirthDate(event.target.value)} />
+            </div>
 
             <label className="flex items-center gap-2 text-sm rounded-md border border-border px-3 py-2">
               <input
@@ -763,7 +775,7 @@ export function CustomersPage() {
               disabled={creating}
               className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">
 
-              {creating ? "Ekleniyor..." : "Kaydet"}
+              {creating ? "Ekleniyor..." : "Müşteriyi Kaydet"}
             </button>
           </div> :
           null}
@@ -793,11 +805,17 @@ export function CustomersPage() {
         )}
       </div>
 
-      {!loading && !items.length ?
-        <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Kayıtlı müşteri bulunamadı.
-        </div> :
-        null}
+      {!loading && !items.length ? (
+        <div className="py-12">
+          <EmptyState 
+            icon={UserPlus} 
+            title="Müşteri Bulunamadı" 
+            description={searchQuery.trim() ? "Arama kriterine uygun müşteri bulunamadı." : "Henüz bir müşteriniz yok. İlk müşterinizi ekleyerek başlayın."}
+            actionLabel={!searchQuery.trim() ? "Yeni Müşteri Ekle" : undefined}
+            onAction={() => setShowCreateForm(true)}
+          />
+        </div>
+      ) : null}
 
       {hasMore ?
         <button
