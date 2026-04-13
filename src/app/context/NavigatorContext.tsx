@@ -75,8 +75,8 @@ export function NavigatorProvider({ children }: { children: React.ReactNode }) {
     // 3. Automated Logic
     // Same Level (Tabs)
     if (currentLevel === 1 && prevLevel === 1) {
-      // Intent Right (0->1) -> Motion RIGHT (Vector 1)
-      return currentRank > prevRank ? 1 : -1;
+      // Forward (0->1) -> Motion LEFT (Vector -1)
+      return currentRank > prevRank ? -1 : 1;
     }
 
     // Hierarchy Change

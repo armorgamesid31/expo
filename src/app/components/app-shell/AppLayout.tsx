@@ -20,16 +20,13 @@ function transitionMotionByKind(vector: number) {
 
   return {
     initial: { 
-      x: vector === 1 ? '-100%' : '100%', 
-      opacity: 1
+      x: vector === 1 ? '-100%' : '100%'
     },
     animate: { 
-      x: 0, 
-      opacity: 1
+      x: 0
     },
     exit: { 
-      x: vector === 1 ? '100%' : '-100%', 
-      opacity: 1
+      x: vector === 1 ? '100%' : '-100%'
     },
     transition: { 
       duration: 0.35, 
