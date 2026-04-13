@@ -135,8 +135,8 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       }
 
       <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Özellikler</h1>
-        <p className="text-sm text-muted-foreground">Yönetim araçları ve gelişmiş modüller</p>
+        <h1 className="text-2xl font-semibold mb-1">Yönetim</h1>
+        <p className="text-sm text-muted-foreground">İşletme araçları, modüller ve ayarlar</p>
       </div>
 
       <div className="p-4 space-y-8">

@@ -11,7 +11,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     { id: 'dashboard', label: 'Ana Sayfa', icon: LayoutDashboard },
     { id: 'schedule', label: 'Randevular', icon: Calendar },
     { id: 'conversations', label: 'Konuşmalar', icon: MessagesSquare },
-    { id: 'settings', label: "Ayarlar", icon: Settings }
+    { id: 'settings', label: "Yönetim", icon: Settings }
   ];
 
   return (

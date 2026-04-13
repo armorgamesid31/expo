@@ -239,4 +239,15 @@
   a {
     font-family: var(--font-body);
   }
+
+  /* Enforce a readable floor for mobile helper/meta text across the app. */
+  :where(
+    .text-xs,
+    [class*="text-[9px]"],
+    [class*="text-[10px]"],
+    [class*="text-[11px]"]
+  ) {
+    font-size: 0.75rem !important;
+    line-height: 1rem;
+  }
 }
