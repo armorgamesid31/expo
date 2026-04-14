@@ -174,6 +174,7 @@ export function TeamAccessPage() {
         <h1 className="text-2xl font-semibold">Ekip ve Yetki</h1>
         <p className="text-sm text-muted-foreground mt-2">
           Erişim ayarlarını yönetmek için yetkiniz yok.
+        </p>
       </div>);
   }
 

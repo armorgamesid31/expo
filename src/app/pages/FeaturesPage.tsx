@@ -25,7 +25,7 @@ export function FeaturesPage() {
       'meta-direct': '/app/features/meta-direct',
       'instagram-inbox': '/app/instagram-inbox',
       'team-access': '/app/team-access',
-      'operations-studio': '/app/operations-management',
+      'operations-management': '/app/operations-management',
       'brand-growth-hub': '/app/brand-growth-hub',
     };
 
