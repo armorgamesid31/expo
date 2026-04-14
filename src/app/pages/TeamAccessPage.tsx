@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigator } from '../context/NavigatorContext';
 import type { AccessPermissionsResponse, AccessUserItem } from '../types/mobile-api';
 
 const ROLES: Array<'OWNER' | 'MANAGER' | 'RECEPTION' | 'STAFF' | 'FINANCE'> = ['OWNER', 'MANAGER', 'RECEPTION', 'STAFF', 'FINANCE'];
@@ -19,6 +20,13 @@ export function TeamAccessPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  const { setHeaderTitle } = useNavigator();
+
+  useEffect(() => {
+    setHeaderTitle('Ekip ve Yetki');
+    return () => setHeaderTitle(null);
+  }, [setHeaderTitle]);
 
   const [users, setUsers] = useState<AccessUserItem[]>([]);
   const [permissions, setPermissions] = useState<AccessPermissionsResponse['permissions']>([]);
@@ -166,14 +174,11 @@ export function TeamAccessPage() {
         <h1 className="text-2xl font-semibold">Ekip ve Yetki</h1>
         <p className="text-sm text-muted-foreground mt-2">
           Erişim ayarlarını yönetmek için yetkiniz yok.
-        </p>
       </div>);
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Ekip ve Yetki</h1>
-      <p className="text-sm text-muted-foreground">Ekip hesaplarını ve rol bazlı erişim yetkilerini yönetin.</p>
+    <div className="pb-20">
 
       <div className="inline-flex rounded-lg border border-border bg-card p-1">
         {canManageUsers ?

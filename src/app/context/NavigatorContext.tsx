@@ -7,6 +7,10 @@ interface NavigatorContextType {
   direction: NavVector;
   isBackAction: boolean;
   setDirection: (dir: NavVector) => void;
+  headerTitle: string | null;
+  setHeaderTitle: (title: string | null) => void;
+  headerActions: React.ReactNode | null;
+  setHeaderActions: (actions: React.ReactNode | null) => void;
 }
 
 const NavigatorContext = createContext<NavigatorContextType | undefined>(undefined);
@@ -21,9 +25,11 @@ function getHierarchyLevel(path: string): number {
     '/app/notification-role-matrix', 
     '/app/team-access', 
     '/app/team-management',
-    '/app/data-import'
+    '/app/data-import',
+    '/app/features/ai-settings',
+    '/app/features/social-channels'
   ];
-  if (level3.some(n => path.startsWith(n))) return 3;
+  if (level3.some(n => n === path || path.startsWith(n))) return 3;
 
   return 2; // Default for modules like /app/analytics, /app/customers etc.
 }
@@ -41,6 +47,14 @@ export function NavigatorProvider({ children }: { children: React.ReactNode }) {
   const navType = useNavigationType();
   const prevLocRef = useRef<Location>(location);
   const [isBackAction, setIsBackAction] = useState(false);
+  const [headerTitle, setHeaderTitle] = useState<string | null>(null);
+  const [headerActions, setHeaderActions] = useState<React.ReactNode | null>(null);
+
+  // Reset header on location change
+  useLayoutEffect(() => {
+    setHeaderTitle(null);
+    setHeaderActions(null);
+  }, [location.pathname]);
 
   // Synchronous Direction Calculation
   // We use useMemo to derive the vector DURING the render cycle 
@@ -99,8 +113,18 @@ export function NavigatorProvider({ children }: { children: React.ReactNode }) {
     prevLocRef.current = location;
   }, [location.key, direction]);
 
+  const value = useMemo(() => ({
+    direction,
+    isBackAction,
+    setDirection: () => {},
+    headerTitle,
+    setHeaderTitle,
+    headerActions,
+    setHeaderActions
+  }), [direction, isBackAction, headerTitle, headerActions]);
+
   return (
-    <NavigatorContext.Provider value={{ direction, isBackAction, setDirection: () => {} }}>
+    <NavigatorContext.Provider value={value}>
       {children}
     </NavigatorContext.Provider>
   );

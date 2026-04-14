@@ -28,7 +28,7 @@ import { NotificationsInboxPage } from './pages/NotificationsInboxPage';
 import { NotificationRoleMatrixPage } from './pages/NotificationRoleMatrixPage';
 import { TeamAccessPage } from './pages/TeamAccessPage';
 import { TeamManagementPage } from './pages/TeamManagementPage';
-import { OperationsStudioPage } from './pages/OperationsStudioPage';
+import { OperationsManagementPage } from './pages/OperationsManagementPage';
 import { BrandGrowthHubPage } from './pages/BrandGrowthHubPage';
 import { DataImportWizardPage } from './pages/DataImportWizardPage';
 import { LocaleProvider } from './context/LocaleContext';
@@ -185,10 +185,10 @@ function AppRoutes() {
           <Route path="packages" element={<PackagesPage />} />
           <Route path="staff" element={<StaffCrudPage />} />
           <Route
-            path="operations-studio"
+            path="operations-management"
             element={
             <AnyPermissionGuard permissionKeys={['customers.manage', 'services.manage', 'packages.manage', 'inventory.manage']}>
-                <OperationsStudioPage />
+                <OperationsManagementPage />
               </AnyPermissionGuard>
             } />
           
@@ -203,7 +203,7 @@ function AppRoutes() {
           <Route
             path="data-import"
             element={
-            <PermissionGuard permissionKey="imports.manage" fallback="/app/operations-studio">
+            <PermissionGuard permissionKey="imports.manage" fallback="/app/operations-management">
                 <DataImportWizardPage />
               </PermissionGuard>
             } />

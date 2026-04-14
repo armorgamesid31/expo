@@ -15,6 +15,8 @@ import { WhatsAppSettings } from '../components/more/WhatsAppSettings';
 import { MetaDirectSetup } from '../components/more/MetaDirectSetup';
 import { SocialChannelsHub } from '../components/more/SocialChannelsHub';
 
+import { AISettingsPage } from './AISettingsPage';
+
 export function FeatureDetailPage() {
   const { featureKey } = useParams();
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ export function FeatureDetailPage() {
     }
   };
 
+  if (featureKey === 'ai-settings') return <AISettingsPage onBack={onBack} />;
   if (featureKey === 'whatsapp-settings') return <WhatsAppSettings onBack={onBack} />;
   if (featureKey === 'whatsapp-agent') return <WhatsAppAgent onBack={onBack} />;
   if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={onBack} />;

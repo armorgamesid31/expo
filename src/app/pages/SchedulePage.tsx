@@ -22,6 +22,8 @@ import { CalendarSkeleton, ListSkeleton } from '../components/schedule/ScheduleS
 import { AppointmentCard } from '../components/schedule/AppointmentCard';
 import { CheckoutDrawer } from '../components/schedule/CheckoutDrawer';
 import { FloatingLabelInput } from '../components/ui/FloatingLabelInput';
+import { DayNavigator } from '../components/analytics/DayNavigator';
+import { asDateInputValue } from '../lib/analytics-range';
 
 interface StaffItem {
   id: number;
@@ -275,6 +277,8 @@ export function SchedulePage() {
     time: '10:00',
     notes: ''
   });
+
+  const [quickActionGroup, setQuickActionGroup] = useState<AppointmentGroup | null>(null);
 
   const timeSlots = useMemo(() => {
     return Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, index) => DAY_START_HOUR + index);
@@ -1351,28 +1355,12 @@ export function SchedulePage() {
         </button>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2">
-        <button
-          type="button"
-          onClick={() => setActiveDate((prev) => addDays(prev, -1))}
-          className="h-11 w-11 grid place-items-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-colors active:scale-95"
-          aria-label="Önceki Gün">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-
-        <div className="text-center flex-1">
-          <p className="font-bold text-sm capitalize">{dateText}</p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{isToday ? 'Bugün' : format(activeDate, 'dd.MM.yyyy')}</p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setActiveDate((prev) => addDays(prev, 1))}
-          className="h-11 w-11 grid place-items-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-colors active:scale-95"
-          aria-label="Sonraki Gün">
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
+      <DayNavigator 
+        dateValue={format(activeDate, 'yyyy-MM-dd')}
+        onDateChange={(next) => setActiveDate(new Date(`${next}T12:00:00`))}
+        onPrevDay={() => setActiveDate((prev) => subDays(prev, 1))}
+        onNextDay={() => setActiveDate((prev) => addDays(prev, 1))}
+      />
 
       {loading && viewMode === 'calendar' && <CalendarSkeleton />}
       {loading && viewMode === 'list' && <ListSkeleton />}
@@ -1528,9 +1516,10 @@ export function SchedulePage() {
                               totalPrice={appointment.service?.price || 0}
                               status={appointmentDisplayStatus as any}
                               serviceNames={[appointment.service?.name || 'Hizmet']}
-                              style={{ top: block.top, height: block.height }}
-                              onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}
-                            />
+                                style={{ top: block.top, height: block.height }}
+                                onClick={() => setSelectedAppointmentGroup(appointmentGroupById[appointment.id] || null)}
+                                onLongPress={() => setQuickActionGroup(appointmentGroupById[appointment.id] || null)}
+                              />
                           );
                         })}
                       </div>);
@@ -1558,10 +1547,11 @@ export function SchedulePage() {
                   startTime={group.startTime}
                   endTime={group.endTime}
                   totalPrice={group.totalPrice}
-                  status={deriveGroupStatus(group.items, getDisplayStatus) as any}
-                  serviceNames={Array.from(new Set(group.items.map(item => item.service?.name || 'Hizmet')))}
-                  onClick={() => setSelectedAppointmentGroup(group)}
-                />
+                   status={deriveGroupStatus(group.items, getDisplayStatus) as any}
+                   serviceNames={Array.from(new Set(group.items.map(item => item.service?.name || 'Hizmet')))}
+                   onClick={() => setSelectedAppointmentGroup(group)}
+                   onLongPress={() => setQuickActionGroup(group)}
+                 />
               ))}
             </div>
           )}
@@ -2214,6 +2204,88 @@ export function SchedulePage() {
           </div>
         </div> :
         null}
+      {quickActionGroup ? (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setQuickActionGroup(null)}>
+          <motion.div 
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            className="w-full max-w-md bg-background rounded-t-[32px] p-6 shadow-2xl space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-2 opacity-50" />
+            <div className="space-y-1 text-center">
+              <h3 className="text-xl font-black italic tracking-tight">{quickActionGroup.customerName}</h3>
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{quickActionGroup.customerPhone}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 active:scale-95 transition-all"
+                onClick={() => {
+                  void applyStatusToAppointments(quickActionGroup.items.map(i => i.id), 'COMPLETED');
+                  setQuickActionGroup(null);
+                }}
+              >
+                <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-wider">Kapat</span>
+              </button>
+
+              <button
+                type="button"
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-sky-500/10 text-sky-600 border border-sky-500/20 active:scale-95 transition-all"
+                onClick={() => {
+                  void applyStatusToAppointments(quickActionGroup.items.map(i => i.id), 'CONFIRMED');
+                  setQuickActionGroup(null);
+                }}
+              >
+                <div className="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center shadow-lg shadow-sky-500/30">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-wider">Onayla</span>
+              </button>
+
+              <button
+                type="button"
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-violet-500/10 text-violet-600 border border-violet-500/20 active:scale-95 transition-all"
+                onClick={() => {
+                  requestStatusChange(quickActionGroup.items.map(i => i.id), 'UPDATED');
+                  setQuickActionGroup(null);
+                }}
+              >
+                <div className="w-10 h-10 rounded-full bg-violet-500 text-white flex items-center justify-center shadow-lg shadow-violet-500/30">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-wider">Ertele</span>
+              </button>
+
+              <button
+                type="button"
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-rose-500/10 text-rose-600 border border-rose-500/20 active:scale-95 transition-all"
+                onClick={() => {
+                  void applyStatusToAppointments(quickActionGroup.items.map(i => i.id), 'CANCELLED');
+                  setQuickActionGroup(null);
+                }}
+              >
+                <div className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/30">
+                  <Minus className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-wider">İptal</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="w-full py-4 text-xs font-black uppercase tracking-[3px] text-muted-foreground border-t border-border mt-4"
+              onClick={() => setQuickActionGroup(null)}
+            >
+              Kapat
+            </button>
+          </motion.div>
+        </div>
+      ) : null}
         </div>
       </div>
     </>

@@ -102,46 +102,45 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
   return (
     <div className="space-y-6 pb-20">
       {/* Header */}
-      <div className="pt-6 px-4">
+      <div className="pt-6 px-1">
         <h1 className="text-2xl font-semibold mb-1">Hoş geldin</h1>
         <p className="text-muted-foreground text-sm">Salon performans özetin</p>
       </div>
 
-      {dayNavigator ? <div className="px-4">{dayNavigator}</div> : null}
-      {rangeError ? <p className="px-4 text-xs text-red-500">{rangeError}</p> : null}
+      {dayNavigator ? <div className="px-1">{dayNavigator}</div> : null}
+      {rangeError ? <p className="px-1 text-xs text-red-500">{rangeError}</p> : null}
 
       {/* Setup Checklist - Displayed only if empty state is true */}
       {onNavigate && checklistReady && !setupCompleted &&
-        <div className="px-4">
+        <div className="px-1">
           <SetupChecklist onNavigate={onNavigate} checklist={checklist} />
         </div>
       }
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 px-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 px-1">
         {analytics ? stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="border-border/50 overflow-hidden hover:shadow-sm transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
+            <Card key={index} className="border-border/50 overflow-hidden hover:shadow-sm transition-shadow h-full">
+              <CardContent className="p-4 flex flex-col h-full justify-between">
+                <div>
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mb-3"
                     style={{ backgroundColor: `${stat.color}20` }}>
-
                     <Icon className="w-5 h-5 transition-transform group-hover:scale-110" style={{ color: stat.color }} />
                   </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.title}</p>
+                    <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.title}</p>
-                  <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
-                  <p className="text-[10px] text-muted-foreground line-clamp-1">{stat.subtitle}</p>
-                </div>
+                <p className="text-[10px] text-muted-foreground line-clamp-1 mt-2">{stat.subtitle}</p>
               </CardContent>
             </Card>);
 
         }) : [1, 2, 3, 4].map((i) => (
-          <Card key={i} className="border-border/50 overflow-hidden">
+          <Card key={i} className="border-border/50 overflow-hidden h-full">
             <CardContent className="p-4 space-y-3">
               <Skeleton className="w-10 h-10 rounded-xl" />
               <div className="space-y-2">
@@ -155,7 +154,7 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
       </div>
 
       {/* Salon Pulse Chart */}
-      <div className="px-4">
+      <div className="px-1">
         <Card className="border-border/50 overflow-hidden">
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
@@ -218,15 +217,15 @@ export function AdminDashboard({ onNavigate, dayNavigator, rangeError, checklist
       </div>
 
       {/* Quick Actions */}
-      <div className="px-4">
+      <div className="px-1">
         <h2 className="text-lg font-semibold mb-3">Hızlı Erişim</h2>
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => onNavigate?.('/app/customers')} className="p-4 bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
-            <Users className="w-6 h-6 mb-2" />
+          <button onClick={() => onNavigate?.('/app/customers')} className="p-4 bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-dark)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform flex flex-col justify-between h-24">
+            <Users className="w-6 h-6" />
             <p className="font-medium text-sm">Tüm Müşteriler</p>
           </button>
-          <button onClick={() => onNavigate?.('/app/analytics')} className="p-4 bg-gradient-to-br from-[var(--deep-indigo)] to-[var(--deep-indigo-light)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform">
-            <TrendingUp className="w-6 h-6 mb-2" />
+          <button onClick={() => onNavigate?.('/app/analytics')} className="p-4 bg-gradient-to-br from-[var(--deep-indigo)] to-[var(--deep-indigo-light)] text-white rounded-xl text-left shadow-lg active:scale-95 transition-transform flex flex-col justify-between h-24">
+            <TrendingUp className="w-6 h-6" />
             <p className="font-medium text-sm">Analitik Raporu</p>
           </button>
         </div>

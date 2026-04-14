@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigator } from '../context/NavigatorContext';
+import { Check } from 'lucide-react';
 
 const DAYS = [
   { key: 'MON', label: 'Pzt' },
@@ -44,7 +46,31 @@ interface SetupResponse {
 
 export function SalonSetupPage() {
   const { apiFetch } = useAuth();
+  const { setHeaderTitle, setHeaderActions } = useNavigator();
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setHeaderTitle('Salon Ayarları');
+    setHeaderActions(
+      <button
+        type="button"
+        onClick={() => {
+          const formElement = document.getElementById('salon-setup-form') as HTMLFormElement;
+          if (formElement) formElement.requestSubmit();
+        }}
+        disabled={saving}
+        className="h-10 px-4 rounded-xl bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 font-bold shadow-lg border-0 transition-all active:scale-95 disabled:opacity-60"
+      >
+        <Check className="h-4 w-4" />
+        <span>Kaydet</span>
+      </button>
+    );
+    return () => {
+      setHeaderTitle(null);
+      setHeaderActions(null);
+    };
+  }, [setHeaderTitle, setHeaderActions, saving]);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -207,16 +233,12 @@ export function SalonSetupPage() {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold">Salon Ayarları</h1>
-        <p className="text-xs text-muted-foreground">Gerekli adımları buradan tamamlayabilirsiniz.</p>
-      </div>
-
+    <div className="p-4 space-y-4 bg-background min-h-full">
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {message ? <p className="text-sm text-green-600">{message}</p> : null}
 
-      <form className="space-y-3" onSubmit={handleSubmit}>
+      <form id="salon-setup-form" className="space-y-3 pb-24" onSubmit={handleSubmit}>
+
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Salon adı" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="Adres" value={form.address} onChange={(e) => setForm((prev) => ({ ...prev, address: e.target.value }))} />
         <input className="w-full rounded-md border border-border px-3 py-2 text-sm" placeholder="WhatsApp telefonu" value={form.whatsappPhone} onChange={(e) => setForm((prev) => ({ ...prev, whatsappPhone: e.target.value }))} />
@@ -314,13 +336,7 @@ export function SalonSetupPage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">
 
-          {saving ? "Kaydediliyor..." : "Kaydet"}
-        </button>
       </form>
     </div>);
 

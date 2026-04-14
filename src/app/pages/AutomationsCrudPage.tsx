@@ -10,6 +10,7 @@ import { Input } from '../components/ui/input';
 import { cn } from '../components/ui/utils';
 import { useSearchParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/skeleton';
+import { useNavigator } from '../context/NavigatorContext';
 
 interface AutomationItem {
   id: number;
@@ -343,6 +344,18 @@ export function AutomationsCrudPage() {
     }
   };
 
+  const { setHeaderTitle } = useNavigator();
+
+  useEffect(() => {
+    const title = viewMode === 'reminder' ?
+      "WhatsApp Hatırlatma Ayarları" :
+      viewMode === 'attendance' ?
+        'Randevu Gelmedi Takibi' :
+        'Otomasyonlar';
+    setHeaderTitle(title);
+    return () => setHeaderTitle(null);
+  }, [viewMode, setHeaderTitle]);
+
   useEffect(() => {
     void load();
   }, []);
@@ -517,23 +530,8 @@ export function AutomationsCrudPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-[var(--luxury-bg)] pb-20">
-      <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">
-          {viewMode === 'reminder' ?
-            "WhatsApp Hatırlatma Ayarları" :
-            viewMode === 'attendance' ?
-              'Randevu Gelmedi Takibi' :
-              'Otomasyonlar'}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {viewMode === 'reminder' ?
-            'Randevu hatırlatma adımlarını tek yerden yönetin' :
-            viewMode === 'attendance' ?
-              'İhlal kurallarını ve yaptırım seviyelerini yönetin' :
-              'Randevu iletişimlerini otomatik yönetin'}
-        </p>
-      </div>
+    <div className="h-full overflow-y-auto bg-background pb-20">
+
 
       <div className="p-4 space-y-4">
         {error ?

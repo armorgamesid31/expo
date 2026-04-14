@@ -25,7 +25,7 @@ export function FeaturesPage() {
       'meta-direct': '/app/features/meta-direct',
       'instagram-inbox': '/app/instagram-inbox',
       'team-access': '/app/team-access',
-      'operations-studio': '/app/operations-studio',
+      'operations-studio': '/app/operations-management',
       'brand-growth-hub': '/app/brand-growth-hub',
     };
 
@@ -40,7 +40,7 @@ export function FeaturesPage() {
       onOpenSettings={() => navigate('/app/settings', { state: { navDirection: 'forward' } })}
       isFeatureVisible={(permissionKey) => {
         if (!permissionKey) return true;
-        if (permissionKey === 'operations.studio') {
+        if (permissionKey === 'operations.management') {
           return (
             hasPermission('customers.manage') ||
             hasPermission('services.manage') ||

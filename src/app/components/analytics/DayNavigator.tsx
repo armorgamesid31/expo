@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
+import { tr } from 'date-fns/locale';
 import { asDateInputValue } from '../../lib/analytics-range';
 
 interface DayNavigatorProps {
@@ -70,6 +71,7 @@ export function DayNavigator(props: DayNavigatorProps) {
             }}
             initialFocus
             showOutsideDays
+            locale={tr}
           />
         </PopoverContent>
       </Popover>

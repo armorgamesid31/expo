@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Award, Bell, Calendar, Clock3, Gift, Pencil, Trash2, UserPlus, Users, Sparkles, History } from 'lucide-react';
@@ -9,6 +10,8 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { cn } from '../components/ui/utils';
+import { useNavigator } from '../context/NavigatorContext';
+import { Plus } from 'lucide-react';
 
 interface CampaignItem {
   id: number;
@@ -528,6 +531,7 @@ function parseConfigFromInputs(template: CampaignTemplate, configInputs: Record<
 
 export function CampaignsCrudPage() {
   const { apiFetch } = useAuth();
+  const { setHeaderTitle, setHeaderActions } = useNavigator();
 
   const [items, setItems] = useState<CampaignItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -557,6 +561,25 @@ export function CampaignsCrudPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setHeaderTitle('Kampanyalar');
+    setHeaderActions(
+      <button
+        type="button"
+        onClick={() => setShowTemplatePicker((prev) => !prev)}
+        className="h-10 px-4 rounded-xl bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 font-bold shadow-lg border-0 transition-all active:scale-95"
+      >
+        <Plus className="h-4 w-4" />
+        <span>Ekle</span>
+      </button>
+    );
+    return () => {
+      setHeaderTitle(null);
+      setHeaderActions(null);
+    };
+  }, [setHeaderTitle, setHeaderActions]);
+
 
   useEffect(() => {
     void loname();
@@ -843,11 +866,8 @@ export function CampaignsCrudPage() {
 
 
   return (
-    <div className="h-full overflow-y-auto bg-[var(--luxury-bg)] pb-20">
-      <div className="p-4 border-b border-border bg-[var(--luxury-bg)] sticky top-0 z-10">
-        <h1 className="text-2xl font-semibold mb-1">Kampanyalar</h1>
-        <p className="text-sm text-muted-foreground">Yeni bir kampanya oluşturun ve performansı detaylı takip edin.</p>
-      </div>
+    <div className="h-full overflow-y-auto bg-background pb-20">
+
 
       <div className="p-4 space-y-4">
         {error ?

@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Pencil, Plus, Trash2, UserRound } from 'lucide-react';
+import { ChevronLeft, Pencil, Plus, Trash2, UserRound } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNavigator } from '../context/NavigatorContext';
 
 interface ServiceItem {
   id: number;
@@ -92,6 +94,7 @@ function ToggleSwitch({
 
 export function StaffCrudPage() {
   const { apiFetch } = useAuth();
+  const navigate = useNavigate();
 
   const [staff, setStaff] = useState<StaffItem[]>([]);
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -161,6 +164,26 @@ export function StaffCrudPage() {
       setLoading(false);
     }
   };
+
+  const { setHeaderTitle, setHeaderActions } = useNavigator();
+
+  useEffect(() => {
+    setHeaderTitle('Personel Yönetimi');
+    setHeaderActions(
+      <button
+        type="button"
+        onClick={openCreate}
+        className="h-10 px-4 rounded-xl bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 font-bold shadow-lg border-0 transition-all active:scale-95"
+      >
+        <Plus className="h-4 w-4" />
+        <span>Ekle</span>
+      </button>
+    );
+    return () => {
+      setHeaderTitle(null);
+      setHeaderActions(null);
+    };
+  }, [setHeaderTitle, setHeaderActions]);
 
   useEffect(() => {
     void load();
@@ -356,20 +379,7 @@ export function StaffCrudPage() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Personel Yönetimi</h1>
-          <p className="text-sm text-muted-foreground">Personel ve hizmet yetkileri</p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="h-10 px-4 rounded-lg bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 shrink-0">
-          <Plus className="h-4 w-4" />
-          Ekle
-        </button>
-      </div>
+    <div className="pb-20">
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}

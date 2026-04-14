@@ -39,13 +39,15 @@ export function LoginPage() {
             src="https://cdn.kedyapp.com/kedylogo_koyu.png"
             alt="Kedy Logo"
             className="h-[52px] w-auto dark:hidden"
-            loading="eager" />
-          
+            loading="eager"
+          />
           <img
-            src="https://cdn.kedyapp.com/kedylogo_beyaztürüncu.png"
+            src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
             alt="Kedy Logo"
             className="hidden h-[52px] w-auto dark:block"
-            loading="eager" />
+            loading="eager"
+          />
+
           
         </div>
         <h1 className="text-xl font-semibold">Salon Mobil Giriş</h1>

@@ -10,6 +10,7 @@ interface SettingsScreenProps {
   onOpenNotificationSettings?: () => void;
   onOpenNotificationsInbox?: () => void;
   onLogout?: () => void;
+  onDeleteAccount?: () => void;
 }
 
 export function SettingsScreen({
@@ -18,7 +19,8 @@ export function SettingsScreen({
   onShowHelpCenter,
   onOpenNotificationSettings,
   onOpenNotificationsInbox,
-  onLogout
+  onLogout,
+  onDeleteAccount
 }: SettingsScreenProps) {
   const settingGroups = [
     {
@@ -37,10 +39,11 @@ export function SettingsScreen({
 
     },
     {
-      title: "Destek",
+      title: "Destek ve Gizlilik",
       items: [
-        { icon: HelpCircle, label: "Yardım Merkezi", description: "Sık sorulan sorular", color: "var(--deep-indigo)", onClick: onShowHelpCenter }]
-
+        { icon: HelpCircle, label: "Yardım Merkezi", description: "Sık sorulan sorular", color: "var(--deep-indigo)", onClick: onShowHelpCenter },
+        { icon: Shield, label: "Hesabımı Sil", description: "Verilerinizi kalıcı olarak temizleyin", color: "#ef4444", onClick: onDeleteAccount }
+      ]
     }];
 
 

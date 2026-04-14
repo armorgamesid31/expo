@@ -41,7 +41,7 @@ function tabFromPathname(pathname: string) {
   const settingsRoutes = [
     '/app/customers', '/app/analytics', '/app/inventory', '/app/campaigns', 
     '/app/automations', '/app/instagram-inbox', '/app/blacklist', '/app/salon-info', 
-    '/app/services', '/app/staff', '/app/data-import', '/app/operations-studio', 
+    '/app/services', '/app/staff', '/app/data-import', '/app/operations-management', 
     '/app/brand-growth-hub', '/app/features', '/app/settings', '/app/notification-settings',
     '/app/notifications', '/app/notification-role-matrix', '/app/team-access', '/app/team-management'
   ];
@@ -50,33 +50,45 @@ function tabFromPathname(pathname: string) {
 }
 
 function backTargetFromPathname(pathname: string): string | null {
-  if (pathname === '/app/settings') return '/app/features';
-  if (pathname.startsWith('/app/features/')) return '/app/features';
-  if (pathname.startsWith('/app/notification-role-matrix')) return '/app/features';
-  if (pathname.startsWith('/app/team-access')) return '/app/features';
-  if (pathname.startsWith('/app/team-management')) return '/app/features';
-  if (pathname.startsWith('/app/data-import')) return '/app/operations-studio';
-  if (pathname.startsWith('/app/notification-settings')) return '/app/settings';
-  if (pathname.startsWith('/app/notifications')) return '/app/settings';
-
-  const featureModuleRoutes = [
-    '/app/customers', '/app/analytics', '/app/inventory', '/app/campaigns', 
-    '/app/automations', '/app/instagram-inbox', '/app/blacklist', '/app/salon-info', 
-    '/app/services', '/app/staff', '/app/data-import', '/app/team-management', 
-    '/app/operations-studio', '/app/brand-growth-hub'
-  ];
-
-  if (featureModuleRoutes.some((route) => pathname.startsWith(route))) {
-    return '/app/features';
+  if (pathname === '/app/dashboard' || pathname === '/app/features' || pathname === '/app/schedule' || pathname === '/app/conversations') {
+    return null;
   }
 
-  return null;
+  // Management Hubs (Parent: features)
+  const hubs = ['/app/operations-management', '/app/brand-growth-hub', '/app/team-management'];
+  if (hubs.some(hub => pathname === hub)) return '/app/features';
+
+  // Operations Studio children
+  const opsChildren = ['/app/inventory', '/app/services', '/app/packages', '/app/data-import'];
+  if (opsChildren.some(child => pathname === child)) return '/app/operations-management';
+
+  // Brand Hub children
+  const brandChildren = ['/app/campaigns', '/app/instagram-inbox', '/app/features/social-channels'];
+  if (brandChildren.some(child => pathname === child)) return '/app/brand-growth-hub';
+
+  // Communication Hub children
+  const commsChildren = ['/app/features/whatsapp-settings', '/app/features/ai-settings', '/app/automations', '/app/features/whatsapp-setup', '/app/features/whatsapp-agent'];
+  if (commsChildren.some(child => pathname === child)) return '/app/features/social-channels';
+
+  // Team Hub children
+  const teamChildren = ['/app/staff', '/app/team-access', '/app/notification-role-matrix'];
+  if (teamChildren.some(child => pathname === child)) return '/app/team-management';
+
+  // Settings & Others
+  if (pathname.startsWith('/app/notification-settings')) return '/app/settings';
+  if (pathname.startsWith('/app/notifications')) return '/app/settings';
+  if (pathname.startsWith('/app/settings')) return '/app/features';
+  if (pathname.startsWith('/app/salon-info')) return '/app/features';
+  if (pathname.startsWith('/app/blacklist')) return '/app/features';
+  if (pathname.startsWith('/app/features/')) return '/app/features';
+
+  return '/app/features';
 }
 
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { direction } = useNavigator();
+  const { direction, headerTitle, headerActions } = useNavigator();
   const { bootstrap, logout } = useAuth();
 
   const activeTab = tabFromPathname(location.pathname);
@@ -102,49 +114,61 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
       <header className="fixed top-0 left-0 right-0 z-40 glass-panel border-b border-border safe-top">
-        <div className="max-w-screen-xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between">
-          <div className="w-10">
-            {backTarget && (
-              <button
-                type="button"
-                onClick={() => window.history.length > 2 ? navigate(-1) : navigate(backTarget!, { state: { navDirection: 'back' } })}
-                className="h-9 w-9 grid place-items-center rounded-xl glass-card transition-all active:scale-90"
-              >
-                <ChevronLeft className="h-5 w-5 text-foreground" />
-              </button>
+        <div className="max-w-screen-xl mx-auto px-2 lg:px-8 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 flex items-center justify-center">
+              {backTarget && (
+                <button
+                  type="button"
+                  onClick={() => window.history.length > 2 ? navigate(-1) : navigate(backTarget!, { state: { navDirection: 'back' } })}
+                  className="h-9 w-9 grid place-items-center rounded-xl glass-card transition-all active:scale-90"
+                >
+                  <ChevronLeft className="h-5 w-5 text-foreground" />
+                </button>
+              )}
+            </div>
+            
+            {headerTitle && (
+              <h1 className="text-lg font-bold tracking-tight px-1 truncate max-w-[200px]">
+                {headerTitle}
+              </h1>
             )}
           </div>
 
-          <div className="flex flex-col items-center">
-            <img
-              src="https://cdn.kedyapp.com/kedylogo_koyu.png"
-              alt="Kedy Logo"
-              className="h-8 w-auto dark:hidden"
-            />
-            <img
-              src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
-              alt="Kedy Logo"
-              className="hidden h-8 w-auto dark:block"
-            />
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mt-0.5">
-              {bootstrap?.salon?.name || 'Kedy App'}
-            </span>
-          </div>
+          {!headerTitle && (
+            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+              <img
+                src="https://cdn.kedyapp.com/kedylogo_koyu.png"
+                alt="Kedy Logo"
+                className="h-8 w-auto dark:hidden"
+              />
+              <img
+                src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
+                alt="Kedy Logo"
+                className="hidden h-8 w-auto dark:block"
+              />
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mt-0.5">
+                {bootstrap?.salon?.name || 'Kedy App'}
+              </span>
+            </div>
+          )}
 
-          <div className="w-10 flex justify-end">
-            <button
-              type="button"
-              onClick={() => void logout()}
-              className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground transition-all active:scale-90 hover:text-destructive"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
+          <div className="flex items-center gap-2 min-w-[36px] justify-end">
+            {headerActions ? headerActions : (
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground transition-all active:scale-90 hover:text-destructive"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            )}
           </div>
         </div>
       </header>
 
       <main className="pt-20 pb-24 overflow-x-hidden min-h-screen relative">
-        <div className="max-w-screen-xl mx-auto px-4 lg:px-8">
+        <div className="max-w-screen-xl mx-auto px-2 lg:px-8">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={location.pathname}

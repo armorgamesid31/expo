@@ -1,14 +1,22 @@
 import { useNavigate } from 'react-router-dom';
 import { Users, Shield, ChevronRight, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigator } from '../context/NavigatorContext';
+import { useEffect } from 'react';
 
 export function TeamManagementPage() {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  const { setHeaderTitle } = useNavigator();
 
   const canManageEmployees = hasPermission('staff.manage');
   const canManageAccess = hasPermission('access.users.manage') || hasPermission('access.roles.manage');
   const canManageNotificationRules = hasPermission('notifications.policy.manage');
+
+  useEffect(() => {
+    setHeaderTitle('Ekip Yönetimi');
+    return () => setHeaderTitle(null);
+  }, [setHeaderTitle]);
 
   if (!canManageEmployees && !canManageAccess && !canManageNotificationRules) {
     return (
@@ -22,11 +30,7 @@ export function TeamManagementPage() {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Ekip Yönetimi</h1>
-      <p className="text-sm text-muted-foreground">
-        Personelleri yönetin ve hesap düzeyi erişimi tek yerden kontrol edin.
-      </p>
+    <div className="p-4 space-y-3">
 
       <div className="space-y-3">
         {canManageEmployees ?

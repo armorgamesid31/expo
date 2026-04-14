@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, ListOrdered, Pencil, Plus, Settings2, Trash2, Layers, HelpCircle } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronUp, ListOrdered, Pencil, Plus, Settings2, Trash2, Layers, HelpCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNavigator } from '../context/NavigatorContext';
 
 interface ServiceItem {
   id: number;
@@ -145,6 +147,7 @@ function formatGenderLabel(genders?: string[] | null) {
 
 export function ServicesCrudPage() {
   const { apiFetch } = useAuth();
+  const navigate = useNavigate();
 
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -232,6 +235,37 @@ export function ServicesCrudPage() {
       setLoading(false);
     }
   };
+
+  const { setHeaderTitle } = useNavigator();
+
+  useEffect(() => {
+    setHeaderTitle('Hizmet Yönetimi');
+    setHeaderActions(
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setCategoryOrderDialogOpen(true)}
+          className="h-10 px-3 rounded-xl bg-muted text-foreground inline-flex items-center gap-2 font-bold transition-all active:scale-95"
+        >
+          <ListOrdered className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs">Sırala</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setGroupManagerOpen(true)}
+          className="h-10 px-3 rounded-xl bg-muted text-foreground inline-flex items-center gap-2 font-bold transition-all active:scale-95"
+        >
+          <Layers className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs">Gruplar</span>
+        </button>
+      </div>
+    );
+    return () => {
+      setHeaderTitle(null);
+      setHeaderActions(null);
+    };
+  }, [setHeaderTitle, setHeaderActions]);
+
 
   useEffect(() => {
     void load();
@@ -715,33 +749,9 @@ export function ServicesCrudPage() {
       setError(err?.message || 'Grup durumu güncellenemedi.');
     }
   };
-
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Hizmet Yönetimi</h1>
-        <p className="text-sm text-muted-foreground">Hizmetler ve kategoriler</p>
-      </div>
+    <div className="pb-20 space-y-4">
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setCategoryOrderDialogOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
-
-          <ListOrdered className="h-4 w-4" />
-          Kategori Sırası
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setGroupManagerOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
-
-          <Layers className="h-4 w-4" />
-          Hizmet Grupları
-        </button>
-      </div>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
