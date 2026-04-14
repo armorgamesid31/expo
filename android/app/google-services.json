@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "356806252602",
+    "project_id": "salonasistan-t206xz",
+    "storage_bucket": "salonasistan-t206xz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:356806252602:android:c2f9715d532f0322677d03",
+        "android_client_info": {
+          "package_name": "com.kedyapp.salonmanagement"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7HXI5LOQrXgojd1g0-Eoq7vRUOCBi5q0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
