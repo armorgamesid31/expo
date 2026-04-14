@@ -12,6 +12,7 @@ import { Automations } from '../components/more/Automations';
 import { HelpCenter } from '../components/more/HelpCenter';
 import { WhatsAppAgentFaq } from '../components/more/WhatsAppAgentFaq';
 import { WhatsAppSettings } from '../components/more/WhatsAppSettings';
+import { WhatsAppTemplates } from '../components/more/WhatsAppTemplates';
 import { MetaDirectSetup } from '../components/more/MetaDirectSetup';
 import { SocialChannelsHub } from '../components/more/SocialChannelsHub';
 
@@ -37,6 +38,7 @@ export function FeatureDetailPage() {
 
   if (featureKey === 'ai-settings') return <AISettingsPage onBack={onBack} />;
   if (featureKey === 'whatsapp-settings') return <WhatsAppSettings onBack={onBack} />;
+  if (featureKey === 'whatsapp-templates') return <WhatsAppTemplates onBack={onBack} />;
   if (featureKey === 'whatsapp-agent') return <WhatsAppAgent onBack={onBack} />;
   if (featureKey === 'whatsapp-agent-faq') return <WhatsAppAgentFaq onBack={onBack} />;
   if (featureKey === 'whatsapp-setup') return <WhatsAppSetup onBack={onBack} />;

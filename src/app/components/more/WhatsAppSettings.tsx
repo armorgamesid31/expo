@@ -7,6 +7,7 @@ import {
   Link2,
   Loader2,
   MessageCircle,
+  MessageSquare,
   Power,
   RefreshCcw,
   Shield,
@@ -285,6 +286,22 @@ export function WhatsAppSettings({ onBack }: WhatsAppSettingsProps) {
                 </div>
               </>
             )}
+          </div>
+        </section>
+
+        {/* ── Messaging Flows Card ─── */}
+        <section className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
+          <div className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => navigate('/app/features/whatsapp-templates')}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center shrink-0">
+                <MessageSquare className="w-4 h-4 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">Mesajlaşma Akışları</p>
+                <p className="text-[11px] text-muted-foreground">Şablon onay dökümleri ve maliyet takibi</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </div>
         </section>
 
