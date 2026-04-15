@@ -150,7 +150,7 @@ export function SocialChannelsHub() {
       writeSnapshot(CHAKRA_STATUS_CACHE_KEY, status);
       setWaPluginId(status.pluginId || null);
       const isConnected = Boolean(status.connected) || Boolean(status.isActive);
-      setWaConnected((prev) => prev ? true : isConnected);
+      setWaConnected(isConnected);
       return { hasPlugin: Boolean(status.pluginId), connected: isConnected };
     } catch {
       return { hasPlugin: false, connected: false };

@@ -131,7 +131,7 @@ export function WhatsAppSetup({ onBack }: WhatsAppSetupProps) {
     setPluginId(status.pluginId || null);
 
     const isConnected = Boolean(status.connected) || Boolean(status.isActive);
-    setConnected((prev) => prev ? true : isConnected);
+    setConnected(isConnected);
 
     if (!status.pluginId) {
       setStatusText("WhatsApp Business kanalınızı aktifleştirmek için bağlantı adımlarını başlatın.");

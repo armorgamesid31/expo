@@ -34,6 +34,7 @@ interface WhatsAppTemplate {
   metaCategory: string | null;
   metaStatus: string | null;
   lastSyncAt: string | null;
+  externalId: string | null;
 }
 
 interface WhatsAppSyncStats {
@@ -62,6 +63,7 @@ export function WhatsAppTemplates({ onBack }: WhatsAppTemplatesProps) {
   const [logs, setLogs] = useState<string[]>([]);
   const [stats, setStats] = useState<WhatsAppSyncStats | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
   const [showTechnical, setShowTechnical] = useState(false);
   const logEndRef = useRef<HTMLDivElement>(null);
 
@@ -79,8 +81,9 @@ export function WhatsAppTemplates({ onBack }: WhatsAppTemplatesProps) {
   const loadTemplates = async () => {
     try {
       setLoading(true);
-      const data = await apiFetch<{ templates: WhatsAppTemplate[] }>('/api/app/chakra/templates');
+      const data = await apiFetch<{ templates: WhatsAppTemplate[], isConnected: boolean }>('/api/app/chakra/templates');
       setTemplates(data.templates);
+      setIsConnected(data.isConnected);
     } catch (err: any) {
       setError('Bağlantı kurulamadı.');
     } finally {
@@ -139,8 +142,8 @@ export function WhatsAppTemplates({ onBack }: WhatsAppTemplatesProps) {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-zinc-400 uppercase">Bulut Servis</p>
-                  <p className="text-sm font-bold text-emerald-500 flex items-center gap-1">
-                    <Activity className="w-3 h-3" /> Online
+                  <p className={`text-sm font-bold flex items-center gap-1 ${isConnected ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    <Activity className="w-3 h-3" /> {isConnected ? 'Online' : 'Offline'}
                   </p>
                 </div>
               </div>
@@ -154,8 +157,9 @@ export function WhatsAppTemplates({ onBack }: WhatsAppTemplatesProps) {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-zinc-400 uppercase">Veritabanı</p>
-                  <p className="text-sm font-bold text-emerald-500 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Bağlı
+                  <p className={`text-sm font-bold flex items-center gap-1 ${isConnected ? 'text-emerald-500' : 'text-amber-500'}`}>
+                    {isConnected ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                    {isConnected ? 'Bağlı' : 'Yapılandırılmamış'}
                   </p>
                 </div>
               </div>
