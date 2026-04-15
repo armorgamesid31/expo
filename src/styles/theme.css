@@ -45,6 +45,9 @@
   --deep-indigo-light: #4DCEFF;
   --luxury-bg: #F7F6F6;
   --luxury-card: #FFFFFF;
+  --luxury-emerald: #065F46; /* Deep, premium emerald */
+  --luxury-emerald-light: #10B981;
+  --luxury-emerald-dark: #064E3B;
 
   /* Glassmorphism & Depth */
   --glass-bg: rgba(255, 255, 255, 0.6);

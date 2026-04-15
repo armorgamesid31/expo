@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Skeleton } from '../components/ui/skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
-import { Award, Bell, Calendar, Clock3, Gift, Pencil, Trash2, UserPlus, Users, Sparkles, History } from 'lucide-react';
+import { Award, Bell, Calendar, Clock3, Gift, Pencil, Trash2, UserPlus, Users, Sparkles, History, Info, HelpCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -9,8 +9,15 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 import { cn } from '../components/ui/utils';
 import { useNavigator } from '../context/NavigatorContext';
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from '../components/ui/accordion';
 import { Plus } from 'lucide-react';
 
 interface CampaignItem {
@@ -135,20 +142,21 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       rewardValue: 15
     },
     fields: [
-      { key: 'pointsPerVisit', label: 'Her ziyarette puan', type: 'number', valueKind: 'number', min: 1, step: 1 },
-      { key: 'rewardThreshold', label: 'Ödül için ziyaret sayısı', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'pointsPerVisit', label: 'Her ziyarette kaç damga verilsin?', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'rewardThreshold', label: 'Hangi ziyarette ödül kazanılsın?', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'rewardType',
-        label: 'Ödül tipi',
+        label: 'Kazanılacak Ödül Nedir?',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'yüzde indirim' },
-          { value: 'fixed_amount', label: 'Sabit tutar' }]
-
+          { value: 'discount_percent', label: 'Yüzde İndirim' },
+          { value: 'fixed_amount', label: 'Sabit Tutar' },
+          { value: 'free_service', label: 'Ücretsiz Hizmet' }
+        ]
       },
-      { key: 'rewardValue', label: 'Ödül değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }]
-
+      { key: 'rewardValue', label: 'Ödül Değeri (İndirim Miktarı)', type: 'number', valueKind: 'number', min: 1, step: 1 }
+    ]
   },
   {
     key: 'multi-service',
@@ -166,26 +174,27 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       { key: 'minServiceCount', label: 'Minimum Hizmet Sayısı', type: 'number', valueKind: 'number', min: 2, step: 1 },
       {
         key: 'discountType',
-        label: 'İndirim tipi',
+        label: 'İndirim Tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'yüzde indirim' },
-          { value: 'fixed_amount', label: 'Sabit tutar' }]
-
+          { value: 'discount_percent', label: 'Yüzde İndirim' },
+          { value: 'fixed_amount', label: 'Sabit Tutar' },
+          { value: 'free_service', label: 'Ücretsiz Hizmet' }
+        ]
       },
       { key: 'discountValue', label: 'İndirim Değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'appliesTo',
-        label: 'Uygulama tipi',
+        label: 'Uygulama Tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'same_appointment', label: 'aynı randevu' },
-          { value: 'same_day', label: 'aynı gün' }]
-
-      }]
-
+          { value: 'same_appointment', label: 'Aynı Randevu' },
+          { value: 'same_day', label: 'Aynı Gün' }
+        ]
+      }
+    ]
   },
   {
     key: 'referral',
@@ -203,17 +212,18 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'rewardType',
-        label: 'İndirim tipi',
+        label: 'İndirim Tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'yüzde indirim' },
-          { value: 'fixed_amount', label: 'Sabit tutar' }]
-
+          { value: 'discount_percent', label: 'Yüzde İndirim' },
+          { value: 'fixed_amount', label: 'Sabit Tutar' },
+          { value: 'free_service', label: 'Ücretsiz Hizmet' }
+        ]
       },
       {
         key: 'referrerRewardValue',
-        label: 'Davet eden ödülü',
+        label: 'Davet Eden Ödülü',
         type: 'number',
         valueKind: 'number',
         min: 1,
@@ -229,25 +239,25 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       },
       {
         key: 'activationTiming',
-        label: 'Ne zaman aktif edilmeli?',
+        label: 'Ne Zaman Aktif Edilmeli?',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'first_appointment', label: 'İlk randevuda geçerli' },
-          { value: 'after_first_completed', label: "İlk randevu tamamlandıktan sonra" }]
-
+          { value: 'first_appointment', label: 'İlk Randevuda Geçerli' },
+          { value: 'after_first_completed', label: "İlk Randevu Tamamlandıktan Sonra" }
+        ]
       },
       {
         key: 'combineWithWelcomeCampaign',
-        label: 'İlk kez gelen müşteri kampanyasıyla birleştirilsin mi?',
+        label: 'Hoş Geldin Kampanyasıyla Birleştirilsin mi?',
         type: 'select',
         valueKind: 'boolean',
         options: [
           { value: 'false', label: 'Hayır' },
-          { value: 'true', label: 'Evet' }]
-
-      }]
-
+          { value: 'true', label: 'Evet' }
+        ]
+      }
+    ]
   },
   {
     key: 'birthday',
@@ -263,24 +273,25 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'discountType',
-        label: 'İndirim tipi',
+        label: 'İndirim Tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'yüzde indirim' },
-          { value: 'fixed_amount', label: 'Sabit tutar' }]
-
+          { value: 'discount_percent', label: 'Yüzde İndirim' },
+          { value: 'fixed_amount', label: 'Sabit Tutar' },
+          { value: 'free_service', label: 'Ücretsiz Hizmet' }
+        ]
       },
-      { key: 'discountValue', label: 'indirim değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'İndirim Değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'validityWindow',
-        label: 'Doğum Gününden Sonra Geçerlilik (Gün)',
+        label: 'Geçerlilik Süresi (Gün)',
         type: 'number',
         valueKind: 'number',
         min: 1,
         step: 1
-      }]
-
+      }
+    ]
   },
   {
     key: 'winback',
@@ -296,27 +307,28 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'inactiveDaysThreshold',
-        label: 'pasiflik eşiği',
+        label: 'Pasiflik Eşiği',
         type: 'select',
         valueKind: 'number',
         options: [
-          { value: '30', label: '30 gün' },
-          { value: '45', label: '45 gün' },
-          { value: '60', label: '60 gün' }]
-
+          { value: '30', label: '30 Gün' },
+          { value: '45', label: '45 Gün' },
+          { value: '60', label: '60 Gün' }
+        ]
       },
       {
         key: 'offerType',
-        label: 'Teklif tipi',
+        label: 'Teklif Tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'yüzde indirim' },
-          { value: 'fixed_amount', label: 'Sabit tutar' }]
-
+          { value: 'discount_percent', label: 'Yüzde İndirim' },
+          { value: 'fixed_amount', label: 'Sabit Tutar' },
+          { value: 'free_service', label: 'Ücretsiz Hizmet' }
+        ]
       },
-      { key: 'offerValue', label: 'teklif değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }]
-
+      { key: 'offerValue', label: 'Teklif Değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }
+    ]
   },
   {
     key: 'welcome',
@@ -332,26 +344,27 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'discountType',
-        label: 'İndirim tipi',
+        label: 'İndirim Tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'yüzde indirim' },
-          { value: 'fixed_amount', label: 'Sabit tutar' }]
-
+          { value: 'discount_percent', label: 'Yüzde İndirim' },
+          { value: 'fixed_amount', label: 'Sabit Tutar' },
+          { value: 'free_service', label: 'Ücretsiz Hizmet' }
+        ]
       },
-      { key: 'discountValue', label: 'indirim değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
+      { key: 'discountValue', label: 'İndirim Değeri', type: 'number', valueKind: 'number', min: 1, step: 1 },
       {
         key: 'combineWithReferralCampaign',
-        label: 'Arkadaşını Getir kampanyasıyla birleştirilsin mi?',
+        label: 'Arkadaşını Getir ile Birleşsin mi?',
         type: 'select',
         valueKind: 'boolean',
         options: [
           { value: 'false', label: 'Hayır' },
-          { value: 'true', label: 'Evet' }]
-
-      }]
-
+          { value: 'true', label: 'Evet' }
+        ]
+      }
+    ]
   },
   {
     key: 'off-peak',
@@ -369,7 +382,7 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     fields: [
       {
         key: 'weekdays',
-        label: 'Geçerli günler',
+        label: 'Geçerli Günler',
         type: 'multi-select',
         valueKind: 'stringArray',
         options: WEEKDAY_OPTIONS
@@ -390,17 +403,19 @@ const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       },
       {
         key: 'discountType',
-        label: 'İndirim tipi',
+        label: 'İndirim Tipi',
         type: 'select',
         valueKind: 'string',
         options: [
-          { value: 'discount_percent', label: 'yüzde indirim' },
-          { value: 'fixed_amount', label: 'Sabit tutar' }]
-
+          { value: 'discount_percent', label: 'Yüzde İndirim' },
+          { value: 'fixed_amount', label: 'Sabit Tutar' },
+          { value: 'free_service', label: 'Ücretsiz Hizmet' }
+        ]
       },
-      { key: 'discountValue', label: 'İndirim Değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }]
-
-  }];
+      { key: 'discountValue', label: 'İndirim Değeri', type: 'number', valueKind: 'number', min: 1, step: 1 }
+    ]
+  }
+];
 
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -534,6 +549,7 @@ export function CampaignsCrudPage() {
   const { setHeaderTitle, setHeaderActions } = useNavigator();
 
   const [items, setItems] = useState<CampaignItem[]>([]);
+  const [services, setServices] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -549,7 +565,7 @@ export function CampaignsCrudPage() {
   const [savingDetail, setSavingDetail] = useState(false);
   const [deletingDetail, setDeletingDetail] = useState(false);
 
-  const loname = async () => {
+  const fetchCampaigns = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -559,6 +575,15 @@ export function CampaignsCrudPage() {
       setError(err?.message || 'Kampanyalar alınamadı.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const response = await apiFetch<{ items: ServiceItem[]; }>('/api/admin/services');
+      setServices(response.items || []);
+    } catch (err) {
+      console.error('Services fetch error:', err);
     }
   };
 
@@ -580,9 +605,9 @@ export function CampaignsCrudPage() {
     };
   }, [setHeaderTitle, setHeaderActions]);
 
-
   useEffect(() => {
-    void loname();
+    void fetchCampaigns();
+    void fetchServices();
   }, []);
 
   const now = new Date();
@@ -648,7 +673,6 @@ export function CampaignsCrudPage() {
           type: createDraft.type,
           description: null,
           isActive: true,
-          priority: Number(createDraft.priority || 100),
           deliveryMode: createDraft.deliveryMode,
           maxGlobalUsage: createDraft.maxGlobalUsage ? Number(createDraft.maxGlobalUsage) : null,
           maxPerCustomer: createDraft.maxPerCustomer ? Number(createDraft.maxPerCustomer) : null,
@@ -688,7 +712,6 @@ export function CampaignsCrudPage() {
         isActive: detailItem.isActive,
         startsAt: toDateInput(detailItem.startsAt || null),
         endsAt: toDateInput(detailItem.endsAt || null),
-        priority: String(detailItem.priority ?? 100),
         deliveryMode: detailItem.deliveryMode === 'AUTO' ? 'AUTO' : 'MANUAL',
         maxGlobalUsage: detailItem.maxGlobalUsage ? String(detailItem.maxGlobalUsage) : '',
         maxPerCustomer: detailItem.maxPerCustomer ? String(detailItem.maxPerCustomer) : '',
@@ -720,7 +743,6 @@ export function CampaignsCrudPage() {
           type: detailDraft.type,
           description: null,
           isActive: detailDraft.isActive,
-          priority: Number(detailDraft.priority || 100),
           deliveryMode: detailDraft.deliveryMode,
           maxGlobalUsage: detailDraft.maxGlobalUsage ? Number(detailDraft.maxGlobalUsage) : null,
           maxPerCustomer: detailDraft.maxPerCustomer ? Number(detailDraft.maxPerCustomer) : null,
@@ -783,13 +805,11 @@ export function CampaignsCrudPage() {
       setDetailError(err?.message || "Kampanya gönderilemedi.");
     }
   };
-
   const renderTemplateFields = (
     template: CampaignTemplate,
     configInputs: Record<string, string>,
     onChange: (key: string, value: string) => void) =>
-
-    <div className="space-y-3">
+    <div className="space-y-4">
       {template.fields.map((field) => {
         if (field.type === 'multi-select') {
           const currentValues = (configInputs[field.key] || '').
@@ -798,8 +818,8 @@ export function CampaignsCrudPage() {
             filter(Boolean);
 
           return (
-            <div key={field.key} className="space-y-1.5">
-              <Label>{field.label}</Label>
+            <div key={field.key} className="space-y-2">
+              <Label className="text-sm font-medium">{field.label}</Label>
               <div className="flex flex-wrap gap-2">
                 {(field.options || []).map((option) => {
                   const isSelected = currentValues.includes(option.value);
@@ -814,10 +834,10 @@ export function CampaignsCrudPage() {
                         onChange(field.key, nextValues.join(','));
                       }}
                       className={cn(
-                        'rounded-md border px-3 py-1.5 text-sm transition-colors',
+                        'rounded-xl border px-3 py-2 text-xs font-semibold transition-all shadow-sm',
                         isSelected ?
-                          'border-[var(--rose-gold)] bg-[var(--rose-gold)]/10 text-foreground' :
-                          'border-border text-muted-foreground'
+                          'border-[var(--rose-gold)] bg-[var(--rose-gold)] text-white' :
+                          'border-border bg-card text-muted-foreground hover:bg-muted'
                       )}>
 
                       {option.label}
@@ -831,10 +851,10 @@ export function CampaignsCrudPage() {
 
         if (field.type === 'select') {
           return (
-            <div key={field.key} className="space-y-1.5">
-              <Label>{field.label}</Label>
+            <div key={field.key} className="space-y-2">
+              <Label className="text-sm font-medium">{field.label}</Label>
               <Select value={configInputs[field.key] || ''} onValueChange={(value) => onChange(field.key, value)}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl border-border bg-card">
                   <SelectValue placeholder="Seçin" />
                 </SelectTrigger>
                 <SelectContent>
@@ -850,10 +870,11 @@ export function CampaignsCrudPage() {
         }
 
         return (
-          <div key={field.key} className="space-y-1.5">
-            <Label>{field.label}</Label>
+          <div key={field.key} className="space-y-2">
+            <Label className="text-sm font-medium">{field.label}</Label>
             <Input
               type="number"
+              className="rounded-xl border-border bg-card"
               min={field.min}
               step={field.step}
               value={configInputs[field.key] || ''}
@@ -862,6 +883,38 @@ export function CampaignsCrudPage() {
           </div>);
 
       })}
+
+      {/* Dynamic Free Service Selector */}
+      {configInputs.rewardType === 'free_service' || configInputs.offerType === 'free_service' || configInputs.discountType === 'free_service' ? (
+        <div className="space-y-2 pt-2 border-t border-dashed border-border">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-bold text-[var(--rose-gold)]">Ücretsiz Verilecek Hizmet</Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>Müşteriye hediye edilecek hizmeti seçin.</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <Select 
+            value={configInputs.rewardServiceId || ''} 
+            onValueChange={(value) => onChange('rewardServiceId', value)}
+          >
+            <SelectTrigger className="rounded-xl border-[var(--rose-gold)]/30 bg-[var(--rose-gold)]/5">
+              <SelectValue placeholder="Hizmet Seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map((service) => (
+                <SelectItem key={service.id} value={String(service.id)}>
+                  {service.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
     </div>;
 
 
@@ -948,17 +1001,36 @@ export function CampaignsCrudPage() {
               <Card key={item.id} className="border border-border bg-card hover:shadow-sm transition-shadow">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-foreground text-sm">{displayCampaignName(item)}</p>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border text-emerald-700 border-emerald-200 bg-emerald-50">
-                      Aktif
-                    </span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="font-semibold text-foreground text-sm truncate">{displayCampaignName(item)}</p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="w-3.5 h-3.5 text-muted-foreground/60" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Bu kampanya {item.type} türündedir.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border text-[var(--luxury-emerald)] border-[var(--luxury-emerald-light)]/20 bg-[var(--luxury-emerald-light)]/5 cursor-help whitespace-nowrap">
+                            Aktif
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>Kampanya şu an aktif ve yayında.</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-1">
                     {formatDateLabel(item.startsAt || null)} - {formatDateLabel(item.endsAt || null)}
                   </p>
-                  <Button variant="outline" size="sm" className="mt-2 w-full text-xs h-9" onClick={() => void openDetail(item)}>
+                  <Button variant="outline" size="sm" className="mt-2 w-full text-xs h-9 rounded-xl border-[var(--rose-gold)]/20 text-[var(--rose-gold)] hover:bg-[var(--rose-gold)]/5" onClick={() => void openDetail(item)}>
                     <Pencil className="w-3.5 h-3.5 mr-2" />
-                    Detay ve Düzenle
+                    Kampanyayı Yönet
                   </Button>
                 </CardContent>
               </Card>
@@ -1024,69 +1096,49 @@ export function CampaignsCrudPage() {
 
           {createDraft ?
             <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="space-y-1.5">
-                  <Label>Başlangıç Tarihi</Label>
-                  <Input
-                    type="date"
-                    value={createDraft.startsAt}
-                    onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, startsAt: event.target.value } : prev)} />
-
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Bitiş Tarihi</Label>
-                  <Input
-                    type="date"
-                    value={createDraft.endsAt}
-                    onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, endsAt: event.target.value } : prev)} />
-
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Öncelik</Label>
-                  <Input
-                    type="number"
-                    value={createDraft.priority}
-                    onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, priority: event.target.value } : prev)} />
-
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Teslimat Modu</Label>
-                  <Select
-                    value={createDraft.deliveryMode}
-                    onValueChange={(value: 'AUTO' | 'MANUAL') =>
-                      setCreateDraft((prev) => prev ? { ...prev, deliveryMode: value } : prev)
-                    }>
-
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AUTO">AUTO</SelectItem>
-                      <SelectItem value="MANUAL">MANUEL</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Maks. Genel Kullanım</Label>
-                  <Input
-                    type="number"
-                    value={createDraft.maxGlobalUsage}
-                    onChange={(event) =>
-                      setCreateDraft((prev) => prev ? { ...prev, maxGlobalUsage: event.target.value } : prev)
-                    } />
-
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Müşteri Başına Maks.</Label>
-                  <Input
-                    type="number"
-                    value={createDraft.maxPerCustomer}
-                    onChange={(event) =>
-                      setCreateDraft((prev) => prev ? { ...prev, maxPerCustomer: event.target.value } : prev)
-                    } />
-
-                </div>
-              </div>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="advanced" className="border-none">
+                  <AccordionTrigger className="text-xs font-semibold text-muted-foreground hover:no-underline py-2">
+                    Gelişmiş Ayarlar (Tarih, Limitler vb.)
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-3 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="space-y-1.5">
+                        <Label>Başlangıç Tarihi</Label>
+                        <Input
+                          type="date"
+                          value={createDraft.startsAt}
+                          onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, startsAt: event.target.value } : prev)} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Bitiş Tarihi</Label>
+                        <Input
+                          type="date"
+                          value={createDraft.endsAt}
+                          onChange={(event) => setCreateDraft((prev) => prev ? { ...prev, endsAt: event.target.value } : prev)} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Maks. Genel Kullanım</Label>
+                        <Input
+                          type="number"
+                          value={createDraft.maxGlobalUsage}
+                          onChange={(event) =>
+                            setCreateDraft((prev) => prev ? { ...prev, maxGlobalUsage: event.target.value } : prev)
+                          } />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Müşteri Başına Maks.</Label>
+                        <Input
+                          type="number"
+                          value={createDraft.maxPerCustomer}
+                          onChange={(event) =>
+                            setCreateDraft((prev) => prev ? { ...prev, maxPerCustomer: event.target.value } : prev)
+                          } />
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
 
               {(() => {
                 const template = templateByKey(createDraft.templateKey);
