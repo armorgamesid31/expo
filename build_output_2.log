@@ -1,0 +1,31 @@
+
+> @figma/my-make-file@0.0.1 build
+> vite build
+
+vite v6.3.5 building for production...
+transforming...
+✓ 1988 modules transformed.
+✗ Build failed in 2.65s
+error during build:
+[vite:esbuild] Transform failed with 1 error:
+/Users/akilsir_murat/Downloads/p/Salonmanagementsaasapp/src/app/pages/AISettingsPage.tsx:58:75: ERROR: Unexpected closing "p" tag does not match opening "Label" tag
+file: /Users/akilsir_murat/Downloads/p/Salonmanagementsaasapp/src/app/pages/AISettingsPage.tsx:58:75
+
+Unexpected closing "p" tag does not match opening "Label" tag
+56 |                </div>
+57 |                <div>
+58 |                  <Label className="text-sm font-bold">Yapay Zeka Asistanı</p>
+   |                                                                             ^
+59 |                  <p className="text-[11px] text-muted-foreground">Tüm kanallarda otomatik yanıtları yönetir</p>
+60 |                </div>
+
+    at failureErrorWithLog (/Users/akilsir_murat/Downloads/p/Salonmanagementsaasapp/node_modules/esbuild/lib/main.js:1467:15)
+    at /Users/akilsir_murat/Downloads/p/Salonmanagementsaasapp/node_modules/esbuild/lib/main.js:736:50
+    at responseCallbacks.<computed> (/Users/akilsir_murat/Downloads/p/Salonmanagementsaasapp/node_modules/esbuild/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/akilsir_murat/Downloads/p/Salonmanagementsaasapp/node_modules/esbuild/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/akilsir_murat/Downloads/p/Salonmanagementsaasapp/node_modules/esbuild/lib/main.js:581:7)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)

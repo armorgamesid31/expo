@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Search, Send, UserRound, Sparkles, MessageSquareDashed, ChevronLeft, Instagram } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Skeleton } from '../components/ui/skeleton';
 import { useAuth } from '../context/AuthContext';
@@ -99,12 +100,29 @@ function formatTs(value: string): string {
 }
 
 function getPreview(item: ConversationItem): string {
-  if (item.lastMessageText && item.lastMessageText.trim()) return item.lastMessageText.trim();
+  if (item.lastMessageText && item.lastMessageText.trim()) return formatOperatorMessage(item.lastMessageText.trim());
   if (item.lastMessageType === 'image') return '[Görüntü]';
   if (item.lastMessageType === 'audio') return '[Ses]';
   if (item.lastMessageType === 'video') return '[Video]';
-  if (item.lastMessageType === 'handover_request') return '[Devir İstendi]';
+  if (item.lastMessageType === 'handover_request') return 'Müşteri temsilci bekliyor';
+  if (item.lastMessageType === 'echo_template') return 'Otomatik yanıt gönderildi.';
   return `[${item.lastMessageType}]`;
+}
+
+function formatOperatorMessage(value: string | null | undefined): string {
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (!text) return '';
+  if (/^\[echo_template\]$/i.test(text)) return 'Otomatik yanıt gönderildi.';
+  if (/^\[Used tools:/i.test(text)) {
+    const withoutToolLog = text.replace(/^\[Used tools:[\s\S]*\]\s*/i, '').trim();
+    return withoutToolLog || 'Asistan hizmet bilgisini kontrol etti.';
+  }
+  return text;
+}
+
+function formatMessageTypeLabel(type: string): string {
+  if (type === 'echo_template') return 'Otomatik yanıt gönderildi.';
+  return `[${type}]`;
 }
 
 function formatRelativeTime(value: string): string {
@@ -175,11 +193,11 @@ function automationBadgeClass(mode: AutomationMode): string {
 }
 
 function automationLabel(mode: AutomationMode): string {
-  if (mode === 'HUMAN_PENDING') return 'Temsilci Bekleniyor';
-  if (mode === 'HUMAN_ACTIVE') return "Temsilci Devrede";
-  if (mode === 'MANUAL_ALWAYS') return 'Her Zaman Manuel';
-  if (mode === 'AUTO_RESUME_PENDING') return 'Otomasyon Başlayacak';
-  return 'Otomatik';
+  if (mode === 'HUMAN_PENDING') return 'Müşteri bekliyor';
+  if (mode === 'HUMAN_ACTIVE') return "Ben yanıtlıyorum";
+  if (mode === 'MANUAL_ALWAYS') return 'Manuel';
+  if (mode === 'AUTO_RESUME_PENDING') return 'Bot başlayacak';
+  return 'Bot yanıtlıyor';
 }
 
 function isHandoverInProgress(mode: AutomationMode): boolean {
@@ -276,6 +294,7 @@ export function ConversationsPage() {
   const selectedConversationIdRef = useRef<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
+  const lastAutoScrolledConversationRef = useRef<string | null>(null);
 
   const selectedConversation = useMemo(() => {
     if (!selectedConversationId) return null;
@@ -406,7 +425,6 @@ export function ConversationsPage() {
       return;
     }
     void loadMessages(rawChannel as ChannelType, rawKey);
-    setMobileView('CHAT');
   }, [loadMessages, selectedConversationId]);
 
   useLayoutEffect(() => {
@@ -415,6 +433,24 @@ export function ConversationsPage() {
     if (!stickToBottomRef.current) return;
     viewport.scrollTop = viewport.scrollHeight;
   }, [messages, selectedConversationId]);
+
+  useEffect(() => {
+    const viewport = messagesViewportRef.current;
+    if (!viewport || !messages.length || !selectedConversationId) return;
+    if (!viewport.getClientRects().length) return;
+    const firstLoadForConversation = lastAutoScrolledConversationRef.current !== selectedConversationId;
+    if (!firstLoadForConversation && !stickToBottomRef.current) return;
+    const scrollToLatest = () => {
+      viewport.scrollTop = viewport.scrollHeight;
+    };
+    lastAutoScrolledConversationRef.current = selectedConversationId;
+    const frame = window.requestAnimationFrame(scrollToLatest);
+    const timer = window.setTimeout(scrollToLatest, 150);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [messages.length, mobileView, selectedConversationId]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -561,6 +597,7 @@ export function ConversationsPage() {
         <div className="inline-flex rounded-xl border border-border/40 bg-background/60 shadow-sm backdrop-blur-md p-1">
           <button
             type="button"
+            aria-pressed={channelView === 'INSTAGRAM'}
             onClick={() => {
               setChannelView('INSTAGRAM');
               setSelectedConversationId(null);
@@ -576,6 +613,7 @@ export function ConversationsPage() {
           {SHOW_WHATSAPP_INBOX ?
             <button
               type="button"
+              aria-pressed={channelView === 'WHATSAPP'}
               onClick={() => {
                 setChannelView('WHATSAPP');
                 setSelectedConversationId(null);
@@ -596,6 +634,7 @@ export function ConversationsPage() {
             <button
               key={filter}
               type="button"
+              aria-pressed={quickFilter === filter}
               onClick={() => setQuickFilter(filter)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium ${quickFilter === filter ? 'bg-muted text-foreground' : 'text-muted-foreground'}`
               }>
@@ -700,9 +739,10 @@ export function ConversationsPage() {
                         layout
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                                              key={id}
+                        key={id}
                         type="button"
                         onClick={() => {
+                          lastAutoScrolledConversationRef.current = null;
                           setSelectedConversationId(id);
                           setMobileView('CHAT');
                         }}
@@ -763,7 +803,7 @@ export function ConversationsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className={`flex flex-col h-full rounded-2xl border border-border/50 bg-background/40 backdrop-blur-xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
+            className={`flex flex-col h-[calc(100vh-380px)] min-h-[360px] rounded-2xl border border-border/50 bg-background/40 backdrop-blur-xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden sm:h-[calc(100vh-260px)] sm:min-h-[520px] lg:h-[750px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
             {selectedConversation ?
               <>
                 <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 pb-3">
@@ -771,6 +811,7 @@ export function ConversationsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Sohbet listesine dön"
                         className="lg:hidden -ml-2 h-8 w-8 hover:bg-white/10"
                         onClick={() => setMobileView('LIST')}
                       >
@@ -792,7 +833,8 @@ export function ConversationsPage() {
                         {conversationDisplayName(selectedConversation)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {selectedConversation.channel} • {selectedConversation.conversationKey}
+                        {selectedConversation.channel}
+                        <span className="hidden sm:inline"> • {selectedConversation.conversationKey}</span>
                       </p>
                       {(() => {
                         const username = normalizeUsername(selectedConversation.profileUsername);
@@ -813,18 +855,20 @@ export function ConversationsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
                     {selectedConversation.hasHandoverRequest ?
-                      <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Temsilci bekleniyor.</span> :
+                      <span className="shrink-0 text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Müşteri bekliyor</span> :
                       null}
                     {handoverInProgress ?
-                      <Button type="button" size="sm" variant="outline" onClick={resumeAuto} disabled={sendingResume}>
-                        {sendingResume ? 'Devam ettiriliyor...' : "Otomasyonu Başlat"}
+                      <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={resumeAuto} disabled={sendingResume}>
+                        {sendingResume ? 'Başlatılıyor...' : "Botu Başlat"}
                       </Button> :
                       null}
-                    <Button type="button" size="sm" variant="outline" onClick={requestHandover} disabled={sendingHandover || handoverInProgress}>
-                      {sendingHandover ? 'İsteniyor...' : handoverInProgress ? "Temsilci Devrede" : 'Temsilciye Aktar'}
-                    </Button>
+                    {!handoverInProgress ?
+                      <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={requestHandover} disabled={sendingHandover}>
+                        {sendingHandover ? 'Alınıyor...' : 'Ben Yanıtlayacağım'}
+                      </Button> :
+                      null}
                   </div>
                 </div>
 
@@ -835,7 +879,7 @@ export function ConversationsPage() {
                     const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
                     stickToBottomRef.current = distanceToBottom < 48;
                   }}
-                  className="flex-1 min-h-[400px] mt-4 space-y-4 overflow-y-auto rounded-2xl border border-border/40 bg-gradient-to-b from-muted/10 to-transparent p-4 scrollbar-thin">
+                  className="flex-1 min-h-0 mt-4 space-y-4 overflow-y-auto rounded-2xl border border-border/40 bg-gradient-to-b from-muted/10 to-transparent p-4 scrollbar-thin lg:min-h-[400px]">
 
                   {loadingMessages ?
                     <div className="space-y-6 py-4">
@@ -872,7 +916,7 @@ export function ConversationsPage() {
                             return (
                               <React.Fragment key={msg.id || index}>
                                 {showDateHeader && (
-                                  <div className="flex justify-center my-8 sticky top-2 z-10 pointer-events-none">
+                                  <div className="flex justify-center my-8 pointer-events-none">
                                     <span className="px-4 py-1.5 rounded-full bg-background/60 backdrop-blur-xl border border-white/20 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground shadow-2xl glass-panel">
                                       {isToday(dt) ? 'Bugün' : isYesterday(dt) ? 'Dün' : format(dt, 'd MMMM yyyy', { locale: tr })}
                                     </span>
@@ -904,7 +948,9 @@ export function ConversationsPage() {
                                           `bg-gradient-to-br from-[var(--deep-indigo)] to-indigo-600 text-white border border-indigo-500/20 ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px] rounded-r-md' : isSameSenderAsNext ? 'rounded-[20px] rounded-br-md' : isSameSenderAsPrev ? 'rounded-[20px] rounded-tr-md' : 'rounded-[20px] rounded-tr-sm'}` : 
                                           `bg-card/40 backdrop-blur-lg border border-white/10 text-foreground ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px] rounded-l-md' : isSameSenderAsNext ? 'rounded-[20px] rounded-bl-md' : isSameSenderAsPrev ? 'rounded-[20px] rounded-tl-md' : 'rounded-[20px] rounded-tl-sm'}`
                                       }`}>
-                                        <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{msg.text || `[${msg.messageType}]`}</p>
+                                        <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                                          {formatOperatorMessage(msg.text) || formatMessageTypeLabel(msg.messageType)}
+                                        </p>
                                         <div className={`text-[9px] mt-1.5 font-bold opacity-40 flex items-center gap-1.5 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
                                           {format(dt, 'HH:mm')}
                                           {isOutbound && msg.status === 'READ' && <CheckCircle2 className="size-2.5 text-sky-300" />}
@@ -921,14 +967,15 @@ export function ConversationsPage() {
                   }
                 </div>
 
-                <div className="mt-4 rounded-xl border border-border/60 bg-background shadow-sm p-2 focus-within:border-[var(--deep-indigo)]/50 focus-within:ring-1 focus-within:ring-[var(--deep-indigo)]/20 transition-all">
+                <div className="sticky bottom-0 z-20 mt-4 rounded-xl border border-border/60 bg-background shadow-sm p-2 focus-within:border-[var(--deep-indigo)]/50 focus-within:ring-1 focus-within:ring-[var(--deep-indigo)]/20 transition-all">
                   <div className="flex gap-2">
-                    <Input
+                    <Textarea
                       value={replyText}
                       onChange={(event) => setReplyText(event.target.value)}
                       placeholder={canReply ? "Mesajınızı yazın..." : "Manuel yanıt yalnızca Instagram için kullanılabilir"}
                       disabled={!canReply}
-                      className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent px-3 text-[15px]"
+                      rows={1}
+                      className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' && !event.shiftKey) {
                           event.preventDefault();
@@ -936,13 +983,13 @@ export function ConversationsPage() {
                         }
                       }} />
 
-                    <Button type="button" onClick={sendReply} disabled={sendingReply || !replyText.trim() || !canReply} className={`rounded-lg px-4 transition-all ${replyText.trim() ? 'bg-[var(--deep-indigo)] hover:bg-[var(--deep-indigo)]/90 text-white' : 'bg-muted text-muted-foreground'}`}>
+                    <Button type="button" aria-label="Mesaj gönder" onClick={sendReply} disabled={sendingReply || !replyText.trim() || !canReply} className={`rounded-lg px-4 transition-all ${replyText.trim() ? 'bg-[var(--deep-indigo)] hover:bg-[var(--deep-indigo)]/90 text-white' : 'bg-muted text-muted-foreground'}`}>
                       {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </Button>
                   </div>
                   {!canReply ?
                     <p className="mt-2 text-[11px] text-muted-foreground px-3">
-                      WhatsApp için manuel cevap şu an kapalı. "Temsilciye Aktar" ile AI akışını devralabilirsiniz.
+                      WhatsApp için manuel cevap şu an kapalı. Bu konuşmayı yönetmek için bot ayarlarını veya kanal bağlantısını kontrol edin.
                     </p> :
                     null}
                 </div>
