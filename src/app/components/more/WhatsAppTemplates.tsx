@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -14,6 +14,11 @@ import {
   TrendingUp,
   Loader2,
   ExternalLink,
+  Terminal,
+  Database,
+  Globe,
+  Activity,
+  Server,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../ui/button';
@@ -31,6 +36,12 @@ interface WhatsAppTemplate {
   lastSyncAt: string | null;
 }
 
+interface WhatsAppSyncStats {
+  total: number;
+  approved: number;
+  lastSync: string;
+}
+
 interface WhatsAppTemplatesProps {
   onBack: () => void;
 }
@@ -42,24 +53,28 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   SATISFACTION_SURVEY: 'Doğrulama & Diğer',
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  UTILITY: 'Maliyet: Düşük (Bilgilendirme)',
-  MARKETING: 'Maliyet: Yüksek (Pazarlama)',
-  AUTHENTICATION: 'Maliyet: Standart (Doğrulama)',
-};
-
 export function WhatsAppTemplates({ onBack }: WhatsAppTemplatesProps) {
   const { apiFetch } = useAuth();
   const { setHeaderTitle } = useNavigator();
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [stats, setStats] = useState<WhatsAppSyncStats | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showTechnical, setShowTechnical] = useState(false);
+  const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setHeaderTitle('Mesajlaşma Akışları');
+    setHeaderTitle('Geliştirici Paneli: WhatsApp');
     return () => setHeaderTitle(null);
   }, [setHeaderTitle]);
+
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs]);
 
   const loadTemplates = async () => {
     try {
@@ -67,7 +82,7 @@ export function WhatsAppTemplates({ onBack }: WhatsAppTemplatesProps) {
       const data = await apiFetch<{ templates: WhatsAppTemplate[] }>('/api/app/chakra/templates');
       setTemplates(data.templates);
     } catch (err: any) {
-      setError('Mesaj akışları yüklenemedi.');
+      setError('Bağlantı kurulamadı.');
     } finally {
       setLoading(false);
     }
@@ -76,24 +91,25 @@ export function WhatsAppTemplates({ onBack }: WhatsAppTemplatesProps) {
   const handleSync = async () => {
     try {
       setSyncing(true);
-      const data = await apiFetch<{ templates: WhatsAppTemplate[] }>('/api/app/chakra/templates/sync', {
+      setError(null);
+      setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Senkronizasyon isteği gönderildi...`]);
+      
+      const data = await apiFetch<{ 
+        templates: WhatsAppTemplate[], 
+        logs: string[],
+        stats: WhatsAppSyncStats 
+      }>('/api/app/chakra/templates/sync', {
         method: 'POST',
       });
+      
       setTemplates(data.templates);
+      setLogs(prev => [...prev, ...(data.logs || [])]);
+      setStats(data.stats);
     } catch (err: any) {
-      setError('Senkronizasyon başarısız.');
+      setError('Senkronizasyon sırasında bir hata oluştu.');
+      setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] KRİTİK HATA: ${err.message}`]);
     } finally {
       setSyncing(false);
-    }
-  };
-
-  const handleAppeal = async (id: number) => {
-    try {
-      await apiFetch(`/api/app/chakra/templates/${id}/appeal`, { method: 'POST' });
-      alert('İtiraz isteği iletildi. Meta incelemesi sonrası durum güncellenecektir.');
-      void loadTemplates();
-    } catch (err: any) {
-      alert('İtiraz iletilemedi.');
     }
   };
 
@@ -103,185 +119,203 @@ export function WhatsAppTemplates({ onBack }: WhatsAppTemplatesProps) {
 
   const getStatusDisplay = (status: string | null) => {
     const s = status?.toUpperCase();
-    if (s === 'APPROVED') return { label: 'Aktif & Hazır', color: 'text-emerald-500', bg: 'bg-emerald-500/10', icon: CheckCircle2 };
-    if (s === 'PENDING' || s === 'PENDING_SUBMISSION') return { label: 'Meta İnceliyor', color: 'text-amber-500', bg: 'bg-amber-500/10', icon: History };
-    if (s === 'REJECTED') return { label: 'Düzenleme Gerekli', color: 'text-rose-500', bg: 'bg-rose-500/10', icon: AlertTriangle };
-    if (s === 'APPEALED') return { label: 'İtiraz Edildi', color: 'text-blue-500', bg: 'bg-blue-500/10', icon: ShieldCheck };
-    return { label: 'Durum Bilinmiyor', color: 'text-zinc-500', bg: 'bg-zinc-500/10', icon: Info };
+    if (s === 'APPROVED') return { label: 'Aktif', color: 'text-emerald-500', bg: 'bg-emerald-500/10', icon: CheckCircle2 };
+    if (s === 'PENDING' || s === 'PENDING_SUBMISSION') return { label: 'İnceleniyor', color: 'text-amber-500', bg: 'bg-amber-500/10', icon: History };
+    if (s === 'REJECTED') return { label: 'Hata', color: 'text-rose-500', bg: 'bg-rose-500/10', icon: AlertTriangle };
+    return { label: 'Beklemede', color: 'text-zinc-500', bg: 'bg-zinc-500/10', icon: Info };
   };
 
   return (
     <div className="h-full pb-24 overflow-y-auto bg-slate-50 dark:bg-zinc-950">
       <div className="p-4 space-y-6">
-        {/* --- Header Health Hero --- */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative overflow-hidden rounded-3xl bg-[var(--deep-indigo)] p-6 text-white shadow-2xl border border-white/5"
-        >
-          {/* Decorative gradients */}
-          <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-[var(--rose-gold)]/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 shadow-lg">
-                <Zap className="w-6 h-6 text-amber-400" />
+        
+        {/* --- Diagnostic Header --- */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="border-none shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase">Bulut Servis</p>
+                  <p className="text-sm font-bold text-emerald-500 flex items-center gap-1">
+                    <Activity className="w-3 h-3" /> Online
+                  </p>
+                </div>
               </div>
-              <Button
+            </CardContent>
+          </Card>
+          <Card className="border-none shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase">Veritabanı</p>
+                  <p className="text-sm font-bold text-emerald-500 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Bağlı
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* --- Main Action Card --- */}
+        <motion.div
+           initial={{ opacity: 0, y: 10 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="relative overflow-hidden rounded-3xl bg-[var(--deep-indigo)] p-6 text-white shadow-xl border border-white/5"
+        >
+          <div className="relative z-10">
+            <div className="flex justify-between items-center mb-4">
+               <h2 className="text-xl font-bold flex items-center gap-2">
+                 <Server className="w-5 h-5 text-amber-400" />
+                 Sistem Durumu
+               </h2>
+               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSync}
                 disabled={syncing}
-                className="text-white/80 hover:text-white hover:bg-white/10 bg-white/5 rounded-xl border border-white/5"
+                className="text-white/80 hover:text-white hover:bg-white/10 bg-white/5 rounded-xl border border-white/10"
               >
                 {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                Tazele
+                Hemen Tazele
               </Button>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight">Akıllı Mesajlaşma</h2>
-            <p className="text-white/60 text-sm mt-1 leading-relaxed">
-              Meta onaylı profesyonel mesajlaşma akışlarınız otomatik olarak yönetilir.
-            </p>
-
-            <div className="mt-6 flex items-center gap-4 bg-white/5 rounded-2xl p-4 border border-white/5">
-              <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Sağlık Durumu</p>
-                <p className="text-lg font-bold text-emerald-400 flex items-center gap-1.5 mt-0.5">
-                  <ShieldCheck className="w-5 h-5" />
-                  %100 Güvenli
-                </p>
-              </div>
-              <div className="h-10 w-[1px] bg-white/10" />
-              <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Son Kontrol</p>
-                <p className="text-sm font-medium text-white/80 mt-1">Az Önce</p>
-              </div>
+            
+            <div className="flex gap-6 mt-6">
+               <div className="flex-1">
+                 <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Kayıtlı Akış</p>
+                 <p className="text-2xl font-bold text-white mt-1">{templates.length}</p>
+               </div>
+               <div className="w-[1px] bg-white/10" />
+               <div className="flex-1">
+                 <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Aktif Onay</p>
+                 <p className="text-2xl font-bold text-emerald-400 mt-1">{stats?.approved || 0}</p>
+               </div>
+               <div className="w-[1px] bg-white/10" />
+               <div className="flex-1">
+                 <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Son Senkron</p>
+                 <p className="text-sm font-medium text-white/80 mt-2">
+                   {stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('tr-TR') : 'Hiç'}
+                 </p>
+               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* --- Templates List --- */}
-        <div className="space-y-4">
+        {/* --- Diagnostic Logs (The Terminal) --- */}
+        <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest leading-none">OTOMATİK AKIŞLAR</h3>
-            {templates.length > 0 && (
-              <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                {templates.length} AKTİF
-              </span>
-            )}
+            <h3 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+              <Terminal className="w-3.5 h-3.5" />
+              SİSTEM GÜNLÜĞÜ (LOGS)
+            </h3>
+            <button 
+              onClick={() => setShowTechnical(!showTechnical)}
+              className="text-[10px] font-bold text-blue-500 hover:underline"
+            >
+              {showTechnical ? 'Sadeleştir' : 'Teknik Detay'}
+            </button>
           </div>
 
+          <Card className="border-none shadow-sm bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+            <div className="p-3 bg-zinc-800/50 border-b border-zinc-800 flex items-center gap-2">
+               <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+               <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+               <span className="text-[10px] font-mono text-zinc-500 ml-2">chakra_sync_v2.log</span>
+            </div>
+            <CardContent className="p-4 h-48 overflow-y-auto font-mono">
+              <div className="space-y-1.5">
+                {logs.length === 0 && (
+                  <p className="text-zinc-600 text-xs italic">Senkronizasyon bekleniyor...</p>
+                )}
+                {logs.map((log, i) => {
+                  const isError = log.includes('HATA') || log.includes('KRİTİK');
+                  const isSuccess = log.includes('Başarıyla') || log.includes('tamamlandı');
+                  
+                  return (
+                    <p key={i} className={`text-[11px] leading-relaxed break-all ${
+                      isError ? 'text-rose-400' : isSuccess ? 'text-emerald-400' : 'text-zinc-400'
+                    }`}>
+                      <span className="text-zinc-600 mr-2">[{i+1}]</span>
+                      {log}
+                    </p>
+                  );
+                })}
+                <div ref={logEndRef} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* --- Simplified Template Status Grid --- */}
+        <div className="space-y-3">
+          <h3 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest px-1">AKIŞ DURUMLARI</h3>
+          
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground animate-pulse">
-              <Loader2 className="w-8 h-8 animate-spin mb-3" />
-              <p className="text-sm font-medium">Akışlar yapılandırılıyor...</p>
-            </div>
-          ) : error ? (
-            <div className="p-8 text-center rounded-2xl border border-rose-500/20 bg-rose-500/5">
-              <AlertTriangle className="w-8 h-8 text-rose-500 mx-auto mb-3" />
-              <p className="text-sm text-rose-600 font-medium">{error}</p>
-              <Button variant="ghost" className="mt-4 text-xs" onClick={() => void loadTemplates()}>Tekrar Dene</Button>
-            </div>
+             <div className="py-10 flex flex-col items-center justify-center opacity-50">
+                <Loader2 className="w-6 h-6 animate-spin mb-2" />
+                <p className="text-xs">Okunuyor...</p>
+             </div>
+          ) : templates.length === 0 ? (
+            <Card className="border-dashed border-2 bg-transparent">
+              <CardContent className="p-8 text-center text-zinc-400">
+                <div className="mb-3 flex justify-center">
+                  <AlertTriangle className="w-8 h-8 opacity-20" />
+                </div>
+                <p className="text-xs font-medium">Henüz hiçbir şablon tanımlanmamış.</p>
+                <p className="text-[10px] mt-1">"Tazele" butonuna basarak ilk kurulumu başlatabilirsiniz.</p>
+              </CardContent>
+            </Card>
           ) : (
-            <AnimatePresence>
-              {templates.map((tpl, idx) => {
+            <div className="grid grid-cols-1 gap-2">
+              {templates.map((tpl) => {
                 const status = getStatusDisplay(tpl.metaStatus);
                 const Icon = status.icon;
-                const isMarketing = tpl.metaCategory === 'MARKETING';
-
+                
                 return (
-                  <motion.div
+                  <div 
                     key={tpl.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.08 }}
-                    className="cursor-default"
+                    className="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800"
                   >
-                    <Card className="group relative overflow-hidden border-border/40 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md shadow-sm active:scale-[0.98] transition-all hover:shadow-md hover:border-border">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${status.bg} ${status.color} border border-current/10`}>
-                                {status.label}
-                              </span>
-                              {isMarketing && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-600 border border-amber-500/10 flex items-center gap-1">
-                                  <TrendingUp className="w-3 h-3" />
-                                  YÜKSEK MALİYET
-                                </span>
-                              )}
-                            </div>
-                            <h4 className="font-bold text-zinc-900 dark:text-white truncate">
-                              {EVENT_TYPE_LABELS[tpl.eventType] || tpl.templateName || 'Bilinmeyen Akış'}
-                            </h4>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1 italic">
-                              "{tpl.templateContent || 'İçerik hazırlanıyor...'}"
-                            </p>
-                          </div>
-                          <div className={`shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center ${status.bg} ${status.color} shadow-inner`}>
-                            <Icon className="w-5 h-5" />
-                          </div>
-                        </div>
-
-                        {/* Cost Disclaimer */}
-                        {isMarketing && (
-                          <div className="mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-[11px] text-amber-700 dark:text-amber-400 flex gap-2">
-                            <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                            <div className="space-y-2">
-                              <p>Meta bu şablonun kategorisini <strong>'Pazarlama'</strong> olarak güncelledi. Bu durum gönderim başına maliyeti artırabilir.</p>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleAppeal(tpl.id)}
-                                  className="h-7 text-[10px] bg-amber-100 hover:bg-amber-200 border-amber-200 text-amber-800 rounded-lg px-3 font-bold"
-                                >
-                                  Maliyete İtiraz Et
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => window.open('https://business.facebook.com/wa/manage/templates/', '_blank')}
-                                  className="h-7 text-[10px] text-amber-700 hover:text-amber-800 hover:bg-transparent rounded-lg font-medium p-0"
-                                >
-                                  Meta Yöneticisi <ExternalLink className="w-2.5 h-2.5 ml-1" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {!isMarketing && tpl.metaCategory && (
-                          <div className="mt-4 flex items-center justify-between text-[11px] text-zinc-400 font-medium">
-                            <div className="flex items-center gap-1.5 text-zinc-500">
-                               <TrendingDown className="w-3 h-3 text-emerald-500" />
-                               {CATEGORY_LABELS[tpl.metaCategory] || tpl.metaCategory}
-                            </div>
-                            <span>{tpl.lastSyncAt ? new Date(tpl.lastSyncAt).toLocaleDateString('tr-TR') : ''}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${status.bg} ${status.color}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                          {EVENT_TYPE_LABELS[tpl.eventType] || tpl.eventType}
+                        </p>
+                        <p className="text-[10px] text-zinc-400 font-medium">
+                          ID: {tpl.externalId?.substring(0, 8) || 'Yok'} • {tpl.metaCategory || 'Bilinmiyor'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`px-2 py-1 rounded-lg text-[10px] font-bold border border-current/10 ${status.bg} ${status.color}`}>
+                       {status.label}
+                    </div>
+                  </div>
                 );
               })}
-            </AnimatePresence>
+            </div>
           )}
         </div>
 
-        {/* --- Help Section --- */}
-        <div className="bg-white/40 dark:bg-zinc-900/30 rounded-3xl p-5 border border-zinc-200 dark:border-zinc-800">
-          <h5 className="text-sm font-bold flex items-center gap-2 mb-2">
-            <MessageSquare className="w-4 h-4 text-indigo-500" />
-            Akışlar Hakkında Bilgi
-          </h5>
-          <p className="text-[11px] text-zinc-500 leading-relaxed">
-            Mesaj akışları Kedy tarafından optimize edilmiştir. Meta'nın onay süreci genellikle 2-24 saat sürer. 
-            Onaylanmayan şablonlar için sistemimiz otomatik olarak düzeltme isteği gönderir.
-          </p>
+        {/* --- Footer Info --- */}
+        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex gap-3">
+           <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+           <p className="text-[11px] text-amber-700 leading-relaxed italic">
+             <strong>Not:</strong> Bu ekran geliştirme sürecinde sistemin doğru çalıştığını teyit etmek için tasarlanmıştır. 
+             Mavi "Tazele" butonuna bastığınızda yapılan tüm işlemler yukarıdaki siyah kutuya kaydedilir.
+           </p>
         </div>
+
       </div>
     </div>
   );
