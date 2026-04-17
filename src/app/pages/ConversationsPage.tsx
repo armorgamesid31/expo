@@ -257,10 +257,18 @@ function mergeAndSortMessages(responses: Array<{ items: MessageItem[]; } | null 
     const items = response?.items || [];
     for (const msg of items) {
       const providerId = typeof msg.providerMessageId === 'string' ? msg.providerMessageId.trim() : '';
+      const direction = (msg.direction || '').toLowerCase();
+      const text = (msg.text || '').trim();
+      
+      // WhatsApp messages might not have unique providerMessageIds for outbound messages in some cases,
+      // or they might have different direction strings. We'll use a more comprehensive fingerprint.
       const fingerprint = providerId ?
         `provider:${providerId}` :
-        `fallback:${msg.direction}|${msg.messageType}|${msg.eventTimestamp}|${msg.text || ''}`;
-      if (!merged.has(fingerprint)) merged.set(fingerprint, msg);
+        `fallback:${direction}|${msg.messageType}|${msg.eventTimestamp}|${text.substring(0, 100)}`;
+        
+      if (!merged.has(fingerprint)) {
+        merged.set(fingerprint, msg);
+      }
     }
   }
   return Array.from(merged.values()).sort((a, b) => {
@@ -554,7 +562,7 @@ export function ConversationsPage() {
     }
   };
 
-  const canReply = selectedConversation?.channel === 'INSTAGRAM';
+  const canReply = selectedConversation?.channel === 'INSTAGRAM' || selectedConversation?.channel === 'WHATSAPP';
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
   const handoverInProgress = isHandoverInProgress(selectedMode);
   const unreadTotal = filteredKonuşmalar.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
@@ -899,8 +907,9 @@ export function ConversationsPage() {
                       <div className="flex flex-col gap-1 min-h-full pb-4">
                         <AnimatePresence initial={false}>
                           {messages.map((msg, index) => {
-                            const isOutbound = msg.direction === 'outbound';
-                            const isSystem = msg.direction === 'system';
+                            const direction = msg.direction?.toLowerCase();
+                            const isOutbound = direction === 'outbound' || direction === 'outgoing' || !!msg.outboundSource;
+                            const isSystem = direction === 'system';
                             const prevMsg = messages[index - 1];
                             const nextMsg = messages[index + 1];
                             
@@ -972,7 +981,7 @@ export function ConversationsPage() {
                     <Textarea
                       value={replyText}
                       onChange={(event) => setReplyText(event.target.value)}
-                      placeholder={canReply ? "Mesajınızı yazın..." : "Manuel yanıt yalnızca Instagram için kullanılabilir"}
+                      placeholder={canReply ? "Mesajınızı yazın..." : "Yanıt göndermek için bir görüşme seçin"}
                       disabled={!canReply}
                       rows={1}
                       className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -987,9 +996,9 @@ export function ConversationsPage() {
                       {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </Button>
                   </div>
-                  {!canReply ?
+                  {!canReply && selectedConversation?.channel === 'WHATSAPP' ?
                     <p className="mt-2 text-[11px] text-muted-foreground px-3">
-                      WhatsApp için manuel cevap şu an kapalı. Bu konuşmayı yönetmek için bot ayarlarını veya kanal bağlantısını kontrol edin.
+                      WhatsApp için manuel cevap şu an kapalı. Kanal bağlantısını kontrol edin.
                     </p> :
                     null}
                 </div>
