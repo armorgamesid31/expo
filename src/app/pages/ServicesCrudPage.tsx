@@ -236,7 +236,7 @@ export function ServicesCrudPage() {
     }
   };
 
-  const { setHeaderTitle } = useNavigator();
+  const { setHeaderTitle, setHeaderActions } = useNavigator();
 
   useEffect(() => {
     setHeaderTitle('Hizmet Yönetimi');

@@ -21,7 +21,7 @@ interface InventoryItem {
 
 export function InventoryPage() {
   const { apiFetch } = useAuth();
-  const { setHeaderTitle } = useNavigator();
+  const { setHeaderTitle, setHeaderActions } = useNavigator();
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);

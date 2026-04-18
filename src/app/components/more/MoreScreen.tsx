@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Sparkles, AlertTriangle, X, UserCog, CheckCircle2, Circle, Layers, Megaphone, Settings } from 'lucide-react';
+import { BarChart3, AlertTriangle, X, UserCog, CheckCircle2, Circle, Layers, Megaphone, Settings } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -123,32 +123,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       )}
 
       <div className="p-4 space-y-6">
-        <motion.div
-          initial={isBackAction ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}>
-          <Card className="border-border/50 bg-gradient-to-br from-[var(--rose-gold)]/10 to-transparent">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--rose-gold)] to-[var(--rose-gold-dark)] flex items-center justify-center text-white text-xl font-bold shadow-inner border border-white/20">
-                  A
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold leading-tight">
-                    Salon Sahibi
-                  </h2>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[var(--rose-gold)]" />
-                    <span className="text-xs font-semibold text-[var(--rose-gold)]">
-                      Premium Paket
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
         <div>
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 px-1 opacity-70 italic">YÖNETİM ARAÇLARI</h3>
           <div className="grid grid-cols-2 gap-3">
@@ -181,10 +155,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
               })}
           </div>
         </div>
-      </div>
-
-      <div className="text-center text-[10px] text-muted-foreground pt-4 opacity-60 pb-8">
-        <p>Salon OS Enterprise — v3.2.0</p>
       </div>
     </div>
   );

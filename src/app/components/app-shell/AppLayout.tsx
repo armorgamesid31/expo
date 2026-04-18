@@ -1,8 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, LogOut } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { BottomNav } from '../layout/BottomNav';
-import { useAuth } from '../../context/AuthContext';
 import { useNavigator } from '../../context/NavigatorContext';
 
 function transitionMotionByKind(vector: number) {
@@ -82,7 +81,6 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { direction, headerTitle, headerActions } = useNavigator();
-  const { logout } = useAuth();
 
   const activeTab = tabFromPathname(location.pathname);
   let backTarget = backTargetFromPathname(location.pathname);
@@ -130,16 +128,7 @@ export function AppLayout() {
             </div>
 
             <div className="flex items-center gap-2 min-w-[36px] justify-end">
-              {headerActions ? headerActions : (
-                <button
-                  type="button"
-                  onClick={() => void logout()}
-                  className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground transition-all active:scale-90 hover:text-destructive"
-                  aria-label="Çıkış Yap"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              )}
+              {headerActions ? headerActions : <div className="h-9 w-9" />}
             </div>
           </div>
         </header>
