@@ -842,7 +842,7 @@ export function ConversationsPage() {
                               </div>
                             )}
                             {/* Channel Icon Overlay */}
-                            <div className={`absolute right-0 bottom-0 translate-x-1/4 translate-y-1/4 size-5 rounded-full border-2 border-background shadow-sm flex items-center justify-center ${item.channel === 'WHATSAPP' ? 'bg-emerald-500' : 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500'}`}>
+                            <div className={`absolute right-0 bottom-0 size-5 rounded-full border-2 border-background shadow-sm flex items-center justify-center ${item.channel === 'WHATSAPP' ? 'bg-emerald-500' : 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500'}`}>
                                 {item.channel === 'WHATSAPP' ? <WhatsAppLogo className="size-2.5 text-white" /> : <Instagram className="size-2.5 text-white" />}
                             </div>
                           </div>
@@ -1028,7 +1028,7 @@ export function ConversationsPage() {
 
                 <div className="sticky bottom-0 z-20 mt-2 rounded-xl border border-border/60 bg-background shadow-sm p-1.5 focus-within:border-[var(--deep-indigo)]/50 focus-within:ring-1 focus-within:ring-[var(--deep-indigo)]/20 transition-all">
                   {isSupportedReplyChannel && !manualReplyUnlocked ? (
-                    <div className="px-2 pb-2">
+                    <div className="px-2 py-2">
                       <Button
                         type="button"
                         className="w-full h-9 text-[12px] font-semibold"
@@ -1038,40 +1038,43 @@ export function ConversationsPage() {
                         {sendingHandover ? 'Canlı destek açılıyor...' : 'Ben Yanıtlayacağım'}
                       </Button>
                     </div>
-                  ) : null}
-                  <div className="flex gap-2">
-                    <Textarea
-                      value={replyText}
-                      onChange={(event) => setReplyText(event.target.value)}
-                      placeholder={canReply ? "Mesajınızı yazın..." : "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"}
-                      disabled={!canReply}
-                      rows={1}
-                      className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' && !event.shiftKey) {
-                          event.preventDefault();
-                          if (canReply) void sendReply();
-                        }
-                      }} />
+                  ) : (
+                    <>
+                      <div className="flex gap-2">
+                        <Textarea
+                          value={replyText}
+                          onChange={(event) => setReplyText(event.target.value)}
+                          placeholder={canReply ? "Mesajınızı yazın..." : "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"}
+                          disabled={!canReply}
+                          rows={1}
+                          className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' && !event.shiftKey) {
+                              event.preventDefault();
+                              if (canReply) void sendReply();
+                            }
+                          }} />
 
-                    <Button type="button" aria-label="Mesaj gönder" onClick={sendReply} disabled={sendingReply || !replyText.trim() || !canReply} className={`rounded-lg px-4 transition-all ${replyText.trim() ? 'bg-[var(--deep-indigo)] hover:bg-[var(--deep-indigo)]/90 text-white' : 'bg-muted text-muted-foreground'}`}>
-                      {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                  {manualReplyUnlocked ? (
-                    <div className="px-2 pt-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-[11px]"
-                        onClick={resumeAuto}
-                        disabled={sendingResume}
-                      >
-                        {sendingResume ? 'Bot devreye alınıyor...' : 'Bot Yanıtlasın'}
-                      </Button>
-                    </div>
-                  ) : null}
+                        <Button type="button" aria-label="Mesaj gönder" onClick={sendReply} disabled={sendingReply || !replyText.trim() || !canReply} className={`rounded-lg px-4 transition-all ${replyText.trim() ? 'bg-[var(--deep-indigo)] hover:bg-[var(--deep-indigo)]/90 text-white' : 'bg-muted text-muted-foreground'}`}>
+                          {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                      {manualReplyUnlocked ? (
+                        <div className="px-2 pt-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-[11px]"
+                            onClick={resumeAuto}
+                            disabled={sendingResume}
+                          >
+                            {sendingResume ? 'Bot devreye alınıyor...' : 'Bot Yanıtlasın'}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </> :
 
