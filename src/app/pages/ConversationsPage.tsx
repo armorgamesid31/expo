@@ -297,7 +297,9 @@ export function ConversationsPage() {
   const [sendingHandover, setSendingHandover] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>('LIST');
+  const [liveConversationMap, setLiveConversationMap] = useState<Record<string, number>>({});
   const realtimeRefreshTimerRef = useRef<number | null>(null);
+  const liveConversationTimersRef = useRef<Record<string, number>>({});
   const conversationsRef = useRef<ConversationItem[]>([]);
   const selectedConversationIdRef = useRef<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
@@ -307,6 +309,45 @@ export function ConversationsPage() {
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
+
+  const markConversationAsReadLocal = useCallback((conversationId: string | null) => {
+    if (!conversationId) return;
+    setKonuşmalar((prev) =>
+      prev.map((item) => {
+        const itemId = `${item.channel}:${item.conversationKey}`;
+        if (itemId !== conversationId || item.unreadCount <= 0) return item;
+        return { ...item, unreadCount: 0 };
+      }),
+    );
+  }, []);
+
+  const markLiveConversation = useCallback((conversationIds: string[]) => {
+    if (!conversationIds.length) return;
+
+    const now = Date.now();
+    setLiveConversationMap((prev) => {
+      const next = { ...prev };
+      for (const id of conversationIds) {
+        next[id] = now;
+      }
+      return next;
+    });
+
+    for (const id of conversationIds) {
+      if (liveConversationTimersRef.current[id]) {
+        window.clearTimeout(liveConversationTimersRef.current[id]);
+      }
+      liveConversationTimersRef.current[id] = window.setTimeout(() => {
+        setLiveConversationMap((prev) => {
+          if (!(id in prev)) return prev;
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+        delete liveConversationTimersRef.current[id];
+      }, 1400);
+    }
+  }, []);
 
   const selectedConversation = useMemo(() => {
     if (!selectedConversationId) return null;
@@ -365,13 +406,24 @@ export function ConversationsPage() {
     stickToBottomRef.current = true;
   }, [selectedConversationId]);
 
+  useEffect(() => {
+    markConversationAsReadLocal(selectedConversationId);
+  }, [markConversationAsReadLocal, selectedConversationId]);
+
   const loadKonuşmalar = useCallback(async (showLoading = true) => {
     if (showLoading) setLoadingKonuşmalar(true);
     try {
       const response = await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
         `/api/admin/conversations?limit=60&channel=${channelView}`
       );
-      const next = response?.items || [];
+      const selectedId = selectedConversationIdRef.current;
+      const next = (response?.items || []).map((item) => {
+        const id = `${item.channel}:${item.conversationKey}`;
+        if (selectedId && id === selectedId && item.unreadCount > 0) {
+          return { ...item, unreadCount: 0 };
+        }
+        return item;
+      });
       setChannelHealth(response?.channelHealth || null);
       setKonuşmalar(next);
       conversationsRef.current = next;
@@ -499,13 +551,27 @@ export function ConversationsPage() {
     channel: channelView,
     cursorScopeKey: 'conversations-page',
     apiFetch,
-    onEvents: (events) => {
+    onEvents: (events, source) => {
+      if (source === 'stream') {
+        markLiveConversation(
+          events.map((event) => `${event.channel}:${event.conversationKey}`),
+        );
+      }
       scheduleRealtimeRefresh(events);
     },
     onRequireFullRefresh: () => {
       scheduleRealtimeRefresh();
     },
   });
+
+  useEffect(() => {
+    return () => {
+      for (const timerId of Object.values(liveConversationTimersRef.current)) {
+        window.clearTimeout(timerId);
+      }
+      liveConversationTimersRef.current = {};
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -759,17 +825,29 @@ export function ConversationsPage() {
                     {filteredKonuşmalar.map((item, index) => {
                     const id = `${item.channel}:${item.conversationKey}`;
                     const active = id === selectedConversationId;
+                    const isLive = !!liveConversationMap[id];
                     const displayName = conversationDisplayName(item);
                     return (
                       <motion.button
                         layout
                         initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        animate={{
+                          opacity: 1,
+                          scale: isLive ? [1, 1.01, 1] : 1,
+                          boxShadow: isLive ?
+                            ['0 0 0 rgba(99,102,241,0)', '0 0 0 3px rgba(99,102,241,0.16)', '0 0 0 rgba(99,102,241,0)'] :
+                            '0 0 0 rgba(99,102,241,0)',
+                        }}
+                        transition={{
+                          duration: isLive ? 0.45 : 0.2,
+                          ease: 'easeOut',
+                        }}
                         key={id}
                         type="button"
                         onClick={() => {
                           lastAutoScrolledConversationRef.current = null;
                           setSelectedConversationId(id);
+                          markConversationAsReadLocal(id);
                           setMobileView('CHAT');
                         }}
                         className={`w-full group rounded-[22px] p-3.5 text-left transition-all duration-300 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'}`
@@ -782,9 +860,11 @@ export function ConversationsPage() {
                             </Avatar>
                             {/* Unread pulsing indicator */}
                             {item.unreadCount > 0 && (
-                              <div className="absolute -top-1 -right-1 flex h-4.5 w-4.5">
+                              <div className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-4.5 w-4.5 bg-orange-500 border-2 border-background flex items-center justify-center text-[9px] text-white font-bold shadow-sm">{item.unreadCount}</span>
+                                <span className="relative inline-flex min-w-5 h-5 px-1 rounded-full bg-orange-500 border-2 border-background items-center justify-center text-[10px] leading-none text-white font-black shadow-sm">
+                                  {item.unreadCount > 99 ? '99+' : item.unreadCount}
+                                </span>
                               </div>
                             )}
                             {/* Channel Icon Overlay */}
@@ -796,7 +876,12 @@ export function ConversationsPage() {
                           <div className="min-w-0 flex-1 py-0.5">
                             <div className="flex items-center justify-between mb-1">
                               <h4 className={`text-sm font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
-                              <span className="text-[10px] text-muted-foreground/80 font-semibold tracking-tighter shrink-0">{formatRelativeTime(item.lastEventTimestamp)}</span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {isLive && (
+                                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                )}
+                                <span className="text-[10px] text-muted-foreground/80 font-semibold tracking-tighter">{formatRelativeTime(item.lastEventTimestamp)}</span>
+                              </div>
                             </div>
                             <p className={`text-xs truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
                               {getPreview(item)}

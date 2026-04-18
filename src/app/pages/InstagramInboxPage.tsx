@@ -210,7 +210,9 @@ export function InstagramInboxPage() {
   const [sendingHandover, setSendingHandover] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
   const [actionInfo, setActionInfo] = useState<string | null>(null);
+  const [liveConversationMap, setLiveConversationMap] = useState<Record<string, number>>({});
   const sseYenileTimerRef = useRef<number | null>(null);
+  const liveConversationTimersRef = useRef<Record<string, number>>({});
   const conversationsRef = useRef<ConversationItem[]>([]);
   const selectedKeyRef = useRef<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
@@ -229,6 +231,44 @@ export function InstagramInboxPage() {
     selectedKeyRef.current = selectedKey;
   }, [selectedKey]);
 
+  const markConversationAsReadLocal = useCallback((conversationKey: string | null) => {
+    if (!conversationKey) return;
+    setConversations((prev) =>
+      prev.map((item) =>
+        item.conversationKey === conversationKey && item.unreadCount > 0 ?
+          { ...item, unreadCount: 0 } :
+          item,
+      ),
+    );
+  }, []);
+
+  const markLiveConversation = useCallback((conversationKeys: string[]) => {
+    if (!conversationKeys.length) return;
+    const now = Date.now();
+    setLiveConversationMap((prev) => {
+      const next = { ...prev };
+      for (const key of conversationKeys) {
+        next[key] = now;
+      }
+      return next;
+    });
+
+    for (const key of conversationKeys) {
+      if (liveConversationTimersRef.current[key]) {
+        window.clearTimeout(liveConversationTimersRef.current[key]);
+      }
+      liveConversationTimersRef.current[key] = window.setTimeout(() => {
+        setLiveConversationMap((prev) => {
+          if (!(key in prev)) return prev;
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        delete liveConversationTimersRef.current[key];
+      }, 1400);
+    }
+  }, []);
+
   useEffect(() => {
     stickToBottomRef.current = true;
   }, [selectedKey]);
@@ -238,7 +278,12 @@ export function InstagramInboxPage() {
     setError(null);
     try {
       const response = await apiFetch<{ items: ConversationItem[]; }>('/api/admin/instagram-inbox/conversations?limit=40');
-      const next = response?.items || [];
+      const activeKey = selectedKeyRef.current;
+      const next = (response?.items || []).map((item) =>
+        activeKey && item.conversationKey === activeKey && item.unreadCount > 0 ?
+          { ...item, unreadCount: 0 } :
+          item,
+      );
       setConversations(next);
       conversationsRef.current = next;
       if (!selectedKeyRef.current && next.length > 0) {
@@ -316,8 +361,9 @@ export function InstagramInboxPage() {
       setMessages([]);
       return;
     }
+    markConversationAsReadLocal(selectedKey);
     void loadMessages(selectedKey);
-  }, [loadMessages, selectedKey]);
+  }, [loadMessages, markConversationAsReadLocal, selectedKey]);
 
   useLayoutEffect(() => {
     const viewport = messagesViewportRef.current;
@@ -332,7 +378,10 @@ export function InstagramInboxPage() {
     channel: 'INSTAGRAM',
     cursorScopeKey: 'instagram-inbox',
     apiFetch,
-    onEvents: (events) => {
+    onEvents: (events, source) => {
+      if (source === 'stream') {
+        markLiveConversation(events.map((event) => event.conversationKey));
+      }
       scheduleRealtimeRefresh(events);
     },
     onRequireFullRefresh: () => {
@@ -345,6 +394,15 @@ export function InstagramInboxPage() {
       if (!sseYenileTimerRef.current) return;
       window.clearTimeout(sseYenileTimerRef.current);
       sseYenileTimerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      for (const timerId of Object.values(liveConversationTimersRef.current)) {
+        window.clearTimeout(timerId);
+      }
+      liveConversationTimersRef.current = {};
     };
   }, []);
 
@@ -460,15 +518,19 @@ export function InstagramInboxPage() {
                 <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
                   {conversations.map((item) => {
                     const active = item.conversationKey === selectedKey;
+                    const isLive = !!liveConversationMap[item.conversationKey];
                     const displayName = conversationDisplayName(item);
                     return (
                       <button
                         key={item.conversationKey}
                         type="button"
-                        onClick={() => setSelectedKey(item.conversationKey)}
+                        onClick={() => {
+                          setSelectedKey(item.conversationKey);
+                          markConversationAsReadLocal(item.conversationKey);
+                        }}
                         className={`w-full text-left rounded-xl border p-3 transition-all ${active ?
                             'border-[var(--deep-indigo)]/60 bg-[var(--deep-indigo)]/10 shadow-sm' :
-                            'border-border/70 hover:bg-muted/40 hover:border-border'}`
+                            'border-border/70 hover:bg-muted/40 hover:border-border'} ${isLive ? 'ring-2 ring-emerald-500/25 shadow-[0_0_0_2px_rgba(16,185,129,0.12)]' : ''}`
                         }>
 
                         <div className="flex items-center justify-between gap-2">
@@ -482,7 +544,7 @@ export function InstagramInboxPage() {
                           <div className="flex items-center gap-1">
                             {item.unreadCount > 0 ?
                               <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
-                                {item.unreadCount}
+                                {item.unreadCount > 99 ? '99+' : item.unreadCount}
                               </span> :
                               null}
                             <span
@@ -500,7 +562,10 @@ export function InstagramInboxPage() {
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
                         <div className="mt-2 flex items-center justify-between">
-                          <p className="text-[10px] text-muted-foreground">{formatTs(item.lastEventTimestamp)}</p>
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                            {isLive && <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                            <span>{formatTs(item.lastEventTimestamp)}</span>
+                          </p>
                           <span className="text-[10px] text-muted-foreground">{item.messageCount} mesaj</span>
                         </div>
                       </button>);
