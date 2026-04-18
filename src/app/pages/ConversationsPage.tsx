@@ -86,6 +86,17 @@ interface ChannelHealthPayload {
   whatsapp: WhatsAppChannelHealth;
 }
 
+function WhatsAppLogo({ className }: { className?: string; }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+      <path
+        fill="currentColor"
+        d="M12.04 2C6.52 2 2.05 6.48 2.05 11.99c0 1.77.46 3.5 1.34 5.03L2 22l5.13-1.35a9.94 9.94 0 0 0 4.9 1.25h.01c5.52 0 9.99-4.48 9.99-9.99A9.95 9.95 0 0 0 12.04 2zm5.82 14.17c-.25.71-1.45 1.36-2 1.44-.52.08-1.17.11-1.89-.12-.44-.14-1-.33-1.72-.64-3.02-1.31-4.98-4.36-5.13-4.56-.15-.2-1.23-1.63-1.23-3.11 0-1.48.78-2.2 1.06-2.5.27-.3.6-.37.8-.37.2 0 .4 0 .57.01.18.01.42-.07.66.5.25.6.84 2.08.91 2.23.08.15.13.33.03.53-.1.2-.15.33-.3.5-.15.18-.31.4-.44.53-.15.15-.3.31-.13.61.18.3.78 1.28 1.67 2.08 1.15 1.03 2.11 1.35 2.41 1.5.3.15.47.13.65-.08.18-.2.74-.86.94-1.16.2-.3.4-.25.68-.15.28.1 1.77.84 2.07.99.31.15.51.23.58.35.08.13.08.74-.17 1.45z"
+      />
+    </svg>
+  );
+}
+
 function formatTs(value: string): string {
   const dt = new Date(value);
   if (Number.isNaN(dt.getTime())) return value;
@@ -168,10 +179,6 @@ function initialsFromLabel(value: string | null | undefined): string {
   return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
 }
 
-function badgeClass(channel: ChannelType): string {
-  return channel === 'INSTAGRAM' ? 'bg-fuchsia-500/10 text-fuchsia-700' : 'bg-emerald-500/10 text-emerald-700';
-}
-
 function normalizeAutomationMode(value: unknown): AutomationMode {
   if (
     value === 'AUTO' ||
@@ -182,22 +189,6 @@ function normalizeAutomationMode(value: unknown): AutomationMode {
     return value;
   }
   return 'AUTO';
-}
-
-function automationBadgeClass(mode: AutomationMode): string {
-  if (mode === 'HUMAN_PENDING') return 'bg-amber-500/10 text-amber-700';
-  if (mode === 'HUMAN_ACTIVE') return 'bg-blue-500/10 text-blue-700';
-  if (mode === 'MANUAL_ALWAYS') return 'bg-slate-500/10 text-slate-700';
-  if (mode === 'AUTO_RESUME_PENDING') return 'bg-cyan-500/10 text-cyan-700';
-  return 'bg-emerald-500/10 text-emerald-700';
-}
-
-function automationLabel(mode: AutomationMode): string {
-  if (mode === 'HUMAN_PENDING') return 'Müşteri bekliyor';
-  if (mode === 'HUMAN_ACTIVE') return "Ben yanıtlıyorum";
-  if (mode === 'MANUAL_ALWAYS') return 'Manuel';
-  if (mode === 'AUTO_RESUME_PENDING') return 'Bot başlayacak';
-  return 'Bot yanıtlıyor';
 }
 
 function isHandoverInProgress(mode: AutomationMode): boolean {
@@ -637,9 +628,11 @@ export function ConversationsPage() {
     }
   };
 
-  const canReply = selectedConversation?.channel === 'INSTAGRAM' || selectedConversation?.channel === 'WHATSAPP';
+  const isSupportedReplyChannel = selectedConversation?.channel === 'INSTAGRAM' || selectedConversation?.channel === 'WHATSAPP';
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
   const handoverInProgress = isHandoverInProgress(selectedMode);
+  const manualReplyUnlocked = handoverInProgress || selectedMode === 'MANUAL_ALWAYS';
+  const canReply = Boolean(isSupportedReplyChannel && manualReplyUnlocked);
   const channelScopedConversations = useMemo(
     () => conversations.filter((item) => item.channel === channelView),
     [conversations, channelView]
@@ -703,7 +696,7 @@ export function ConversationsPage() {
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
               }`}
             >
-              <MessageCircle className="size-3.5" />
+              <WhatsAppLogo className="size-3.5" />
               WhatsApp
             </button> :
             null}
@@ -849,8 +842,8 @@ export function ConversationsPage() {
                               </div>
                             )}
                             {/* Channel Icon Overlay */}
-                            <div className={`absolute -bottom-1 -right-1 size-5 rounded-full border-2 border-background shadow-sm flex items-center justify-center ${item.channel === 'WHATSAPP' ? 'bg-emerald-500' : 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500'}`}>
-                                {item.channel === 'WHATSAPP' ? <MessageCircle className="size-2.5 text-white" /> : <Instagram className="size-2.5 text-white" />}
+                            <div className={`absolute right-0 bottom-0 translate-x-1/4 translate-y-1/4 size-5 rounded-full border-2 border-background shadow-sm flex items-center justify-center ${item.channel === 'WHATSAPP' ? 'bg-emerald-500' : 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500'}`}>
+                                {item.channel === 'WHATSAPP' ? <WhatsAppLogo className="size-2.5 text-white" /> : <Instagram className="size-2.5 text-white" />}
                             </div>
                           </div>
                           
@@ -867,14 +860,9 @@ export function ConversationsPage() {
                             <p className={`text-[11px] truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
                               {getPreview(item)}
                             </p>
-                            <div className="mt-1.5 flex items-center gap-1 overflow-hidden">
-                              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
-                                {automationLabel(normalizeAutomationMode(item.automationMode))}
-                              </span>
-                              {item.identityLinked && (
-                                <span className="text-[8px] px-1.5 py-0.5 rounded-full uppercase tracking-widest font-black bg-emerald-500/10 text-emerald-600 border border-emerald-500/10">Bağlı</span>
-                              )}
-                            </div>
+                            {item.identityLinked ? (
+                              <div className="mt-1 text-[9px] font-semibold text-emerald-600/90">Profil bağlı</div>
+                            ) : null}
                           </div>
                         </div>
                         {active && (
@@ -934,34 +922,12 @@ export function ConversationsPage() {
                           <p className="text-[10px] text-muted-foreground truncate">@{username}</p> :
                           null;
                       })()}
-                      <div className="mt-1 flex flex-wrap items-center gap-1">
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] ${automationBadgeClass(selectedMode)}`}>
-                          {automationLabel(selectedMode)}
-                        </span>
-                        <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] ${selectedConversation.identityLinked ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`
-                          }>
-
-                          {selectedConversation.identityLinked ? 'Profil bağlı' : 'Bağlı değil'}
-                        </span>
+                      <div className="mt-1 text-[10px] font-medium text-muted-foreground">
+                        {selectedConversation.identityLinked ? 'Profil bağlı' : 'Profil bağlı değil'}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 overflow-x-auto">
-                    {selectedConversation.hasHandoverRequest ?
-                      <span className="shrink-0 text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Müşteri bekliyor</span> :
-                      null}
-                    {handoverInProgress ?
-                      <Button type="button" size="sm" variant="outline" className="shrink-0 h-8 px-2.5 text-[11px]" onClick={resumeAuto} disabled={sendingResume}>
-                        {sendingResume ? 'Başlatılıyor...' : "Botu Başlat"}
-                      </Button> :
-                      null}
-                    {!handoverInProgress ?
-                      <Button type="button" size="sm" variant="outline" className="shrink-0 h-8 px-2.5 text-[11px]" onClick={requestHandover} disabled={sendingHandover}>
-                        {sendingHandover ? 'Alınıyor...' : 'Ben Yanıtlayacağım'}
-                      </Button> :
-                      null}
-                  </div>
+                  {selectedConversation.hasHandoverRequest ? <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" /> : null}
                 </div>
 
                 <div
@@ -1061,11 +1027,23 @@ export function ConversationsPage() {
                 </div>
 
                 <div className="sticky bottom-0 z-20 mt-2 rounded-xl border border-border/60 bg-background shadow-sm p-1.5 focus-within:border-[var(--deep-indigo)]/50 focus-within:ring-1 focus-within:ring-[var(--deep-indigo)]/20 transition-all">
+                  {isSupportedReplyChannel && !manualReplyUnlocked ? (
+                    <div className="px-2 pb-2">
+                      <Button
+                        type="button"
+                        className="w-full h-9 text-[12px] font-semibold"
+                        onClick={requestHandover}
+                        disabled={sendingHandover}
+                      >
+                        {sendingHandover ? 'Canlı destek açılıyor...' : 'Ben Yanıtlayacağım'}
+                      </Button>
+                    </div>
+                  ) : null}
                   <div className="flex gap-2">
                     <Textarea
                       value={replyText}
                       onChange={(event) => setReplyText(event.target.value)}
-                      placeholder={canReply ? "Mesajınızı yazın..." : "Yanıt göndermek için bir görüşme seçin"}
+                      placeholder={canReply ? "Mesajınızı yazın..." : "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"}
                       disabled={!canReply}
                       rows={1}
                       className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -1080,11 +1058,20 @@ export function ConversationsPage() {
                       {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </Button>
                   </div>
-                  {!canReply && selectedConversation?.channel === 'WHATSAPP' ?
-                    <p className="mt-2 text-[11px] text-muted-foreground px-3">
-                      WhatsApp için manuel cevap şu an kapalı. Kanal bağlantısını kontrol edin.
-                    </p> :
-                    null}
+                  {manualReplyUnlocked ? (
+                    <div className="px-2 pt-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-[11px]"
+                        onClick={resumeAuto}
+                        disabled={sendingResume}
+                      >
+                        {sendingResume ? 'Bot devreye alınıyor...' : 'Bot Yanıtlasın'}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               </> :
 
