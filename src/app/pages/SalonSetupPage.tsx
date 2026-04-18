@@ -48,6 +48,7 @@ export function SalonSetupPage() {
   const { apiFetch } = useAuth();
   const { setHeaderTitle, setHeaderActions } = useNavigator();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setHeaderTitle('Salon Ayarları');
@@ -70,8 +71,6 @@ export function SalonSetupPage() {
       setHeaderActions(null);
     };
   }, [setHeaderTitle, setHeaderActions, saving]);
-
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [presetAnswers, setPresetAnswers] = useState<Record<string, string>>({});

@@ -77,6 +77,22 @@ function backTargetFromPathname(pathname: string): string | null {
   return '/app/features';
 }
 
+function inferHeaderTitleFromPath(pathname: string): string | null {
+  if (pathname === '/app/operations-management') return 'Operasyon Yönetimi';
+  if (pathname === '/app/brand-growth-hub') return 'Marka & Büyüme';
+  if (pathname === '/app/team-management') return 'Ekip Yönetimi';
+  if (pathname === '/app/services') return 'Hizmet Yönetimi';
+  if (pathname === '/app/inventory') return 'Envanter';
+  if (pathname === '/app/packages') return 'Paket Yönetimi';
+  if (pathname === '/app/staff') return 'Personel Yönetimi';
+  if (pathname === '/app/salon-info') return 'Salon Bilgileri';
+  if (pathname === '/app/campaigns') return 'Kampanyalar';
+  if (pathname === '/app/automations') return 'Otomasyonlar';
+  if (pathname === '/app/features/website-builder') return 'Web Sitesi Ayarları';
+  if (pathname.startsWith('/app/features/')) return 'Yönetim';
+  return null;
+}
+
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -88,8 +104,9 @@ export function AppLayout() {
   if (fromState && typeof fromState === 'string') {
     backTarget = fromState;
   }
+  const resolvedHeaderTitle = headerTitle ?? inferHeaderTitleFromPath(location.pathname);
   const transitionMotion = transitionMotionByKind(direction);
-  const showTopBar = Boolean(backTarget || headerTitle || headerActions);
+  const showTopBar = Boolean(backTarget || resolvedHeaderTitle || headerActions);
 
   const handleTabChange = (tab: string) => {
     const routeMap: Record<string, string> = {
@@ -120,9 +137,9 @@ export function AppLayout() {
                 <div className="h-9 w-9" />
               )}
 
-              {headerTitle && (
+              {resolvedHeaderTitle && (
                 <h1 className="text-lg font-semibold tracking-tight truncate max-w-[220px]">
-                  {headerTitle}
+                  {resolvedHeaderTitle}
                 </h1>
               )}
             </div>
