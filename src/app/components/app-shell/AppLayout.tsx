@@ -89,7 +89,7 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { direction, headerTitle, headerActions } = useNavigator();
-  const { bootstrap, logout } = useAuth();
+  const { logout } = useAuth();
 
   const activeTab = tabFromPathname(location.pathname);
   let backTarget = backTargetFromPathname(location.pathname);
@@ -134,24 +134,6 @@ export function AppLayout() {
               </h1>
             )}
           </div>
-
-          {!headerTitle && (
-            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-              <img
-                src="https://cdn.kedyapp.com/kedylogo_koyu.png"
-                alt="Kedy Logo"
-                className="h-8 w-auto dark:hidden"
-              />
-              <img
-                src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
-                alt="Kedy Logo"
-                className="hidden h-8 w-auto dark:block"
-              />
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mt-0.5">
-                {bootstrap?.salon?.name || 'Kedy App'}
-              </span>
-            </div>
-          )}
 
           <div className="flex items-center gap-2 min-w-[36px] justify-end">
             {headerActions ? headerActions : (
