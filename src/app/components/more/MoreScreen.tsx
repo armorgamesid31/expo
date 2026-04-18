@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, AlertTriangle, X, UserCog, CheckCircle2, Circle, Layers, Megaphone, Settings } from 'lucide-react';
+import { BarChart3, AlertTriangle, X, UserCog, CheckCircle2, Circle, Layers, Megaphone, Settings, Building2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -34,6 +34,12 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
         }
         onNavigate('settings');
       },
+      color: 'var(--rose-gold)'
+    },
+    {
+      icon: Building2,
+      label: "Salon Bilgileri",
+      action: () => onNavigate('salon-info'),
       color: 'var(--rose-gold)'
     },
     {
@@ -124,7 +130,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
 
       <div className="p-4 space-y-6">
         <div>
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 px-1 opacity-70 italic">YÖNETİM ARAÇLARI</h3>
           <div className="grid grid-cols-2 gap-3">
             {managementTools
               .filter((item) => (isFeatureVisible ? isFeatureVisible((item as any).featureKey || "") : true))

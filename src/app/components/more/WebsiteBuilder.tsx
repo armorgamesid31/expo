@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEventHandler } from 'react';
-import { ArrowLeft, Globe, Instagram, MessageCircle, Camera, Check, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { Globe, Instagram, MessageCircle, Camera, Check, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigator } from '../../context/NavigatorContext';
 
 interface WebsiteBuilderProps {
-  onGeri: () => void;
+  onBack?: () => void;
 }
 
 interface GalleryImageItem {
@@ -85,8 +86,9 @@ const ShimmerOverlay = () => (
   />
 );
 
-export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
+export function WebsiteBuilder({ onBack: _onBack }: WebsiteBuilderProps) {
   const { apiFetch, bootstrap } = useAuth();
+  const { setHeaderTitle } = useNavigator();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -102,6 +104,11 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
   const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(defaultGalleryImages);
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setHeaderTitle('Web Sitesi Ayarları');
+    return () => setHeaderTitle(null);
+  }, [setHeaderTitle]);
 
   useEffect(() => {
     let mounted = true;
@@ -283,10 +290,6 @@ export function WebsiteBuilder({ onGeri }: WebsiteBuilderProps) {
   return (
     <div className="h-full pb-20">
       <div className="sticky top-0 bg-background z-10 border-b border-border p-4">
-        <button onClick={onGeri} className="flex items-center gap-2 text-muted-foreground mb-3 active:opacity-70">
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Geri</span>
-        </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[var(--deep-indigo)]/10 flex items-center justify-center">
