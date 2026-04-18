@@ -27,6 +27,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
     {
       icon: Settings,
       label: "Ayarlar",
+      description: 'Hesap, bildirim ve sistem tercihleri',
       action: () => {
         if (onOpenSettings) {
           onOpenSettings();
@@ -39,6 +40,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
     {
       icon: Building2,
       label: "Salon Bilgileri",
+      description: 'Salon profili, iletişim ve çalışma düzeni',
       action: () => onNavigate('salon-info'),
       color: 'var(--rose-gold)'
     },
@@ -46,6 +48,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       featureKey: 'operations.management',
       icon: Layers,
       label: 'Operasyon Yönetimi',
+      description: 'Müşteri, hizmet, paket ve envanter yönetimi',
       action: () => onNavigate('operations-management'),
       color: 'var(--deep-indigo)'
     },
@@ -53,6 +56,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       featureKey: 'team.management',
       icon: UserCog,
       label: "Ekip Yönetimi",
+      description: 'Personel, yetki ve ekip ayarları',
       action: () => onNavigate('team-management'),
       color: 'var(--deep-indigo)'
     },
@@ -60,6 +64,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       featureKey: 'brand.growth.hub',
       icon: Megaphone,
       label: 'Marka & Büyüme',
+      description: 'Kampanyalar, web sitesi ve içerik yönetimi',
       action: () => onNavigate('brand-growth-hub'),
       color: 'var(--rose-gold)'
     },
@@ -67,6 +72,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       featureKey: 'analytics.view',
       icon: BarChart3,
       label: "Analitik",
+      description: 'Performans, ciro ve müşteri içgörüleri',
       action: () => onNavigate('analytics'),
       color: 'var(--deep-indigo)'
     }
@@ -130,7 +136,7 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
 
       <div className="p-4 space-y-6">
         <div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {managementTools
               .filter((item) => (isFeatureVisible ? isFeatureVisible((item as any).featureKey || "") : true))
               .map((item, idx) => {
@@ -146,15 +152,16 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
                       ease: [0.22, 1, 0.36, 1],
                     }}
                     onClick={item.action}
-                    className="group relative flex flex-col items-center justify-center p-4 rounded-2xl border border-border/50 bg-card hover:bg-muted/30 transition-all active:scale-[0.97] shadow-sm h-28 text-center"
+                    className="group relative flex flex-col items-center justify-center p-5 rounded-2xl border border-border/50 bg-card hover:bg-muted/30 transition-all active:scale-[0.98] shadow-sm min-h-[148px] text-center"
                   >
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-transform group-hover:scale-110 duration-300"
+                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 duration-300"
                       style={{ backgroundColor: `${item.color}15` }}
                     >
-                      <Icon className="w-5 h-5" style={{ color: item.color }} />
+                      <Icon className="w-6 h-6" style={{ color: item.color }} />
                     </div>
-                    <p className="font-bold text-[13px] leading-tight text-foreground">{item.label}</p>
+                    <p className="font-semibold text-[16px] leading-tight text-foreground">{item.label}</p>
+                    <p className="mt-1 text-[11px] leading-snug text-muted-foreground line-clamp-2">{item.description}</p>
                   </motion.button>
                 );
               })}
