@@ -285,8 +285,8 @@ export function ConversationsPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
-  const [sendingHandover, setSendingHandover] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
+  const [manualComposeRequested, setManualComposeRequested] = useState(false);
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>('LIST');
   const [liveConversationMap, setLiveConversationMap] = useState<Record<string, number>>({});
   const realtimeRefreshTimerRef = useRef<number | null>(null);
@@ -585,31 +585,6 @@ export function ConversationsPage() {
     }
   };
 
-  const requestHandover = async () => {
-    if (!selectedConversation) return;
-    setSendingHandover(true);
-    try {
-      const response = await apiFetch<{ alreadyRequested?: boolean; }>(
-        `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/handover`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ note: 'Salon personeli tarafından canlı destek istendi.' })
-        }
-      );
-      if (response?.alreadyRequested) {
-        showToast('Bu görüşme zaten canlı destek modunda.', 'info');
-      } else {
-        showToast('Canlı destek talebi iletildi.', 'success');
-      }
-      await loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
-      await loadKonuşmalar(false);
-    } catch (err: any) {
-      showToast(err?.message || 'Devir isteği başarısız oldu.', 'error');
-    } finally {
-      setSendingHandover(false);
-    }
-  };
-
   const resumeAuto = async () => {
     if (!selectedConversation) return;
     setSendingResume(true);
@@ -631,7 +606,7 @@ export function ConversationsPage() {
   const isSupportedReplyChannel = selectedConversation?.channel === 'INSTAGRAM' || selectedConversation?.channel === 'WHATSAPP';
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
   const handoverInProgress = isHandoverInProgress(selectedMode);
-  const manualReplyUnlocked = handoverInProgress || selectedMode === 'MANUAL_ALWAYS';
+  const manualReplyUnlocked = handoverInProgress || selectedMode === 'MANUAL_ALWAYS' || manualComposeRequested;
   const canReply = Boolean(isSupportedReplyChannel && manualReplyUnlocked);
   const channelScopedConversations = useMemo(
     () => conversations.filter((item) => item.channel === channelView),
@@ -654,6 +629,10 @@ export function ConversationsPage() {
     setSelectedConversationId(null);
     setMessages([]);
   }, [channelBlocked]);
+
+  useEffect(() => {
+    setManualComposeRequested(false);
+  }, [selectedConversationId]);
 
   return (
     <div className="h-full pb-20 overflow-y-auto px-0 py-2 bg-gradient-to-br from-indigo-500/5 via-background to-fuchsia-500/5 relative">
@@ -827,7 +806,7 @@ export function ConversationsPage() {
                         className={`w-full group rounded-[18px] p-2.5 text-left transition-all duration-300 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'}`
                         }>
                         <div className="flex gap-2.5 relative z-10">
-                          <div className="relative shrink-0">
+                          <div className="relative shrink-0 size-10">
                             <Avatar className={`size-10 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
                               {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
                               <AvatarFallback className="bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)] font-bold">{initialsFromLabel(displayName)}</AvatarFallback>
@@ -842,7 +821,7 @@ export function ConversationsPage() {
                               </div>
                             )}
                             {/* Channel Icon Overlay */}
-                            <div className={`absolute right-0 bottom-0 size-5 rounded-full border-2 border-background shadow-sm flex items-center justify-center ${item.channel === 'WHATSAPP' ? 'bg-emerald-500' : 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500'}`}>
+                            <div className={`absolute -right-0.5 -bottom-0.5 z-20 size-5 rounded-full border-2 border-background shadow-sm flex items-center justify-center ${item.channel === 'WHATSAPP' ? 'bg-emerald-500' : 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500'}`}>
                                 {item.channel === 'WHATSAPP' ? <WhatsAppLogo className="size-2.5 text-white" /> : <Instagram className="size-2.5 text-white" />}
                             </div>
                           </div>
@@ -1032,10 +1011,12 @@ export function ConversationsPage() {
                       <Button
                         type="button"
                         className="w-full h-9 text-[12px] font-semibold"
-                        onClick={requestHandover}
-                        disabled={sendingHandover}
+                        onClick={() => {
+                          setManualComposeRequested(true);
+                          showToast('Manuel yanıt modu açıldı.', 'success');
+                        }}
                       >
-                        {sendingHandover ? 'Canlı destek açılıyor...' : 'Ben Yanıtlayacağım'}
+                        Ben Yanıtlayacağım
                       </Button>
                     </div>
                   ) : (
