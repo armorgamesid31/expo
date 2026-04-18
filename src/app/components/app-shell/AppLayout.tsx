@@ -1,6 +1,8 @@
-import { Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronLeft, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { BottomNav } from '../layout/BottomNav';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigator } from '../../context/NavigatorContext';
 
 function transitionMotionByKind(vector: number) {
@@ -46,13 +48,50 @@ function tabFromPathname(pathname: string) {
   return 'dashboard';
 }
 
+function backTargetFromPathname(pathname: string): string | null {
+  if (pathname === '/app/dashboard' || pathname === '/app/features' || pathname === '/app/schedule' || pathname === '/app/conversations') {
+    return null;
+  }
+
+  const hubs = ['/app/operations-management', '/app/brand-growth-hub', '/app/team-management'];
+  if (hubs.some(hub => pathname === hub)) return '/app/features';
+
+  const opsChildren = ['/app/inventory', '/app/services', '/app/packages', '/app/data-import'];
+  if (opsChildren.some(child => pathname === child)) return '/app/operations-management';
+
+  const brandChildren = ['/app/campaigns', '/app/instagram-inbox', '/app/features/social-channels'];
+  if (brandChildren.some(child => pathname === child)) return '/app/brand-growth-hub';
+
+  const commsChildren = ['/app/features/whatsapp-settings', '/app/features/ai-settings', '/app/automations', '/app/features/whatsapp-setup', '/app/features/whatsapp-agent'];
+  if (commsChildren.some(child => pathname === child)) return '/app/features/social-channels';
+
+  const teamChildren = ['/app/staff', '/app/team-access', '/app/notification-role-matrix'];
+  if (teamChildren.some(child => pathname === child)) return '/app/team-management';
+
+  if (pathname.startsWith('/app/notification-settings')) return '/app/settings';
+  if (pathname.startsWith('/app/notifications')) return '/app/settings';
+  if (pathname.startsWith('/app/settings')) return '/app/features';
+  if (pathname.startsWith('/app/salon-info')) return '/app/features';
+  if (pathname.startsWith('/app/blacklist')) return '/app/features';
+  if (pathname.startsWith('/app/features/')) return '/app/features';
+
+  return '/app/features';
+}
+
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { direction } = useNavigator();
+  const { direction, headerTitle, headerActions } = useNavigator();
+  const { logout } = useAuth();
 
   const activeTab = tabFromPathname(location.pathname);
+  let backTarget = backTargetFromPathname(location.pathname);
+  const fromState = (location.state as any)?.from;
+  if (fromState && typeof fromState === 'string') {
+    backTarget = fromState;
+  }
   const transitionMotion = transitionMotionByKind(direction);
+  const showTopBar = Boolean(backTarget || headerTitle || headerActions);
 
   const handleTabChange = (tab: string) => {
     const routeMap: Record<string, string> = {
@@ -66,7 +105,47 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
-      <main className="pt-4 pb-24 overflow-x-hidden min-h-screen relative">
+      {showTopBar && (
+        <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border">
+          <div className="max-w-screen-xl mx-auto px-2 lg:px-8 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-[36px]">
+              {backTarget ? (
+                <button
+                  type="button"
+                  onClick={() => window.history.length > 2 ? navigate(-1) : navigate(backTarget!, { state: { navDirection: 'back' } })}
+                  className="h-9 w-9 grid place-items-center rounded-xl transition-all active:scale-90"
+                  aria-label="Geri"
+                >
+                  <ChevronLeft className="h-5 w-5 text-foreground" />
+                </button>
+              ) : (
+                <div className="h-9 w-9" />
+              )}
+
+              {headerTitle && (
+                <h1 className="text-lg font-semibold tracking-tight truncate max-w-[220px]">
+                  {headerTitle}
+                </h1>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 min-w-[36px] justify-end">
+              {headerActions ? headerActions : (
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground transition-all active:scale-90 hover:text-destructive"
+                  aria-label="Çıkış Yap"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          </div>
+        </header>
+      )}
+
+      <main className={`${showTopBar ? 'pt-16' : 'pt-4'} pb-24 overflow-x-hidden min-h-screen relative`}>
         <div className="max-w-screen-xl mx-auto px-2 lg:px-8">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
