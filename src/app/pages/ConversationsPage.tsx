@@ -298,6 +298,7 @@ export function ConversationsPage() {
   const [sendingResume, setSendingResume] = useState(false);
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>('LIST');
   const sseRefreshTimerRef = useRef<number | null>(null);
+  const fallbackPollTimerRef = useRef<number | null>(null);
   const conversationsRef = useRef<ConversationItem[]>([]);
   const selectedConversationIdRef = useRef<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
@@ -490,13 +491,26 @@ export function ConversationsPage() {
     };
 
     es.addEventListener('conversation.update', scheduleRefresh);
+    es.onerror = scheduleRefresh;
+
+    if (fallbackPollTimerRef.current) {
+      window.clearInterval(fallbackPollTimerRef.current);
+    }
+    fallbackPollTimerRef.current = window.setInterval(() => {
+      scheduleRefresh();
+    }, 8000);
 
     return () => {
       es.removeEventListener('conversation.update', scheduleRefresh);
+      es.onerror = null;
       es.close();
       if (sseRefreshTimerRef.current) {
         window.clearTimeout(sseRefreshTimerRef.current);
         sseRefreshTimerRef.current = null;
+      }
+      if (fallbackPollTimerRef.current) {
+        window.clearInterval(fallbackPollTimerRef.current);
+        fallbackPollTimerRef.current = null;
       }
     };
   }, [accessToken, channelView, loadKonuşmalar, loadMessages]);
