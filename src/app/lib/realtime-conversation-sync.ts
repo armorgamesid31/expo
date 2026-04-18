@@ -119,10 +119,12 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
       onStatusChangeRef.current?.(next);
     };
 
-    const applyCursor = (next: number) => {
-      if (next <= cursorRef.current) return;
-      cursorRef.current = next;
-      persistCursor(options.cursorScopeKey, options.channel || null, next);
+    const applyCursor = (next: number, allowRollback = false) => {
+      const safeNext = Number.isInteger(next) && next >= 0 ? next : 0;
+      if (!allowRollback && safeNext <= cursorRef.current) return;
+      if (allowRollback && safeNext === cursorRef.current) return;
+      cursorRef.current = safeNext;
+      persistCursor(options.cursorScopeKey, options.channel || null, safeNext);
     };
 
     const runSync = async (reason: 'startup' | 'reconnect' | 'lifecycle'): Promise<void> => {
@@ -143,7 +145,7 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
 
         if (response.requiresFullRefresh || response.hasGap) {
           await onRequireFullRefreshRef.current(reason === 'startup' ? 'reconnect' : 'gap');
-          applyCursor(toSafeCursor(response.latestCursor));
+          applyCursor(toSafeCursor(response.latestCursor), true);
           return;
         }
 
@@ -154,7 +156,13 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
             applyCursor(toSafeCursor(event.cursor));
           }
         }
-        applyCursor(toSafeCursor(response.latestCursor));
+        const latest = toSafeCursor(response.latestCursor);
+        if (events.length === 0 && latest < cursorRef.current) {
+          // Session cursor can be ahead after environment/db switches; reset to server cursor.
+          applyCursor(latest, true);
+        } else {
+          applyCursor(latest);
+        }
       } catch (error) {
         console.warn('[realtime-sync] sync failed:', error);
         setStatus('degraded');
@@ -195,7 +203,7 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
         reconnectAttemptRef.current = 0;
         const payload = safeParse<RealtimeEventReady>((event as MessageEvent).data || '{}');
         if (!payload) return;
-        applyCursor(toSafeCursor(payload.latestCursor));
+        applyCursor(toSafeCursor(payload.latestCursor), true);
         setStatus('live');
       });
 
