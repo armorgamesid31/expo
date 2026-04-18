@@ -304,6 +304,10 @@ export function ConversationsPage() {
   const stickToBottomRef = useRef(true);
   const lastAutoScrolledConversationRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    selectedConversationIdRef.current = selectedConversationId;
+  }, [selectedConversationId]);
+
   const selectedConversation = useMemo(() => {
     if (!selectedConversationId) return null;
     return conversations.find((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId) || null;
