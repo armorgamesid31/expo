@@ -333,7 +333,7 @@ export function InstagramInboxPage() {
     }
   }, [apiFetch]);
 
-  const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
+  const scheduleRealtimeRefresh = useCallback((_events?: ConversationRealtimeEvent[]) => {
     if (sseYenileTimerRef.current) return;
     sseYenileTimerRef.current = window.setTimeout(() => {
       sseYenileTimerRef.current = null;
@@ -341,12 +341,6 @@ export function InstagramInboxPage() {
       const activeKey = selectedKeyRef.current;
       if (!activeKey) {
         return;
-      }
-      if (events && events.length > 0) {
-        const affectsActiveConversation = events.some((event) => event.conversationKey === activeKey);
-        if (!affectsActiveConversation) {
-          return;
-        }
       }
       void loadMessages(activeKey, false);
     }, 250);

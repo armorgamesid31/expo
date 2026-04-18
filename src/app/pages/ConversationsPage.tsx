@@ -472,7 +472,7 @@ export function ConversationsPage() {
       if (showLoading) setLoadingMessages(false);
     }
   }, [apiFetch]);
-  const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
+  const scheduleRealtimeRefresh = useCallback((_events?: ConversationRealtimeEvent[]) => {
     if (realtimeRefreshTimerRef.current) return;
     realtimeRefreshTimerRef.current = window.setTimeout(() => {
       realtimeRefreshTimerRef.current = null;
@@ -487,15 +487,6 @@ export function ConversationsPage() {
       const rawKey = rest.join(':');
       if ((rawChannel !== 'INSTAGRAM' && rawChannel !== 'WHATSAPP') || !rawKey) {
         return;
-      }
-
-      if (events && events.length > 0) {
-        const affectsActiveConversation = events.some(
-          (event) => `${event.channel}:${event.conversationKey}` === activeId,
-        );
-        if (!affectsActiveConversation) {
-          return;
-        }
       }
 
       void loadMessages(rawChannel as ChannelType, rawKey, false);

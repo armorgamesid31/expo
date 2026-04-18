@@ -45,7 +45,6 @@ type UseConversationRealtimeSyncOptions = {
 const BACKOFF_MIN_MS = 500;
 const BACKOFF_MAX_MS = 15000;
 const SYNC_LIMIT = 300;
-const FALLBACK_SYNC_INTERVAL_MS = 2000;
 
 function toSafeCursor(value: unknown): number {
   const numeric = typeof value === 'string' ? Number(value) : typeof value === 'number' ? value : NaN;
@@ -95,7 +94,6 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
   const reconnectAttemptRef = useRef(0);
   const streamRef = useRef<EventSource | null>(null);
   const recoverTimerRef = useRef<number | null>(null);
-  const fallbackSyncTimerRef = useRef<number | null>(null);
   const destroyedRef = useRef(false);
   const statusRef = useRef<RealtimeSyncStatus>('connecting');
   const syncInFlightRef = useRef(false);
@@ -180,12 +178,6 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
       }
     };
 
-    const clearFallbackSyncTimer = () => {
-      if (!fallbackSyncTimerRef.current) return;
-      window.clearInterval(fallbackSyncTimerRef.current);
-      fallbackSyncTimerRef.current = null;
-    };
-
     const closeStream = () => {
       const stream = streamRef.current;
       streamRef.current = null;
@@ -260,18 +252,12 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
     window.addEventListener('focus', focusHandler);
     window.addEventListener('online', onlineHandler);
 
-    fallbackSyncTimerRef.current = window.setInterval(() => {
-      if (destroyedRef.current) return;
-      void runSync('lifecycle');
-    }, FALLBACK_SYNC_INTERVAL_MS);
-
     void runSync('startup').finally(() => {
       openStream();
     });
 
     return () => {
       destroyedRef.current = true;
-      clearFallbackSyncTimer();
       clearRecoverTimer();
       closeStream();
       document.removeEventListener('visibilitychange', visibilityHandler);
