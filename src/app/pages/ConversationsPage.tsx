@@ -663,9 +663,9 @@ export function ConversationsPage() {
   }, [channelBlocked]);
 
   return (
-    <div className="h-full pb-20 overflow-y-auto p-4 sm:p-6 bg-gradient-to-br from-indigo-500/5 via-background to-fuchsia-500/5 relative">
+    <div className="h-full pb-20 overflow-y-auto px-0 py-2 bg-gradient-to-br from-indigo-500/5 via-background to-fuchsia-500/5 relative">
       <div className="pointer-events-none absolute right-0 top-0 h-[400px] w-[400px] -translate-y-1/2 translate-x-1/3 rounded-full bg-[var(--deep-indigo)] mix-blend-screen opacity-10 blur-[100px]" />
-      <div className={`mb-5 relative z-10 ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'} flex-wrap items-center gap-2.5`}>
+      <div className={`mb-2 relative z-10 ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'} flex-wrap items-center gap-2 px-1 sm:px-2`}>
         <div className="inline-flex rounded-2xl border border-border/50 bg-background/70 shadow-sm backdrop-blur-md p-1">
           <button
             type="button"
@@ -736,7 +736,7 @@ export function ConversationsPage() {
       </div>
 
       {channelBlocked ?
-        <div className="rounded-2xl border border-border bg-background p-6">
+        <div className="rounded-2xl border border-border bg-background p-4 mx-1 sm:mx-2">
           <p className="text-base font-semibold">
             {channelView === 'INSTAGRAM' ? "Instagram bağlantısı gerekli" : "WhatsApp bağlantısı gerekli"}
           </p>
@@ -761,27 +761,27 @@ export function ConversationsPage() {
           </Button>
         </div> :
 
-        <div className="flex flex-col h-full lg:grid lg:grid-cols-[320px,minmax(0,1fr)] gap-4 relative z-10">
+        <div className="flex flex-col h-full lg:grid lg:grid-cols-[300px,minmax(0,1fr)] gap-2 relative z-10 px-1 sm:px-2">
           <motion.div
-            className={`flex flex-col bg-background/40 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden h-[calc(100vh-180px)] min-h-[520px] lg:h-[calc(100vh-180px)] lg:min-h-[640px] ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'}`}
+            className={`flex flex-col bg-background/40 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden h-[calc(100vh-150px)] min-h-[560px] lg:h-[calc(100vh-150px)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'}`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <div className="relative px-4 pt-4">
-              <Search className="pointer-events-none absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative px-2 pt-2">
+              <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Ad, kullanıcı adı, mesaj ara"
-                className="pl-9" />
+                className="pl-9 h-9" />
 
             </div>
 
             {loadingKonuşmalar ?
-              <div className="space-y-3 mt-4 px-4">
+              <div className="space-y-2 mt-2 px-2">
                 {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="flex p-3 gap-3 border border-transparent">
-                    <Skeleton className="w-11 h-11 rounded-full shrink-0" />
+                  <div key={i} className="flex p-2 gap-2 border border-transparent">
+                    <Skeleton className="w-9 h-9 rounded-full shrink-0" />
                     <div className="flex-1 space-y-2 mt-1">
                       <div className="flex justify-between">
                          <Skeleton className="h-4 w-28" />
@@ -801,7 +801,7 @@ export function ConversationsPage() {
                   </p>
                 </div> :
 
-                <div className="flex-1 space-y-2 overflow-y-auto pr-2 pb-2 scrollbar-thin px-4">
+                <div className="flex-1 space-y-1.5 overflow-y-auto pr-1 pb-1 scrollbar-thin px-2">
                   <AnimatePresence mode="popLayout">
                     {filteredKonuşmalar.map((item, index) => {
                     const id = `${item.channel}:${item.conversationKey}`;
@@ -831,11 +831,11 @@ export function ConversationsPage() {
                           markConversationAsReadLocal(id);
                           setMobileView('CHAT');
                         }}
-                        className={`w-full group rounded-[22px] p-3.5 text-left transition-all duration-300 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'}`
+                        className={`w-full group rounded-[18px] p-2.5 text-left transition-all duration-300 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'}`
                         }>
-                        <div className="flex gap-4 relative z-10">
+                        <div className="flex gap-2.5 relative z-10">
                           <div className="relative shrink-0">
-                            <Avatar className={`size-12 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
+                            <Avatar className={`size-10 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
                               {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
                               <AvatarFallback className="bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)] font-bold">{initialsFromLabel(displayName)}</AvatarFallback>
                             </Avatar>
@@ -854,9 +854,9 @@ export function ConversationsPage() {
                             </div>
                           </div>
                           
-                          <div className="min-w-0 flex-1 py-0.5">
+                          <div className="min-w-0 flex-1 py-0">
                             <div className="flex items-center justify-between mb-1">
-                              <h4 className={`text-sm font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
+                              <h4 className={`text-[13px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {isLive && (
                                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -864,10 +864,10 @@ export function ConversationsPage() {
                                 <span className="text-[10px] text-muted-foreground/80 font-semibold tracking-tighter">{formatRelativeTime(item.lastEventTimestamp)}</span>
                               </div>
                             </div>
-                            <p className={`text-xs truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
+                            <p className={`text-[11px] truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
                               {getPreview(item)}
                             </p>
-                            <div className="mt-2 flex items-center gap-1.5 overflow-hidden">
+                            <div className="mt-1.5 flex items-center gap-1 overflow-hidden">
                               <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${automationBadgeClass(normalizeAutomationMode(item.automationMode))}`}>
                                 {automationLabel(normalizeAutomationMode(item.automationMode))}
                               </span>
@@ -895,21 +895,21 @@ export function ConversationsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className={`flex flex-col h-[calc(100vh-180px)] min-h-[520px] rounded-2xl border border-border/50 bg-background/40 backdrop-blur-xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden sm:min-h-[620px] lg:h-[calc(100vh-180px)] lg:min-h-[640px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
+            className={`flex flex-col h-[calc(100vh-150px)] min-h-[560px] rounded-2xl border border-border/50 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden sm:min-h-[680px] lg:h-[calc(100vh-150px)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
             {selectedConversation ?
               <>
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 pb-3">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-2 border-b border-border/60 px-1.5 pb-2">
+                  <div className="flex items-center gap-2 min-w-0">
                       <Button
                         variant="ghost"
                         size="icon"
                         aria-label="Sohbet listesine dön"
-                        className="lg:hidden -ml-2 h-8 w-8 hover:bg-white/10"
+                        className="lg:hidden -ml-1 h-8 w-8 hover:bg-white/10"
                         onClick={() => setMobileView('LIST')}
                       >
                         <ChevronLeft className="w-5 h-5 text-muted-foreground" />
                       </Button>
-                    <Avatar className="size-10 border border-border/60">
+                    <Avatar className="size-9 border border-border/60">
                       {selectedConversation.profilePicUrl ?
                         <AvatarImage
                           src={selectedConversation.profilePicUrl}
@@ -921,10 +921,10 @@ export function ConversationsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold">
+                      <p className="text-[13px] font-semibold truncate">
                         {conversationDisplayName(selectedConversation)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[11px] text-muted-foreground truncate">
                         {selectedConversation.channel}
                         <span className="hidden sm:inline"> • {selectedConversation.conversationKey}</span>
                       </p>
@@ -947,17 +947,17 @@ export function ConversationsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
+                  <div className="flex items-center gap-1.5 overflow-x-auto">
                     {selectedConversation.hasHandoverRequest ?
                       <span className="shrink-0 text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Müşteri bekliyor</span> :
                       null}
                     {handoverInProgress ?
-                      <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={resumeAuto} disabled={sendingResume}>
+                      <Button type="button" size="sm" variant="outline" className="shrink-0 h-8 px-2.5 text-[11px]" onClick={resumeAuto} disabled={sendingResume}>
                         {sendingResume ? 'Başlatılıyor...' : "Botu Başlat"}
                       </Button> :
                       null}
                     {!handoverInProgress ?
-                      <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={requestHandover} disabled={sendingHandover}>
+                      <Button type="button" size="sm" variant="outline" className="shrink-0 h-8 px-2.5 text-[11px]" onClick={requestHandover} disabled={sendingHandover}>
                         {sendingHandover ? 'Alınıyor...' : 'Ben Yanıtlayacağım'}
                       </Button> :
                       null}
@@ -971,7 +971,7 @@ export function ConversationsPage() {
                     const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
                     stickToBottomRef.current = distanceToBottom < 48;
                   }}
-                  className="flex-1 min-h-0 mt-4 space-y-4 overflow-y-auto rounded-2xl border border-border/40 bg-gradient-to-b from-muted/10 to-transparent p-4 scrollbar-thin lg:min-h-[400px]">
+                  className="flex-1 min-h-0 mt-2 space-y-3 overflow-y-auto rounded-2xl border border-border/40 bg-gradient-to-b from-muted/10 to-transparent p-2 scrollbar-thin lg:min-h-[420px]">
 
                   {loadingMessages ?
                     <div className="space-y-6 py-4">
@@ -1060,7 +1060,7 @@ export function ConversationsPage() {
                   }
                 </div>
 
-                <div className="sticky bottom-0 z-20 mt-4 rounded-xl border border-border/60 bg-background shadow-sm p-2 focus-within:border-[var(--deep-indigo)]/50 focus-within:ring-1 focus-within:ring-[var(--deep-indigo)]/20 transition-all">
+                <div className="sticky bottom-0 z-20 mt-2 rounded-xl border border-border/60 bg-background shadow-sm p-1.5 focus-within:border-[var(--deep-indigo)]/50 focus-within:ring-1 focus-within:ring-[var(--deep-indigo)]/20 transition-all">
                   <div className="flex gap-2">
                     <Textarea
                       value={replyText}
