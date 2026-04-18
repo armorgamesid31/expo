@@ -9,9 +9,9 @@ import { useAuth } from '../context/AuthContext';
 import { useToasts } from '../context/ToastContext';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale/tr';
-import { API_BASE_URL } from '../lib/config';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ConversationRealtimeEvent, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
@@ -297,8 +297,7 @@ export function ConversationsPage() {
   const [sendingHandover, setSendingHandover] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>('LIST');
-  const sseRefreshTimerRef = useRef<number | null>(null);
-  const fallbackPollTimerRef = useRef<number | null>(null);
+  const realtimeRefreshTimerRef = useRef<number | null>(null);
   const conversationsRef = useRef<ConversationItem[]>([]);
   const selectedConversationIdRef = useRef<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
@@ -421,6 +420,35 @@ export function ConversationsPage() {
       if (showLoading) setLoadingMessages(false);
     }
   }, [apiFetch]);
+  const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
+    if (realtimeRefreshTimerRef.current) return;
+    realtimeRefreshTimerRef.current = window.setTimeout(() => {
+      realtimeRefreshTimerRef.current = null;
+      void loadKonuşmalar(false);
+
+      const activeId = selectedConversationIdRef.current;
+      if (!activeId || !activeId.includes(':')) {
+        return;
+      }
+
+      const [rawChannel, ...rest] = activeId.split(':');
+      const rawKey = rest.join(':');
+      if ((rawChannel !== 'INSTAGRAM' && rawChannel !== 'WHATSAPP') || !rawKey) {
+        return;
+      }
+
+      if (events && events.length > 0) {
+        const affectsActiveConversation = events.some(
+          (event) => `${event.channel}:${event.conversationKey}` === activeId,
+        );
+        if (!affectsActiveConversation) {
+          return;
+        }
+      }
+
+      void loadMessages(rawChannel as ChannelType, rawKey, false);
+    }, 250);
+  }, [loadKonuşmalar, loadMessages]);
 
   useEffect(() => {
     void loadKonuşmalar();
@@ -465,55 +493,27 @@ export function ConversationsPage() {
     };
   }, [messages.length, mobileView, selectedConversationId]);
 
+  useConversationRealtimeSync({
+    enabled: !!accessToken,
+    accessToken,
+    channel: channelView,
+    cursorScopeKey: 'conversations-page',
+    apiFetch,
+    onEvents: (events) => {
+      scheduleRealtimeRefresh(events);
+    },
+    onRequireFullRefresh: () => {
+      scheduleRealtimeRefresh();
+    },
+  });
+
   useEffect(() => {
-    if (!accessToken) return;
-
-    const streamUrl =
-      `${API_BASE_URL}/api/admin/conversations/stream` +
-      `?authToken=${encodeURIComponent(accessToken)}` +
-      `&channel=${encodeURIComponent(channelView)}`;
-    const es = new EventSource(streamUrl);
-
-    const scheduleRefresh = () => {
-      if (sseRefreshTimerRef.current) return;
-      sseRefreshTimerRef.current = window.setTimeout(() => {
-        sseRefreshTimerRef.current = null;
-        void loadKonuşmalar(false);
-        const activeId = selectedConversationIdRef.current;
-        if (activeId && activeId.includes(':')) {
-          const [rawChannel, ...rest] = activeId.split(':');
-          const rawKey = rest.join(':');
-          if ((rawChannel === 'INSTAGRAM' || rawChannel === 'WHATSAPP') && rawKey) {
-            void loadMessages(rawChannel as ChannelType, rawKey, false);
-          }
-        }
-      }, 350);
-    };
-
-    es.addEventListener('conversation.update', scheduleRefresh);
-    es.onerror = scheduleRefresh;
-
-    if (fallbackPollTimerRef.current) {
-      window.clearInterval(fallbackPollTimerRef.current);
-    }
-    fallbackPollTimerRef.current = window.setInterval(() => {
-      scheduleRefresh();
-    }, 8000);
-
     return () => {
-      es.removeEventListener('conversation.update', scheduleRefresh);
-      es.onerror = null;
-      es.close();
-      if (sseRefreshTimerRef.current) {
-        window.clearTimeout(sseRefreshTimerRef.current);
-        sseRefreshTimerRef.current = null;
-      }
-      if (fallbackPollTimerRef.current) {
-        window.clearInterval(fallbackPollTimerRef.current);
-        fallbackPollTimerRef.current = null;
-      }
+      if (!realtimeRefreshTimerRef.current) return;
+      window.clearTimeout(realtimeRefreshTimerRef.current);
+      realtimeRefreshTimerRef.current = null;
     };
-  }, [accessToken, channelView, loadKonuşmalar, loadMessages]);
+  }, []);
 
   const sendReply = async () => {
     if (!selectedConversation || !replyText.trim()) return;

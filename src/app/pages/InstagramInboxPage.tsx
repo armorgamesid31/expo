@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../lib/config';
+import { ConversationRealtimeEvent, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
 
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
 
@@ -288,6 +288,25 @@ export function InstagramInboxPage() {
     }
   }, [apiFetch]);
 
+  const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
+    if (sseYenileTimerRef.current) return;
+    sseYenileTimerRef.current = window.setTimeout(() => {
+      sseYenileTimerRef.current = null;
+      void loadConversations(false);
+      const activeKey = selectedKeyRef.current;
+      if (!activeKey) {
+        return;
+      }
+      if (events && events.length > 0) {
+        const affectsActiveConversation = events.some((event) => event.conversationKey === activeKey);
+        if (!affectsActiveConversation) {
+          return;
+        }
+      }
+      void loadMessages(activeKey, false);
+    }, 250);
+  }, [loadConversations, loadMessages]);
+
   useEffect(() => {
     void loadConversations();
   }, [loadConversations]);
@@ -307,38 +326,27 @@ export function InstagramInboxPage() {
     viewport.scrollTop = viewport.scrollHeight;
   }, [messages, selectedKey]);
 
+  useConversationRealtimeSync({
+    enabled: !!accessToken,
+    accessToken,
+    channel: 'INSTAGRAM',
+    cursorScopeKey: 'instagram-inbox',
+    apiFetch,
+    onEvents: (events) => {
+      scheduleRealtimeRefresh(events);
+    },
+    onRequireFullRefresh: () => {
+      scheduleRealtimeRefresh();
+    },
+  });
+
   useEffect(() => {
-    if (!accessToken) return;
-
-    const streamUrl =
-      `${API_BASE_URL}/api/admin/conversations/stream` +
-      `?authToken=${encodeURIComponent(accessToken)}` +
-      `&channel=INSTAGRAM`;
-    const es = new EventSource(streamUrl);
-
-    const scheduleYenile = () => {
-      if (sseYenileTimerRef.current) return;
-      sseYenileTimerRef.current = window.setTimeout(() => {
-        sseYenileTimerRef.current = null;
-        void loadConversations(false);
-        const activeKey = selectedKeyRef.current;
-        if (activeKey) {
-          void loadMessages(activeKey, false);
-        }
-      }, 350);
-    };
-
-    es.addEventListener('conversation.update', scheduleYenile);
-
     return () => {
-      es.removeEventListener('conversation.update', scheduleYenile);
-      es.close();
-      if (sseYenileTimerRef.current) {
-        window.clearTimeout(sseYenileTimerRef.current);
-        sseYenileTimerRef.current = null;
-      }
+      if (!sseYenileTimerRef.current) return;
+      window.clearTimeout(sseYenileTimerRef.current);
+      sseYenileTimerRef.current = null;
     };
-  }, [accessToken, loadConversations, loadMessages]);
+  }, []);
 
   const sendReply = async () => {
     if (!selectedKey || !replyText.trim()) {
