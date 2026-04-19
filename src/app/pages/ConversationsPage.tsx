@@ -193,6 +193,26 @@ function normalizeAutomationMode(value: unknown): AutomationMode {
   return 'AUTO';
 }
 
+function buildConversationAvatarSrc(input: {
+  channel: ChannelType;
+  conversationKey: string;
+  sourceUrl: string | null | undefined;
+  accessToken: string | null | undefined;
+}): string | null {
+  const source = typeof input.sourceUrl === 'string' ? input.sourceUrl.trim() : '';
+  if (!source) return null;
+  const token = typeof input.accessToken === 'string' ? input.accessToken.trim() : '';
+  if (!token) return source;
+
+  const params = new URLSearchParams({
+    channel: input.channel,
+    conversationKey: input.conversationKey,
+    sourceUrl: source,
+    authToken: token,
+  });
+  return `/api/admin/conversations/profile-image?${params.toString()}`;
+}
+
 function isHandoverInProgress(mode: AutomationMode): boolean {
   return mode === 'HUMAN_PENDING' || mode === 'HUMAN_ACTIVE';
 }
@@ -817,7 +837,18 @@ export function ConversationsPage() {
                         <div className="flex gap-2.5 relative z-10">
                           <div className="relative shrink-0 size-10">
                             <Avatar className={`size-10 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
-                              {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
+                              {item.profilePicUrl ? (
+                                <AvatarImage
+                                  src={
+                                    buildConversationAvatarSrc({
+                                      channel: item.channel,
+                                      conversationKey: item.conversationKey,
+                                      sourceUrl: item.profilePicUrl,
+                                      accessToken,
+                                    }) || undefined
+                                  }
+                                  alt={displayName} />
+                              ) : null}
                               <AvatarFallback className="bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)] font-bold">{initialsFromLabel(displayName)}</AvatarFallback>
                             </Avatar>
                             {/* Unread pulsing indicator */}
@@ -888,7 +919,14 @@ export function ConversationsPage() {
                     <Avatar className="size-9 border border-border/60">
                       {selectedConversation.profilePicUrl ?
                         <AvatarImage
-                          src={selectedConversation.profilePicUrl}
+                          src={
+                            buildConversationAvatarSrc({
+                              channel: selectedConversation.channel,
+                              conversationKey: selectedConversation.conversationKey,
+                              sourceUrl: selectedConversation.profilePicUrl,
+                              accessToken,
+                            }) || undefined
+                          }
                           alt={conversationDisplayName(selectedConversation)} /> :
 
                         null}
