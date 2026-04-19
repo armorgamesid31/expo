@@ -383,6 +383,18 @@ export function StaffCrudPage() {
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
+      {!loading ?
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            onClick={openCreate}
+            className="h-10 px-4 rounded-xl bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 font-semibold shadow-sm border-0 transition-all active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Personel Ekle</span>
+          </button>
+        </div> :
+        null}
 
       {!loading ?
         <div className="space-y-3 pb-20">
