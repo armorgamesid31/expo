@@ -1336,14 +1336,6 @@ export function SchedulePage() {
         <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Randevular</h1>
-        <button
-          type="button"
-          onClick={() => void openCreateModal()}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-primary to-primary-dark px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300">
-
-          <Plus className="h-4 w-4" />
-          Yeni Randevu
-        </button>
       </div>
 
       <div className="inline-flex rounded-lg border border-border bg-card p-1">

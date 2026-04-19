@@ -4,6 +4,7 @@ import {
   LocalPushPermissionState,
   PUSH_NOTIFICATION_RECEIVED_EVENT,
   PUSH_REGISTRATION_CHANGED_EVENT,
+  getCurrentPushToken,
   getLocalPushPermissionState
 } from
   '../lib/push-notifications';
@@ -57,6 +58,7 @@ export function NotificationSettingsPage() {
   const [testMessage, setTestMessage] = useState<string | null>(null);
   const [masterEnabled, setMasterEnabled] = useState(true);
   const [localPermission, setLocalPermission] = useState<LocalPushPermissionState>('unsupported');
+  const [localPushToken, setLocalPushToken] = useState<string | null>(null);
   const [pushStatus, setPushStatus] = useState<PushStatusResponse | null>(null);
   const [events, setEvents] = useState<Record<EventKey, boolean>>({
     HANDOVER_REQUIRED: true,
@@ -91,12 +93,14 @@ export function NotificationSettingsPage() {
   const loadPushStatus = useCallback(async () => {
     setPushStatusLoading(true);
     try {
-      const [remoteStatus, permission] = await Promise.all([
+      const [remoteStatus, permission, token] = await Promise.all([
         apiFetch<PushStatusResponse>('/api/mobile/push/status'),
-        getLocalPushPermissionState()]
+        getLocalPushPermissionState(),
+        getCurrentPushToken()]
       );
       setPushStatus(remoteStatus);
       setLocalPermission(permission);
+      setLocalPushToken(token);
       setPushStatusError(null);
     } catch (err: any) {
       setPushStatusError(err?.message || 'Push durumu alinamadi.');
@@ -223,6 +227,22 @@ export function NotificationSettingsPage() {
             <span className="font-medium">{pushStatus?.activeDeviceCount ?? 0}</span>
           </div>
         </div>
+
+        {localPushToken ?
+          <div className="rounded-lg border border-border/70 px-3 py-2 text-xs">
+            <p className="font-semibold mb-1">Bu cihaz FCM tokenı</p>
+            <p className="break-all text-muted-foreground">{localPushToken}</p>
+            <button
+              type="button"
+              onClick={() => {
+                void navigator.clipboard?.writeText(localPushToken);
+              }}
+              className="mt-2 rounded-md border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+
+              Tokenı kopyala
+            </button>
+          </div> :
+          null}
 
         {pushStatus?.providerError ?
           <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600">

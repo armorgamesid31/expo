@@ -16,7 +16,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 glass-panel border-t border-border z-50 safe-bottom">
-      <div className="flex items-center justify-around h-16 px-2">
+      <div className="flex items-center justify-around h-16 px-2 pt-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -25,7 +25,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors min-w-[60px] ${
+              className={`relative flex flex-col items-center justify-center gap-1 flex-1 h-full pt-0.5 transition-colors min-w-[60px] ${
                 isActive ? 'text-primary' : 'text-muted-foreground'
               }`}
             >

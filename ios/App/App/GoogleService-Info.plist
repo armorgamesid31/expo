@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyBN_U8g70Mvl0fLzXxlcMbm0S2zhKQEqEo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>356806252602</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.kedyapp.salonmanagement</string>
+	<key>PROJECT_ID</key>
+	<string>salonasistan-t206xz</string>
+	<key>STORAGE_BUCKET</key>
+	<string>salonasistan-t206xz.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:356806252602:ios:36d88f0d9660ea7a677d03</string>
+</dict>
+</plist>

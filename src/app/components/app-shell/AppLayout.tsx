@@ -1,8 +1,10 @@
+import { useCallback, useRef, type TouchEvent } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { BottomNav } from '../layout/BottomNav';
 import { useNavigator } from '../../context/NavigatorContext';
+import { useAuth } from '../../context/AuthContext';
 
 function transitionMotionByKind(vector: number) {
   // Vector 1: Slide Content RIGHT (New from Left) - Used for Forward Tabs / Up Hierarchy
@@ -101,7 +103,12 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { direction, headerTitle, headerActions } = useNavigator();
-
+  const { bootstrap } = useAuth();
+  const edgeSwipeRef = useRef<{ active: boolean; startX: number; startY: number }>({
+    active: false,
+    startX: 0,
+    startY: 0
+  });
   const activeTab = tabFromPathname(location.pathname);
   let backTarget = backTargetFromPathname(location.pathname);
   const fromState = (location.state as any)?.from;
@@ -110,7 +117,15 @@ export function AppLayout() {
   }
   const resolvedHeaderTitle = headerTitle ?? inferHeaderTitleFromPath(location.pathname);
   const transitionMotion = transitionMotionByKind(direction);
-  const showTopBar = Boolean(backTarget || resolvedHeaderTitle || headerActions);
+  const showDashboardHeader = location.pathname === '/app/dashboard';
+  const showTopBar = Boolean(backTarget || resolvedHeaderTitle || headerActions || showDashboardHeader);
+  const canSwipeBack = location.pathname.startsWith('/app/') && Boolean(backTarget);
+
+  const triggerBackNavigation = useCallback(() => {
+    if (backTarget) {
+      navigate(backTarget, { state: { navDirection: 'back' } });
+    }
+  }, [backTarget, navigate]);
 
   const handleTabChange = (tab: string) => {
     const routeMap: Record<string, string> = {
@@ -122,40 +137,126 @@ export function AppLayout() {
     navigate(routeMap[tab] || '/app/dashboard');
   };
 
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 1) return;
+
+    const touch = event.touches[0];
+    const target = event.target as HTMLElement | null;
+    const disallowGesture = target?.closest('input, textarea, select, [contenteditable="true"]');
+    if (disallowGesture) return;
+
+    const fromLeftEdge = touch.clientX <= 24;
+
+    if (canSwipeBack && fromLeftEdge) {
+      edgeSwipeRef.current = {
+        active: true,
+        startX: touch.clientX,
+        startY: touch.clientY
+      };
+      return;
+    }
+
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.changedTouches.length !== 1) return;
+
+    const touch = event.changedTouches[0];
+    if (edgeSwipeRef.current.active) {
+      const deltaX = touch.clientX - edgeSwipeRef.current.startX;
+      const deltaY = Math.abs(touch.clientY - edgeSwipeRef.current.startY);
+      edgeSwipeRef.current.active = false;
+
+      const horizontalEnough = deltaX > 72;
+      const mostlyHorizontal = deltaY < 60 && Math.abs(deltaX) > deltaY * 1.2;
+      if (horizontalEnough && mostlyHorizontal) {
+        triggerBackNavigation();
+      }
+      return;
+    }
+
+  };
+
+  const handleTouchCancel = () => {
+    edgeSwipeRef.current.active = false;
+  };
+
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden relative">
+    <div
+      className="min-h-screen bg-background overflow-x-hidden relative"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+      style={{
+        paddingLeft: 'var(--safe-area-left)',
+        paddingRight: 'var(--safe-area-right)'
+      }}
+    >
       {showTopBar && (
-        <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border">
-          <div className="max-w-screen-xl mx-auto px-2 lg:px-8 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-2 min-w-[36px]">
-              {backTarget ? (
-                <button
-                  type="button"
-                  onClick={() => window.history.length > 2 ? navigate(-1) : navigate(backTarget!, { state: { navDirection: 'back' } })}
-                  className="h-9 w-9 grid place-items-center rounded-xl transition-all active:scale-90"
-                  aria-label="Geri"
-                >
-                  <ChevronLeft className="h-5 w-5 text-foreground" />
-                </button>
-              ) : (
-                <div className="h-9 w-9" />
-              )}
+        <header
+          className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border"
+          style={{ paddingTop: 'var(--safe-area-top)' }}
+        >
+          <div className="max-w-screen-xl mx-auto px-2 lg:px-8 h-14 relative">
+            {showDashboardHeader ? (
+              <div className="h-full grid grid-cols-[1fr_auto_1fr] items-center">
+                <div className="min-w-0 pr-2">
+                  <p className="text-[13px] font-semibold text-foreground/90 truncate">
+                    {bootstrap?.salon?.name || 'Salon'}
+                  </p>
+                </div>
+                <div className="justify-self-center">
+                  <img
+                    src="https://cdn.kedyapp.com/kedylogo_koyu.png"
+                    alt="Kedy Logo"
+                    className="h-8 w-auto dark:hidden"
+                    loading="eager"
+                  />
+                  <img
+                    src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
+                    alt="Kedy Logo"
+                    className="hidden h-8 w-auto dark:block"
+                    loading="eager"
+                  />
+                </div>
+                <div className="justify-self-end h-9 w-9" />
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-[36px]">
+                  {backTarget ? (
+                    <button
+                      type="button"
+                      onClick={triggerBackNavigation}
+                      className="h-9 w-9 grid place-items-center rounded-xl transition-all active:scale-90"
+                      aria-label="Geri"
+                    >
+                      <ChevronLeft className="h-5 w-5 text-foreground" />
+                    </button>
+                  ) : (
+                    <div className="h-9 w-9" />
+                  )}
 
-              {resolvedHeaderTitle && (
-                <h1 className="text-lg font-semibold tracking-tight truncate max-w-[220px]">
-                  {resolvedHeaderTitle}
-                </h1>
-              )}
-            </div>
+                  {resolvedHeaderTitle && (
+                    <h1 className="text-lg font-semibold tracking-tight truncate max-w-[220px]">
+                      {resolvedHeaderTitle}
+                    </h1>
+                  )}
+                </div>
 
-            <div className="flex items-center gap-2 min-w-[36px] justify-end">
-              {headerActions ? headerActions : <div className="h-9 w-9" />}
-            </div>
+                <div className="flex items-center gap-2 min-w-[36px] justify-end">
+                  {headerActions ? headerActions : <div className="h-9 w-9" />}
+                </div>
+              </div>
+            )}
           </div>
         </header>
       )}
 
-      <main className={`${showTopBar ? 'pt-16' : 'pt-4'} pb-24 overflow-x-hidden min-h-screen relative`}>
+      <main
+        className="pb-24 overflow-x-hidden min-h-screen relative"
+        style={{ paddingTop: showTopBar ? 'calc(4rem + var(--safe-area-top))' : 'calc(var(--safe-area-top) + 1rem)' }}
+      >
         <div className="max-w-screen-xl mx-auto px-2 lg:px-8">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div

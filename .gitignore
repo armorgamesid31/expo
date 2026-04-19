@@ -5,3 +5,5 @@ dist/
 .npm_cache/
 bin/
 .env.local
+ios/DerivedData/
+ios/DerivedDataManual/

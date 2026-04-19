@@ -1,5 +1,5 @@
 import { App as CapacitorApp } from '@capacitor/app';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Device } from '@capacitor/device';
 import {
   ActionPerformed,
@@ -28,6 +28,40 @@ interface PushEventHandlers {
 
 let pushEventHandlers: PushEventHandlers = {};
 
+type FirebaseMessagingPlugin = {
+  getToken: () => Promise<{ token?: string | null }>;
+};
+
+const FirebaseMessaging = registerPlugin<FirebaseMessagingPlugin>('FirebaseMessaging');
+
+async function wait(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function resolveNativePushToken(apnsOrFcmToken: string): Promise<string> {
+  if (!Capacitor.isNativePlatform()) return apnsOrFcmToken;
+  if (Capacitor.getPlatform() !== 'ios') return apnsOrFcmToken;
+
+  // On iOS, Capacitor PushNotifications registration commonly returns APNs token.
+  // Firebase Cloud Messaging requires the FCM registration token.
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      const result = await FirebaseMessaging.getToken();
+      const fcmToken = typeof result?.token === 'string' ? result.token.trim() : '';
+      if (fcmToken) {
+        return fcmToken;
+      }
+    } catch (error) {
+      console.warn('FCM token fetch attempt failed:', error);
+    }
+
+    await wait(600);
+  }
+
+  console.warn('Falling back to APNs token because FCM token could not be resolved in time.');
+  return apnsOrFcmToken;
+}
+
 function dispatchPushEvent(eventName: string, detail?: unknown) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(eventName, { detail }));
@@ -35,6 +69,10 @@ function dispatchPushEvent(eventName: string, detail?: unknown) {
 
 async function getStoredPushToken(): Promise<string | null> {
   return secureGet(PUSH_TOKEN_KEY);
+}
+
+export async function getCurrentPushToken(): Promise<string | null> {
+  return getStoredPushToken();
 }
 
 async function setStoredPushToken(token: string): Promise<void> {
@@ -215,7 +253,8 @@ export async function initPushNotifications(
 
   PushNotifications.addListener('registration', async (token: Token) => {
     try {
-      await registerToken(token.value);
+      const resolvedToken = await resolveNativePushToken(token.value);
+      await registerToken(resolvedToken);
     } catch (error) {
       console.warn('Push registration callback failed:', error);
     }

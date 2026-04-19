@@ -886,15 +886,15 @@ export function ConversationsPage() {
                           
                           <div className="min-w-0 flex-1 py-0">
                             <div className="flex items-center justify-between mb-1">
-                              <h4 className={`text-[14px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
+                              <h4 className={`text-[15px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {isLive && (
                                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 )}
-                                <span className="text-[11px] text-muted-foreground/80 font-semibold tracking-tighter">{formatRelativeTime(item.lastEventTimestamp)}</span>
+                                <span className="text-[12px] text-muted-foreground/80 font-semibold tracking-tighter">{formatRelativeTime(item.lastEventTimestamp)}</span>
                               </div>
                             </div>
-                            <p className={`text-[12px] truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
+                            <p className={`text-[13px] truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
                               {getPreview(item)}
                             </p>
                           </div>
@@ -1048,7 +1048,7 @@ export function ConversationsPage() {
                                           `bg-gradient-to-br from-[var(--deep-indigo)] to-indigo-600 text-white border border-indigo-500/20 ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px] rounded-r-md' : isSameSenderAsNext ? 'rounded-[20px] rounded-br-md' : isSameSenderAsPrev ? 'rounded-[20px] rounded-tr-md' : 'rounded-[20px] rounded-tr-sm'}` : 
                                           `bg-card/40 backdrop-blur-lg border border-white/10 text-foreground ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px] rounded-l-md' : isSameSenderAsNext ? 'rounded-[20px] rounded-bl-md' : isSameSenderAsPrev ? 'rounded-[20px] rounded-tl-md' : 'rounded-[20px] rounded-tl-sm'}`
                                       }`}>
-                                        <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                                        <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
                                           {formatOperatorMessage(msg.text) || formatMessageTypeLabel(msg.messageType)}
                                         </p>
                                         <div className={`text-[9px] mt-1.5 font-bold opacity-40 flex items-center gap-1.5 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
@@ -1090,7 +1090,7 @@ export function ConversationsPage() {
                           placeholder={canReply ? "Mesajınızı yazın..." : "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"}
                           disabled={!canReply}
                           rows={1}
-                          className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[14px] focus-visible:ring-0 focus-visible:ring-offset-0"
                           onKeyDown={(event) => {
                             if (event.key === 'Enter' && !event.shiftKey) {
                               event.preventDefault();
@@ -1135,5 +1135,4 @@ export function ConversationsPage() {
     </div>);
 
 }
-
 
