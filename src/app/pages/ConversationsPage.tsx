@@ -20,6 +20,8 @@ type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS
 type QuickFilter = 'all' | 'unread' | 'handover';
 const SHOW_WHATSAPP_INBOX = true;
 const CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY = 'conversations:selected-channel';
+const CONVERSATIONS_SELECTED_ID_CACHE_KEY = 'conversations:selected-id';
+const CONVERSATIONS_MOBILE_VIEW_CACHE_KEY = 'conversations:mobile-view';
 
 interface ConversationItem {
   channel: ChannelType;
@@ -306,14 +308,20 @@ export function ConversationsPage() {
   const [loadingKonuşmalar, setLoadingKonuşmalar] = useState(true);
   const [conversations, setKonuşmalar] = useState<ConversationItem[]>([]);
   const [channelHealth, setChannelHealth] = useState<ChannelHealthPayload | null>(null);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
+    const cached = readSnapshot<string>(CONVERSATIONS_SELECTED_ID_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
+    return typeof cached === 'string' && cached.includes(':') ? cached : null;
+  });
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
   const [manualComposeRequested, setManualComposeRequested] = useState(false);
-  const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>('LIST');
+  const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>(() => {
+    const cached = readSnapshot<'LIST' | 'CHAT'>(CONVERSATIONS_MOBILE_VIEW_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
+    return cached === 'CHAT' ? 'CHAT' : 'LIST';
+  });
   const [liveConversationMap, setLiveConversationMap] = useState<Record<string, number>>({});
   const realtimeRefreshTimerRef = useRef<number | null>(null);
   const liveConversationTimersRef = useRef<Record<string, number>>({});
@@ -326,6 +334,14 @@ export function ConversationsPage() {
   useEffect(() => {
     writeSnapshot(CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY, channelView);
   }, [channelView]);
+
+  useEffect(() => {
+    writeSnapshot(CONVERSATIONS_SELECTED_ID_CACHE_KEY, selectedConversationId);
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    writeSnapshot(CONVERSATIONS_MOBILE_VIEW_CACHE_KEY, mobileView);
+  }, [mobileView]);
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversationId;
@@ -405,6 +421,7 @@ export function ConversationsPage() {
   }, [selectedConversationId]);
 
   useEffect(() => {
+    if (loadingKonuşmalar) return;
     if (!filteredKonuşmalar.length) {
       setSelectedConversationId(null);
       selectedConversationIdRef.current = null;
@@ -421,7 +438,7 @@ export function ConversationsPage() {
       setSelectedConversationId(nextId);
       selectedConversationIdRef.current = nextId;
     }
-  }, [filteredKonuşmalar, selectedConversationId]);
+  }, [filteredKonuşmalar, loadingKonuşmalar, selectedConversationId]);
 
   useEffect(() => {
     stickToBottomRef.current = true;
@@ -854,9 +871,9 @@ export function ConversationsPage() {
                             </Avatar>
                             {/* Unread pulsing indicator */}
                             {item.unreadCount > 0 && (
-                              <div className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5">
+                              <div className="absolute -top-1 -right-1 flex h-4 min-w-4">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                <span className="relative inline-flex min-w-5 h-5 px-1 rounded-full bg-orange-500 border-2 border-background items-center justify-center text-[10px] leading-none text-white font-black shadow-sm">
+                                <span className="relative inline-flex min-w-4 h-4 px-1 rounded-full bg-orange-500 border border-background items-center justify-center text-[9px] leading-none text-white font-black shadow-sm">
                                   {item.unreadCount > 99 ? '99+' : item.unreadCount}
                                 </span>
                               </div>
@@ -869,20 +886,17 @@ export function ConversationsPage() {
                           
                           <div className="min-w-0 flex-1 py-0">
                             <div className="flex items-center justify-between mb-1">
-                              <h4 className={`text-[13px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
+                              <h4 className={`text-[14px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {isLive && (
                                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 )}
-                                <span className="text-[10px] text-muted-foreground/80 font-semibold tracking-tighter">{formatRelativeTime(item.lastEventTimestamp)}</span>
+                                <span className="text-[11px] text-muted-foreground/80 font-semibold tracking-tighter">{formatRelativeTime(item.lastEventTimestamp)}</span>
                               </div>
                             </div>
-                            <p className={`text-[11px] truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
+                            <p className={`text-[12px] truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
                               {getPreview(item)}
                             </p>
-                            {item.identityLinked ? (
-                              <div className="mt-1 text-[9px] font-semibold text-emerald-600/90">Profil bağlı</div>
-                            ) : null}
                           </div>
                         </div>
                         {active && (
@@ -936,20 +950,20 @@ export function ConversationsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-[13px] font-semibold truncate">
+                      <p className="text-[14px] font-semibold truncate">
                         {conversationDisplayName(selectedConversation)}
                       </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
+                      <p className="text-[12px] text-muted-foreground truncate">
                         {selectedConversation.channel}
                         <span className="hidden sm:inline"> • {selectedConversation.conversationKey}</span>
                       </p>
                       {(() => {
                         const username = normalizeUsername(selectedConversation.profileUsername);
                         return username ?
-                          <p className="text-[10px] text-muted-foreground truncate">@{username}</p> :
+                          <p className="text-[11px] text-muted-foreground truncate">@{username}</p> :
                           null;
                       })()}
-                      <div className="mt-1 text-[10px] font-medium text-muted-foreground">
+                      <div className="mt-1 text-[11px] font-medium text-muted-foreground">
                         {selectedConversation.identityLinked ? 'Profil bağlı' : 'Profil bağlı değil'}
                       </div>
                     </div>
@@ -1121,3 +1135,5 @@ export function ConversationsPage() {
     </div>);
 
 }
+
+
