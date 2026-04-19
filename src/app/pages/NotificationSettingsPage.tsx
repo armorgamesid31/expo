@@ -18,7 +18,7 @@ import type {
 const EVENTS = [
   { key: 'HANDOVER_REQUIRED', label: 'Handover gerekli' },
   { key: 'HANDOVER_REMINDER', label: 'Handover tekrar' },
-  { key: 'SAME_DAY_APPOINTMENT_CHANGE', label: "Ayni gun randevu değişikliği" },
+  { key: 'SAME_DAY_APPOINTMENT_CHANGE', label: "Aynı gün randevu değişikliği" },
   { key: 'END_OF_DAY_MISSING_DATA', label: "Gun sonu eksık veri" },
   { key: 'DAILY_MANAGER_REPORT', label: 'Gunluk rapor' }] as
   const;
@@ -170,7 +170,7 @@ export function NotificationSettingsPage() {
 
       setTestMessage(
         result.scheduled ?
-          `${result.delaySeconds} saniyelik gecikmeli ${result.scenario || input.scenario} testi planlandi. Simdi uygulamayi arka plana al.` :
+          `${result.delaySeconds} saniyelik gecikmeli ${result.scenario || input.scenario} testi planlandı. Şimdi uygulamayı arka plana al.` :
           `Test sonucu: GÖNDERİLDİ ${result.pushDeliverySummary.SENT}, HATA ${result.pushDeliverySummary.FAILED}, ATLADI ${result.pushDeliverySummary.SKIPPED}`
       );
       await loadPushStatus();

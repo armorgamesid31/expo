@@ -207,7 +207,7 @@ function PushPermissionPromptBridge() {
         <div className="space-y-2">
           <h3 className="text-base font-semibold">Bildirimlere izin ver</h3>
           <p className="text-sm text-muted-foreground">
-            Randevu degisikligi, handover ve gun sonu raporlarini aninda almak icin bildirim iznini acabilirsin.
+            Randevu değişikliği, handover ve gün sonu raporlarını anında almak için bildirim iznini açabilirsin.
           </p>
         </div>
 
@@ -221,7 +221,7 @@ function PushPermissionPromptBridge() {
             }}
             className="h-10 rounded-lg border border-border px-4 text-sm font-semibold text-muted-foreground disabled:opacity-60">
 
-            Simdi degil
+            Şimdi değil
           </button>
           <button
             type="button"
@@ -229,7 +229,7 @@ function PushPermissionPromptBridge() {
             onClick={() => void handleAllow()}
             className="h-10 rounded-lg bg-[var(--deep-indigo)] px-4 text-sm font-semibold text-white disabled:opacity-60">
 
-            {busy ? 'Hazirlaniyor...' : 'Izin ver'}
+            {busy ? 'Hazırlanıyor...' : 'İzin ver'}
           </button>
         </div>
       </div>
