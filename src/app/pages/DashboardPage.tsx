@@ -45,6 +45,7 @@ type DashboardChecklist = {
 
 const DASHBOARD_CHECKLIST_CACHE_KEY = 'dashboard:checklist';
 const DASHBOARD_ANALYTICS_CACHE_PREFIX = 'dashboard:analytics:single-day';
+const DASHBOARD_SELECTED_DATE_CACHE_KEY = 'dashboard:selected-date';
 
 function analyticsCacheKey(fromIso: string, toIso: string): string {
   return `${DASHBOARD_ANALYTICS_CACHE_PREFIX}:${fromIso}:${toIso}`;
@@ -69,8 +70,15 @@ export function DashboardPage() {
       1000 * 60 * 60 * 24,
     );
   });
-  const [selectedDate, setSelectedDate] = useState(todayDateInputValue());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const cachedDate = readSnapshot<string>(DASHBOARD_SELECTED_DATE_CACHE_KEY, 1000 * 60 * 60 * 24 * 90);
+    return cachedDate || todayDateInputValue();
+  });
   const [rangeError, setRangeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    writeSnapshot(DASHBOARD_SELECTED_DATE_CACHE_KEY, selectedDate);
+  }, [selectedDate]);
 
   const handleNavigate = (target: string) => {
     const mapping: Record<string, string> = {

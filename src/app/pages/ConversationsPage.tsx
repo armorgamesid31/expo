@@ -12,11 +12,13 @@ import { tr } from 'date-fns/locale/tr';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConversationRealtimeEvent, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
+import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
 type QuickFilter = 'all' | 'unread' | 'handover';
 const SHOW_WHATSAPP_INBOX = true;
+const CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY = 'conversations:selected-channel';
 
 interface ConversationItem {
   channel: ChannelType;
@@ -274,7 +276,10 @@ export function ConversationsPage() {
   const { apiFetch, accessToken } = useAuth();
   const { showToast } = useToasts();
   const navigate = useNavigate();
-  const [channelView, setChannelView] = useState<ChannelType>('INSTAGRAM');
+  const [channelView, setChannelView] = useState<ChannelType>(() => {
+    const cached = readSnapshot<ChannelType>(CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
+    return cached === 'WHATSAPP' || cached === 'INSTAGRAM' ? cached : 'INSTAGRAM';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [loadingKonuşmalar, setLoadingKonuşmalar] = useState(true);
@@ -296,6 +301,10 @@ export function ConversationsPage() {
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
   const lastAutoScrolledConversationRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    writeSnapshot(CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY, channelView);
+  }, [channelView]);
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversationId;

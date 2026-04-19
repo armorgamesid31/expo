@@ -75,6 +75,7 @@ const DAY_END_HOUR = 21;
 const SLOT_HEIGHT = 72;
 const COLUMN_WIDTH = 180;
 const SCHEDULE_CACHE_PREFIX = 'schedule:day';
+const SCHEDULE_SELECTED_DATE_CACHE_KEY = 'schedule:selected-date';
 type UIAppointmentStatus = 'BOOKED' | 'CONFIRMED' | 'UPDATED' | 'NO_SHOW' | 'CANCELLED' | 'COMPLETED' | 'MIXED';
 type UIAppointmentAction = 'BOOKED' | 'CONFIRMED' | 'UPDATED' | 'NO_SHOW' | 'CANCELLED' | 'COMPLETED';
 const APPOINTMENT_STATUS_ACTIONS: UIAppointmentAction[] = ['BOOKED', 'CONFIRMED', 'UPDATED', 'NO_SHOW', 'CANCELLED'];
@@ -96,6 +97,13 @@ function scheduleCacheKey(dayKey: string): string {
 
 function readScheduleSnapshot(date: Date): ScheduleSnapshot | null {
   return readSnapshot<ScheduleSnapshot>(scheduleCacheKey(dayKeyFromDate(date)), 1000 * 60 * 60 * 6);
+}
+
+function readScheduleSelectedDate(): Date {
+  const cached = readSnapshot<string>(SCHEDULE_SELECTED_DATE_CACHE_KEY, 1000 * 60 * 60 * 24 * 90);
+  if (!cached) return new Date();
+  const parsed = new Date(`${cached}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
 function statusLabel(status: UIAppointmentStatus | string) {
@@ -204,8 +212,8 @@ function translateWaitlistStatus(status: string | null | undefined) {
 
 export function SchedulePage() {
   const { apiFetch } = useAuth();
-  const [initialScheduleSnapshot] = useState<ScheduleSnapshot | null>(() => readScheduleSnapshot(new Date()));
-  const [activeDate, setActiveDate] = useState(new Date());
+  const [activeDate, setActiveDate] = useState<Date>(() => readScheduleSelectedDate());
+  const [initialScheduleSnapshot] = useState<ScheduleSnapshot | null>(() => readScheduleSnapshot(activeDate));
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
   const [staff, setStaff] = useState<StaffItem[]>(() => initialScheduleSnapshot?.staff || []);
@@ -288,6 +296,10 @@ export function SchedulePage() {
 
   const dateText = useMemo(() => format(activeDate, 'EEEE, d MMMM', { locale: tr }), [activeDate]);
   const isToday = useMemo(() => format(activeDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'), [activeDate]);
+
+  useEffect(() => {
+    writeSnapshot(SCHEDULE_SELECTED_DATE_CACHE_KEY, format(activeDate, 'yyyy-MM-dd'));
+  }, [activeDate]);
 
   const servicesById = useMemo(() => {
     const map: Record<string, ServiceItem> = {};
