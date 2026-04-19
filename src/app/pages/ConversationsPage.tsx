@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConversationRealtimeEvent, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
+import { API_BASE_URL } from '../lib/config';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
@@ -210,7 +211,7 @@ function buildConversationAvatarSrc(input: {
     sourceUrl: source,
     authToken: token,
   });
-  return `/api/admin/conversations/profile-image?${params.toString()}`;
+  return `${API_BASE_URL}/api/admin/conversations/profile-image?${params.toString()}`;
 }
 
 function isHandoverInProgress(mode: AutomationMode): boolean {
