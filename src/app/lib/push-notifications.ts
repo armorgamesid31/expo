@@ -223,10 +223,7 @@ export async function initPushNotifications(
 
   await createDefaultAndroidChannel();
 
-  let permission = await PushNotifications.checkPermissions();
-  if (permission.receive === 'prompt') {
-    permission = await PushNotifications.requestPermissions();
-  }
+  const permission = await PushNotifications.checkPermissions();
 
   if (permission.receive !== 'granted') {
     dispatchPushEvent(PUSH_REGISTRATION_CHANGED_EVENT);
@@ -275,4 +272,22 @@ export async function initPushNotifications(
   });
 
   await PushNotifications.register();
+}
+
+export async function requestPushPermissionAndInit(
+  apiFetch: <T>(path: string, options?: RequestInit) => Promise<T>,
+): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+
+  let permission = await PushNotifications.checkPermissions();
+  if (permission.receive === 'prompt') {
+    permission = await PushNotifications.requestPermissions();
+  }
+
+  if (permission.receive !== 'granted') {
+    dispatchPushEvent(PUSH_REGISTRATION_CHANGED_EVENT);
+    return;
+  }
+
+  await initPushNotifications(apiFetch);
 }

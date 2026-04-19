@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -38,8 +38,13 @@ import { DataImportWizardPage } from './pages/DataImportWizardPage';
 import { LocaleProvider } from './context/LocaleContext';
 import { NavigatorProvider } from './context/NavigatorContext';
 import { resolvePushAppPath } from './lib/push-routing';
-import { setPushEventHandlers } from './lib/push-notifications';
+import {
+  getLocalPushPermissionState,
+  requestPushPermissionAndInit,
+  setPushEventHandlers
+} from './lib/push-notifications';
 import { revalidateAllCentralCache, type CentralCacheDescriptor } from './lib/central-data-cache';
+import { ENABLE_PUSH_NOTIFICATIONS } from './lib/config';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
 const GLOBAL_REVALIDATE_MS = 2 * 60 * 1000;
@@ -149,6 +154,86 @@ function GlobalDataSyncBridge() {
   }, [apiFetch, isAuthenticated]);
 
   return null;
+}
+
+function PushPermissionPromptBridge() {
+  const { isAuthenticated, apiFetch } = useAuth();
+  const [visible, setVisible] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!ENABLE_PUSH_NOTIFICATIONS) {
+      setVisible(false);
+      return;
+    }
+    if (!isAuthenticated) {
+      setVisible(false);
+      setDismissed(false);
+      return;
+    }
+    if (dismissed) return;
+
+    let active = true;
+    (async () => {
+      const permission = await getLocalPushPermissionState();
+      if (!active) return;
+      setVisible(permission === 'prompt' || permission === 'prompt-with-rationale');
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated, dismissed]);
+
+  const handleAllow = async () => {
+    setBusy(true);
+    try {
+      await requestPushPermissionAndInit(apiFetch);
+    } catch (error) {
+      console.warn('Push permission flow failed:', error);
+    } finally {
+      setBusy(false);
+      setVisible(false);
+      setDismissed(true);
+    }
+  };
+
+  if (!visible || !isAuthenticated) return null;
+
+  return (
+    <div className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-[2px] grid place-items-end sm:place-items-center p-4">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl p-5 space-y-4">
+        <div className="space-y-2">
+          <h3 className="text-base font-semibold">Bildirimlere izin ver</h3>
+          <p className="text-sm text-muted-foreground">
+            Randevu degisikligi, handover ve gun sonu raporlarini aninda almak icin bildirim iznini acabilirsin.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setVisible(false);
+              setDismissed(true);
+            }}
+            className="h-10 rounded-lg border border-border px-4 text-sm font-semibold text-muted-foreground disabled:opacity-60">
+
+            Simdi degil
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void handleAllow()}
+            className="h-10 rounded-lg bg-[var(--deep-indigo)] px-4 text-sm font-semibold text-white disabled:opacity-60">
+
+            {busy ? 'Hazirlaniyor...' : 'Izin ver'}
+          </button>
+        </div>
+      </div>
+    </div>);
 }
 
 function RootRedirect() {
@@ -313,6 +398,7 @@ export default function App() {
           <BrowserRouter>
             <PushNotificationBridge />
             <GlobalDataSyncBridge />
+            <PushPermissionPromptBridge />
             <NavigatorProvider>
               <AppRoutes />
             </NavigatorProvider>
