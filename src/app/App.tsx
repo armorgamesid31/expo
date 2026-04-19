@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
+import { App as CapacitorApp } from '@capacitor/app';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthGuard } from './components/app-shell/AuthGuard';
 import { AppLayout } from './components/app-shell/AppLayout';
@@ -35,8 +36,10 @@ import { LocaleProvider } from './context/LocaleContext';
 import { NavigatorProvider } from './context/NavigatorContext';
 import { resolvePushAppPath } from './lib/push-routing';
 import { setPushEventHandlers } from './lib/push-notifications';
+import { revalidateAllCentralCache, type CentralCacheDescriptor } from './lib/central-data-cache';
 
 const THEME_PREF_KEY = 'kedy.mobile.theme.dark';
+const GLOBAL_REVALIDATE_MS = 2 * 60 * 1000;
 
 function ThemeBootstrap() {
   useEffect(() => {
@@ -97,6 +100,50 @@ function PushNotificationBridge() {
       setPushEventHandlers({});
     };
   }, [apiFetch, isAuthenticated, navigate, showToast]);
+
+  return null;
+}
+
+function GlobalDataSyncBridge() {
+  const { apiFetch, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let disposed = false;
+
+    const refreshAll = async () => {
+      if (disposed) return;
+      await revalidateAllCentralCache(async (descriptor: CentralCacheDescriptor) => {
+        return await apiFetch(descriptor.path, { __cache: { mode: 'network-only' } } as any);
+      });
+    };
+
+    const intervalId = window.setInterval(() => {
+      void refreshAll();
+    }, GLOBAL_REVALIDATE_MS);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshAll();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    const appStateListener = CapacitorApp.addListener('appStateChange', (state) => {
+      if (state.isActive) {
+        void refreshAll();
+      }
+    });
+
+    void refreshAll();
+
+    return () => {
+      disposed = true;
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      appStateListener.then((listener) => listener.remove()).catch(() => undefined);
+    };
+  }, [apiFetch, isAuthenticated]);
 
   return null;
 }
@@ -253,6 +300,7 @@ export default function App() {
           <ThemeBootstrap />
           <BrowserRouter>
             <PushNotificationBridge />
+            <GlobalDataSyncBridge />
             <NavigatorProvider>
               <AppRoutes />
             </NavigatorProvider>

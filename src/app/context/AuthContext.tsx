@@ -3,6 +3,7 @@ import { httpRequest, ApiError } from '../lib/http';
 import { prefetchContentRuntimeBundle } from '../lib/content-runtime';
 import { secureGet, secureRemove, secureSet } from '../lib/secure-storage';
 import { ENABLE_PUSH_NOTIFICATIONS, STORAGE_KEYS } from '../lib/config';
+import { resolveCentralGet } from '../lib/central-data-cache';
 import type { BootstrapResponse } from '../types/mobile-api';
 import { initPushNotifications, unregisterPushToken } from '../lib/push-notifications';
 
@@ -18,7 +19,10 @@ interface AuthContextValue {
   accessToken: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  apiFetch: <T>(path: string, options?: RequestInit) => Promise<T>;
+  apiFetch: <T>(
+    path: string,
+    options?: RequestInit & { __cache?: { mode?: 'swr' | 'network-only' | 'cache-only' } },
+  ) => Promise<T>;
   hasPermission: (permissionKey: string) => boolean;
 }
 
@@ -128,14 +132,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadBootstrap]);
 
   const apiFetch = useCallback(
-    async <T,>(path: string, options: RequestInit = {}): Promise<T> => {
+    async <T,>(
+      path: string,
+      options: RequestInit & { __cache?: { mode?: 'swr' | 'network-only' | 'cache-only' } } = {},
+    ): Promise<T> => {
       if (!accessToken) {
         throw new Error('Not authenticated');
       }
 
+      const cacheMode = options.__cache?.mode || 'swr';
+      const requestOptions: RequestInit = { ...options };
+      delete (requestOptions as any).__cache;
+      const method = (requestOptions.method || 'GET').toUpperCase();
+      const scope = String(bootstrap?.salon?.id || 'global');
+
+      const runNetworkRequest = async () => {
+        try {
+          return await httpRequest<T>(path, {
+            ...requestOptions,
+            token: accessToken,
+            salonId: bootstrap?.salon?.id || null,
+          } as any);
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 401) {
+            const nextAccessToken = await rotateAccess();
+            if (!nextAccessToken) {
+              await logout();
+              throw error;
+            }
+
+            return await httpRequest<T>(path, {
+              ...requestOptions,
+              token: nextAccessToken,
+              salonId: bootstrap?.salon?.id || null,
+            } as any);
+          }
+          throw error;
+        }
+      };
+
+      if (method === 'GET') {
+        return await resolveCentralGet<T>({
+          scope,
+          path,
+          mode: cacheMode,
+          fetchNetwork: runNetworkRequest,
+        });
+      }
+
       try {
         return await httpRequest<T>(path, {
-          ...options,
+          ...requestOptions,
           token: accessToken,
           salonId: bootstrap?.salon?.id || null,
         } as any);
@@ -148,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           return await httpRequest<T>(path, {
-            ...options,
+            ...requestOptions,
             token: nextAccessToken,
             salonId: bootstrap?.salon?.id || null,
           } as any);
