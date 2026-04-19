@@ -44,6 +44,32 @@ export interface AccessPermissionDefinition {
   isCritical: boolean;
 }
 
+export interface SalonClosureDto {
+  id: number;
+  salonId: number;
+  startAt: string;
+  endAt: string;
+  reason: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StaffTimeOffDto {
+  id: number;
+  salonId: number;
+  staffId: number;
+  startAt: string;
+  endAt: string;
+  reason: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  staff?: {
+    id: number;
+    name: string;
+    title?: string | null;
+  };
+}
+
 export interface AccessPermissionsResponse {
   permissions: AccessPermissionDefinition[];
   rolePermissions: Record<string, string[]>;

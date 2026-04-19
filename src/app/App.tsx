@@ -14,6 +14,8 @@ import { FeaturesPage } from './pages/FeaturesPage';
 import { FeatureDetailPage } from './pages/FeatureDetailPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SalonSetupPage } from './pages/SalonSetupPage';
+import { SalonInfoBasicsPage } from './pages/SalonInfoBasicsPage';
+import { SalonInfoFaqPage } from './pages/SalonInfoFaqPage';
 import { ServicesCrudPage } from './pages/ServicesCrudPage';
 import { StaffCrudPage } from './pages/StaffCrudPage';
 import { InventoryPage } from './pages/InventoryPage';
@@ -29,6 +31,7 @@ import { NotificationsInboxPage } from './pages/NotificationsInboxPage';
 import { NotificationRoleMatrixPage } from './pages/NotificationRoleMatrixPage';
 import { TeamAccessPage } from './pages/TeamAccessPage';
 import { TeamManagementPage } from './pages/TeamManagementPage';
+import { TimeOffManagementPage } from './pages/TimeOffManagementPage';
 import { OperationsManagementPage } from './pages/OperationsManagementPage';
 import { BrandGrowthHubPage } from './pages/BrandGrowthHubPage';
 import { DataImportWizardPage } from './pages/DataImportWizardPage';
@@ -228,6 +231,8 @@ function AppRoutes() {
           <Route path="blacklist" element={<BlacklistPage />} />
           <Route path="instagram-inbox" element={<InstagramInboxPage />} />
           <Route path="salon-info" element={<SalonSetupPage />} />
+          <Route path="salon-info/basic" element={<SalonInfoBasicsPage />} />
+          <Route path="salon-info/faq" element={<SalonInfoFaqPage />} />
           <Route path="services" element={<ServicesCrudPage />} />
           <Route path="packages" element={<PackagesPage />} />
           <Route path="staff" element={<StaffCrudPage />} />
@@ -260,6 +265,13 @@ function AppRoutes() {
             element={
             <AnyPermissionGuard permissionKeys={['staff.manage', 'access.users.manage', 'access.roles.manage', 'notifications.policy.manage']}>
                 <TeamManagementPage />
+              </AnyPermissionGuard>
+            } />
+          <Route
+            path="time-off-management"
+            element={
+            <AnyPermissionGuard permissionKeys={['staff.manage', 'access.users.manage', 'access.roles.manage']}>
+                <TimeOffManagementPage />
               </AnyPermissionGuard>
             } />
           

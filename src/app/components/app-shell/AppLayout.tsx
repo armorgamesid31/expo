@@ -41,7 +41,7 @@ function tabFromPathname(pathname: string) {
     '/app/automations', '/app/instagram-inbox', '/app/blacklist', '/app/salon-info', 
     '/app/services', '/app/staff', '/app/data-import', '/app/operations-management', 
     '/app/brand-growth-hub', '/app/features', '/app/settings', '/app/notification-settings',
-    '/app/notifications', '/app/notification-role-matrix', '/app/team-access', '/app/team-management'
+    '/app/notifications', '/app/notification-role-matrix', '/app/team-access', '/app/team-management', '/app/time-off-management'
   ];
   if (settingsRoutes.some(route => pathname.startsWith(route))) return 'settings';
   return 'dashboard';
@@ -64,13 +64,14 @@ function backTargetFromPathname(pathname: string): string | null {
   const commsChildren = ['/app/features/whatsapp-settings', '/app/features/ai-settings', '/app/automations', '/app/features/whatsapp-setup', '/app/features/whatsapp-agent'];
   if (commsChildren.some(child => pathname === child)) return '/app/features/social-channels';
 
-  const teamChildren = ['/app/staff', '/app/team-access', '/app/notification-role-matrix'];
+  const teamChildren = ['/app/staff', '/app/team-access', '/app/notification-role-matrix', '/app/time-off-management'];
   if (teamChildren.some(child => pathname === child)) return '/app/team-management';
 
   if (pathname.startsWith('/app/notification-settings')) return '/app/settings';
   if (pathname.startsWith('/app/notifications')) return '/app/settings';
   if (pathname.startsWith('/app/settings')) return '/app/features';
-  if (pathname.startsWith('/app/salon-info')) return '/app/features';
+  if (pathname === '/app/salon-info') return '/app/features';
+  if (pathname.startsWith('/app/salon-info/')) return '/app/salon-info';
   if (pathname.startsWith('/app/blacklist')) return '/app/features';
   if (pathname.startsWith('/app/features/')) return '/app/features';
 
@@ -85,7 +86,10 @@ function inferHeaderTitleFromPath(pathname: string): string | null {
   if (pathname === '/app/inventory') return 'Envanter';
   if (pathname === '/app/packages') return 'Paket Yönetimi';
   if (pathname === '/app/staff') return 'Personel Yönetimi';
+  if (pathname === '/app/time-off-management') return 'Tatil ve İzin Yönetimi';
   if (pathname === '/app/salon-info') return 'Salon Bilgileri';
+  if (pathname === '/app/salon-info/basic') return 'Temel Bilgiler';
+  if (pathname === '/app/salon-info/faq') return 'Sık Sorulan Sorular';
   if (pathname === '/app/campaigns') return 'Kampanyalar';
   if (pathname === '/app/automations') return 'Otomasyonlar';
   if (pathname === '/app/features/website-builder') return 'Web Sitesi Ayarları';

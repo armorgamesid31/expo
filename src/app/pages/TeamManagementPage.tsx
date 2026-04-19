@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Users, Shield, ChevronRight, Bell } from 'lucide-react';
+import { Users, Shield, ChevronRight, Bell, CalendarRange } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigator } from '../context/NavigatorContext';
 import { useEffect } from 'react';
@@ -12,13 +12,14 @@ export function TeamManagementPage() {
   const canManageEmployees = hasPermission('staff.manage');
   const canManageAccess = hasPermission('access.users.manage') || hasPermission('access.roles.manage');
   const canManageNotificationRules = hasPermission('notifications.policy.manage');
+  const canManageTimeOff = hasPermission('staff.manage') || hasPermission('access.users.manage') || hasPermission('access.roles.manage');
 
   useEffect(() => {
     setHeaderTitle('Ekip Yönetimi');
     return () => setHeaderTitle(null);
   }, [setHeaderTitle]);
 
-  if (!canManageEmployees && !canManageAccess && !canManageNotificationRules) {
+  if (!canManageEmployees && !canManageAccess && !canManageNotificationRules && !canManageTimeOff) {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-semibold">Ekip Yönetimi</h1>
@@ -89,6 +90,27 @@ export function TeamManagementPage() {
                 <div>
                   <p className="text-sm font-semibold">Bildirim Kuralları</p>
                   <p className="text-xs text-muted-foreground">Rol bazlı uyarı alıcıları ve devir hatırlatma politikası</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </button> :
+          null}
+
+        {canManageTimeOff ?
+          <button
+            type="button"
+            onClick={() => navigate('/app/time-off-management', { state: { navDirection: 'forward' } })}
+            className="w-full rounded-xl border border-border bg-card p-4 text-left">
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/15 grid place-items-center">
+                  <CalendarRange className="h-5 w-5 text-[var(--rose-gold)]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Tatil ve İzin Yönetimi</p>
+                  <p className="text-xs text-muted-foreground">Salon tatilleri ve personel izin tarihleri</p>
                 </div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, AlertTriangle, X, UserCog, CheckCircle2, Circle, Layers, Megaphone, Settings, Building2 } from 'lucide-react';
+import { BarChart3, AlertTriangle, X, CheckCircle2, Circle, Layers, Settings, Building2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -51,22 +51,6 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
       description: 'Müşteri, hizmet, paket ve envanter yönetimi',
       action: () => onNavigate('operations-management'),
       color: 'var(--deep-indigo)'
-    },
-    {
-      featureKey: 'team.management',
-      icon: UserCog,
-      label: "Ekip Yönetimi",
-      description: 'Personel, yetki ve ekip ayarları',
-      action: () => onNavigate('team-management'),
-      color: 'var(--deep-indigo)'
-    },
-    {
-      featureKey: 'brand.growth.hub',
-      icon: Megaphone,
-      label: 'Marka & Büyüme',
-      description: 'Kampanyalar, web sitesi ve içerik yönetimi',
-      action: () => onNavigate('brand-growth-hub'),
-      color: 'var(--rose-gold)'
     },
     {
       featureKey: 'analytics.view',
@@ -171,3 +155,4 @@ export function MoreScreen({ isDarkMode, onToggleDarkMode, onNavigate, onOpenSet
     </div>
   );
 }
+
