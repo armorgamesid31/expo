@@ -436,16 +436,21 @@ export function ConversationsPage() {
 
   useEffect(() => {
     if (mobileView !== 'CHAT') return;
-    if (selectedConversationId) return;
+    const hasValidSelection =
+      !!selectedConversationId &&
+      conversations.some((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId);
+    if (hasValidSelection) return;
     setMobileView('LIST');
-  }, [mobileView, selectedConversationId]);
+  }, [conversations, mobileView, selectedConversationId]);
 
   const fetchGetWithFallback = useCallback(
-    async <T,>(path: string): Promise<T> => {
+    async <T,>(path: string): Promise<{ data: T; usedFallback: boolean }> => {
       try {
-        return await apiFetch<T>(path, { __cache: { mode: 'network-only' } });
+        const data = await apiFetch<T>(path, { __cache: { mode: 'network-only' } });
+        return { data, usedFallback: false };
       } catch {
-        return await apiFetch<T>(path, { __cache: { mode: 'swr' } });
+        const data = await apiFetch<T>(path, { __cache: { mode: 'swr' } });
+        return { data, usedFallback: true };
       }
     },
     [apiFetch],
@@ -570,13 +575,36 @@ export function ConversationsPage() {
   const loadKonuşmalar = useCallback(async (showLoading = true) => {
     if (showLoading) setLoadingKonuşmalar(true);
     try {
-      const response = await fetchGetWithFallback<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
+      const { data: response, usedFallback } = await fetchGetWithFallback<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
         channelView === 'ALL'
           ? '/api/admin/conversations?limit=60'
           : `/api/admin/conversations?limit=60&channel=${channelView}`
       );
+      let items = response?.items || [];
+
+      // If a channel filter is empty, transparently retry with ALL to avoid
+      // leaving the user in a blank view due stale filter/cache state.
+      if (items.length === 0 && channelView !== 'ALL') {
+        const { data: allResponse } = await fetchGetWithFallback<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
+          '/api/admin/conversations?limit=60',
+        );
+        if ((allResponse?.items || []).length > 0) {
+          setChannelView('ALL');
+          items = allResponse.items || [];
+          setChannelHealth(allResponse?.channelHealth || response?.channelHealth || null);
+        } else {
+          setChannelHealth(response?.channelHealth || allResponse?.channelHealth || null);
+        }
+      } else {
+        setChannelHealth(response?.channelHealth || null);
+      }
+
+      if (usedFallback && items.length === 0 && conversationsRef.current.length > 0) {
+        return;
+      }
+
       const selectedId = selectedConversationIdRef.current;
-      const next = (response?.items || []).map((item) => {
+      const next = items.map((item) => {
         const id = `${item.channel}:${item.conversationKey}`;
         const seenAt = readReceiptRef.current[id];
         const alreadySeen =
@@ -587,7 +615,6 @@ export function ConversationsPage() {
         }
         return item;
       });
-      setChannelHealth(response?.channelHealth || null);
       setKonuşmalar(next);
       conversationsRef.current = next;
       if (!selectedConversationIdRef.current && next.length > 0) {
@@ -606,15 +633,23 @@ export function ConversationsPage() {
     if (showLoading) setLoadingMessages(true);
     try {
       const relatedKeys = findRelatedConversationKeys(conversationsRef.current, { channel, conversationKey }).slice(0, 5);
+      let usedFallbackInAny = false;
       const responses = await Promise.all(
         relatedKeys.map((item) =>
           fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
             `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`
-          )
+          ).then((result) => {
+            if (result.usedFallback) usedFallbackInAny = true;
+            return result.data;
+          }),
         )
       );
       const response = responses[0];
-      setMessages(mergeAndSortMessages(responses));
+      const merged = mergeAndSortMessages(responses);
+      if (usedFallbackInAny && merged.length === 0 && messages.length > 0) {
+        return;
+      }
+      setMessages(merged);
       if (response?.conversationState) {
         const patch = response.conversationState;
         const rawMode = patch.automationMode || patch.mode;
@@ -635,7 +670,7 @@ export function ConversationsPage() {
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
-  }, [fetchGetWithFallback]);
+  }, [fetchGetWithFallback, messages.length]);
   const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
     if (realtimeRefreshTimerRef.current) return;
     const activeId = selectedConversationIdRef.current;
