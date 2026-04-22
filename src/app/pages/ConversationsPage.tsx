@@ -635,12 +635,33 @@ export function ConversationsPage() {
 
   const resumeAuto = async () => {
     if (!selectedConversation) return;
+    setKonuşmalar((prev) =>
+      prev.map((item) =>
+        item.channel === selectedConversation.channel && item.conversationKey === selectedConversation.conversationKey ?
+          { ...item, automationMode: 'AUTO' } :
+          item
+      )
+    );
+    setManualComposeRequested(false);
     setSendingResume(true);
     try {
-      await apiFetch(
+      const response = await apiFetch<{ state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/resume-auto`,
         { method: 'POST' }
       );
+      if (response?.state) {
+        setKonuşmalar((prev) =>
+          prev.map((item) =>
+            item.channel === selectedConversation.channel && item.conversationKey === selectedConversation.conversationKey ?
+              {
+                ...item,
+                manualAlways: typeof response.state?.manualAlways === 'boolean' ? response.state.manualAlways : item.manualAlways,
+                automationMode: normalizeAutomationMode(response.state?.mode || item.automationMode),
+              } :
+              item
+          )
+        );
+      }
       showToast('Yapay zeka otomasyonu tekrar devreye alındı.', 'success');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
       await loadKonuşmalar(false);
@@ -653,13 +674,34 @@ export function ConversationsPage() {
 
   const requestHandover = async () => {
     if (!selectedConversation) return;
+    setKonuşmalar((prev) =>
+      prev.map((item) =>
+        item.channel === selectedConversation.channel && item.conversationKey === selectedConversation.conversationKey ?
+          { ...item, automationMode: 'HUMAN_PENDING' } :
+          item
+      )
+    );
+    setManualComposeRequested(true);
     setSendingHandover(true);
     try {
-      await apiFetch(
+      const response = await apiFetch<{ state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/handover`,
         { method: 'POST' }
       );
-      showToast('Canlı destek talebi iletildi.', 'success');
+      if (response?.state) {
+        setKonuşmalar((prev) =>
+          prev.map((item) =>
+            item.channel === selectedConversation.channel && item.conversationKey === selectedConversation.conversationKey ?
+              {
+                ...item,
+                manualAlways: typeof response.state?.manualAlways === 'boolean' ? response.state.manualAlways : item.manualAlways,
+                automationMode: normalizeAutomationMode(response.state?.mode || item.automationMode),
+              } :
+              item
+          )
+        );
+      }
+      showToast('Manuel yanıt modu açıldı.', 'success');
       await loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
@@ -1146,7 +1188,7 @@ export function ConversationsPage() {
                     <div className="flex items-center gap-1.5">
                        <div className={`size-1.5 rounded-full ${handoverInProgress ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                         {handoverInProgress ? 'Manuel Mod: Canlı Destek' : 'Bot Modu: AI Yanıtlıyor'}
+                         {handoverInProgress ? 'Kedy AI: Pasif' : 'Kedy AI: Aktif'}
                        </span>
                     </div>
                     {handoverInProgress ? (
