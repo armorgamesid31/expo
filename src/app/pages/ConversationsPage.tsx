@@ -17,7 +17,6 @@ import { API_BASE_URL } from '../lib/config';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
-type QuickFilter = 'all' | 'unread' | 'handover';
 const SHOW_WHATSAPP_INBOX = true;
 const CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY = 'conversations:selected-channel';
 const CONVERSATIONS_SELECTED_ID_CACHE_KEY = 'conversations:selected-id';
@@ -302,7 +301,7 @@ export function ConversationsPage() {
     return cached === 'WHATSAPP' || cached === 'INSTAGRAM' ? cached : 'INSTAGRAM';
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+  const [showOnlyHandover, setShowOnlyHandover] = useState(false);
   const [loadingKonuşmalar, setLoadingKonuşmalar] = useState(true);
   const [conversations, setKonuşmalar] = useState<ConversationItem[]>([]);
   const [channelHealth, setChannelHealth] = useState<ChannelHealthPayload | null>(null);
@@ -393,10 +392,7 @@ export function ConversationsPage() {
   const filteredKonuşmalar = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return conversations.filter((item) => {
-      const matchesFilter =
-        quickFilter === 'all' ||
-        quickFilter === 'unread' && item.unreadCount > 0 ||
-        quickFilter === 'handover' && isHandoverInProgress(normalizeAutomationMode(item.automationMode));
+      const matchesFilter = !showOnlyHandover || isHandoverInProgress(normalizeAutomationMode(item.automationMode));
       if (!matchesFilter) return false;
       if (!query) return true;
       const haystack = [
@@ -409,7 +405,7 @@ export function ConversationsPage() {
         toLowerCase();
       return haystack.includes(query);
     });
-  }, [conversations, quickFilter, searchQuery]);
+  }, [conversations, searchQuery, showOnlyHandover]);
 
   useEffect(() => {
     conversationsRef.current = conversations;
@@ -676,11 +672,9 @@ export function ConversationsPage() {
     () => conversations.filter((item) => item.channel === channelView),
     [conversations, channelView]
   );
-  const unreadTotal = channelScopedConversations.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
   const handoverTotal = channelScopedConversations.filter((item) =>
     isHandoverInProgress(normalizeAutomationMode(item.automationMode))
   ).length;
-  const allTotal = channelScopedConversations.length;
   const selectedChannelHealth = channelView === 'INSTAGRAM' ? channelHealth?.instagram : channelHealth?.whatsapp;
   const channelBlocked = channelHealth
     ? channelView === 'INSTAGRAM'
@@ -711,7 +705,7 @@ export function ConversationsPage() {
               setSelectedConversationId(null);
               setMessages([]);
               setSearchQuery('');
-              setQuickFilter('all');
+              setShowOnlyHandover(false);
             }}
             className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
               channelView === 'INSTAGRAM'
@@ -731,7 +725,7 @@ export function ConversationsPage() {
                 setSelectedConversationId(null);
                 setMessages([]);
                 setSearchQuery('');
-                setQuickFilter('all');
+                setShowOnlyHandover(false);
               }}
               className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
                 channelView === 'WHATSAPP'
@@ -744,31 +738,20 @@ export function ConversationsPage() {
             </button> :
             null}
         </div>
-
-        <div className="grid w-full min-w-0 grid-cols-3 rounded-2xl border border-border/50 bg-background/70 shadow-sm backdrop-blur-md p-1 sm:flex sm:w-auto">
-          {([
-            { value: 'all' as QuickFilter, label: 'Hepsi', count: allTotal },
-            { value: 'unread' as QuickFilter, label: 'Okunmamış', count: unreadTotal },
-            { value: 'handover' as QuickFilter, label: 'Canlı Destek', count: handoverTotal },
-          ]).map((filter) =>
-            <button
-              key={filter.value}
-              type="button"
-              aria-pressed={quickFilter === filter.value}
-              onClick={() => setQuickFilter(filter.value)}
-              className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-semibold transition sm:flex-none sm:px-2.5 sm:text-xs ${
-                quickFilter === filter.value
-                  ? 'bg-muted text-foreground'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-              }`}
-            >
-                <span className="truncate">{filter.label}</span>
-              <span className="rounded-md bg-background/80 px-1.5 py-0.5 text-[10px] font-bold text-foreground/80">
-                {filter.count}
-              </span>
-            </button>
-          )}
-        </div>
+        <button
+          type="button"
+          aria-pressed={showOnlyHandover}
+          onClick={() => setShowOnlyHandover((prev) => !prev)}
+          className={`inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold shadow-sm backdrop-blur-md transition ${
+            showOnlyHandover
+              ? 'border-amber-500/40 bg-amber-500/10 text-amber-700'
+              : 'border-border/50 bg-background/70 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+          }`}
+        >
+          <Sparkles className="size-3.5" />
+          <span>{showOnlyHandover ? 'Canlı Destek Açık' : 'Canlı Destek'}</span>
+          <span className="rounded-md bg-background/80 px-1.5 py-0.5 text-[10px] font-black text-foreground/80">{handoverTotal}</span>
+        </button>
       </div>
 
       {!channelBlocked && selectedChannelHealth && (
@@ -850,12 +833,6 @@ export function ConversationsPage() {
                 <div className="size-2 rounded-full bg-foreground/20" />
                 <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">{filteredKonuşmalar.length} Sohbet</span>
               </div>
-              {unreadTotal > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/5 shadow-sm whitespace-nowrap">
-                  <div className="size-2 rounded-full bg-orange-500 animate-pulse" />
-                  <span className="text-[10px] font-bold uppercase tracking-tight text-orange-700">{unreadTotal} Okunmamış</span>
-                </div>
-              )}
               {handoverTotal > 0 && (
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 shadow-sm whitespace-nowrap">
                   <div className="size-2 rounded-full bg-amber-500" />
@@ -1038,12 +1015,8 @@ export function ConversationsPage() {
                         {conversationDisplayName(selectedConversation)}
                       </p>
                       <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
-                        <span
-                          className="text-[10px] min-w-0 items-center gap-1 font-bold uppercase tracking-tight text-muted-foreground/60 flex truncate"
-                          title={`${selectedConversation.channel} • ${selectedConversation.conversationKey}`}>
-                          <span className="shrink-0">{selectedConversation.channel}</span>
-                          <span className="shrink-0">•</span>
-                          <span className="truncate">{selectedConversation.conversationKey}</span>
+                        <span className="text-[10px] min-w-0 font-bold uppercase tracking-tight text-muted-foreground/60 truncate">
+                          {selectedConversation.channel === 'INSTAGRAM' ? 'Instagram Sohbeti' : 'WhatsApp Sohbeti'}
                         </span>
                         {isHandoverInProgress(normalizeAutomationMode(selectedConversation.automationMode)) && (
                           <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-tight text-amber-600 shadow-sm shadow-amber-500/10">
