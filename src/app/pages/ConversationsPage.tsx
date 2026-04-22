@@ -600,14 +600,14 @@ export function ConversationsPage() {
       setMessages(mergeAndSortMessages(responses));
       if (response?.conversationState) {
         const patch = response.conversationState;
-        const nextMode = normalizeAutomationMode((patch.automationMode || patch.mode) as AutomationMode | undefined);
+        const rawMode = patch.automationMode || patch.mode;
         setKonuşmalar((prev) =>
           prev.map((item) =>
             item.channel === channel && item.conversationKey === conversationKey ?
               {
                 ...item,
                 ...patch,
-                automationMode: normalizeAutomationMode(nextMode || item.automationMode)
+                automationMode: rawMode ? normalizeAutomationMode(rawMode) : item.automationMode
               } :
               item
           )
