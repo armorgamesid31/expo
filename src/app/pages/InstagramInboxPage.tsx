@@ -10,6 +10,7 @@ import { ConversationRealtimeEvent, useConversationRealtimeSync } from '../lib/r
 import { API_BASE_URL } from '../lib/config';
 
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
+const INSTAGRAM_REPLY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 interface ConversationItem {
   conversationKey: string;
@@ -131,6 +132,13 @@ function automationLabel(mode: AutomationMode): string {
   return 'Otomatik';
 }
 
+function isInstagramReplyWindowExpired(lastCustomerMessageAt?: string | null): boolean {
+  if (typeof lastCustomerMessageAt !== 'string' || !lastCustomerMessageAt.trim()) return false;
+  const lastCustomerTs = new Date(lastCustomerMessageAt).getTime();
+  if (!Number.isFinite(lastCustomerTs)) return false;
+  return Date.now() - lastCustomerTs > INSTAGRAM_REPLY_WINDOW_MS;
+}
+
 function isHandoverInProgress(mode: AutomationMode): boolean {
   return mode === 'HUMAN_PENDING' || mode === 'HUMAN_ACTIVE';
 }
@@ -242,6 +250,7 @@ export function InstagramInboxPage() {
     () => conversations.find((item) => item.conversationKey === selectedKey) || null,
     [conversations, selectedKey]
   );
+  const instagramWindowExpired = isInstagramReplyWindowExpired(selectedConversation?.lastCustomerMessageAt);
 
   useEffect(() => {
     conversationsRef.current = conversations;
@@ -424,6 +433,10 @@ export function InstagramInboxPage() {
     if (!selectedKey || !replyText.trim()) {
       return;
     }
+    if (instagramWindowExpired) {
+      setError('Instagram 24 saat penceresi dolduğu için mesaj gönderilemez. Müşterinin tekrar yazması gerekiyor.');
+      return;
+    }
 
     setSendingReply(true);
     setActionInfo(null);
@@ -438,6 +451,10 @@ export function InstagramInboxPage() {
       await loadMessages(selectedKey);
       await loadConversations();
     } catch (err: any) {
+      if (err?.body?.errorCode === 'INSTAGRAM_WINDOW_EXPIRED') {
+        setError('Instagram 24 saat penceresi dolduğu için mesaj gönderilemez. Müşterinin tekrar yazması gerekiyor.');
+        return;
+      }
       setError(err?.message || 'Yanıt gönderilemedi.');
     } finally {
       setSendingReply(false);
@@ -706,11 +723,19 @@ export function InstagramInboxPage() {
                   }
                 </div>
 
+                {instagramWindowExpired ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 px-3 py-2 text-xs flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>Instagram 24 saat yanıt penceresi doldu. Yeni mesaj göndermek için müşterinin tekrar yazması gerekiyor.</span>
+                  </div>
+                ) : null}
+
                 <div className="flex gap-2">
                   <Input
                     value={replyText}
                     onChange={(event) => setReplyText(event.target.value)}
-                    placeholder="Müşteriye manuel yanıt yazın"
+                    placeholder={instagramWindowExpired ? 'Instagram 24 saat penceresi dolduğu için yeni mesaj gönderemezsiniz.' : 'Müşteriye manuel yanıt yazın'}
+                    disabled={instagramWindowExpired}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' && !event.shiftKey) {
                         event.preventDefault();
@@ -718,7 +743,7 @@ export function InstagramInboxPage() {
                       }
                     }} />
 
-                  <Button type="button" onClick={sendReply} disabled={sendingReply || !replyText.trim()}>
+                  <Button type="button" onClick={sendReply} disabled={sendingReply || !replyText.trim() || instagramWindowExpired}>
                     {sendingReply ? "Gönderiliyor..." : "Gönder"}
                   </Button>
                 </div>

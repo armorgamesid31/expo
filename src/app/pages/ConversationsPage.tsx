@@ -23,6 +23,7 @@ const SHOW_WHATSAPP_INBOX = true;
 const CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY = 'conversations:selected-channel';
 const CONVERSATIONS_SELECTED_ID_CACHE_KEY = 'conversations:selected-id';
 const CONVERSATIONS_MOBILE_VIEW_CACHE_KEY = 'conversations:mobile-view';
+const INSTAGRAM_REPLY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 interface ConversationItem {
   channel: ChannelType;
@@ -136,6 +137,13 @@ function formatOperatorMessage(value: string | null | undefined): string {
     return withoutToolLog || 'Asistan hizmet bilgisini kontrol etti.';
   }
   return text;
+}
+
+function isInstagramReplyWindowExpired(lastCustomerMessageAt?: string | null): boolean {
+  if (typeof lastCustomerMessageAt !== 'string' || !lastCustomerMessageAt.trim()) return false;
+  const lastCustomerTs = new Date(lastCustomerMessageAt).getTime();
+  if (!Number.isFinite(lastCustomerTs)) return false;
+  return Date.now() - lastCustomerTs > INSTAGRAM_REPLY_WINDOW_MS;
 }
 
 function formatMessageTypeLabel(type: string): string {
@@ -703,6 +711,10 @@ export function ConversationsPage() {
       await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
+      if (err?.body?.errorCode === 'INSTAGRAM_WINDOW_EXPIRED') {
+        showToast('Instagram 24 saat penceresi dolduğu için mesaj gönderilemez. Müşterinin tekrar yazması gerekiyor.', 'error');
+        return;
+      }
       showToast(err?.message || "Bize ulaşın mesajı gönderilemedi.", 'error');
     } finally {
       setSendingReply(false);
@@ -811,7 +823,10 @@ export function ConversationsPage() {
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
   const handoverInProgress = isHandoverInProgress(selectedMode);
   const manualReplyUnlocked = handoverInProgress || selectedMode === 'MANUAL_ALWAYS' || manualComposeRequested;
-  const canReply = Boolean(isSupportedReplyChannel && manualReplyUnlocked);
+  const instagramWindowExpired =
+    selectedConversation?.channel === 'INSTAGRAM' &&
+    isInstagramReplyWindowExpired(selectedConversation.lastCustomerMessageAt);
+  const canReply = Boolean(isSupportedReplyChannel && manualReplyUnlocked && !instagramWindowExpired);
   const channelScopedConversations = useMemo(() => {
     if (channelView === 'ALL') return conversations;
     return conversations.filter((item) => item.channel === channelView);
@@ -1316,13 +1331,25 @@ export function ConversationsPage() {
                       </Button>
                     )}
                   </div>
+                  {instagramWindowExpired ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+                      <AlertTriangle className="size-3.5 mt-0.5 shrink-0" />
+                      <span>Instagram 24 saat yanıt penceresi doldu. Yeni mesaj göndermek için müşterinin tekrar yazması gerekiyor.</span>
+                    </div>
+                  ) : null}
 
                   <div className="rounded-2xl border border-border/40 bg-background/80 backdrop-blur-md shadow-2xl p-2 focus-within:border-indigo-500/50 transition-all">
                     <div className="flex gap-2">
                       <Textarea
                         value={replyText}
                         onChange={(event) => setReplyText(event.target.value)}
-                        placeholder={canReply ? "Mesajınızı yazın..." : "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"}
+                        placeholder={
+                          instagramWindowExpired ?
+                            'Instagram 24 saat penceresi dolduğu için yeni mesaj gönderemezsiniz.' :
+                            canReply ?
+                              'Mesajınızı yazın...' :
+                              "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"
+                        }
                         disabled={!canReply}
                         rows={1}
                         className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
