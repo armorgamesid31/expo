@@ -841,7 +841,7 @@ export function ConversationsPage() {
 
         <div className="flex flex-col h-full lg:grid lg:grid-cols-[300px,minmax(0,1fr)] gap-2 relative z-10 px-1 sm:px-2">
           <motion.div
-            className={`flex flex-col bg-background/40 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden h-[calc(100vh-150px)] min-h-[560px] lg:h-[calc(100vh-150px)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'}`}
+            className={`flex flex-col bg-background/40 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden h-[calc(100dvh-11.5rem)] min-h-0 lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'}`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
@@ -932,7 +932,19 @@ export function ConversationsPage() {
                         <div className="flex gap-4 relative z-10">
                           <div className="relative shrink-0">
                             <Avatar className={`size-12 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
-                              {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
+                              {item.profilePicUrl ?
+                                <AvatarImage
+                                  src={
+                                    buildConversationAvatarSrc({
+                                      channel: item.channel,
+                                      conversationKey: item.conversationKey,
+                                      sourceUrl: item.profilePicUrl,
+                                      accessToken,
+                                    }) || undefined
+                                  }
+                                  alt={displayName} /> :
+
+                                null}
                               <AvatarFallback className={`font-bold text-white shadow-inner bg-gradient-to-br ${
                                 index % 3 === 0 ? 'from-indigo-500 to-purple-600' : 
                                 index % 3 === 1 ? 'from-violet-500 to-fuchsia-600' : 
@@ -989,7 +1001,7 @@ export function ConversationsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className={`flex flex-col h-[calc(100vh-150px)] min-h-[560px] rounded-2xl border border-border/40 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden sm:min-h-[680px] lg:h-[calc(100vh-150px)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
+            className={`flex flex-col h-[calc(100dvh-11.5rem)] min-h-0 rounded-2xl border border-border/40 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
             {selectedConversation ?
               <>
                 <div className="flex items-center justify-between gap-2 border-b border-border/40 px-1.5 pb-2">
@@ -1025,8 +1037,10 @@ export function ConversationsPage() {
                       <p className="text-[14px] font-semibold truncate leading-tight">
                         {conversationDisplayName(selectedConversation)}
                       </p>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] items-center gap-1 font-bold uppercase tracking-tight text-muted-foreground/60 flex">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className="text-[10px] items-center gap-1 font-bold uppercase tracking-tight text-muted-foreground/60 flex truncate"
+                          title={`${selectedConversation.channel} • ${selectedConversation.conversationKey}`}>
                           {selectedConversation.channel} • {selectedConversation.conversationKey}
                         </span>
                         {isHandoverInProgress(normalizeAutomationMode(selectedConversation.automationMode)) && (

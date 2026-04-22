@@ -18,11 +18,13 @@ body,
 
 html {
   -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable;
 }
 
 body {
   margin: 0;
   overscroll-behavior-y: none;
+  overflow-x: hidden;
 }
 
 /* Custom Scrollbar Styles */
@@ -65,9 +67,9 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* Smooth transitions */
-* {
-  transition-property: background-color, border-color, color, transform, opacity, box-shadow;
+/* Smooth transitions - Only apply to properties that don't conflict with motion */
+.transition-all-custom {
+  transition-property: background-color, border-color, color, opacity, box-shadow;
   transition-duration: 250ms;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }

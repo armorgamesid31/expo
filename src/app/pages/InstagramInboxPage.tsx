@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { useAuth } from '../context/AuthContext';
 import { ConversationRealtimeEvent, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
+import { API_BASE_URL } from '../lib/config';
 
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
 
@@ -132,6 +133,25 @@ function automationLabel(mode: AutomationMode): string {
 
 function isHandoverInProgress(mode: AutomationMode): boolean {
   return mode === 'HUMAN_PENDING' || mode === 'HUMAN_ACTIVE';
+}
+
+function buildConversationAvatarSrc(input: {
+  conversationKey: string;
+  sourceUrl: string | null | undefined;
+  accessToken: string | null | undefined;
+}): string | null {
+  const source = typeof input.sourceUrl === 'string' ? input.sourceUrl.trim() : '';
+  if (!source) return null;
+  const token = typeof input.accessToken === 'string' ? input.accessToken.trim() : '';
+  if (!token) return source;
+
+  const params = new URLSearchParams({
+    channel: 'INSTAGRAM',
+    conversationKey: input.conversationKey,
+    sourceUrl: source,
+    authToken: token,
+  });
+  return `${API_BASE_URL}/api/admin/conversations/profile-image?${params.toString()}`;
 }
 
 function findRelatedConversationKeys(items: ConversationItem[], selectedKey: string): string[] {
@@ -530,12 +550,23 @@ export function InstagramInboxPage() {
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <Avatar className="size-8 border border-border/60">
-                              {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
+                              {item.profilePicUrl ?
+                                <AvatarImage
+                                  src={
+                                    buildConversationAvatarSrc({
+                                      conversationKey: item.conversationKey,
+                                      sourceUrl: item.profilePicUrl,
+                                      accessToken,
+                                    }) || undefined
+                                  }
+                                  alt={displayName} /> :
+
+                                null}
                               <AvatarFallback className="text-[10px]">{initialsFromLabel(displayName)}</AvatarFallback>
                             </Avatar>
                             <p className="text-sm font-medium truncate">{displayName}</p>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 flex-wrap justify-end">
                             {item.unreadCount > 0 ?
                               <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--rose-gold)]/10 text-[var(--rose-gold)]">
                                 {item.unreadCount > 99 ? '99+' : item.unreadCount}
@@ -555,12 +586,12 @@ export function InstagramInboxPage() {
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{getPreview(item)}</p>
-                        <div className="mt-2 flex items-center justify-between">
+                        <div className="mt-2 flex items-center justify-between gap-2">
                           <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                             {isLive && <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-                            <span>{formatTs(item.lastEventTimestamp)}</span>
+                            <span className="truncate">{formatTs(item.lastEventTimestamp)}</span>
                           </p>
-                          <span className="text-[10px] text-muted-foreground">{item.messageCount} mesaj</span>
+                          <span className="text-[10px] text-muted-foreground shrink-0">{item.messageCount} mesaj</span>
                         </div>
                       </button>);
 
@@ -574,12 +605,18 @@ export function InstagramInboxPage() {
           <CardContent className="p-3 space-y-3">
             {selectedConversation ?
               <>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar className="size-10 border border-border/60">
                       {selectedConversation.profilePicUrl ?
                         <AvatarImage
-                          src={selectedConversation.profilePicUrl}
+                          src={
+                            buildConversationAvatarSrc({
+                              conversationKey: selectedConversation.conversationKey,
+                              sourceUrl: selectedConversation.profilePicUrl,
+                              accessToken,
+                            }) || undefined
+                          }
                           alt={conversationDisplayName(selectedConversation)} /> :
 
                         null}
@@ -591,7 +628,9 @@ export function InstagramInboxPage() {
                       <p className="text-sm font-semibold">
                         {conversationDisplayName(selectedConversation)}
                       </p>
-                      <p className="text-xs text-muted-foreground">Kod: {selectedConversation.conversationKey}</p>
+                      <p className="text-xs text-muted-foreground truncate" title={selectedConversation.conversationKey}>
+                        Kod: {selectedConversation.conversationKey}
+                      </p>
                       {(() => {
                         const username = normalizeUsername(selectedConversation.profileUsername);
                         return username ?
@@ -605,7 +644,7 @@ export function InstagramInboxPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {selectedConversation.hasHandoverRequest ?
                       <span className="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-700">Temsilci bekleniyor.</span> :
                       null}
