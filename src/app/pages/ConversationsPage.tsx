@@ -249,6 +249,16 @@ function channelLabel(channel: ChannelType | undefined): string {
   return 'Uygulama';
 }
 
+function normalizeConversationKeyForClient(channel: ChannelType, conversationKey: string): string {
+  const trimmed = conversationKey.trim();
+  if (!trimmed) return '';
+  const prefix = `${channel}:`;
+  if (trimmed.startsWith(prefix)) {
+    return trimmed.slice(prefix.length).trim();
+  }
+  return trimmed;
+}
+
 function describeMessageSource(msg: MessageItem, selectedChannel?: ChannelType): string {
   const activeChannel = msg.deliveryChannel || selectedChannel;
   if (msg.direction === 'inbound') {
@@ -366,7 +376,13 @@ export function ConversationsPage() {
   const [channelHealth, setChannelHealth] = useState<ChannelHealthPayload | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
     const cached = readSnapshot<string>(CONVERSATIONS_SELECTED_ID_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
-    return typeof cached === 'string' && cached.includes(':') ? cached : null;
+    if (typeof cached !== 'string' || !cached.includes(':')) return null;
+    const [rawChannel, ...rest] = cached.split(':');
+    const channel = rawChannel === 'INSTAGRAM' || rawChannel === 'WHATSAPP' ? rawChannel : null;
+    const joinedKey = rest.join(':').trim();
+    if (!channel || !joinedKey) return null;
+    const normalizedKey = normalizeConversationKeyForClient(channel, joinedKey);
+    return normalizedKey ? `${channel}:${normalizedKey}` : null;
   });
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -375,7 +391,7 @@ export function ConversationsPage() {
   const [sendingResume, setSendingResume] = useState(false);
   const [sendingHandover, setSendingHandover] = useState(false);
   const [pressedMessage, setPressedMessage] = useState<MessageItem | null>(null);
-  const [manualComposeRequested, setManualComposeRequested] = useState(false);
+  const [manualComposeConversationId, setManualComposeConversationId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>(() => {
     const cached = readSnapshot<'LIST' | 'CHAT'>(CONVERSATIONS_MOBILE_VIEW_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
     return cached === 'CHAT' ? 'CHAT' : 'LIST';
@@ -746,14 +762,18 @@ export function ConversationsPage() {
         (typeof response?.item?.conversationKey === 'string' && response.item.conversationKey.trim())
           ? response.item.conversationKey.trim()
           : selectedConversation.conversationKey;
-      if (effectiveConversationKey !== selectedConversation.conversationKey) {
-        const nextSelectedId = `${selectedConversation.channel}:${effectiveConversationKey}`;
+      const normalizedEffectiveConversationKey = normalizeConversationKeyForClient(
+        selectedConversation.channel,
+        effectiveConversationKey,
+      );
+      if (normalizedEffectiveConversationKey !== selectedConversation.conversationKey) {
+        const nextSelectedId = `${selectedConversation.channel}:${normalizedEffectiveConversationKey}`;
         setSelectedConversationId(nextSelectedId);
         selectedConversationIdRef.current = nextSelectedId;
       }
       setReplyText('');
       showToast('Yanıt başarıyla gönderildi.', 'success');
-      await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
       if (err?.body?.errorCode === 'INSTAGRAM_WINDOW_EXPIRED') {
@@ -778,8 +798,12 @@ export function ConversationsPage() {
         (typeof response?.conversationKey === 'string' && response.conversationKey.trim())
           ? response.conversationKey.trim()
           : selectedConversation.conversationKey;
-      if (effectiveConversationKey !== selectedConversation.conversationKey) {
-        const nextSelectedId = `${selectedConversation.channel}:${effectiveConversationKey}`;
+      const normalizedEffectiveConversationKey = normalizeConversationKeyForClient(
+        selectedConversation.channel,
+        effectiveConversationKey,
+      );
+      if (normalizedEffectiveConversationKey !== selectedConversation.conversationKey) {
+        const nextSelectedId = `${selectedConversation.channel}:${normalizedEffectiveConversationKey}`;
         setSelectedConversationId(nextSelectedId);
         selectedConversationIdRef.current = nextSelectedId;
       }
@@ -787,7 +811,10 @@ export function ConversationsPage() {
         setKonuşmalar((prev) =>
           prev.map((item) =>
             item.channel === selectedConversation.channel &&
-            (item.conversationKey === selectedConversation.conversationKey || item.conversationKey === effectiveConversationKey) ?
+            (
+              item.conversationKey === selectedConversation.conversationKey ||
+              item.conversationKey === normalizedEffectiveConversationKey
+            ) ?
               {
                 ...item,
                 manualAlways: typeof response.state?.manualAlways === 'boolean' ? response.state.manualAlways : item.manualAlways,
@@ -797,9 +824,9 @@ export function ConversationsPage() {
           )
         );
       }
-      setManualComposeRequested(false);
+      setManualComposeConversationId(null);
       showToast('Yapay zeka otomasyonu tekrar devreye alındı.', 'success');
-      await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
       showToast(toUserFriendlyError(err, 'Otomasyon başlatılamadı.'), 'error');
@@ -810,14 +837,6 @@ export function ConversationsPage() {
 
   const requestHandover = async () => {
     if (!selectedConversation) return;
-    setKonuşmalar((prev) =>
-      prev.map((item) =>
-        item.channel === selectedConversation.channel && item.conversationKey === selectedConversation.conversationKey ?
-          { ...item, automationMode: 'HUMAN_PENDING' } :
-          item
-      )
-    );
-    setManualComposeRequested(true);
     setSendingHandover(true);
     try {
       const response = await apiFetch<{ conversationKey?: string; state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
@@ -828,8 +847,12 @@ export function ConversationsPage() {
         (typeof response?.conversationKey === 'string' && response.conversationKey.trim())
           ? response.conversationKey.trim()
           : selectedConversation.conversationKey;
-      if (effectiveConversationKey !== selectedConversation.conversationKey) {
-        const nextSelectedId = `${selectedConversation.channel}:${effectiveConversationKey}`;
+      const normalizedEffectiveConversationKey = normalizeConversationKeyForClient(
+        selectedConversation.channel,
+        effectiveConversationKey,
+      );
+      const nextSelectedId = `${selectedConversation.channel}:${normalizedEffectiveConversationKey}`;
+      if (normalizedEffectiveConversationKey !== selectedConversation.conversationKey) {
         setSelectedConversationId(nextSelectedId);
         selectedConversationIdRef.current = nextSelectedId;
       }
@@ -837,7 +860,10 @@ export function ConversationsPage() {
         setKonuşmalar((prev) =>
           prev.map((item) =>
             item.channel === selectedConversation.channel &&
-            (item.conversationKey === selectedConversation.conversationKey || item.conversationKey === effectiveConversationKey) ?
+            (
+              item.conversationKey === selectedConversation.conversationKey ||
+              item.conversationKey === normalizedEffectiveConversationKey
+            ) ?
               {
                 ...item,
                 manualAlways: typeof response.state?.manualAlways === 'boolean' ? response.state.manualAlways : item.manualAlways,
@@ -846,11 +872,20 @@ export function ConversationsPage() {
               item
           )
         );
+        const nextMode = normalizeAutomationMode(response.state?.mode);
+        setManualComposeConversationId(
+          nextMode === 'HUMAN_PENDING' || nextMode === 'HUMAN_ACTIVE' || nextMode === 'MANUAL_ALWAYS'
+            ? nextSelectedId
+            : null
+        );
+      } else {
+        setManualComposeConversationId(nextSelectedId);
       }
       showToast('Manuel yanıt modu açıldı.', 'success');
-      await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
+      setManualComposeConversationId(null);
       showToast(toUserFriendlyError(err, 'Talep iletilemedi.'), 'error');
     } finally {
       setSendingHandover(false);
@@ -860,7 +895,10 @@ export function ConversationsPage() {
   const isSupportedReplyChannel = selectedConversation?.channel === 'INSTAGRAM' || selectedConversation?.channel === 'WHATSAPP';
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
   const handoverInProgress = isHandoverInProgress(selectedMode);
-  const manualReplyUnlocked = handoverInProgress || selectedMode === 'MANUAL_ALWAYS' || manualComposeRequested;
+  const manualReplyUnlocked =
+    handoverInProgress ||
+    selectedMode === 'MANUAL_ALWAYS' ||
+    (selectedConversationId && manualComposeConversationId === selectedConversationId);
   const instagramWindowExpired =
     selectedConversation?.channel === 'INSTAGRAM' &&
     isInstagramReplyWindowExpired(selectedConversation.lastCustomerMessageAt);
@@ -886,10 +924,6 @@ export function ConversationsPage() {
     setSelectedConversationId(null);
     setMessages([]);
   }, [channelBlocked]);
-
-  useEffect(() => {
-    setManualComposeRequested(false);
-  }, [selectedConversationId]);
 
   return (
     <div className="h-full w-full max-w-full overflow-x-hidden pb-20 overflow-y-auto px-0 py-2 bg-gradient-to-br from-indigo-500/5 via-background to-fuchsia-500/5 relative">
