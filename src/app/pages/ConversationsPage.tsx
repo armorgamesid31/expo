@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ConversationRealtimeEvent, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 import { API_BASE_URL } from '../lib/config';
+import { httpRequest } from '../lib/http';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
 type ChannelFilter = 'ALL' | ChannelType;
@@ -260,6 +261,24 @@ function normalizeConversationKeyForClient(channel: ChannelType, conversationKey
   return trimmed;
 }
 
+function toConversationId(channel: ChannelType, conversationKey: string): string {
+  const normalizedKey = normalizeConversationKeyForClient(channel, conversationKey);
+  return `${channel}:${normalizedKey || conversationKey.trim()}`;
+}
+
+async function withTimeout<T>(task: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
+  return await new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    task.
+      then((value) => resolve(value)).
+      catch((error) => reject(error)).
+      finally(() => window.clearTimeout(timeoutId));
+  });
+}
+
 function describeMessageSource(msg: MessageItem, selectedChannel?: ChannelType): string {
   const activeChannel = msg.deliveryChannel || selectedChannel;
   if (msg.direction === 'inbound') {
@@ -364,7 +383,7 @@ function mergeAndSortMessages(responses: Array<{ items: MessageItem[]; } | null 
 }
 
 export function ConversationsPage() {
-  const { apiFetch, accessToken } = useAuth();
+  const { apiFetch, accessToken, bootstrap } = useAuth();
   const { showToast } = useToasts();
   const navigate = useNavigate();
   const [channelView, setChannelView] = useState<ChannelFilter>(() => {
@@ -446,14 +465,38 @@ export function ConversationsPage() {
   const fetchGetWithFallback = useCallback(
     async <T,>(path: string): Promise<{ data: T; usedFallback: boolean }> => {
       try {
-        const data = await apiFetch<T>(path, { __cache: { mode: 'network-only' } });
+        const data = await withTimeout(
+          apiFetch<T>(path, { __cache: { mode: 'network-only' } }),
+          10000,
+          'Network request timed out.',
+        );
         return { data, usedFallback: false };
       } catch {
-        const data = await apiFetch<T>(path, { __cache: { mode: 'swr' } });
-        return { data, usedFallback: true };
+        try {
+          const data = await withTimeout(
+            apiFetch<T>(path, { __cache: { mode: 'swr' } }),
+            5000,
+            'Cache fallback timed out.',
+          );
+          return { data, usedFallback: true };
+        } catch {
+          if (!accessToken) {
+            throw new Error('Not authenticated');
+          }
+          const data = await withTimeout(
+            httpRequest<T>(path, {
+              method: 'GET',
+              token: accessToken,
+              salonId: bootstrap?.salon?.id || null,
+            }),
+            10000,
+            'Direct network fallback timed out.',
+          );
+          return { data, usedFallback: false };
+        }
       }
     },
-    [apiFetch],
+    [accessToken, apiFetch, bootstrap?.salon?.id],
   );
 
   const markConversationAsReadLocal = useCallback((conversationId: string | null) => {
@@ -676,7 +719,7 @@ export function ConversationsPage() {
     const activeId = selectedConversationIdRef.current;
     const activeConversationTouched = Boolean(
       activeId &&
-      events?.some((event) => `${event.channel}:${event.conversationKey}` === activeId),
+      events?.some((event) => toConversationId(event.channel, event.conversationKey) === activeId),
     );
     const waitMs = activeConversationTouched ? 60 : 160;
 
@@ -748,7 +791,7 @@ export function ConversationsPage() {
     onEvents: (events, source) => {
       if (source === 'stream') {
         markLiveConversation(
-          events.map((event) => `${event.channel}:${event.conversationKey}`),
+          events.map((event) => toConversationId(event.channel, event.conversationKey)),
         );
       }
       scheduleRealtimeRefresh(events);
