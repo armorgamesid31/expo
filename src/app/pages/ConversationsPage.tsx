@@ -699,7 +699,7 @@ export function ConversationsPage() {
   }, [selectedConversationId]);
 
   return (
-    <div className="h-full pb-20 overflow-y-auto px-0 py-2 bg-gradient-to-br from-indigo-500/5 via-background to-fuchsia-500/5 relative">
+    <div className="h-full w-full max-w-full overflow-x-hidden pb-20 overflow-y-auto px-0 py-2 bg-gradient-to-br from-indigo-500/5 via-background to-fuchsia-500/5 relative">
       <div className="pointer-events-none absolute right-0 top-0 h-[400px] w-[400px] -translate-y-1/2 translate-x-1/3 rounded-full bg-[var(--deep-indigo)] mix-blend-screen opacity-10 blur-[100px]" />
       <div className={`mb-2 relative z-10 ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'} flex-wrap items-center gap-2 px-1 sm:px-2`}>
         <div className="inline-flex rounded-2xl border border-border/50 bg-background/70 shadow-sm backdrop-blur-md p-1">

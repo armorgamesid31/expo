@@ -492,7 +492,7 @@ export function InstagramInboxPage() {
   const handoverInProgress = isHandoverInProgress(selectedMode);
 
   return (
-    <div className="h-full pb-20 overflow-y-auto bg-gradient-to-b from-background to-muted/20">
+    <div className="h-full w-full max-w-full overflow-x-hidden pb-20 overflow-y-auto bg-gradient-to-b from-background to-muted/20">
       <div className="sticky top-0 bg-[var(--luxury-bg)] z-10 border-b border-border p-4">
         <button
           type="button"

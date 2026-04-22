@@ -214,7 +214,12 @@ export function SchedulePage() {
   const { apiFetch } = useAuth();
   const [activeDate, setActiveDate] = useState<Date>(() => readScheduleSelectedDate());
   const [initialScheduleSnapshot] = useState<ScheduleSnapshot | null>(() => readScheduleSnapshot(activeDate));
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+      return 'list';
+    }
+    return 'calendar';
+  });
 
   const [staff, setStaff] = useState<StaffItem[]>(() => initialScheduleSnapshot?.staff || []);
   const [services, setServices] = useState<ServiceItem[]>(() => initialScheduleSnapshot?.services || []);
@@ -1349,7 +1354,7 @@ export function SchedulePage() {
 
   return (
     <>
-      <div id="kedy-app-schedule-root" className="min-h-screen bg-background">
+      <div id="kedy-app-schedule-root" className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
         <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Randevular</h1>
@@ -1483,8 +1488,8 @@ export function SchedulePage() {
 
       {viewMode === 'calendar' ?
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-            <div className="min-w-[760px]">
+          <div className="overflow-auto" style={{ maxHeight: 'calc(100dvh - 250px)' }}>
+            <div className="min-w-[640px] sm:min-w-[760px]">
               <div className="flex border-b border-border sticky top-0 bg-card z-10">
                 <div className="w-16 shrink-0 border-r border-border" />
                 <div className="flex flex-1">

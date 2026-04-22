@@ -76,35 +76,35 @@ export function NavigatorProvider({ children }: { children: React.ReactNode }) {
 
     // 1. POP / Manual Back
     if (navType === 'POP' || explicitDirection === 'back') {
-      if (currentLevel < prevLevel) return 1; // Return up: Slide Right
+      if (currentLevel < prevLevel) return -1; // Return up: Slide Right
       if (currentLevel === 1 && prevLevel === 1) return currentRank > prevRank ? 1 : -1;
-      return 1; // Default back: Slide Right
+      return -1; // Default back: Slide Right
     }
 
     // 2. Explicit Forward
     if (explicitDirection === 'forward') {
-      return -1; // Detail forward: Slide Left
+      return 1; // Detail forward: Slide Left
     }
 
     // 3. Automated Logic
     // Same Level (Tabs)
     if (currentLevel === 1 && prevLevel === 1) {
       // Forward (0->1) -> Motion LEFT (Vector -1)
-      return currentRank > prevRank ? -1 : 1;
+      return currentRank > prevRank ? 1 : -1;
     }
 
     // Hierarchy Change
     if (currentLevel > prevLevel) {
       // INTO DEPTH: Motion LEFT (Vector -1)
-      return -1;
+      return 1;
     }
     if (currentLevel < prevLevel) {
       // BACK TO SURFACE: Motion RIGHT (Vector 1)
-      return 1;
+      return -1;
     }
 
     // Default for same-level depth changes (L2 -> L2)
-    return -1;
+    return 1;
   }, [location.key, navType, location.state]);
 
   // Update back action state
