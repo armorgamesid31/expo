@@ -214,12 +214,17 @@ export function SchedulePage() {
   const { apiFetch } = useAuth();
   const [activeDate, setActiveDate] = useState<Date>(() => readScheduleSelectedDate());
   const [initialScheduleSnapshot] = useState<ScheduleSnapshot | null>(() => readScheduleSnapshot(activeDate));
+  const [isCompactCalendar, setIsCompactCalendar] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 1023px)').matches;
+  });
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>(() => {
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
       return 'list';
     }
     return 'calendar';
   });
+  const [mobileCalendarStaffId, setMobileCalendarStaffId] = useState<number | null>(null);
 
   const [staff, setStaff] = useState<StaffItem[]>(() => initialScheduleSnapshot?.staff || []);
   const [services, setServices] = useState<ServiceItem[]>(() => initialScheduleSnapshot?.services || []);
@@ -298,9 +303,35 @@ export function SchedulePage() {
   }, []);
 
   const timelineHeight = timeSlots.length * SLOT_HEIGHT;
+  const visibleCalendarStaff = useMemo(() => {
+    if (!isCompactCalendar) return staff;
+    if (!staff.length) return [];
+    if (mobileCalendarStaffId == null) return [staff[0]];
+    return staff.filter((member) => member.id === mobileCalendarStaffId);
+  }, [isCompactCalendar, mobileCalendarStaffId, staff]);
+  const calendarGridMinWidth = 64 + Math.max(staff.length, 1) * COLUMN_WIDTH;
 
   const dateText = useMemo(() => format(activeDate, 'EEEE, d MMMM', { locale: tr }), [activeDate]);
   const isToday = useMemo(() => format(activeDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'), [activeDate]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(max-width: 1023px)');
+    const update = () => setIsCompactCalendar(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (!staff.length) {
+      setMobileCalendarStaffId(null);
+      return;
+    }
+    if (mobileCalendarStaffId == null || !staff.some((member) => member.id === mobileCalendarStaffId)) {
+      setMobileCalendarStaffId(staff[0].id);
+    }
+  }, [mobileCalendarStaffId, staff]);
 
   useEffect(() => {
     writeSnapshot(SCHEDULE_SELECTED_DATE_CACHE_KEY, format(activeDate, 'yyyy-MM-dd'));
@@ -1354,7 +1385,7 @@ export function SchedulePage() {
 
   return (
     <>
-      <div id="kedy-app-schedule-root" className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
+      <div id="kedy-app-schedule-root" className="min-h-screen w-full max-w-full overflow-x-clip bg-background">
         <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Randevular</h1>
@@ -1488,18 +1519,37 @@ export function SchedulePage() {
 
       {viewMode === 'calendar' ?
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="overflow-auto" style={{ maxHeight: 'calc(100dvh - 250px)' }}>
-            <div className="min-w-[640px] sm:min-w-[760px]">
+          {isCompactCalendar && staff.length > 1 ? (
+            <div className="border-b border-border bg-card px-3 py-2">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {staff.map((member) => (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => setMobileCalendarStaffId(member.id)}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
+                      mobileCalendarStaffId === member.id
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-border bg-background text-muted-foreground'
+                    }`}>
+                    {member.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <div className={isCompactCalendar ? 'overflow-y-auto' : 'overflow-auto'} style={{ maxHeight: 'calc(100dvh - 250px)' }}>
+            <div className="min-w-0" style={isCompactCalendar ? undefined : { minWidth: calendarGridMinWidth }}>
               <div className="flex border-b border-border sticky top-0 bg-card z-10">
                 <div className="w-16 shrink-0 border-r border-border" />
                 <div className="flex flex-1">
-                  {staff.map((member) =>
-                    <div key={member.id} className="border-r border-border px-2 py-2" style={{ width: COLUMN_WIDTH }}>
+                  {visibleCalendarStaff.map((member) =>
+                    <div key={member.id} className="border-r border-border px-2 py-2" style={isCompactCalendar ? { width: '100%' } : { width: COLUMN_WIDTH }}>
                       <p className="text-xs font-semibold truncate">{member.name}</p>
                       <p className="text-[11px] text-muted-foreground truncate">{member.title || 'Uzman'}</p>
                     </div>
                   )}
-                  {!staff.length ?
+                  {!visibleCalendarStaff.length ?
                     <div className="px-3 py-3 text-xs text-muted-foreground">Takvim için personel bulunamadı.</div> :
                     null}
                 </div>
@@ -1519,10 +1569,10 @@ export function SchedulePage() {
                 </div>
 
                 <div className="flex flex-1">
-                  {staff.map((member) => {
+                  {visibleCalendarStaff.map((member) => {
                     const rows = appointments.filter((item) => item.staff?.id === member.id);
                     return (
-                      <div key={member.id} className="relative border-r border-border" style={{ width: COLUMN_WIDTH, height: timelineHeight }}>
+                      <div key={member.id} className="relative border-r border-border" style={isCompactCalendar ? { width: '100%', height: timelineHeight } : { width: COLUMN_WIDTH, height: timelineHeight }}>
                         {timeSlots.map((hour) =>
                           <div key={`${member.id}-${hour}`} className="border-b border-border/70" style={{ height: SLOT_HEIGHT }} />
                         )}
