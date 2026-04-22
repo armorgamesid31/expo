@@ -5,6 +5,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Skeleton } from '../components/ui/skeleton';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { useAuth } from '../context/AuthContext';
 import { useToasts } from '../context/ToastContext';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -172,7 +173,7 @@ function conversationDisplayName(item: Pick<ConversationItem, 'customerName' | '
   if (item.customerName && item.customerName.trim()) return item.customerName.trim();
   const username = normalizeUsername(item.profileUsername);
   if (username) return `@${username}`;
-  return `Kullanıcı ${item.conversationKey}`;
+  return 'İsimsiz Kullanıcı';
 }
 
 function initialsFromLabel(value: string | null | undefined): string {
@@ -218,6 +219,42 @@ function buildConversationAvatarSrc(input: {
 
 function isHandoverInProgress(mode: AutomationMode): boolean {
   return mode === 'HUMAN_PENDING' || mode === 'HUMAN_ACTIVE';
+}
+
+function channelLabel(channel: ChannelType | undefined): string {
+  if (channel === 'INSTAGRAM') return 'Instagram';
+  if (channel === 'WHATSAPP') return 'WhatsApp';
+  return 'Uygulama';
+}
+
+function describeMessageSource(msg: MessageItem, selectedChannel?: ChannelType): string {
+  const activeChannel = msg.deliveryChannel || selectedChannel;
+  if (msg.direction === 'inbound') {
+    return `${channelLabel(activeChannel)} uygulaması`;
+  }
+  if (msg.direction === 'system') {
+    return 'Kedy Sistem';
+  }
+
+  if (msg.outboundSource === 'AI_AGENT') {
+    return 'Kedy AI';
+  }
+  if (msg.outboundSource === 'HUMAN_APP') {
+    return 'Kedy App';
+  }
+  return `${channelLabel(activeChannel)} uygulaması`;
+}
+
+function describeMessageAuthor(msg: MessageItem): string {
+  if (msg.direction === 'inbound') return 'Müşteri';
+  if (msg.direction === 'system') return 'Sistem';
+  if (msg.outboundSource === 'AI_AGENT') return 'Kedy AI';
+
+  const senderEmail = typeof msg.outboundSenderEmail === 'string' ? msg.outboundSenderEmail.trim() : '';
+  if (senderEmail) return senderEmail;
+  const sourceLabel = typeof msg.outboundSourceLabel === 'string' ? msg.outboundSourceLabel.trim() : '';
+  if (sourceLabel) return sourceLabel;
+  return 'Salon Ekibi';
 }
 
 function findRelatedConversationKeys(
@@ -315,6 +352,7 @@ export function ConversationsPage() {
   const [sendingReply, setSendingReply] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
   const [sendingHandover, setSendingHandover] = useState(false);
+  const [pressedMessage, setPressedMessage] = useState<MessageItem | null>(null);
   const [manualComposeRequested, setManualComposeRequested] = useState(false);
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>(() => {
     const cached = readSnapshot<'LIST' | 'CHAT'>(CONVERSATIONS_MOBILE_VIEW_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
@@ -323,6 +361,7 @@ export function ConversationsPage() {
   const [liveConversationMap, setLiveConversationMap] = useState<Record<string, number>>({});
   const realtimeRefreshTimerRef = useRef<number | null>(null);
   const liveConversationTimersRef = useRef<Record<string, number>>({});
+  const longPressTimerRef = useRef<number | null>(null);
   const conversationsRef = useRef<ConversationItem[]>([]);
   const selectedConversationIdRef = useRef<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
@@ -610,6 +649,33 @@ export function ConversationsPage() {
       realtimeRefreshTimerRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (!longPressTimerRef.current) return;
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    };
+  }, []);
+
+  const clearLongPressTimer = useCallback(() => {
+    if (!longPressTimerRef.current) return;
+    window.clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = null;
+  }, []);
+
+  const openMessageMeta = useCallback((msg: MessageItem) => {
+    clearLongPressTimer();
+    setPressedMessage(msg);
+  }, [clearLongPressTimer]);
+
+  const beginLongPress = useCallback((msg: MessageItem) => {
+    clearLongPressTimer();
+    longPressTimerRef.current = window.setTimeout(() => {
+      setPressedMessage(msg);
+      longPressTimerRef.current = null;
+    }, 420);
+  }, [clearLongPressTimer]);
 
   const sendReply = async () => {
     if (!selectedConversation || !replyText.trim()) return;
@@ -1163,7 +1229,24 @@ export function ConversationsPage() {
                                         isOutbound ? 
                                           `bg-gradient-to-br from-[var(--deep-indigo)] to-indigo-600 text-white border border-indigo-500/20 ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px]' : isSameSenderAsNext ? 'rounded-t-[20px] rounded-bl-[20px] rounded-br-[8px]' : isSameSenderAsPrev ? 'rounded-b-[20px] rounded-tl-[20px] rounded-tr-[8px]' : 'rounded-[20px] rounded-tr-[4px]'}` : 
                                           `bg-card/40 backdrop-blur-lg border border-white/10 text-foreground ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px]' : isSameSenderAsNext ? 'rounded-t-[20px] rounded-br-[20px] rounded-bl-[8px]' : isSameSenderAsPrev ? 'rounded-b-[20px] rounded-tr-[20px] rounded-tl-[8px]' : 'rounded-[20px] rounded-tl-[4px]'}`
-                                      }`}>
+                                      }`}
+                                      role="button"
+                                      tabIndex={0}
+                                      aria-label="Mesaj detaylarını görüntüle"
+                                      onContextMenu={(event) => {
+                                        event.preventDefault();
+                                        openMessageMeta(msg);
+                                      }}
+                                      onTouchStart={() => beginLongPress(msg)}
+                                      onTouchEnd={clearLongPressTimer}
+                                      onTouchCancel={clearLongPressTimer}
+                                      onTouchMove={clearLongPressTimer}
+                                      onKeyDown={(event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                          event.preventDefault();
+                                          openMessageMeta(msg);
+                                        }
+                                      }}>
                                         <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
                                           {formatOperatorMessage(msg.text) || formatMessageTypeLabel(msg.messageType)}
                                         </p>
@@ -1246,6 +1329,38 @@ export function ConversationsPage() {
           </motion.div>
         </div>
       }
+      <Dialog
+        open={Boolean(pressedMessage)}
+        onOpenChange={(open) => {
+          if (!open) setPressedMessage(null);
+        }}>
+        <DialogContent className="max-w-[420px] rounded-2xl border border-border/40 bg-background/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">Mesaj Detayı</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Kaynak ve gönderen bilgisi
+            </DialogDescription>
+          </DialogHeader>
+          {pressedMessage && (
+            <div className="space-y-2 text-sm">
+              <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Kaynak</p>
+                <p className="font-medium">{describeMessageSource(pressedMessage, selectedConversation?.channel)}</p>
+              </div>
+              <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Yazan</p>
+                <p className="font-medium">{describeMessageAuthor(pressedMessage)}</p>
+              </div>
+              <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarih</p>
+                <p className="font-medium">
+                  {format(new Date(pressedMessage.eventTimestamp), 'd MMMM yyyy HH:mm', { locale: tr })}
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
