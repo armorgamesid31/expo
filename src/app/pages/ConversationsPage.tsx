@@ -48,6 +48,7 @@ interface ConversationItem {
 
 interface MessageItem {
   id: number;
+  conversationKey?: string;
   providerMessageId: string;
   messageType: string;
   text: string | null;
@@ -681,16 +682,25 @@ export function ConversationsPage() {
     if (!selectedConversation || !replyText.trim()) return;
     setSendingReply(true);
     try {
-      await apiFetch(
+      const response = await apiFetch<{ item?: MessageItem & { conversationKey?: string; }; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/reply`,
         {
           method: 'POST',
           body: JSON.stringify({ text: replyText.trim() })
         }
       );
+      const effectiveConversationKey =
+        (typeof response?.item?.conversationKey === 'string' && response.item.conversationKey.trim())
+          ? response.item.conversationKey.trim()
+          : selectedConversation.conversationKey;
+      if (effectiveConversationKey !== selectedConversation.conversationKey) {
+        const nextSelectedId = `${selectedConversation.channel}:${effectiveConversationKey}`;
+        setSelectedConversationId(nextSelectedId);
+        selectedConversationIdRef.current = nextSelectedId;
+      }
       setReplyText('');
       showToast('Yanıt başarıyla gönderildi.', 'success');
-      await loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
+      await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
       showToast(err?.message || "Bize ulaşın mesajı gönderilemedi.", 'error');
@@ -711,14 +721,24 @@ export function ConversationsPage() {
     setManualComposeRequested(false);
     setSendingResume(true);
     try {
-      const response = await apiFetch<{ state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
+      const response = await apiFetch<{ conversationKey?: string; state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/resume-auto`,
         { method: 'POST' }
       );
+      const effectiveConversationKey =
+        (typeof response?.conversationKey === 'string' && response.conversationKey.trim())
+          ? response.conversationKey.trim()
+          : selectedConversation.conversationKey;
+      if (effectiveConversationKey !== selectedConversation.conversationKey) {
+        const nextSelectedId = `${selectedConversation.channel}:${effectiveConversationKey}`;
+        setSelectedConversationId(nextSelectedId);
+        selectedConversationIdRef.current = nextSelectedId;
+      }
       if (response?.state) {
         setKonuşmalar((prev) =>
           prev.map((item) =>
-            item.channel === selectedConversation.channel && item.conversationKey === selectedConversation.conversationKey ?
+            item.channel === selectedConversation.channel &&
+            (item.conversationKey === selectedConversation.conversationKey || item.conversationKey === effectiveConversationKey) ?
               {
                 ...item,
                 manualAlways: typeof response.state?.manualAlways === 'boolean' ? response.state.manualAlways : item.manualAlways,
@@ -729,7 +749,7 @@ export function ConversationsPage() {
         );
       }
       showToast('Yapay zeka otomasyonu tekrar devreye alındı.', 'success');
-      await loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
+      await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
       showToast(err?.message || 'Otomasyon başlatılamadı.', 'error');
@@ -750,14 +770,24 @@ export function ConversationsPage() {
     setManualComposeRequested(true);
     setSendingHandover(true);
     try {
-      const response = await apiFetch<{ state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
+      const response = await apiFetch<{ conversationKey?: string; state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/handover`,
         { method: 'POST' }
       );
+      const effectiveConversationKey =
+        (typeof response?.conversationKey === 'string' && response.conversationKey.trim())
+          ? response.conversationKey.trim()
+          : selectedConversation.conversationKey;
+      if (effectiveConversationKey !== selectedConversation.conversationKey) {
+        const nextSelectedId = `${selectedConversation.channel}:${effectiveConversationKey}`;
+        setSelectedConversationId(nextSelectedId);
+        selectedConversationIdRef.current = nextSelectedId;
+      }
       if (response?.state) {
         setKonuşmalar((prev) =>
           prev.map((item) =>
-            item.channel === selectedConversation.channel && item.conversationKey === selectedConversation.conversationKey ?
+            item.channel === selectedConversation.channel &&
+            (item.conversationKey === selectedConversation.conversationKey || item.conversationKey === effectiveConversationKey) ?
               {
                 ...item,
                 manualAlways: typeof response.state?.manualAlways === 'boolean' ? response.state.manualAlways : item.manualAlways,
@@ -768,7 +798,7 @@ export function ConversationsPage() {
         );
       }
       showToast('Manuel yanıt modu açıldı.', 'success');
-      await loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
+      await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
       showToast(err?.message || 'Talep iletilemedi.', 'error');
