@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Search, Send, MessageSquareDashed, ChevronLeft, Instagram, LogOut, Sparkles, SendHorizontal } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Search, Send, MessageSquareDashed, ChevronLeft, Instagram, Sparkles, SendHorizontal, LifeBuoy } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -16,6 +16,7 @@ import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 import { API_BASE_URL } from '../lib/config';
 
 type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
+type ChannelFilter = 'ALL' | ChannelType;
 type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
 const SHOW_WHATSAPP_INBOX = true;
 const CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY = 'conversations:selected-channel';
@@ -296,12 +297,11 @@ export function ConversationsPage() {
   const { apiFetch, accessToken } = useAuth();
   const { showToast } = useToasts();
   const navigate = useNavigate();
-  const [channelView, setChannelView] = useState<ChannelType>(() => {
-    const cached = readSnapshot<ChannelType>(CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
-    return cached === 'WHATSAPP' || cached === 'INSTAGRAM' ? cached : 'INSTAGRAM';
+  const [channelView, setChannelView] = useState<ChannelFilter>(() => {
+    const cached = readSnapshot<ChannelFilter>(CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
+    return cached === 'ALL' || cached === 'WHATSAPP' || cached === 'INSTAGRAM' ? cached : 'ALL';
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [showOnlyHandover, setShowOnlyHandover] = useState(false);
   const [loadingKonuşmalar, setLoadingKonuşmalar] = useState(true);
   const [conversations, setKonuşmalar] = useState<ConversationItem[]>([]);
   const [channelHealth, setChannelHealth] = useState<ChannelHealthPayload | null>(null);
@@ -391,9 +391,7 @@ export function ConversationsPage() {
 
   const filteredKonuşmalar = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return conversations.filter((item) => {
-      const matchesFilter = !showOnlyHandover || isHandoverInProgress(normalizeAutomationMode(item.automationMode));
-      if (!matchesFilter) return false;
+    const filtered = conversations.filter((item) => {
       if (!query) return true;
       const haystack = [
         conversationDisplayName(item),
@@ -405,7 +403,13 @@ export function ConversationsPage() {
         toLowerCase();
       return haystack.includes(query);
     });
-  }, [conversations, searchQuery, showOnlyHandover]);
+    return filtered.sort((a, b) => {
+      const aHandover = isHandoverInProgress(normalizeAutomationMode(a.automationMode));
+      const bHandover = isHandoverInProgress(normalizeAutomationMode(b.automationMode));
+      if (aHandover !== bHandover) return aHandover ? -1 : 1;
+      return new Date(b.lastEventTimestamp).getTime() - new Date(a.lastEventTimestamp).getTime();
+    });
+  }, [conversations, searchQuery]);
 
   useEffect(() => {
     conversationsRef.current = conversations;
@@ -447,7 +451,9 @@ export function ConversationsPage() {
     if (showLoading) setLoadingKonuşmalar(true);
     try {
       const response = await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
-        `/api/admin/conversations?limit=60&channel=${channelView}`
+        channelView === 'ALL'
+          ? '/api/admin/conversations?limit=60'
+          : `/api/admin/conversations?limit=60&channel=${channelView}`
       );
       const selectedId = selectedConversationIdRef.current;
       const next = (response?.items || []).map((item) => {
@@ -572,7 +578,7 @@ export function ConversationsPage() {
   useConversationRealtimeSync({
     enabled: !!accessToken,
     accessToken,
-    channel: channelView,
+    channel: channelView === 'ALL' ? undefined : channelView,
     cursorScopeKey: 'conversations-page',
     apiFetch,
     onEvents: (events, source) => {
@@ -668,18 +674,20 @@ export function ConversationsPage() {
   const handoverInProgress = isHandoverInProgress(selectedMode);
   const manualReplyUnlocked = handoverInProgress || selectedMode === 'MANUAL_ALWAYS' || manualComposeRequested;
   const canReply = Boolean(isSupportedReplyChannel && manualReplyUnlocked);
-  const channelScopedConversations = useMemo(
-    () => conversations.filter((item) => item.channel === channelView),
-    [conversations, channelView]
-  );
+  const channelScopedConversations = useMemo(() => {
+    if (channelView === 'ALL') return conversations;
+    return conversations.filter((item) => item.channel === channelView);
+  }, [conversations, channelView]);
   const handoverTotal = channelScopedConversations.filter((item) =>
     isHandoverInProgress(normalizeAutomationMode(item.automationMode))
   ).length;
-  const selectedChannelHealth = channelView === 'INSTAGRAM' ? channelHealth?.instagram : channelHealth?.whatsapp;
+  const selectedChannelHealth = channelView === 'INSTAGRAM' ? channelHealth?.instagram : channelView === 'WHATSAPP' ? channelHealth?.whatsapp : null;
   const channelBlocked = channelHealth
     ? channelView === 'INSTAGRAM'
       ? !(channelHealth.instagram.connected && channelHealth.instagram.bindingReady)
-      : !channelHealth.whatsapp.connected
+      : channelView === 'WHATSAPP'
+        ? !channelHealth.whatsapp.connected
+        : false
     : false;
 
   useEffect(() => {
@@ -699,13 +707,29 @@ export function ConversationsPage() {
         <div className="flex w-full sm:w-auto min-w-0 rounded-2xl border border-border/50 bg-background/70 shadow-sm backdrop-blur-md p-1">
           <button
             type="button"
+            aria-pressed={channelView === 'ALL'}
+            onClick={() => {
+              setChannelView('ALL');
+              setSelectedConversationId(null);
+              setMessages([]);
+              setSearchQuery('');
+            }}
+            className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+              channelView === 'ALL'
+                ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-md'
+                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+            }`}
+          >
+            Tümü
+          </button>
+          <button
+            type="button"
             aria-pressed={channelView === 'INSTAGRAM'}
             onClick={() => {
               setChannelView('INSTAGRAM');
               setSelectedConversationId(null);
               setMessages([]);
               setSearchQuery('');
-              setShowOnlyHandover(false);
             }}
             className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
               channelView === 'INSTAGRAM'
@@ -725,7 +749,6 @@ export function ConversationsPage() {
                 setSelectedConversationId(null);
                 setMessages([]);
                 setSearchQuery('');
-                setShowOnlyHandover(false);
               }}
               className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
                 channelView === 'WHATSAPP'
@@ -738,30 +761,16 @@ export function ConversationsPage() {
             </button> :
             null}
         </div>
-        <button
-          type="button"
-          aria-pressed={showOnlyHandover}
-          onClick={() => setShowOnlyHandover((prev) => !prev)}
-          className={`inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold shadow-sm backdrop-blur-md transition ${
-            showOnlyHandover
-              ? 'border-amber-500/40 bg-amber-500/10 text-amber-700'
-              : 'border-border/50 bg-background/70 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-          }`}
-        >
-          <Sparkles className="size-3.5" />
-          <span>{showOnlyHandover ? 'Canlı Destek Açık' : 'Canlı Destek'}</span>
-          <span className="rounded-md bg-background/80 px-1.5 py-0.5 text-[10px] font-black text-foreground/80">{handoverTotal}</span>
-        </button>
       </div>
 
       {!channelBlocked && selectedChannelHealth && (
         <div className="mt-2 overflow-hidden rounded-2xl border border-border/50 bg-background/50 shadow-sm backdrop-blur-md px-4 py-3 sm:mx-2 mb-4 mx-1">
           <div className="flex items-center gap-3">
             <div className={`size-2 rounded-full animate-pulse ${
-              channelView === 'INSTAGRAM' ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+              channelView === 'INSTAGRAM' ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : channelView === 'WHATSAPP' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.5)]'
             }`} />
             <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
-              {channelView} Canlı Yayın
+              Mesaj Kanalı Aktif
             </span>
             <div className="ml-auto flex items-center gap-1.5 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
               <div className="size-1 rounded-full bg-muted-foreground/40" />
@@ -870,7 +879,7 @@ export function ConversationsPage() {
                   <MessageSquareDashed className="w-12 h-12 mb-4 opacity-20" />
                   <p className="text-sm font-semibold text-foreground/80">Sohbet kutusu boş</p>
                   <p className="text-xs opacity-80 mt-1">
-                    {selectedChannelHealth ? "Bu filtrelere uygun bir mesajlaşma bulunamadı." : "Bu kanal için mesaj yok."}
+                    {channelView === 'ALL' ? "Henüz görüntülenecek sohbet yok." : "Bu kanal için mesaj yok."}
                   </p>
                 </div> :
 
@@ -947,7 +956,14 @@ export function ConversationsPage() {
                           
                           <div className="w-0 min-w-0 flex-1 py-0">
                             <div className="flex min-w-0 items-center justify-between mb-1">
-                              <h4 className={`text-[15px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
+                              <div className="flex min-w-0 items-center gap-1.5">
+                                {isHandoverInProgress(normalizeAutomationMode(item.automationMode)) && (
+                                  <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-600">
+                                    <LifeBuoy className="size-3.5" />
+                                  </span>
+                                )}
+                                <h4 className={`text-[15px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
+                              </div>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {isLive && (
                                   <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
