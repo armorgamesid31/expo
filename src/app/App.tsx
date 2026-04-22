@@ -23,7 +23,6 @@ import { CampaignsCrudPage } from './pages/CampaignsCrudPage';
 import { AutomationsCrudPage } from './pages/AutomationsCrudPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { BlacklistPage } from './pages/BlacklistPage';
-import { InstagramInboxPage } from './pages/InstagramInboxPage';
 import { ConversationsPage } from './pages/ConversationsPage';
 import { PackagesPage } from './pages/PackagesPage';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
@@ -314,7 +313,7 @@ function AppRoutes() {
           <Route path="campaigns" element={<CampaignsCrudPage />} />
           <Route path="automations" element={<AutomationsCrudPage />} />
           <Route path="blacklist" element={<BlacklistPage />} />
-          <Route path="instagram-inbox" element={<InstagramInboxPage />} />
+          <Route path="instagram-inbox" element={<Navigate to="/app/conversations" replace />} />
           <Route path="salon-info" element={<SalonSetupPage />} />
           <Route path="salon-info/basic" element={<SalonInfoBasicsPage />} />
           <Route path="salon-info/faq" element={<SalonInfoFaqPage />} />

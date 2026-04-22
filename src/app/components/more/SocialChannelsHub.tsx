@@ -457,7 +457,7 @@ export function SocialChannelsHub() {
                     variant="ghost" 
                     size="sm" 
                     className="h-9 w-9 p-0 rounded-xl"
-                    onClick={() => navigate('/app/instagram-inbox', { state: { navDirection: 'forward' } })}
+                    onClick={() => navigate('/app/conversations', { state: { navDirection: 'forward' } })}
                   >
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </Button>

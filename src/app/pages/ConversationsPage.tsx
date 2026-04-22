@@ -12,7 +12,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale/tr';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ConversationRealtimeEvent, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
+import { ConversationRealtimeEvent, RealtimeSyncStatus, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 import { API_BASE_URL } from '../lib/config';
 import { httpRequest } from '../lib/http';
@@ -251,6 +251,32 @@ function channelLabel(channel: ChannelType | undefined): string {
   return 'Uygulama';
 }
 
+function realtimeStatusMeta(status: RealtimeSyncStatus): {
+  label: string;
+  dotClass: string;
+  badgeClass: string;
+} {
+  if (status === 'live') {
+    return {
+      label: 'Canlı',
+      dotClass: 'bg-emerald-500',
+      badgeClass: 'text-emerald-700 bg-emerald-500/10 border-emerald-500/20',
+    };
+  }
+  if (status === 'recovering' || status === 'connecting') {
+    return {
+      label: 'Toparlanıyor',
+      dotClass: 'bg-amber-500',
+      badgeClass: 'text-amber-700 bg-amber-500/10 border-amber-500/20',
+    };
+  }
+  return {
+    label: 'Zayıf',
+    dotClass: 'bg-rose-500',
+    badgeClass: 'text-rose-700 bg-rose-500/10 border-rose-500/20',
+  };
+}
+
 function normalizeConversationKeyForClient(channel: ChannelType, conversationKey: string): string {
   const trimmed = conversationKey.trim();
   if (!trimmed) return '';
@@ -422,7 +448,11 @@ export function ConversationsPage() {
     return cached;
   });
   const [liveConversationMap, setLiveConversationMap] = useState<Record<string, number>>({});
+  const [realtimeStatus, setRealtimeStatus] = useState<RealtimeSyncStatus>('connecting');
   const realtimeRefreshTimerRef = useRef<number | null>(null);
+  const degradedRefreshTimerRef = useRef<number | null>(null);
+  const degradedRefreshAttemptRef = useRef(0);
+  const refreshInFlightRef = useRef(false);
   const liveConversationTimersRef = useRef<Record<string, number>>({});
   const longPressTimerRef = useRef<number | null>(null);
   const conversationsRef = useRef<ConversationItem[]>([]);
@@ -714,6 +744,26 @@ export function ConversationsPage() {
       if (showLoading) setLoadingMessages(false);
     }
   }, [fetchGetWithFallback, messages.length]);
+
+  const refreshConversationsView = useCallback(async () => {
+    if (refreshInFlightRef.current) return;
+    refreshInFlightRef.current = true;
+    try {
+      const liveSelectedId = selectedConversationIdRef.current;
+      if (liveSelectedId && liveSelectedId.includes(':')) {
+        const [rawChannel, ...rest] = liveSelectedId.split(':');
+        const rawKey = rest.join(':');
+        if ((rawChannel === 'INSTAGRAM' || rawChannel === 'WHATSAPP') && rawKey) {
+          await loadMessages(rawChannel as ChannelType, rawKey, false);
+        }
+      }
+
+      await loadKonuşmalar(false);
+    } finally {
+      refreshInFlightRef.current = false;
+    }
+  }, [loadKonuşmalar, loadMessages]);
+
   const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
     if (realtimeRefreshTimerRef.current) return;
     const activeId = selectedConversationIdRef.current;
@@ -725,19 +775,9 @@ export function ConversationsPage() {
 
     realtimeRefreshTimerRef.current = window.setTimeout(() => {
       realtimeRefreshTimerRef.current = null;
-
-      const liveSelectedId = selectedConversationIdRef.current;
-      if (liveSelectedId && liveSelectedId.includes(':')) {
-        const [rawChannel, ...rest] = liveSelectedId.split(':');
-        const rawKey = rest.join(':');
-        if ((rawChannel === 'INSTAGRAM' || rawChannel === 'WHATSAPP') && rawKey) {
-          void loadMessages(rawChannel as ChannelType, rawKey, false);
-        }
-      }
-
-      void loadKonuşmalar(false);
+      void refreshConversationsView();
     }, waitMs);
-  }, [loadKonuşmalar, loadMessages]);
+  }, [refreshConversationsView]);
 
   useEffect(() => {
     void loadKonuşmalar();
@@ -782,6 +822,43 @@ export function ConversationsPage() {
     };
   }, [messages.length, mobileView, selectedConversationId]);
 
+  useEffect(() => {
+    if (realtimeStatus !== 'degraded') {
+      degradedRefreshAttemptRef.current = 0;
+      if (degradedRefreshTimerRef.current) {
+        window.clearTimeout(degradedRefreshTimerRef.current);
+        degradedRefreshTimerRef.current = null;
+      }
+      return;
+    }
+
+    const nextDelayMs = () => {
+      const hidden = document.visibilityState !== 'visible';
+      const attempt = degradedRefreshAttemptRef.current;
+      const base = hidden ? 2500 : 900;
+      const step = hidden ? 1500 : 700;
+      const max = hidden ? 12000 : 5000;
+      return Math.min(max, base + attempt * step);
+    };
+
+    const scheduleNext = () => {
+      if (degradedRefreshTimerRef.current) return;
+      degradedRefreshTimerRef.current = window.setTimeout(async () => {
+        degradedRefreshTimerRef.current = null;
+        await refreshConversationsView();
+        degradedRefreshAttemptRef.current = Math.min(degradedRefreshAttemptRef.current + 1, 10);
+        scheduleNext();
+      }, nextDelayMs());
+    };
+
+    scheduleNext();
+    return () => {
+      if (!degradedRefreshTimerRef.current) return;
+      window.clearTimeout(degradedRefreshTimerRef.current);
+      degradedRefreshTimerRef.current = null;
+    };
+  }, [realtimeStatus, refreshConversationsView]);
+
   useConversationRealtimeSync({
     enabled: !!accessToken,
     accessToken,
@@ -799,6 +876,7 @@ export function ConversationsPage() {
     onRequireFullRefresh: () => {
       scheduleRealtimeRefresh();
     },
+    onStatusChange: setRealtimeStatus,
   });
 
   useEffect(() => {
@@ -815,6 +893,14 @@ export function ConversationsPage() {
       if (!realtimeRefreshTimerRef.current) return;
       window.clearTimeout(realtimeRefreshTimerRef.current);
       realtimeRefreshTimerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (!degradedRefreshTimerRef.current) return;
+      window.clearTimeout(degradedRefreshTimerRef.current);
+      degradedRefreshTimerRef.current = null;
     };
   }, []);
 
@@ -1024,6 +1110,7 @@ export function ConversationsPage() {
         ? !channelHealth.whatsapp.connected
         : false
     : false;
+  const realtimeBadge = realtimeStatusMeta(realtimeStatus);
 
   useEffect(() => {
     if (!channelBlocked) return;
@@ -1103,7 +1190,11 @@ export function ConversationsPage() {
             <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
               Mesaj Kanalı Aktif
             </span>
-            <div className="ml-auto flex items-center gap-1.5 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+            <div className={`ml-auto flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold ${realtimeBadge.badgeClass}`}>
+              <div className={`size-1.5 rounded-full ${realtimeBadge.dotClass}`} />
+              {realtimeBadge.label}
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
               <div className="size-1 rounded-full bg-muted-foreground/40" />
               Sisteme Bağlı
             </div>

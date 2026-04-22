@@ -47,7 +47,7 @@ function tabFromPathname(pathname: string) {
   if (pathname.startsWith('/app/conversations')) return 'conversations';
   const settingsRoutes = [
     '/app/customers', '/app/analytics', '/app/inventory', '/app/campaigns', 
-    '/app/automations', '/app/instagram-inbox', '/app/blacklist', '/app/salon-info', 
+    '/app/automations', '/app/blacklist', '/app/salon-info',
     '/app/services', '/app/staff', '/app/data-import', '/app/operations-management', 
     '/app/brand-growth-hub', '/app/features', '/app/settings', '/app/notification-settings',
     '/app/notifications', '/app/notification-role-matrix', '/app/team-access', '/app/team-management', '/app/time-off-management'
@@ -67,7 +67,7 @@ function backTargetFromPathname(pathname: string): string | null {
   const opsChildren = ['/app/inventory', '/app/services', '/app/packages', '/app/data-import'];
   if (opsChildren.some(child => pathname === child)) return '/app/operations-management';
 
-  const brandChildren = ['/app/campaigns', '/app/instagram-inbox', '/app/features/social-channels'];
+  const brandChildren = ['/app/campaigns', '/app/features/social-channels'];
   if (brandChildren.some(child => pathname === child)) return '/app/brand-growth-hub';
 
   const commsChildren = ['/app/features/whatsapp-settings', '/app/features/ai-settings', '/app/automations', '/app/features/whatsapp-setup', '/app/features/whatsapp-agent'];

@@ -1,12 +1,23 @@
-export type PushRouteKey = 'instagram-inbox' | 'schedule' | 'analytics' | 'notifications';
+export type PushRouteKey = 'conversations' | 'schedule' | 'analytics' | 'notifications';
 
 function isPushRouteKey(value: unknown): value is PushRouteKey {
-  return value === 'instagram-inbox' || value === 'schedule' || value === 'analytics' || value === 'notifications';
+  return value === 'conversations' || value === 'schedule' || value === 'analytics' || value === 'notifications';
+}
+
+function normalizeLegacyRoute(value: unknown): PushRouteKey | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === 'instagram-inbox') return 'conversations';
+  if (normalized === 'conversations' || normalized === 'schedule' || normalized === 'analytics' || normalized === 'notifications') {
+    return normalized;
+  }
+  return null;
 }
 
 export function inferPushRouteFromEvent(eventType: unknown): PushRouteKey {
   if (eventType === 'HANDOVER_REQUIRED' || eventType === 'HANDOVER_REMINDER') {
-    return 'instagram-inbox';
+    return 'conversations';
   }
   if (eventType === 'SAME_DAY_APPOINTMENT_CHANGE' || eventType === 'END_OF_DAY_MISSING_DATA') {
     return 'schedule';
@@ -26,8 +37,9 @@ export function inferPushRouteFromEvent(eventType: unknown): PushRouteKey {
 }
 
 export function resolvePushRoute(input: { route?: unknown; eventType?: unknown }): PushRouteKey {
-  if (isPushRouteKey(input.route)) {
-    return input.route;
+  const normalizedRoute = normalizeLegacyRoute(input.route);
+  if (normalizedRoute && isPushRouteKey(normalizedRoute)) {
+    return normalizedRoute;
   }
   return inferPushRouteFromEvent(input.eventType);
 }

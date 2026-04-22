@@ -23,7 +23,7 @@ export function FeaturesPage() {
       marketing: '/app/features/marketing',
       'help-center': '/app/features/help-center',
       'meta-direct': '/app/features/meta-direct',
-      'instagram-inbox': '/app/instagram-inbox',
+      'instagram-inbox': '/app/conversations',
       'team-access': '/app/team-access',
       'operations-management': '/app/operations-management',
       'brand-growth-hub': '/app/brand-growth-hub',

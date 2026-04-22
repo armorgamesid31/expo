@@ -193,6 +193,19 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
       if (destroyedRef.current) return;
 
       setStatus('connecting');
+      if (typeof window.EventSource !== 'function') {
+        setStatus('degraded');
+        const attempt = reconnectAttemptRef.current;
+        reconnectAttemptRef.current += 1;
+        const waitMs = computeBackoffMs(attempt);
+        clearRecoverTimer();
+        recoverTimerRef.current = window.setTimeout(async () => {
+          await runSync('reconnect');
+          openStream();
+        }, waitMs);
+        return;
+      }
+
       const params = new URLSearchParams();
       params.set('authToken', options.accessToken || '');
       params.set('cursor', String(cursorRef.current));
@@ -200,7 +213,22 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
         params.set('channel', options.channel);
       }
       const streamUrl = `${API_BASE_URL}/api/admin/conversations/stream?${params.toString()}`;
-      const stream = new EventSource(streamUrl);
+      let stream: EventSource;
+      try {
+        stream = new EventSource(streamUrl);
+      } catch (error) {
+        console.warn('[realtime-sync] stream open failed:', error);
+        setStatus('degraded');
+        const attempt = reconnectAttemptRef.current;
+        reconnectAttemptRef.current += 1;
+        const waitMs = computeBackoffMs(attempt);
+        clearRecoverTimer();
+        recoverTimerRef.current = window.setTimeout(async () => {
+          await runSync('reconnect');
+          openStream();
+        }, waitMs);
+        return;
+      }
       streamRef.current = stream;
 
       stream.addEventListener('ready', (event) => {
