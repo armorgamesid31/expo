@@ -224,7 +224,7 @@ export function SchedulePage() {
     }
     return 'calendar';
   });
-  const [mobileCalendarStaffId, setMobileCalendarStaffId] = useState<number | null>(null);
+  const [mobileCalendarStaffId, setMobileCalendarStaffId] = useState<number | 'ALL'>('ALL');
 
   const [staff, setStaff] = useState<StaffItem[]>(() => initialScheduleSnapshot?.staff || []);
   const [services, setServices] = useState<ServiceItem[]>(() => initialScheduleSnapshot?.services || []);
@@ -306,7 +306,7 @@ export function SchedulePage() {
   const visibleCalendarStaff = useMemo(() => {
     if (!isCompactCalendar) return staff;
     if (!staff.length) return [];
-    if (mobileCalendarStaffId == null) return [staff[0]];
+    if (mobileCalendarStaffId === 'ALL') return staff;
     return staff.filter((member) => member.id === mobileCalendarStaffId);
   }, [isCompactCalendar, mobileCalendarStaffId, staff]);
   const calendarGridMinWidth = 64 + Math.max(staff.length, 1) * COLUMN_WIDTH;
@@ -325,11 +325,11 @@ export function SchedulePage() {
 
   useEffect(() => {
     if (!staff.length) {
-      setMobileCalendarStaffId(null);
+      setMobileCalendarStaffId('ALL');
       return;
     }
-    if (mobileCalendarStaffId == null || !staff.some((member) => member.id === mobileCalendarStaffId)) {
-      setMobileCalendarStaffId(staff[0].id);
+    if (mobileCalendarStaffId !== 'ALL' && !staff.some((member) => member.id === mobileCalendarStaffId)) {
+      setMobileCalendarStaffId('ALL');
     }
   }, [mobileCalendarStaffId, staff]);
 
@@ -1522,6 +1522,16 @@ export function SchedulePage() {
           {isCompactCalendar && staff.length > 1 ? (
             <div className="border-b border-border bg-card px-3 py-2">
               <div className="flex gap-2 overflow-x-auto pb-1">
+                <button
+                  type="button"
+                  onClick={() => setMobileCalendarStaffId('ALL')}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
+                    mobileCalendarStaffId === 'ALL'
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-border bg-background text-muted-foreground'
+                  }`}>
+                  Tümü
+                </button>
                 {staff.map((member) => (
                   <button
                     key={member.id}
@@ -1538,7 +1548,7 @@ export function SchedulePage() {
               </div>
             </div>
           ) : null}
-          <div className={isCompactCalendar ? 'overflow-y-auto' : 'overflow-auto'} style={{ maxHeight: 'calc(100dvh - 250px)' }}>
+          <div className={isCompactCalendar ? 'overflow-auto' : 'overflow-auto'} style={{ maxHeight: 'calc(100dvh - 250px)' }}>
             <div className="min-w-0" style={isCompactCalendar ? undefined : { minWidth: calendarGridMinWidth }}>
               <div className="flex border-b border-border sticky top-0 bg-card z-10">
                 <div className="w-16 shrink-0 border-r border-border" />

@@ -897,7 +897,7 @@ export function ConversationsPage() {
                   </p>
                 </div> :
 
-                <div className="flex-1 space-y-1.5 overflow-y-auto pr-1 pb-1 scrollbar-thin px-2">
+                <div className="flex-1 min-w-0 space-y-1.5 overflow-y-auto overflow-x-hidden pr-1 pb-1 scrollbar-thin px-2">
                   <AnimatePresence mode="popLayout">
                     {filteredKonuşmalar.map((item, index) => {
                     const id = `${item.channel}:${item.conversationKey}`;
@@ -927,9 +927,9 @@ export function ConversationsPage() {
                           markConversationAsReadLocal(id);
                           setMobileView('CHAT');
                         }}
-                        className={`w-full group rounded-[18px] p-2.5 text-left transition-all duration-300 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'}`
+                        className={`w-full max-w-full min-w-0 group rounded-[18px] p-2.5 text-left transition-all duration-300 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'}`
                         }>
-                        <div className="flex gap-4 relative z-10">
+                        <div className="flex min-w-0 gap-4 relative z-10">
                           <div className="relative shrink-0">
                             <Avatar className={`size-12 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
                               {item.profilePicUrl ?
@@ -969,7 +969,7 @@ export function ConversationsPage() {
                           </div>
                           
                           <div className="min-w-0 flex-1 py-0">
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="flex min-w-0 items-center justify-between mb-1">
                               <h4 className={`text-[15px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {isLive && (
@@ -978,7 +978,7 @@ export function ConversationsPage() {
                                 <span className="text-[12px] text-muted-foreground/80 font-semibold tracking-tighter">{formatRelativeTime(item.lastEventTimestamp)}</span>
                               </div>
                             </div>
-                            <p className={`text-[13px] truncate transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
+                            <p className={`block max-w-full min-w-0 overflow-hidden text-[13px] text-ellipsis whitespace-nowrap transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
                               {getPreview(item)}
                             </p>
                           </div>
