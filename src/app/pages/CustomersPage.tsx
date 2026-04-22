@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Search, UserPlus, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToasts } from '../context/ToastContext';
 import { FloatingLabelInput } from '../components/ui/FloatingLabelInput';
@@ -100,6 +101,7 @@ interface CustomerRiskPolicy {
   autoBanEnabled: boolean;
   noShowThreshold: number;
   blockBookingWhenBanned: boolean;
+  attendanceConfig: AttendanceConfig;
 }
 
 interface CustomerRiskPolicyResponse {
@@ -131,7 +133,153 @@ interface CustomersListSnapshot {
   hasMore: boolean;
 }
 
+type ValidityWindow = '1m' | '3m' | '6m' | '1y' | 'unlimited';
+type AttendanceRangeKey = '0_3' | '4_5' | '6_7' | '8_9' | '10_plus';
+type AttendancePenaltyAction =
+  'normal' |
+  'simple_warning' |
+  'possible_block' |
+  'manual_approval' |
+  'full_block';
+
+interface AttendanceNotificationConfig {
+  missedAppointments: boolean;
+  lateCancellations: boolean;
+  lateReschedules: boolean;
+}
+
+interface AttendanceConfig {
+  countMissedAppointments: boolean;
+  countLateCancellations: boolean;
+  countLateReschedules: boolean;
+  lateCancellationHours: number;
+  lateRescheduleHours: number;
+  validityWindow: ValidityWindow;
+  notificationEvents: AttendanceNotificationConfig;
+  penaltyPolicy: Record<AttendanceRangeKey, AttendancePenaltyAction>;
+}
+
+const ATTENDANCE_RANGES: Array<{ key: AttendanceRangeKey; label: string; }> = [
+  { key: '0_3', label: '0-3' },
+  { key: '4_5', label: '4-5' },
+  { key: '6_7', label: '6-7' },
+  { key: '8_9', label: '8-9' },
+  { key: '10_plus', label: '10+' }];
+
+const PENALTY_ACTION_OPTIONS: Array<{ value: AttendancePenaltyAction; label: string; }> = [
+  { value: 'normal', label: 'Normal' },
+  { value: 'simple_warning', label: 'Basit uyarı' },
+  { value: 'possible_block', label: 'Engel uyarısı' },
+  { value: 'manual_approval', label: 'Salon onayı' },
+  { value: 'full_block', label: 'Tam engel' }];
+
+const VALIDITY_OPTIONS: Array<{ value: ValidityWindow; label: string; }> = [
+  { value: '1m', label: '1 ay' },
+  { value: '3m', label: '3 ay' },
+  { value: '6m', label: '6 ay' },
+  { value: '1y', label: '1 yıl' },
+  { value: 'unlimited', label: 'Sınırsız' }];
+
+const DEFAULT_ATTENDANCE_CONFIG: AttendanceConfig = {
+  countMissedAppointments: true,
+  countLateCancellations: true,
+  countLateReschedules: true,
+  lateCancellationHours: 24,
+  lateRescheduleHours: 12,
+  validityWindow: '6m',
+  notificationEvents: {
+    missedAppointments: true,
+    lateCancellations: true,
+    lateReschedules: true
+  },
+  penaltyPolicy: {
+    '0_3': 'normal',
+    '4_5': 'simple_warning',
+    '6_7': 'possible_block',
+    '8_9': 'manual_approval',
+    '10_plus': 'full_block'
+  }
+};
+
+const DEFAULT_RISK_POLICY: CustomerRiskPolicy = {
+  autoBanEnabled: false,
+  noShowThreshold: 3,
+  blockBookingWhenBanned: true,
+  attendanceConfig: DEFAULT_ATTENDANCE_CONFIG
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function toBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') return value;
+  return fallback;
+}
+
+function toPositiveInt(value: unknown, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  const rounded = Math.floor(parsed);
+  if (rounded <= 0) return fallback;
+  return rounded;
+}
+
+function toValidityWindow(value: unknown, fallback: ValidityWindow): ValidityWindow {
+  if (typeof value !== 'string') return fallback;
+  return VALIDITY_OPTIONS.some((item) => item.value === value) ? (value as ValidityWindow) : fallback;
+}
+
+function toAttendanceAction(value: unknown, fallback: AttendancePenaltyAction): AttendancePenaltyAction {
+  if (typeof value !== 'string') return fallback;
+  return PENALTY_ACTION_OPTIONS.some((item) => item.value === value) ? (value as AttendancePenaltyAction) : fallback;
+}
+
+function normalizeAttendanceConfig(config: unknown, fallback: AttendanceConfig = DEFAULT_ATTENDANCE_CONFIG): AttendanceConfig {
+  const raw = isRecord(config) ? config : {};
+  const notificationEventsRaw = isRecord(raw.notificationEvents) ? raw.notificationEvents : {};
+  const penaltyPolicyRaw = isRecord(raw.penaltyPolicy) ? raw.penaltyPolicy : {};
+
+  return {
+    countMissedAppointments: toBoolean(raw.countMissedAppointments, fallback.countMissedAppointments),
+    countLateCancellations: toBoolean(raw.countLateCancellations, fallback.countLateCancellations),
+    countLateReschedules: toBoolean(raw.countLateReschedules, fallback.countLateReschedules),
+    lateCancellationHours: toPositiveInt(raw.lateCancellationHours, fallback.lateCancellationHours),
+    lateRescheduleHours: toPositiveInt(raw.lateRescheduleHours, fallback.lateRescheduleHours),
+    validityWindow: toValidityWindow(raw.validityWindow, fallback.validityWindow),
+    notificationEvents: {
+      missedAppointments: toBoolean(
+        notificationEventsRaw.missedAppointments,
+        fallback.notificationEvents.missedAppointments
+      ),
+      lateCancellations: toBoolean(
+        notificationEventsRaw.lateCancellations,
+        fallback.notificationEvents.lateCancellations
+      ),
+      lateReschedules: toBoolean(
+        notificationEventsRaw.lateReschedules,
+        fallback.notificationEvents.lateReschedules
+      )
+    },
+    penaltyPolicy: ATTENDANCE_RANGES.reduce<Record<AttendanceRangeKey, AttendancePenaltyAction>>((acc, range) => {
+      acc[range.key] = toAttendanceAction(penaltyPolicyRaw[range.key], fallback.penaltyPolicy[range.key]);
+      return acc;
+    }, {} as Record<AttendanceRangeKey, AttendancePenaltyAction>)
+  };
+}
+
+function normalizeRiskPolicy(policy: unknown): CustomerRiskPolicy {
+  const raw = isRecord(policy) ? policy : {};
+  return {
+    autoBanEnabled: toBoolean(raw.autoBanEnabled, DEFAULT_RISK_POLICY.autoBanEnabled),
+    noShowThreshold: toPositiveInt(raw.noShowThreshold, DEFAULT_RISK_POLICY.noShowThreshold),
+    blockBookingWhenBanned: toBoolean(raw.blockBookingWhenBanned, DEFAULT_RISK_POLICY.blockBookingWhenBanned),
+    attendanceConfig: normalizeAttendanceConfig(raw.attendanceConfig, DEFAULT_RISK_POLICY.attendanceConfig)
+  };
+}
+
 export function CustomersPage() {
+  const navigate = useNavigate();
   const { apiFetch } = useAuth();
   const { showToast } = useToasts();
   const [initialListSnapshot] = useState<CustomersListSnapshot | null>(
@@ -173,14 +321,11 @@ export function CustomersPage() {
   const [editAcceptMarketing, setEditAcceptMarketing] = useState(false);
   const [riskSaving, setRiskSaving] = useState(false);
   const [riskError, setRiskError] = useState<string | null>(null);
-  const [riskPolicy, setRiskPolicy] = useState<CustomerRiskPolicy>({
-    autoBanEnabled: false,
-    noShowThreshold: 3,
-    blockBookingWhenBanned: true
-  });
+  const [riskPolicy, setRiskPolicy] = useState<CustomerRiskPolicy>(DEFAULT_RISK_POLICY);
   const [riskPolicyLoading, setRiskPolicyLoading] = useState(true);
   const [riskPolicySaving, setRiskPolicySaving] = useState(false);
   const [riskPolicyError, setRiskPolicyError] = useState<string | null>(null);
+  const [showRiskCenter, setShowRiskCenter] = useState(false);
   const [banStatus, setBanStatus] = useState<BlacklistCheckResponse | null>(null);
   const [banLoading, setBanLoading] = useState(false);
   const [banSaving, setBanSaving] = useState(false);
@@ -220,7 +365,7 @@ export function CustomersPage() {
     setRiskPolicyError(null);
     try {
       const response = await apiFetch<CustomerRiskPolicyResponse>('/api/admin/customer-risk-policy');
-      setRiskPolicy(response.policy);
+      setRiskPolicy(normalizeRiskPolicy(response.policy));
     } catch (err: any) {
       setRiskPolicyError(err?.message || 'No-show policy alınamadı.');
     } finally {
@@ -239,7 +384,7 @@ export function CustomersPage() {
           ...next
         })
       });
-      setRiskPolicy(response.policy);
+      setRiskPolicy(normalizeRiskPolicy(response.policy));
       showToast('Risk politikası güncellendi.', 'success');
     } catch (err: any) {
       setRiskPolicyError(err?.message || 'Risk politikası kaydedilemedi.');
@@ -828,53 +973,24 @@ export function CustomersPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Müşteriler</h1>
-        <p className="text-xs text-muted-foreground">No-show ve yasaklama burada yönetilir</p>
+        <p className="text-xs text-muted-foreground">Profil, ban ve risk takibi</p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-3 space-y-3">
-        <p className="text-sm font-medium">Risk & Yasaklama Politikası</p>
+      <div className="rounded-xl border border-border bg-card p-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm">No-show eşiğinde otomatik yasakla</p>
-            <p className="text-xs text-muted-foreground">Eşik aşıldığında müşteri otomatik kara listeye alınır.</p>
+            <p className="text-sm font-medium">Risk Merkezi</p>
+            <p className="text-xs text-muted-foreground">
+              Kara liste ve randevu ihlali ayarları bu panelden yönetilir.
+            </p>
           </div>
-          <input
-            type="checkbox"
-            checked={riskPolicy.autoBanEnabled}
-            disabled={riskPolicySaving || riskPolicyLoading}
-            onChange={(event) => void saveRiskPolicy({ autoBanEnabled: event.target.checked })}
-          />
+          <button
+            type="button"
+            onClick={() => setShowRiskCenter(true)}
+            className="min-h-11 rounded-md border border-border px-4 py-2 text-sm font-medium hover:border-[var(--rose-gold)]/40 transition-colors">
+            Risk & Yasaklama
+          </button>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <label className="text-sm">No-show eşiği</label>
-          <input
-            type="number"
-            min={1}
-            className="w-20 rounded-md border border-border bg-input-background px-2 py-1 text-sm"
-            value={riskPolicy.noShowThreshold}
-            disabled={riskPolicySaving || riskPolicyLoading}
-            onChange={(event) =>
-              setRiskPolicy((prev) => ({
-                ...prev,
-                noShowThreshold: Math.max(1, Number(event.target.value) || 1)
-              }))}
-            onBlur={() => void saveRiskPolicy({ noShowThreshold: riskPolicy.noShowThreshold })}
-          />
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm">Banlı müşteriye randevu blokla</p>
-            <p className="text-xs text-muted-foreground">WhatsApp, Instagram ve kayıtlı müşteri id’si için geçerlidir.</p>
-          </div>
-          <input
-            type="checkbox"
-            checked={riskPolicy.blockBookingWhenBanned}
-            disabled={riskPolicySaving || riskPolicyLoading}
-            onChange={(event) => void saveRiskPolicy({ blockBookingWhenBanned: event.target.checked })}
-          />
-        </div>
-        {riskPolicyLoading ? <p className="text-xs text-muted-foreground">Politika yükleniyor...</p> : null}
-        {riskPolicyError ? <p className="text-xs text-red-500">{riskPolicyError}</p> : null}
       </div>
 
       <div className="relative">
@@ -997,6 +1113,281 @@ export function CustomersPage() {
 
           {loadingMore ? "Yükleniyor..." : 'Daha Fazla Yükle'}
         </button> :
+        null}
+
+      {showRiskCenter ?
+        <div className="fixed inset-0 z-[58] bg-black/40 backdrop-blur-[1px] flex items-end">
+          <div className="w-full max-h-[88vh] overflow-y-auto rounded-t-2xl bg-background border-t border-border p-4 pb-24 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Risk Merkezi</h2>
+              <button
+                type="button"
+                className="h-8 w-8 grid place-items-center rounded-md border border-border"
+                onClick={() => setShowRiskCenter(false)}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                type="button"
+                onClick={() => navigate('/app/blacklist')}
+                className="min-h-11 rounded-md border border-border px-3 py-2 text-sm text-left hover:border-[var(--rose-gold)]/40 transition-colors">
+                Kara Liste Kayıtları
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/app/automations?section=attendance')}
+                className="min-h-11 rounded-md border border-border px-3 py-2 text-sm text-left hover:border-[var(--rose-gold)]/40 transition-colors">
+                Randevu İhlali Akışı
+              </button>
+            </div>
+
+            <div className="rounded-lg border border-border p-3 space-y-3">
+              <p className="text-sm font-medium">Ban Politikası</p>
+              <label className="flex items-center justify-between gap-3 text-sm">
+                <span>No-show eşiğinde otomatik yasakla</span>
+                <input
+                  type="checkbox"
+                  checked={riskPolicy.autoBanEnabled}
+                  disabled={riskPolicySaving || riskPolicyLoading}
+                  onChange={(event) => setRiskPolicy((prev) => ({ ...prev, autoBanEnabled: event.target.checked }))}
+                />
+              </label>
+              <label className="flex items-center justify-between gap-3 text-sm">
+                <span>No-show eşiği</span>
+                <input
+                  type="number"
+                  min={1}
+                  className="w-24 rounded-md border border-border bg-input-background px-2 py-1 text-sm"
+                  value={riskPolicy.noShowThreshold}
+                  disabled={riskPolicySaving || riskPolicyLoading}
+                  onChange={(event) =>
+                    setRiskPolicy((prev) => ({
+                      ...prev,
+                      noShowThreshold: Math.max(1, Number(event.target.value) || 1)
+                    }))}
+                />
+              </label>
+              <label className="flex items-center justify-between gap-3 text-sm">
+                <span>Banlı müşteriyi her kanalda blokla</span>
+                <input
+                  type="checkbox"
+                  checked={riskPolicy.blockBookingWhenBanned}
+                  disabled={riskPolicySaving || riskPolicyLoading}
+                  onChange={(event) =>
+                    setRiskPolicy((prev) => ({ ...prev, blockBookingWhenBanned: event.target.checked }))}
+                />
+              </label>
+            </div>
+
+            <div className="rounded-lg border border-border p-3 space-y-3">
+              <p className="text-sm font-medium">Randevu İhlali Konfigürasyonu</p>
+              <p className="text-xs text-muted-foreground">
+                Esnek model: sayım tipleri, süre penceresi, bildirim olayları ve ceza matrisi.
+              </p>
+
+              <div className="grid grid-cols-1 gap-2 text-sm">
+                <label className="flex items-center justify-between gap-3">
+                  <span>Gelmedi say</span>
+                  <input
+                    type="checkbox"
+                    checked={riskPolicy.attendanceConfig.countMissedAppointments}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          countMissedAppointments: event.target.checked
+                        }
+                      }))}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                  <span>Geç iptal say</span>
+                  <input
+                    type="checkbox"
+                    checked={riskPolicy.attendanceConfig.countLateCancellations}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          countLateCancellations: event.target.checked
+                        }
+                      }))}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                  <span>Geç iptal saat eşiği</span>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-24 rounded-md border border-border bg-input-background px-2 py-1 text-sm"
+                    value={riskPolicy.attendanceConfig.lateCancellationHours}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          lateCancellationHours: Math.max(1, Number(event.target.value) || 1)
+                        }
+                      }))}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                  <span>Geç erteleme say</span>
+                  <input
+                    type="checkbox"
+                    checked={riskPolicy.attendanceConfig.countLateReschedules}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          countLateReschedules: event.target.checked
+                        }
+                      }))}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                  <span>Geç erteleme saat eşiği</span>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-24 rounded-md border border-border bg-input-background px-2 py-1 text-sm"
+                    value={riskPolicy.attendanceConfig.lateRescheduleHours}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          lateRescheduleHours: Math.max(1, Number(event.target.value) || 1)
+                        }
+                      }))}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                  <span>Geçerlilik penceresi</span>
+                  <select
+                    className="h-9 rounded-md border border-border bg-input-background px-2 text-sm"
+                    value={riskPolicy.attendanceConfig.validityWindow}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          validityWindow: event.target.value as ValidityWindow
+                        }
+                      }))}>
+                    {VALIDITY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="rounded-md border border-border p-2.5 space-y-2">
+                <p className="text-xs font-medium">Bildirim Olayları</p>
+                <label className="flex items-center justify-between gap-3 text-sm">
+                  <span>Gelmedi bildirimi</span>
+                  <input
+                    type="checkbox"
+                    checked={riskPolicy.attendanceConfig.notificationEvents.missedAppointments}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          notificationEvents: {
+                            ...prev.attendanceConfig.notificationEvents,
+                            missedAppointments: event.target.checked
+                          }
+                        }
+                      }))}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-sm">
+                  <span>Geç iptal bildirimi</span>
+                  <input
+                    type="checkbox"
+                    checked={riskPolicy.attendanceConfig.notificationEvents.lateCancellations}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          notificationEvents: {
+                            ...prev.attendanceConfig.notificationEvents,
+                            lateCancellations: event.target.checked
+                          }
+                        }
+                      }))}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-sm">
+                  <span>Geç erteleme bildirimi</span>
+                  <input
+                    type="checkbox"
+                    checked={riskPolicy.attendanceConfig.notificationEvents.lateReschedules}
+                    onChange={(event) =>
+                      setRiskPolicy((prev) => ({
+                        ...prev,
+                        attendanceConfig: {
+                          ...prev.attendanceConfig,
+                          notificationEvents: {
+                            ...prev.attendanceConfig.notificationEvents,
+                            lateReschedules: event.target.checked
+                          }
+                        }
+                      }))}
+                  />
+                </label>
+              </div>
+
+              <div className="rounded-md border border-border p-2.5 space-y-2">
+                <p className="text-xs font-medium">Ceza Matrisi</p>
+                {ATTENDANCE_RANGES.map((range) => (
+                  <label key={range.key} className="flex items-center justify-between gap-3 text-sm">
+                    <span>{range.label} ihlal</span>
+                    <select
+                      className="h-9 rounded-md border border-border bg-input-background px-2 text-sm"
+                      value={riskPolicy.attendanceConfig.penaltyPolicy[range.key]}
+                      onChange={(event) =>
+                        setRiskPolicy((prev) => ({
+                          ...prev,
+                          attendanceConfig: {
+                            ...prev.attendanceConfig,
+                            penaltyPolicy: {
+                              ...prev.attendanceConfig.penaltyPolicy,
+                              [range.key]: event.target.value as AttendancePenaltyAction
+                            }
+                          }
+                        }))}>
+                      {PENALTY_ACTION_OPTIONS.map((action) => (
+                        <option key={action.value} value={action.value}>
+                          {action.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {riskPolicyLoading ? <p className="text-xs text-muted-foreground">Politika yükleniyor...</p> : null}
+            {riskPolicyError ? <p className="text-xs text-red-500">{riskPolicyError}</p> : null}
+            <button
+              type="button"
+              onClick={() => void saveRiskPolicy(riskPolicy)}
+              disabled={riskPolicySaving || riskPolicyLoading}
+              className="w-full min-h-11 rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">
+              {riskPolicySaving ? 'Kaydediliyor...' : 'Risk Ayarlarını Kaydet'}
+            </button>
+          </div>
+        </div> :
         null}
 
       {detailLoading || detailError || selectedCustomer ?
