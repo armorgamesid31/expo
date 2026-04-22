@@ -434,6 +434,12 @@ export function ConversationsPage() {
     selectedConversationIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
 
+  useEffect(() => {
+    if (mobileView !== 'CHAT') return;
+    if (selectedConversationId) return;
+    setMobileView('LIST');
+  }, [mobileView, selectedConversationId]);
+
   const fetchGetWithFallback = useCallback(
     async <T,>(path: string): Promise<T> => {
       try {
