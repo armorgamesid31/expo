@@ -656,7 +656,7 @@ export function ConversationsPage() {
     setSendingHandover(true);
     try {
       await apiFetch(
-        `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/request-handover`,
+        `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/handover`,
         { method: 'POST' }
       );
       showToast('Canlı destek talebi iletildi.', 'success');
