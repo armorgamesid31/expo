@@ -366,17 +366,23 @@ export function InstagramInboxPage() {
     }
   }, [apiFetch]);
 
-  const scheduleRealtimeRefresh = useCallback((_events?: ConversationRealtimeEvent[]) => {
+  const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
     if (sseYenileTimerRef.current) return;
+    const activeKey = selectedKeyRef.current;
+    const activeConversationTouched = Boolean(
+      activeKey &&
+      events?.some((event) => event.conversationKey === activeKey),
+    );
+    const waitMs = activeConversationTouched ? 60 : 160;
+
     sseYenileTimerRef.current = window.setTimeout(() => {
       sseYenileTimerRef.current = null;
-      void loadConversations(false);
-      const activeKey = selectedKeyRef.current;
-      if (!activeKey) {
-        return;
+      const liveActiveKey = selectedKeyRef.current;
+      if (liveActiveKey) {
+        void loadMessages(liveActiveKey, false);
       }
-      void loadMessages(activeKey, false);
-    }, 250);
+      void loadConversations(false);
+    }, waitMs);
   }, [loadConversations, loadMessages]);
 
   useEffect(() => {
@@ -452,8 +458,10 @@ export function InstagramInboxPage() {
       });
       setReplyText('');
       setActionInfo('Yanıt başarıyla gönderildi.');
-      await loadMessages(selectedKey);
-      await loadConversations();
+      await Promise.all([
+        loadMessages(selectedKey),
+        loadConversations(),
+      ]);
     } catch (err: any) {
       if (err?.body?.errorCode === 'INSTAGRAM_WINDOW_EXPIRED') {
         setError('Instagram 24 saat penceresi dolduğu için mesaj gönderilemez. Müşterinin tekrar yazması gerekiyor.');
@@ -480,8 +488,10 @@ export function InstagramInboxPage() {
         }
       );
       setActionInfo(response?.alreadyRequested ? 'Bu görüşme zaten canlı destek modunda.' : 'Canlı destek talebi iletildi.');
-      await loadMessages(selectedKey);
-      await loadConversations();
+      await Promise.all([
+        loadMessages(selectedKey),
+        loadConversations(),
+      ]);
     } catch (err: any) {
       setError(err?.message || 'Devir isteği başarısız oldu.');
     } finally {
@@ -500,8 +510,10 @@ export function InstagramInboxPage() {
         method: 'POST'
       });
       setActionInfo('Bu konuşmada yapay zeka otomasyonu tekrar devreye alındı.');
-      await loadMessages(selectedKey);
-      await loadConversations();
+      await Promise.all([
+        loadMessages(selectedKey),
+        loadConversations(),
+      ]);
     } catch (err: any) {
       setError(err?.message || 'Otomasyon başlatılamadı.');
     } finally {

@@ -621,25 +621,29 @@ export function ConversationsPage() {
       if (showLoading) setLoadingMessages(false);
     }
   }, [apiFetch]);
-  const scheduleRealtimeRefresh = useCallback((_events?: ConversationRealtimeEvent[]) => {
+  const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
     if (realtimeRefreshTimerRef.current) return;
+    const activeId = selectedConversationIdRef.current;
+    const activeConversationTouched = Boolean(
+      activeId &&
+      events?.some((event) => `${event.channel}:${event.conversationKey}` === activeId),
+    );
+    const waitMs = activeConversationTouched ? 60 : 160;
+
     realtimeRefreshTimerRef.current = window.setTimeout(() => {
       realtimeRefreshTimerRef.current = null;
+
+      const liveSelectedId = selectedConversationIdRef.current;
+      if (liveSelectedId && liveSelectedId.includes(':')) {
+        const [rawChannel, ...rest] = liveSelectedId.split(':');
+        const rawKey = rest.join(':');
+        if ((rawChannel === 'INSTAGRAM' || rawChannel === 'WHATSAPP') && rawKey) {
+          void loadMessages(rawChannel as ChannelType, rawKey, false);
+        }
+      }
+
       void loadKonuşmalar(false);
-
-      const activeId = selectedConversationIdRef.current;
-      if (!activeId || !activeId.includes(':')) {
-        return;
-      }
-
-      const [rawChannel, ...rest] = activeId.split(':');
-      const rawKey = rest.join(':');
-      if ((rawChannel !== 'INSTAGRAM' && rawChannel !== 'WHATSAPP') || !rawKey) {
-        return;
-      }
-
-      void loadMessages(rawChannel as ChannelType, rawKey, false);
-    }, 250);
+    }, waitMs);
   }, [loadKonuşmalar, loadMessages]);
 
   useEffect(() => {
@@ -777,8 +781,10 @@ export function ConversationsPage() {
       }
       setReplyText('');
       showToast('Yanıt başarıyla gönderildi.', 'success');
-      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
-      await loadKonuşmalar(false);
+      await Promise.all([
+        loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false),
+        loadKonuşmalar(false),
+      ]);
     } catch (err: any) {
       if (err?.body?.errorCode === 'INSTAGRAM_WINDOW_EXPIRED') {
         showToast('Instagram 24 saat penceresi dolduğu için mesaj gönderilemez. Müşterinin tekrar yazması gerekiyor.', 'error');
@@ -831,8 +837,10 @@ export function ConversationsPage() {
       }
       setManualComposeConversationId(null);
       showToast('Yapay zeka otomasyonu tekrar devreye alındı.', 'success');
-      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
-      await loadKonuşmalar(false);
+      await Promise.all([
+        loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false),
+        loadKonuşmalar(false),
+      ]);
     } catch (err: any) {
       showToast(toUserFriendlyError(err, 'Otomasyon başlatılamadı.'), 'error');
     } finally {
@@ -883,8 +891,10 @@ export function ConversationsPage() {
         setManualComposeConversationId(nextSelectedId);
       }
       showToast('Manuel yanıt modu açıldı.', 'success');
-      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
-      await loadKonuşmalar(false);
+      await Promise.all([
+        loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false),
+        loadKonuşmalar(false),
+      ]);
     } catch (err: any) {
       setManualComposeConversationId(null);
       showToast(toUserFriendlyError(err, 'Talep iletilemedi.'), 'error');
