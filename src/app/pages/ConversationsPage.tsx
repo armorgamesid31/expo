@@ -66,6 +66,7 @@ interface MessageItem {
 
 interface ConversationStatePayload {
   automationMode?: AutomationMode;
+  mode?: AutomationMode;
   manualAlways?: boolean;
   humanPendingSince?: string | null;
   humanActiveUntil?: string | null;
@@ -599,13 +600,14 @@ export function ConversationsPage() {
       setMessages(mergeAndSortMessages(responses));
       if (response?.conversationState) {
         const patch = response.conversationState;
+        const nextMode = normalizeAutomationMode((patch.automationMode || patch.mode) as AutomationMode | undefined);
         setKonuşmalar((prev) =>
           prev.map((item) =>
             item.channel === channel && item.conversationKey === conversationKey ?
               {
                 ...item,
                 ...patch,
-                automationMode: normalizeAutomationMode(patch.automationMode || item.automationMode)
+                automationMode: normalizeAutomationMode(nextMode || item.automationMode)
               } :
               item
           )
@@ -790,7 +792,7 @@ export function ConversationsPage() {
     if (!selectedConversation) return;
     setSendingResume(true);
     try {
-      const response = await apiFetch<{ conversationKey?: string; state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
+      const response = await apiFetch<{ conversationKey?: string; state?: { mode?: AutomationMode; automationMode?: AutomationMode; manualAlways?: boolean; }; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/resume-auto`,
         { method: 'POST' }
       );
@@ -807,6 +809,7 @@ export function ConversationsPage() {
         setSelectedConversationId(nextSelectedId);
         selectedConversationIdRef.current = nextSelectedId;
       }
+      const stateMode = response?.state?.automationMode || response?.state?.mode;
       if (response?.state) {
         setKonuşmalar((prev) =>
           prev.map((item) =>
@@ -818,7 +821,7 @@ export function ConversationsPage() {
               {
                 ...item,
                 manualAlways: typeof response.state?.manualAlways === 'boolean' ? response.state.manualAlways : item.manualAlways,
-                automationMode: normalizeAutomationMode(response.state?.mode || item.automationMode),
+                automationMode: normalizeAutomationMode(stateMode || item.automationMode),
               } :
               item
           )
@@ -839,7 +842,7 @@ export function ConversationsPage() {
     if (!selectedConversation) return;
     setSendingHandover(true);
     try {
-      const response = await apiFetch<{ conversationKey?: string; state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
+      const response = await apiFetch<{ conversationKey?: string; state?: { mode?: AutomationMode; automationMode?: AutomationMode; manualAlways?: boolean; }; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/handover`,
         { method: 'POST' }
       );
@@ -856,6 +859,7 @@ export function ConversationsPage() {
         setSelectedConversationId(nextSelectedId);
         selectedConversationIdRef.current = nextSelectedId;
       }
+      const stateMode = response?.state?.automationMode || response?.state?.mode;
       if (response?.state) {
         setKonuşmalar((prev) =>
           prev.map((item) =>
@@ -867,17 +871,12 @@ export function ConversationsPage() {
               {
                 ...item,
                 manualAlways: typeof response.state?.manualAlways === 'boolean' ? response.state.manualAlways : item.manualAlways,
-                automationMode: normalizeAutomationMode(response.state?.mode || item.automationMode),
+                automationMode: normalizeAutomationMode(stateMode || item.automationMode),
               } :
               item
           )
         );
-        const nextMode = normalizeAutomationMode(response.state?.mode);
-        setManualComposeConversationId(
-          nextMode === 'HUMAN_PENDING' || nextMode === 'HUMAN_ACTIVE' || nextMode === 'MANUAL_ALWAYS'
-            ? nextSelectedId
-            : null
-        );
+        setManualComposeConversationId(nextSelectedId);
       } else {
         setManualComposeConversationId(nextSelectedId);
       }
@@ -894,7 +893,9 @@ export function ConversationsPage() {
 
   const isSupportedReplyChannel = selectedConversation?.channel === 'INSTAGRAM' || selectedConversation?.channel === 'WHATSAPP';
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
-  const handoverInProgress = isHandoverInProgress(selectedMode);
+  const handoverInProgress =
+    isHandoverInProgress(selectedMode) ||
+    Boolean(selectedConversationId && manualComposeConversationId === selectedConversationId);
   const manualReplyUnlocked =
     handoverInProgress ||
     selectedMode === 'MANUAL_ALWAYS' ||
