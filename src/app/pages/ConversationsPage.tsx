@@ -556,7 +556,8 @@ export function ConversationsPage() {
       const response = await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
         channelView === 'ALL'
           ? '/api/admin/conversations?limit=60'
-          : `/api/admin/conversations?limit=60&channel=${channelView}`
+          : `/api/admin/conversations?limit=60&channel=${channelView}`,
+        { __cache: { mode: 'network-only' } },
       );
       const selectedId = selectedConversationIdRef.current;
       const next = (response?.items || []).map((item) => {
@@ -592,7 +593,8 @@ export function ConversationsPage() {
       const responses = await Promise.all(
         relatedKeys.map((item) =>
           apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
-            `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`
+            `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`,
+            { __cache: { mode: 'network-only' } },
           )
         )
       );

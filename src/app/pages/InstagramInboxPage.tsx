@@ -306,7 +306,10 @@ export function InstagramInboxPage() {
     if (showLoading) setLoadingConversations(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: ConversationItem[]; }>('/api/admin/instagram-inbox/conversations?limit=40');
+      const response = await apiFetch<{ items: ConversationItem[]; }>(
+        '/api/admin/instagram-inbox/conversations?limit=40',
+        { __cache: { mode: 'network-only' } },
+      );
       const activeKey = selectedKeyRef.current;
       const next = (response?.items || []).map((item) =>
         activeKey && item.conversationKey === activeKey && item.unreadCount > 0 ?
@@ -335,7 +338,8 @@ export function InstagramInboxPage() {
       const responses = await Promise.all(
         relatedKeys.map((key) =>
           apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
-            `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`
+            `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`,
+            { __cache: { mode: 'network-only' } },
           )
         )
       );

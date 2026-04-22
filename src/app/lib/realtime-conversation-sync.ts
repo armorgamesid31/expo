@@ -36,7 +36,10 @@ type UseConversationRealtimeSyncOptions = {
   accessToken: string | null;
   channel?: ChannelType | null;
   cursorScopeKey: string;
-  apiFetch: <T>(path: string, options?: RequestInit) => Promise<T>;
+  apiFetch: <T>(
+    path: string,
+    options?: RequestInit & { __cache?: { mode?: 'swr' | 'network-only' | 'cache-only' } },
+  ) => Promise<T>;
   onEvents: (events: ConversationRealtimeEvent[], source: 'stream' | 'sync') => void | Promise<void>;
   onRequireFullRefresh: (reason: 'gap' | 'reconnect') => void | Promise<void>;
   onStatusChange?: (status: RealtimeSyncStatus) => void;
@@ -141,6 +144,7 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
 
         const response = await options.apiFetch<RealtimeSyncResponse>(
           `/api/admin/conversations/realtime/sync?${params.toString()}`,
+          { __cache: { mode: 'network-only' } },
         );
 
         if (response.requiresFullRefresh || response.hasGap) {
