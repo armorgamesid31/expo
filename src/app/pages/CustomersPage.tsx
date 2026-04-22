@@ -12,7 +12,6 @@ import type {
   PackageTemplateItem
 } from
   '../types/mobile-api';
-import { useNavigate } from 'react-router-dom';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 
 const PAGE_LIMIT = 20;
@@ -97,6 +96,23 @@ interface NoShowRiskUpdateResponse {
   };
 }
 
+interface CustomerRiskPolicy {
+  autoBanEnabled: boolean;
+  noShowThreshold: number;
+  blockBookingWhenBanned: boolean;
+}
+
+interface CustomerRiskPolicyResponse {
+  policy: CustomerRiskPolicy;
+}
+
+interface BlacklistCheckResponse {
+  blocked: boolean;
+  reason: string | null;
+  entryId: number | null;
+  matchType: 'CUSTOMER' | 'PHONE' | 'IDENTITY' | null;
+}
+
 interface CustomerPackagesResponse {
   items: CustomerPackageItem[];
 }
@@ -117,7 +133,6 @@ interface CustomersListSnapshot {
 
 export function CustomersPage() {
   const { apiFetch } = useAuth();
-  const navigate = useNavigate();
   const { showToast } = useToasts();
   const [initialListSnapshot] = useState<CustomersListSnapshot | null>(
     () => readSnapshot<CustomersListSnapshot>(CUSTOMERS_LIST_CACHE_KEY, 1000 * 60 * 10)
@@ -158,6 +173,19 @@ export function CustomersPage() {
   const [editAcceptMarketing, setEditAcceptMarketing] = useState(false);
   const [riskSaving, setRiskSaving] = useState(false);
   const [riskError, setRiskError] = useState<string | null>(null);
+  const [riskPolicy, setRiskPolicy] = useState<CustomerRiskPolicy>({
+    autoBanEnabled: false,
+    noShowThreshold: 3,
+    blockBookingWhenBanned: true
+  });
+  const [riskPolicyLoading, setRiskPolicyLoading] = useState(true);
+  const [riskPolicySaving, setRiskPolicySaving] = useState(false);
+  const [riskPolicyError, setRiskPolicyError] = useState<string | null>(null);
+  const [banStatus, setBanStatus] = useState<BlacklistCheckResponse | null>(null);
+  const [banLoading, setBanLoading] = useState(false);
+  const [banSaving, setBanSaving] = useState(false);
+  const [banReasonInput, setBanReasonInput] = useState('');
+  const [banError, setBanError] = useState<string | null>(null);
   const [customerPackages, setCustomerPackages] = useState<CustomerPackageItem[]>([]);
   const [packageTemplates, setPackageTemplates] = useState<PackageTemplateItem[]>([]);
   const [packageLedger, setPackageLedger] = useState<PackageLedgerItem[]>([]);
@@ -185,6 +213,62 @@ export function CustomersPage() {
     }
 
     return apiFetch<AdminCustomersResponse>(`/api/admin/customers?${query.toString()}`);
+  };
+
+  const loadRiskPolicy = async () => {
+    setRiskPolicyLoading(true);
+    setRiskPolicyError(null);
+    try {
+      const response = await apiFetch<CustomerRiskPolicyResponse>('/api/admin/customer-risk-policy');
+      setRiskPolicy(response.policy);
+    } catch (err: any) {
+      setRiskPolicyError(err?.message || 'No-show policy alınamadı.');
+    } finally {
+      setRiskPolicyLoading(false);
+    }
+  };
+
+  const saveRiskPolicy = async (next: Partial<CustomerRiskPolicy>) => {
+    setRiskPolicySaving(true);
+    setRiskPolicyError(null);
+    try {
+      const response = await apiFetch<CustomerRiskPolicyResponse>('/api/admin/customer-risk-policy', {
+        method: 'PUT',
+        body: JSON.stringify({
+          ...riskPolicy,
+          ...next
+        })
+      });
+      setRiskPolicy(response.policy);
+      showToast('Risk politikası güncellendi.', 'success');
+    } catch (err: any) {
+      setRiskPolicyError(err?.message || 'Risk politikası kaydedilemedi.');
+    } finally {
+      setRiskPolicySaving(false);
+    }
+  };
+
+  const loadSelectedCustomerBan = async (customerId: number, phone?: string | null, instagram?: string | null) => {
+    setBanLoading(true);
+    setBanError(null);
+    try {
+      const query = new URLSearchParams();
+      query.set('customerId', String(customerId));
+      if (phone) {
+        query.set('phone', phone);
+      }
+      if (instagram && instagram.trim()) {
+        query.set('channel', 'INSTAGRAM');
+        query.set('subjectNormalized', instagram.replace(/^@/, '').trim().toLowerCase());
+      }
+      const response = await apiFetch<BlacklistCheckResponse>(`/api/admin/blacklist/check?${query.toString()}`);
+      setBanStatus(response);
+    } catch (err: any) {
+      setBanStatus(null);
+      setBanError(err?.message || 'Yasak durumu alınamadı.');
+    } finally {
+      setBanLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -226,6 +310,10 @@ export function CustomersPage() {
       mounted = false;
     };
   }, [searchQuery]);
+
+  useEffect(() => {
+    void loadRiskPolicy();
+  }, []);
 
   const handleLoadMore = async () => {
     if (!cursor || loadingMore) {
@@ -423,6 +511,9 @@ export function CustomersPage() {
     setPackageAdjustTarget({ packageId: '', serviceId: '' });
     setPackageAdjustDelta('');
     setPackageAdjustReason('');
+    setBanStatus(null);
+    setBanReasonInput('');
+    setBanError(null);
 
     try {
       const response = await apiFetch<CustomerDetailResponse>(`/api/admin/customers/${customerId}`);
@@ -439,7 +530,10 @@ export function CustomersPage() {
       setDiscountMessage(response.discount?.messageTemplate || '');
       setDiscountError(null);
       setDiscountSuccess(null);
-      await loadCustomerPackageData(customerId);
+      await Promise.all([
+        loadCustomerPackageData(customerId),
+        loadSelectedCustomerBan(customerId, response.customer.phone || null, response.customer.instagram || null)
+      ]);
     } catch (err: any) {
       setDetailError(err?.message || 'Müşteri profili açılamadı.');
     } finally {
@@ -546,6 +640,11 @@ export function CustomersPage() {
       );
       setProfileEditMode(false);
       setProfileSuccess("Müşteri bilgileri güncellendi.");
+      await loadSelectedCustomerBan(
+        response.customer.id,
+        response.customer.phone || null,
+        response.customer.instagram || null
+      );
     } catch (err: any) {
       setProfileError(err?.message || "Müşteri bilgileri güncellenemedi.");
     } finally {
@@ -585,6 +684,47 @@ export function CustomersPage() {
       setRiskError(err?.message || 'Katılım oranı güncellenemedi.');
     } finally {
       setRiskSaving(false);
+    }
+  };
+
+  const handleToggleBan = async () => {
+    if (!selectedCustomer || banSaving) return;
+    setBanSaving(true);
+    setBanError(null);
+    try {
+      if (banStatus?.blocked && banStatus.entryId) {
+        await apiFetch(`/api/admin/blacklist/${banStatus.entryId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ isActive: false })
+        });
+        setBanStatus({
+          blocked: false,
+          reason: null,
+          entryId: null,
+          matchType: null
+        });
+        showToast('Müşteri yasağı kaldırıldı.', 'success');
+      } else {
+        await apiFetch('/api/admin/blacklist', {
+          method: 'POST',
+          body: JSON.stringify({
+            customerId: selectedCustomer.customer.id,
+            phone: selectedCustomer.customer.phone,
+            fullName: selectedCustomer.customer.name || null,
+            reason: banReasonInput.trim() || 'Manual ban from customer profile'
+          })
+        });
+        await loadSelectedCustomerBan(
+          selectedCustomer.customer.id,
+          selectedCustomer.customer.phone || null,
+          selectedCustomer.customer.instagram || null
+        );
+        showToast('Müşteri yasaklandı.', 'success');
+      }
+    } catch (err: any) {
+      setBanError(err?.message || 'Yasak işlemi başarısız.');
+    } finally {
+      setBanSaving(false);
     }
   };
 
@@ -686,24 +826,55 @@ export function CustomersPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Müşteriler</h1>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate('/app/automations?section=attendance')}
-            className="rounded-md border border-border px-3 py-1.5 text-xs">
+        <p className="text-xs text-muted-foreground">No-show ve yasaklama burada yönetilir</p>
+      </div>
 
-            Gelmedi Takibi
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/app/blacklist')}
-            className="rounded-md border border-border px-3 py-1.5 text-xs">
-
-            Kara Liste
-          </button>
+      <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+        <p className="text-sm font-medium">Risk & Yasaklama Politikası</p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm">No-show eşiğinde otomatik yasakla</p>
+            <p className="text-xs text-muted-foreground">Eşik aşıldığında müşteri otomatik kara listeye alınır.</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={riskPolicy.autoBanEnabled}
+            disabled={riskPolicySaving || riskPolicyLoading}
+            onChange={(event) => void saveRiskPolicy({ autoBanEnabled: event.target.checked })}
+          />
         </div>
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-sm">No-show eşiği</label>
+          <input
+            type="number"
+            min={1}
+            className="w-20 rounded-md border border-border bg-input-background px-2 py-1 text-sm"
+            value={riskPolicy.noShowThreshold}
+            disabled={riskPolicySaving || riskPolicyLoading}
+            onChange={(event) =>
+              setRiskPolicy((prev) => ({
+                ...prev,
+                noShowThreshold: Math.max(1, Number(event.target.value) || 1)
+              }))}
+            onBlur={() => void saveRiskPolicy({ noShowThreshold: riskPolicy.noShowThreshold })}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm">Banlı müşteriye randevu blokla</p>
+            <p className="text-xs text-muted-foreground">WhatsApp, Instagram ve kayıtlı müşteri id’si için geçerlidir.</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={riskPolicy.blockBookingWhenBanned}
+            disabled={riskPolicySaving || riskPolicyLoading}
+            onChange={(event) => void saveRiskPolicy({ blockBookingWhenBanned: event.target.checked })}
+          />
+        </div>
+        {riskPolicyLoading ? <p className="text-xs text-muted-foreground">Politika yükleniyor...</p> : null}
+        {riskPolicyError ? <p className="text-xs text-red-500">{riskPolicyError}</p> : null}
       </div>
 
       <div className="relative">
@@ -848,6 +1019,9 @@ export function CustomersPage() {
                   setPackageLedger([]);
                   setPackageError(null);
                   setPackageAssignSuccess(null);
+                  setBanStatus(null);
+                  setBanReasonInput('');
+                  setBanError(null);
                 }}>
 
                 <X className="h-4 w-4" />
@@ -1012,6 +1186,45 @@ export function CustomersPage() {
                     </p>
                     {riskError ? <p className="text-[11px] text-red-500 mt-1">{riskError}</p> : null}
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">Yasaklama Durumu</p>
+                    <span
+                      className={`text-[11px] px-2 py-0.5 rounded border ${
+                        banStatus?.blocked ? 'border-red-500/30 bg-red-500/10 text-red-700' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
+                      }`}>
+                      {banStatus?.blocked ? 'Yasaklı' : 'Aktif'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Banlı müşteri WhatsApp, Instagram veya kayıtlı profil ile randevu alamaz.
+                  </p>
+                  {!banStatus?.blocked ? (
+                    <input
+                      type="text"
+                      className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                      placeholder="Yasaklama nedeni (opsiyonel)"
+                      value={banReasonInput}
+                      onChange={(event) => setBanReasonInput(event.target.value)}
+                    />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Sebep: {banStatus?.reason || 'Belirtilmedi'}
+                    </p>
+                  )}
+                  {banLoading ? <p className="text-xs text-muted-foreground">Durum kontrol ediliyor...</p> : null}
+                  {banError ? <p className="text-xs text-red-500">{banError}</p> : null}
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleBan()}
+                    disabled={banSaving || banLoading}
+                    className={`w-full rounded-md px-4 py-2 text-sm text-white disabled:opacity-60 ${
+                      banStatus?.blocked ? 'bg-zinc-700' : 'bg-red-600'
+                    }`}>
+                    {banSaving ? 'İşleniyor...' : banStatus?.blocked ? 'Yasağı Kaldır' : 'Müşteriyi Yasakla'}
+                  </button>
                 </div>
 
                 <div className="rounded-lg border border-border p-3 space-y-3">

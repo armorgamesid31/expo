@@ -97,6 +97,40 @@ interface ChannelHealthPayload {
   whatsapp: WhatsAppChannelHealth;
 }
 
+interface LinkedCustomerProfile {
+  customer: {
+    id: number;
+    name: string | null;
+    phone: string;
+    instagram?: string | null;
+    birthDate?: string | null;
+    acceptMarketing?: boolean | null;
+  };
+  summary: {
+    totalAppointmentDays: number;
+    totalRevenue: number;
+    noShowRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+    noShowCount: number;
+    totalBookings: number;
+  };
+  discount?: {
+    kind: 'PERCENT' | 'FIXED';
+    value: number;
+    note: string | null;
+    notifyCustomer: boolean;
+    messageTemplate: string | null;
+    lastNotificationStatus: string | null;
+    updatedAt: string;
+  } | null;
+}
+
+interface BlacklistCheckResult {
+  blocked: boolean;
+  reason: string | null;
+  entryId: number | null;
+  matchType: 'CUSTOMER' | 'PHONE' | 'IDENTITY' | null;
+}
+
 type ReadReceiptMap = Record<string, string>;
 
 function WhatsAppLogo({ className }: { className?: string; }) {
@@ -437,6 +471,16 @@ export function ConversationsPage() {
   const [sendingResume, setSendingResume] = useState(false);
   const [sendingHandover, setSendingHandover] = useState(false);
   const [pressedMessage, setPressedMessage] = useState<MessageItem | null>(null);
+  const [linkedCustomerProfileOpen, setLinkedCustomerProfileOpen] = useState(false);
+  const [linkedCustomerProfileLoading, setLinkedCustomerProfileLoading] = useState(false);
+  const [linkedCustomerProfileError, setLinkedCustomerProfileError] = useState<string | null>(null);
+  const [linkedCustomerProfile, setLinkedCustomerProfile] = useState<LinkedCustomerProfile | null>(null);
+  const [linkedCustomerBanStatus, setLinkedCustomerBanStatus] = useState<BlacklistCheckResult | null>(null);
+  const [linkedCustomerBanLoading, setLinkedCustomerBanLoading] = useState(false);
+  const [linkedCustomerBanSaving, setLinkedCustomerBanSaving] = useState(false);
+  const [linkedCustomerBanReason, setLinkedCustomerBanReason] = useState('');
+  const [linkedCustomerBanError, setLinkedCustomerBanError] = useState<string | null>(null);
+  const [profileModalConversation, setProfileModalConversation] = useState<ConversationItem | null>(null);
   const [manualComposeConversationId, setManualComposeConversationId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>(() => {
     const cached = readSnapshot<'LIST' | 'CHAT'>(CONVERSATIONS_MOBILE_VIEW_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
@@ -586,6 +630,123 @@ export function ConversationsPage() {
     if (!selectedConversationId) return null;
     return conversations.find((item) => `${item.channel}:${item.conversationKey}` === selectedConversationId) || null;
   }, [conversations, selectedConversationId]);
+
+  const refreshLinkedCustomerBanStatus = useCallback(
+    async (conversation: ConversationItem, profile: LinkedCustomerProfile | null) => {
+      const query = new URLSearchParams();
+      const linkedCustomerId = profile?.customer?.id;
+      if (Number.isInteger(Number(linkedCustomerId)) && Number(linkedCustomerId) > 0) {
+        query.set('customerId', String(linkedCustomerId));
+      }
+
+      if (conversation.channel === 'WHATSAPP') {
+        query.set('phone', conversation.conversationKey);
+        query.set('channel', 'WHATSAPP');
+      } else {
+        query.set('channel', 'INSTAGRAM');
+        query.set('subjectNormalized', conversation.conversationKey.replace(/^INSTAGRAM:/i, '').trim().toLowerCase());
+      }
+
+      if (!query.toString()) {
+        setLinkedCustomerBanStatus(null);
+        return;
+      }
+
+      setLinkedCustomerBanLoading(true);
+      setLinkedCustomerBanError(null);
+      try {
+        const response = await apiFetch<BlacklistCheckResult>(`/api/admin/blacklist/check?${query.toString()}`);
+        setLinkedCustomerBanStatus(response);
+      } catch (err: any) {
+        setLinkedCustomerBanStatus(null);
+        setLinkedCustomerBanError(toUserFriendlyError(err, 'Yasak durumu alınamadı.'));
+      } finally {
+        setLinkedCustomerBanLoading(false);
+      }
+    },
+    [apiFetch],
+  );
+
+  const openLinkedCustomerProfile = useCallback(async (conversation: ConversationItem) => {
+    const parsedId =
+      typeof conversation.linkedCustomerId === 'number' ? conversation.linkedCustomerId : Number(conversation.linkedCustomerId);
+    setProfileModalConversation(conversation);
+    setLinkedCustomerProfileOpen(true);
+    setLinkedCustomerProfile(null);
+    setLinkedCustomerProfileError(null);
+    setLinkedCustomerBanStatus(null);
+    setLinkedCustomerBanReason('');
+    setLinkedCustomerBanError(null);
+    if (!Number.isInteger(parsedId) || parsedId <= 0) {
+      setLinkedCustomerProfileLoading(false);
+      void refreshLinkedCustomerBanStatus(conversation, null);
+      return;
+    }
+    setLinkedCustomerProfileLoading(true);
+    try {
+      const response = await apiFetch<LinkedCustomerProfile>(`/api/admin/customers/${parsedId}`);
+      setLinkedCustomerProfile(response);
+      await refreshLinkedCustomerBanStatus(conversation, response);
+    } catch (err: any) {
+      setLinkedCustomerProfileError(toUserFriendlyError(err, 'Müşteri profili açılamadı.'));
+      setLinkedCustomerProfile(null);
+      await refreshLinkedCustomerBanStatus(conversation, null);
+    } finally {
+      setLinkedCustomerProfileLoading(false);
+    }
+  }, [apiFetch, refreshLinkedCustomerBanStatus]);
+
+  const toggleLinkedCustomerBan = useCallback(async () => {
+    if (!profileModalConversation || linkedCustomerBanSaving) return;
+    setLinkedCustomerBanSaving(true);
+    setLinkedCustomerBanError(null);
+    try {
+      if (linkedCustomerBanStatus?.blocked && linkedCustomerBanStatus.entryId) {
+        await apiFetch(`/api/admin/blacklist/${linkedCustomerBanStatus.entryId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ isActive: false }),
+        });
+        showToast('Yasak kaldırıldı.', 'success');
+      } else {
+        const payload: Record<string, unknown> = {
+          reason: linkedCustomerBanReason.trim() || 'Manual ban from conversation profile',
+          fullName: linkedCustomerProfile?.customer?.name || profileModalConversation.customerName || null,
+        };
+        if (linkedCustomerProfile?.customer?.id) {
+          payload.customerId = linkedCustomerProfile.customer.id;
+        }
+        if (profileModalConversation.channel === 'WHATSAPP') {
+          payload.phone = profileModalConversation.conversationKey;
+          payload.channel = 'WHATSAPP';
+        } else {
+          payload.channel = 'INSTAGRAM';
+          payload.subjectNormalized = profileModalConversation.conversationKey
+            .replace(/^INSTAGRAM:/i, '')
+            .trim()
+            .toLowerCase();
+        }
+        await apiFetch('/api/admin/blacklist', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        showToast('Müşteri yasaklandı.', 'success');
+      }
+      await refreshLinkedCustomerBanStatus(profileModalConversation, linkedCustomerProfile);
+    } catch (err: any) {
+      setLinkedCustomerBanError(toUserFriendlyError(err, 'Yasak durumu güncellenemedi.'));
+    } finally {
+      setLinkedCustomerBanSaving(false);
+    }
+  }, [
+    apiFetch,
+    linkedCustomerBanReason,
+    linkedCustomerBanSaving,
+    linkedCustomerBanStatus,
+    linkedCustomerProfile,
+    profileModalConversation,
+    refreshLinkedCustomerBanStatus,
+    showToast,
+  ]);
 
   const filteredKonuşmalar = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -1430,40 +1591,47 @@ export function ConversationsPage() {
                       >
                         <ChevronLeft className="w-5 h-5 text-muted-foreground" />
                       </Button>
-                    <Avatar className="size-9 border border-border/40">
-                      {selectedConversation.profilePicUrl ?
-                        <AvatarImage
-                          src={
-                            buildConversationAvatarSrc({
-                              channel: selectedConversation.channel,
-                              conversationKey: selectedConversation.conversationKey,
-                              sourceUrl: selectedConversation.profilePicUrl,
-                              accessToken,
-                            }) || undefined
-                          }
-                          alt={conversationDisplayName(selectedConversation)} /> :
+                    <button
+                      type="button"
+                      onClick={() => void openLinkedCustomerProfile(selectedConversation)}
+                      className="min-h-11 min-w-0 flex items-center gap-2 rounded-xl px-1.5 py-1 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--deep-indigo)]/40 cursor-pointer"
+                      aria-label="Sohbet profilini aç"
+                    >
+                      <Avatar className="size-9 border border-border/40">
+                        {selectedConversation.profilePicUrl ?
+                          <AvatarImage
+                            src={
+                              buildConversationAvatarSrc({
+                                channel: selectedConversation.channel,
+                                conversationKey: selectedConversation.conversationKey,
+                                sourceUrl: selectedConversation.profilePicUrl,
+                                accessToken,
+                              }) || undefined
+                            }
+                            alt={conversationDisplayName(selectedConversation)} /> :
 
-                        null}
-                      <AvatarFallback className="text-xs">
-                        {initialsFromLabel(conversationDisplayName(selectedConversation))}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-[14px] font-semibold truncate leading-tight">
-                        {conversationDisplayName(selectedConversation)}
-                      </p>
-                      <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
-                        <span className="text-[10px] min-w-0 font-bold uppercase tracking-tight text-muted-foreground/60 truncate">
-                          {selectedConversation.channel === 'INSTAGRAM' ? 'Instagram Sohbeti' : 'WhatsApp Sohbeti'}
-                        </span>
-                        {isHandoverInProgress(normalizeAutomationMode(selectedConversation.automationMode)) && (
-                          <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-tight text-amber-600 shadow-sm shadow-amber-500/10">
-                            <Sparkles className="size-1.5 fill-current" />
-                            Canlı Destek
+                          null}
+                        <AvatarFallback className="text-xs">
+                          {initialsFromLabel(conversationDisplayName(selectedConversation))}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-semibold truncate leading-tight">
+                          {conversationDisplayName(selectedConversation)}
+                        </p>
+                        <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+                          <span className="text-[10px] min-w-0 font-bold uppercase tracking-tight text-muted-foreground/60 truncate">
+                            {selectedConversation.channel === 'INSTAGRAM' ? 'Instagram Sohbeti' : 'WhatsApp Sohbeti'}
                           </span>
-                        )}
+                          {isHandoverInProgress(normalizeAutomationMode(selectedConversation.automationMode)) && (
+                            <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-tight text-amber-600 shadow-sm shadow-amber-500/10">
+                              <Sparkles className="size-1.5 fill-current" />
+                              Canlı Destek
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </button>
                   </div>
                 </div>
 
@@ -1685,6 +1853,155 @@ export function ConversationsPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={linkedCustomerProfileOpen}
+        onOpenChange={(open) => {
+          setLinkedCustomerProfileOpen(open);
+          if (!open) {
+            setProfileModalConversation(null);
+            setLinkedCustomerProfile(null);
+            setLinkedCustomerProfileError(null);
+            setLinkedCustomerProfileLoading(false);
+            setLinkedCustomerBanStatus(null);
+            setLinkedCustomerBanReason('');
+            setLinkedCustomerBanError(null);
+            setLinkedCustomerBanLoading(false);
+          }
+        }}>
+        <DialogContent className="max-w-[520px] rounded-2xl border border-border/40 bg-background/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">Sohbet Profili</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Kayıtlı müşteri bilgisi ve sohbet özeti
+            </DialogDescription>
+          </DialogHeader>
+          {profileModalConversation ? (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 px-3 py-3">
+                <Avatar className="size-20 border border-border/40">
+                  {profileModalConversation.profilePicUrl ?
+                    <AvatarImage
+                      src={
+                        buildConversationAvatarSrc({
+                          channel: profileModalConversation.channel,
+                          conversationKey: profileModalConversation.conversationKey,
+                          sourceUrl: profileModalConversation.profilePicUrl,
+                          accessToken,
+                        }) || undefined
+                      }
+                      alt={conversationDisplayName(profileModalConversation)} /> :
+                    null}
+                  <AvatarFallback className="text-sm">
+                    {initialsFromLabel(conversationDisplayName(profileModalConversation))}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{conversationDisplayName(profileModalConversation)}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {profileModalConversation.channel === 'INSTAGRAM' ? 'Instagram' : 'WhatsApp'}
+                  </p>
+                </div>
+                <span
+                  className={`ml-auto rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-tight ${
+                    linkedCustomerProfile ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'
+                  }`}>
+                  {linkedCustomerProfile ? 'Kayıtlı' : 'Kayıtsız'}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Instagram Kullanıcı Adı</p>
+                  <p className="font-medium">
+                    {linkedCustomerProfile?.customer.instagram ?
+                      `@${linkedCustomerProfile.customer.instagram.replace(/^@/, '')}` :
+                      profileModalConversation.profileUsername ?
+                        `@${profileModalConversation.profileUsername.replace(/^@/, '')}` :
+                        '-'}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">WhatsApp Numarası</p>
+                  <p className="font-medium">
+                    {profileModalConversation.channel === 'WHATSAPP' ? profileModalConversation.conversationKey : linkedCustomerProfile?.customer.phone || '-'}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Alınan Hizmet Sayısı</p>
+                  <p className="font-medium">{linkedCustomerProfile?.summary.totalBookings ?? 0}</p>
+                </div>
+                <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">No-show</p>
+                  <p className="font-medium">{linkedCustomerProfile?.summary.noShowCount ?? 0}</p>
+                </div>
+                <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Toplam Harcama</p>
+                  <p className="font-medium">
+                    {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(linkedCustomerProfile?.summary.totalRevenue || 0)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Kampanya Durumları</p>
+                  <p className="font-medium">
+                    Pazarlama İzni: {linkedCustomerProfile ? (linkedCustomerProfile.customer.acceptMarketing ? 'Açık' : 'Kapalı') : 'Bilinmiyor'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Son Kampanya: {linkedCustomerProfile?.discount?.lastNotificationStatus || (linkedCustomerProfile ? 'Gönderim kaydı yok' : 'Kayıtlı değil')}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Yasaklama</p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      linkedCustomerBanStatus?.blocked
+                        ? 'bg-red-500/10 text-red-700'
+                        : 'bg-emerald-500/10 text-emerald-700'
+                    }`}>
+                    {linkedCustomerBanStatus?.blocked ? 'YASAKLI' : 'AKTİF'}
+                  </span>
+                </div>
+                {!linkedCustomerBanStatus?.blocked ? (
+                  <input
+                    type="text"
+                    value={linkedCustomerBanReason}
+                    onChange={(event) => setLinkedCustomerBanReason(event.target.value)}
+                    placeholder="Yasak nedeni (opsiyonel)"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                ) : (
+                  <p className="text-xs text-muted-foreground">Sebep: {linkedCustomerBanStatus?.reason || 'Belirtilmedi'}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void toggleLinkedCustomerBan()}
+                  disabled={linkedCustomerBanSaving || linkedCustomerBanLoading}
+                  className={`w-full rounded-md px-3 py-2 text-sm text-white disabled:opacity-60 ${
+                    linkedCustomerBanStatus?.blocked ? 'bg-zinc-700' : 'bg-red-600'
+                  }`}>
+                  {linkedCustomerBanSaving
+                    ? 'İşleniyor...'
+                    : linkedCustomerBanStatus?.blocked
+                      ? 'Yasağı Kaldır'
+                      : 'Yasakla'}
+                </button>
+                {linkedCustomerBanLoading ? <p className="text-xs text-muted-foreground">Durum kontrol ediliyor...</p> : null}
+                {linkedCustomerBanError ? <p className="text-xs text-red-500">{linkedCustomerBanError}</p> : null}
+              </div>
+            </div>
+          ) : null}
+          {linkedCustomerProfileLoading ? (
+            <div className="space-y-2 py-2">
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+            </div>
+          ) : null}
+          {!linkedCustomerProfileLoading && linkedCustomerProfileError ? (
+            <p className="text-sm text-red-500">{linkedCustomerProfileError}</p>
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

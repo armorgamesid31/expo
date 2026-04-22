@@ -70,7 +70,7 @@ function backTargetFromPathname(pathname: string): string | null {
   const brandChildren = ['/app/campaigns', '/app/features/social-channels'];
   if (brandChildren.some(child => pathname === child)) return '/app/brand-growth-hub';
 
-  const commsChildren = ['/app/features/whatsapp-settings', '/app/features/ai-settings', '/app/automations', '/app/features/whatsapp-setup', '/app/features/whatsapp-agent'];
+  const commsChildren = ['/app/features/whatsapp-settings', '/app/features/ai-settings', '/app/features/whatsapp-setup', '/app/features/whatsapp-agent'];
   if (commsChildren.some(child => pathname === child)) return '/app/features/social-channels';
 
   const teamChildren = ['/app/staff', '/app/team-access', '/app/notification-role-matrix', '/app/time-off-management'];
@@ -81,7 +81,8 @@ function backTargetFromPathname(pathname: string): string | null {
   if (pathname.startsWith('/app/settings')) return '/app/features';
   if (pathname === '/app/salon-info') return '/app/features';
   if (pathname.startsWith('/app/salon-info/')) return '/app/salon-info';
-  if (pathname.startsWith('/app/blacklist')) return '/app/features';
+  if (pathname.startsWith('/app/automations')) return '/app/customers';
+  if (pathname.startsWith('/app/blacklist')) return '/app/customers';
   if (pathname.startsWith('/app/features/')) return '/app/features';
 
   return '/app/features';
