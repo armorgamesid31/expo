@@ -23,6 +23,7 @@ const SHOW_WHATSAPP_INBOX = true;
 const CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY = 'conversations:selected-channel';
 const CONVERSATIONS_SELECTED_ID_CACHE_KEY = 'conversations:selected-id';
 const CONVERSATIONS_MOBILE_VIEW_CACHE_KEY = 'conversations:mobile-view';
+const CONVERSATIONS_READ_RECEIPTS_CACHE_KEY = 'conversations:read-receipts';
 const INSTAGRAM_REPLY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 interface ConversationItem {
@@ -94,6 +95,8 @@ interface ChannelHealthPayload {
   whatsapp: WhatsAppChannelHealth;
 }
 
+type ReadReceiptMap = Record<string, string>;
+
 function WhatsAppLogo({ className }: { className?: string; }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
@@ -164,6 +167,16 @@ function formatRelativeTime(value: string): string {
   const diffDay = Math.floor(diffHour / 24);
   if (diffDay < 7) return `${diffDay}g`;
   return formatTs(value);
+}
+
+function toUserFriendlyError(err: any, fallback: string): string {
+  const raw =
+    (typeof err?.body?.message === 'string' && err.body.message.trim()) ||
+    (typeof err?.message === 'string' && err.message.trim()) ||
+    '';
+  if (!raw) return fallback;
+  if (/^request failed \(\d+\)$/i.test(raw)) return fallback;
+  return raw;
 }
 
 function normalizeUsername(value: string | null | undefined): string | null {
@@ -367,11 +380,17 @@ export function ConversationsPage() {
     const cached = readSnapshot<'LIST' | 'CHAT'>(CONVERSATIONS_MOBILE_VIEW_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
     return cached === 'CHAT' ? 'CHAT' : 'LIST';
   });
+  const [readReceiptMap, setReadReceiptMap] = useState<ReadReceiptMap>(() => {
+    const cached = readSnapshot<ReadReceiptMap>(CONVERSATIONS_READ_RECEIPTS_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
+    if (!cached || typeof cached !== 'object') return {};
+    return cached;
+  });
   const [liveConversationMap, setLiveConversationMap] = useState<Record<string, number>>({});
   const realtimeRefreshTimerRef = useRef<number | null>(null);
   const liveConversationTimersRef = useRef<Record<string, number>>({});
   const longPressTimerRef = useRef<number | null>(null);
   const conversationsRef = useRef<ConversationItem[]>([]);
+  const readReceiptRef = useRef<ReadReceiptMap>({});
   const selectedConversationIdRef = useRef<string | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
@@ -390,11 +409,30 @@ export function ConversationsPage() {
   }, [mobileView]);
 
   useEffect(() => {
+    writeSnapshot(CONVERSATIONS_READ_RECEIPTS_CACHE_KEY, readReceiptMap);
+    readReceiptRef.current = readReceiptMap;
+  }, [readReceiptMap]);
+
+  useEffect(() => {
     selectedConversationIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
 
   const markConversationAsReadLocal = useCallback((conversationId: string | null) => {
     if (!conversationId) return;
+    const matched = conversationsRef.current.find(
+      (item) => `${item.channel}:${item.conversationKey}` === conversationId,
+    );
+    const acknowledgedAt = matched?.lastEventTimestamp || new Date().toISOString();
+    setReadReceiptMap((prev) => {
+      const existing = prev[conversationId];
+      if (existing && new Date(existing).getTime() >= new Date(acknowledgedAt).getTime()) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [conversationId]: acknowledgedAt,
+      };
+    });
     setKonuşmalar((prev) =>
       prev.map((item) => {
         const itemId = `${item.channel}:${item.conversationKey}`;
@@ -506,7 +544,11 @@ export function ConversationsPage() {
       const selectedId = selectedConversationIdRef.current;
       const next = (response?.items || []).map((item) => {
         const id = `${item.channel}:${item.conversationKey}`;
-        if (selectedId && id === selectedId && item.unreadCount > 0) {
+        const seenAt = readReceiptRef.current[id];
+        const alreadySeen =
+          !!seenAt && Number.isFinite(new Date(seenAt).getTime()) &&
+          new Date(seenAt).getTime() >= new Date(item.lastEventTimestamp).getTime();
+        if ((selectedId && id === selectedId && item.unreadCount > 0) || (alreadySeen && item.unreadCount > 0)) {
           return { ...item, unreadCount: 0 };
         }
         return item;
@@ -520,7 +562,7 @@ export function ConversationsPage() {
         setSelectedConversationId(nextId);
       }
     } catch (err: any) {
-      showToast(err?.message || "Konuşmalar yüklenemedi.", 'error');
+      showToast(toUserFriendlyError(err, "Konuşmalar yüklenemedi."), 'error');
     } finally {
       if (showLoading) setLoadingKonuşmalar(false);
     }
@@ -554,7 +596,7 @@ export function ConversationsPage() {
         );
       }
     } catch (err: any) {
-      showToast(err?.message || "Konuşma mesajları yüklenemedi.", 'error');
+      showToast(toUserFriendlyError(err, "Konuşma mesajları yüklenemedi."), 'error');
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
@@ -690,6 +732,9 @@ export function ConversationsPage() {
     if (!selectedConversation || !replyText.trim()) return;
     setSendingReply(true);
     try {
+      if (selectedConversation.channel === 'INSTAGRAM' && instagramWindowExpired) {
+        showToast('Instagram 24 saat penceresi dolmuş olabilir. Gönderim başarısız olursa müşterinin tekrar yazması gerekir.', 'info');
+      }
       const response = await apiFetch<{ item?: MessageItem & { conversationKey?: string; }; }>(
         `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/reply`,
         {
@@ -715,7 +760,7 @@ export function ConversationsPage() {
         showToast('Instagram 24 saat penceresi dolduğu için mesaj gönderilemez. Müşterinin tekrar yazması gerekiyor.', 'error');
         return;
       }
-      showToast(err?.message || "Bize ulaşın mesajı gönderilemedi.", 'error');
+      showToast(toUserFriendlyError(err, 'Mesaj gönderilemedi.'), 'error');
     } finally {
       setSendingReply(false);
     }
@@ -723,14 +768,6 @@ export function ConversationsPage() {
 
   const resumeAuto = async () => {
     if (!selectedConversation) return;
-    setKonuşmalar((prev) =>
-      prev.map((item) =>
-        item.channel === selectedConversation.channel && item.conversationKey === selectedConversation.conversationKey ?
-          { ...item, automationMode: 'AUTO' } :
-          item
-      )
-    );
-    setManualComposeRequested(false);
     setSendingResume(true);
     try {
       const response = await apiFetch<{ conversationKey?: string; state?: { mode?: AutomationMode; manualAlways?: boolean; }; }>(
@@ -760,11 +797,12 @@ export function ConversationsPage() {
           )
         );
       }
+      setManualComposeRequested(false);
       showToast('Yapay zeka otomasyonu tekrar devreye alındı.', 'success');
       await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
-      showToast(err?.message || 'Otomasyon başlatılamadı.', 'error');
+      showToast(toUserFriendlyError(err, 'Otomasyon başlatılamadı.'), 'error');
     } finally {
       setSendingResume(false);
     }
@@ -813,7 +851,7 @@ export function ConversationsPage() {
       await loadMessages(selectedConversation.channel, effectiveConversationKey, false);
       await loadKonuşmalar(false);
     } catch (err: any) {
-      showToast(err?.message || 'Talep iletilemedi.', 'error');
+      showToast(toUserFriendlyError(err, 'Talep iletilemedi.'), 'error');
     } finally {
       setSendingHandover(false);
     }
@@ -826,7 +864,7 @@ export function ConversationsPage() {
   const instagramWindowExpired =
     selectedConversation?.channel === 'INSTAGRAM' &&
     isInstagramReplyWindowExpired(selectedConversation.lastCustomerMessageAt);
-  const canReply = Boolean(isSupportedReplyChannel && manualReplyUnlocked && !instagramWindowExpired);
+  const canReply = Boolean(isSupportedReplyChannel && manualReplyUnlocked);
   const channelScopedConversations = useMemo(() => {
     if (channelView === 'ALL') return conversations;
     return conversations.filter((item) => item.channel === channelView);
@@ -1334,7 +1372,7 @@ export function ConversationsPage() {
                   {instagramWindowExpired ? (
                     <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
                       <AlertTriangle className="size-3.5 mt-0.5 shrink-0" />
-                      <span>Instagram 24 saat yanıt penceresi doldu. Yeni mesaj göndermek için müşterinin tekrar yazması gerekiyor.</span>
+                      <span>Instagram 24 saat yanıt penceresi dolmuş olabilir. Mesaj gönderimi başarısız olursa müşterinin tekrar yazması gerekir.</span>
                     </div>
                   ) : null}
 
@@ -1345,7 +1383,7 @@ export function ConversationsPage() {
                         onChange={(event) => setReplyText(event.target.value)}
                         placeholder={
                           instagramWindowExpired ?
-                            'Instagram 24 saat penceresi dolduğu için yeni mesaj gönderemezsiniz.' :
+                            'Instagram 24 saat penceresi dolmuş olabilir. Yine de deneyebilirsiniz.' :
                             canReply ?
                               'Mesajınızı yazın...' :
                               "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"

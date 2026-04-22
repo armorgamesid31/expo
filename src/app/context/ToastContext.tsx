@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
@@ -24,8 +24,15 @@ export function useToasts() {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const lastShownAtRef = useRef<Record<string, number>>({});
 
   const showToast = useCallback((message: string, type: ToastType) => {
+    const dedupeKey = `${type}:${message.trim()}`;
+    const now = Date.now();
+    const lastShownAt = lastShownAtRef.current[dedupeKey] || 0;
+    if (now - lastShownAt < 1800) return;
+    lastShownAtRef.current[dedupeKey] = now;
+
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, type, message }]);
     setTimeout(() => {
