@@ -302,13 +302,23 @@ export function InstagramInboxPage() {
     stickToBottomRef.current = true;
   }, [selectedKey]);
 
+  const fetchGetWithFallback = useCallback(
+    async <T,>(path: string): Promise<T> => {
+      try {
+        return await apiFetch<T>(path, { __cache: { mode: 'network-only' } });
+      } catch {
+        return await apiFetch<T>(path, { __cache: { mode: 'swr' } });
+      }
+    },
+    [apiFetch],
+  );
+
   const loadConversations = useCallback(async (showLoading = true) => {
     if (showLoading) setLoadingConversations(true);
     setError(null);
     try {
-      const response = await apiFetch<{ items: ConversationItem[]; }>(
-        '/api/admin/instagram-inbox/conversations?limit=40',
-        { __cache: { mode: 'network-only' } },
+      const response = await fetchGetWithFallback<{ items: ConversationItem[]; }>(
+        '/api/admin/instagram-inbox/conversations?limit=40'
       );
       const activeKey = selectedKeyRef.current;
       const next = (response?.items || []).map((item) =>
@@ -328,7 +338,7 @@ export function InstagramInboxPage() {
     } finally {
       if (showLoading) setLoadingConversations(false);
     }
-  }, [apiFetch]);
+  }, [fetchGetWithFallback]);
 
   const loadMessages = useCallback(async (conversationKey: string, showLoading = true) => {
     if (showLoading) setLoadingMessages(true);
@@ -337,9 +347,8 @@ export function InstagramInboxPage() {
       const relatedKeys = findRelatedConversationKeys(conversationsRef.current, conversationKey).slice(0, 5);
       const responses = await Promise.all(
         relatedKeys.map((key) =>
-          apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
-            `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`,
-            { __cache: { mode: 'network-only' } },
+          fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
+            `/api/admin/instagram-inbox/conversations/${encodeURIComponent(key)}/messages?limit=120`
           )
         )
       );
@@ -364,7 +373,7 @@ export function InstagramInboxPage() {
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
-  }, [apiFetch]);
+  }, [fetchGetWithFallback]);
 
   const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
     if (sseYenileTimerRef.current) return;

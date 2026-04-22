@@ -434,6 +434,17 @@ export function ConversationsPage() {
     selectedConversationIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
 
+  const fetchGetWithFallback = useCallback(
+    async <T,>(path: string): Promise<T> => {
+      try {
+        return await apiFetch<T>(path, { __cache: { mode: 'network-only' } });
+      } catch {
+        return await apiFetch<T>(path, { __cache: { mode: 'swr' } });
+      }
+    },
+    [apiFetch],
+  );
+
   const markConversationAsReadLocal = useCallback((conversationId: string | null) => {
     if (!conversationId) return;
     const matched = conversationsRef.current.find(
@@ -553,11 +564,10 @@ export function ConversationsPage() {
   const loadKonuşmalar = useCallback(async (showLoading = true) => {
     if (showLoading) setLoadingKonuşmalar(true);
     try {
-      const response = await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
+      const response = await fetchGetWithFallback<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
         channelView === 'ALL'
           ? '/api/admin/conversations?limit=60'
-          : `/api/admin/conversations?limit=60&channel=${channelView}`,
-        { __cache: { mode: 'network-only' } },
+          : `/api/admin/conversations?limit=60&channel=${channelView}`
       );
       const selectedId = selectedConversationIdRef.current;
       const next = (response?.items || []).map((item) => {
@@ -584,7 +594,7 @@ export function ConversationsPage() {
     } finally {
       if (showLoading) setLoadingKonuşmalar(false);
     }
-  }, [apiFetch, channelView]);
+  }, [channelView, fetchGetWithFallback]);
 
   const loadMessages = useCallback(async (channel: ChannelType, conversationKey: string, showLoading = true) => {
     if (showLoading) setLoadingMessages(true);
@@ -592,9 +602,8 @@ export function ConversationsPage() {
       const relatedKeys = findRelatedConversationKeys(conversationsRef.current, { channel, conversationKey }).slice(0, 5);
       const responses = await Promise.all(
         relatedKeys.map((item) =>
-          apiFetch<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
-            `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`,
-            { __cache: { mode: 'network-only' } },
+          fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
+            `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`
           )
         )
       );
@@ -620,7 +629,7 @@ export function ConversationsPage() {
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
-  }, [apiFetch]);
+  }, [fetchGetWithFallback]);
   const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
     if (realtimeRefreshTimerRef.current) return;
     const activeId = selectedConversationIdRef.current;

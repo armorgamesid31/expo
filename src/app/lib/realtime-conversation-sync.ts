@@ -142,10 +142,20 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
           params.set('channel', options.channel);
         }
 
-        const response = await options.apiFetch<RealtimeSyncResponse>(
-          `/api/admin/conversations/realtime/sync?${params.toString()}`,
-          { __cache: { mode: 'network-only' } },
-        );
+        const path = `/api/admin/conversations/realtime/sync?${params.toString()}`;
+        const response = await (async () => {
+          try {
+            return await options.apiFetch<RealtimeSyncResponse>(
+              path,
+              { __cache: { mode: 'network-only' } },
+            );
+          } catch {
+            return await options.apiFetch<RealtimeSyncResponse>(
+              path,
+              { __cache: { mode: 'swr' } },
+            );
+          }
+        })();
 
         if (response.requiresFullRefresh || response.hasGap) {
           await onRequireFullRefreshRef.current(reason === 'startup' ? 'reconnect' : 'gap');
