@@ -699,7 +699,7 @@ export function ConversationsPage() {
   }, [selectedConversationId]);
 
   return (
-    <div className="h-full w-full max-w-full overflow-x-clip pb-20 overflow-y-auto px-0 py-2 bg-gradient-to-br from-indigo-500/5 via-background to-fuchsia-500/5 relative">
+    <div className="h-full w-full max-w-full overflow-x-hidden pb-20 overflow-y-auto px-0 py-2 bg-gradient-to-br from-indigo-500/5 via-background to-fuchsia-500/5 relative">
       <div className="pointer-events-none absolute right-0 top-0 h-[400px] w-[400px] -translate-y-1/2 translate-x-1/3 rounded-full bg-[var(--deep-indigo)] mix-blend-screen opacity-10 blur-[100px]" />
       <div className={`mb-2 relative z-10 ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'} flex-wrap items-center gap-2 px-1 sm:px-2`}>
         <div className="flex w-full sm:w-auto min-w-0 rounded-2xl border border-border/50 bg-background/70 shadow-sm backdrop-blur-md p-1">
@@ -745,7 +745,7 @@ export function ConversationsPage() {
             null}
         </div>
 
-        <div className="flex w-full sm:w-auto min-w-0 rounded-2xl border border-border/50 bg-background/70 shadow-sm backdrop-blur-md p-1">
+        <div className="grid w-full min-w-0 grid-cols-3 rounded-2xl border border-border/50 bg-background/70 shadow-sm backdrop-blur-md p-1 sm:flex sm:w-auto">
           {([
             { value: 'all' as QuickFilter, label: 'Hepsi', count: allTotal },
             { value: 'unread' as QuickFilter, label: 'Okunmamış', count: unreadTotal },
@@ -756,7 +756,7 @@ export function ConversationsPage() {
               type="button"
               aria-pressed={quickFilter === filter.value}
               onClick={() => setQuickFilter(filter.value)}
-              className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold transition ${
+              className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-semibold transition sm:flex-none sm:px-2.5 sm:text-xs ${
                 quickFilter === filter.value
                   ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -845,7 +845,7 @@ export function ConversationsPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <div className="flex items-center gap-2 p-4 overflow-x-auto scrollbar-none">
+            <div className="flex flex-wrap items-center gap-2 p-4">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/40 bg-background/60 shadow-sm whitespace-nowrap">
                 <div className="size-2 rounded-full bg-foreground/20" />
                 <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">{filteredKonuşmalar.length} Sohbet</span>
@@ -968,7 +968,7 @@ export function ConversationsPage() {
                             </div>
                           </div>
                           
-                          <div className="min-w-0 flex-1 py-0">
+                          <div className="w-0 min-w-0 flex-1 py-0">
                             <div className="flex min-w-0 items-center justify-between mb-1">
                               <h4 className={`text-[15px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
                               <div className="flex items-center gap-1.5 shrink-0">
