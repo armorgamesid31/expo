@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminDashboard } from '../components/dashboard/AdminDashboard';
 import { DayNavigator } from '../components/analytics/DayNavigator';
 import { useAuth } from '../context/AuthContext';
-import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
+import { readSnapshot, subscribeDataChanged, writeSnapshot } from '../lib/ui-cache';
 import {
   resolveSingleDayRange,
   shiftDateInputValue,
@@ -159,6 +159,19 @@ export function DashboardPage() {
     void loadAnalytics(selectedDate);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    return subscribeDataChanged((domains) => {
+      if (
+      domains.length === 0 ||
+      domains.includes('appointments') ||
+      domains.includes('staff') ||
+      domains.includes('dashboard'))
+      {
+        void loadAnalytics(selectedDate);
+      }
+    });
+  }, [selectedDate]);
 
   const onDateChange = (nextDate: string) => {
     setSelectedDate(nextDate);

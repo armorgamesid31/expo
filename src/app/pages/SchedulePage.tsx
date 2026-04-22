@@ -15,7 +15,7 @@ import type {
   CustomerPackageItem
 } from
   '../types/mobile-api';
-import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
+import { notifyDataChanged, readSnapshot, subscribeDataChanged, writeSnapshot } from '../lib/ui-cache';
 
 // Modular Components
 import { CalendarSkeleton, ListSkeleton } from '../components/schedule/ScheduleSkeletons';
@@ -486,6 +486,19 @@ export function SchedulePage() {
     void loadSchedule();
   }, [loadSchedule]);
 
+  useEffect(() => {
+    return subscribeDataChanged((domains) => {
+      if (
+      domains.length === 0 ||
+      domains.includes('schedule') ||
+      domains.includes('appointments') ||
+      domains.includes('staff'))
+      {
+        void loadSchedule();
+      }
+    });
+  }, [loadSchedule]);
+
   const loadWaitlist = useCallback(async () => {
     const dayKey = dayKeyFromDate(activeDate);
     setWaitlistLoading(true);
@@ -693,6 +706,7 @@ export function SchedulePage() {
       setSelectedStaffByService({});
       setForm((prev) => ({ ...prev, customerId: '', customerName: '', customerPhone: '', notes: '' }));
       await loadSchedule();
+      notifyDataChanged(['appointments', 'schedule', 'dashboard', 'customers']);
     } catch (err: any) {
       setCreateError(err?.message || 'Randevu oluşturulamadı.');
     } finally {
@@ -777,6 +791,7 @@ export function SchedulePage() {
         setStatusFeedback(`${appointmentIds.length} randevu güncellendi: ${summary}`);
       }
       await loadSchedule();
+      notifyDataChanged(['appointments', 'schedule', 'dashboard', 'customers']);
       setStatusOverrides((previous) => {
         const next = { ...previous };
         for (const appointmentId of appointmentIds) {
@@ -940,6 +955,7 @@ export function SchedulePage() {
         } satisfies AppointmentCheckoutRequest)
       });
       await loadSchedule();
+      notifyDataChanged(['appointments', 'schedule', 'dashboard', 'customers']);
       setSelectedAppointmentGroup(null);
       setCheckoutModal(null);
       setStatusFeedback(response.summary?.message || `${checkoutTargets.length} satır kapatıldı.`);
@@ -1227,6 +1243,7 @@ export function SchedulePage() {
       );
 
       await loadSchedule();
+      notifyDataChanged(['appointments', 'schedule', 'dashboard', 'customers']);
       setStatusOverrides((previous) => {
         const next = { ...previous };
         for (const id of committed.previousAppointmentIds || []) {

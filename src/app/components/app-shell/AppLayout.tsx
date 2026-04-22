@@ -1,15 +1,15 @@
 import { useCallback, useRef, type TouchEvent } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { BottomNav } from '../layout/BottomNav';
 import { useNavigator } from '../../context/NavigatorContext';
 import { useAuth } from '../../context/AuthContext';
 
-function transitionMotionByKind(vector: number) {
-  // Vector 1: Slide Content RIGHT (New from Left) - Used for Forward Tabs / Up Hierarchy
-  // Vector -1: Slide Content LEFT (New from Right) - Used for Forward Hierarchy / Back Tabs
-  if (vector === 0) {
+function transitionMotionByKind(direction: number) {
+  // direction 1: Forward (Slide Left)
+  // direction -1: Back (Slide Right)
+  if (direction === 0) {
     return {
       initial: { opacity: 1 },
       animate: { opacity: 1 },
@@ -20,17 +20,24 @@ function transitionMotionByKind(vector: number) {
 
   return {
     initial: { 
-      x: vector === 1 ? '-100%' : '100%'
+      x: direction === 1 ? '100%' : '-100%',
+      opacity: 0,
+      scale: 0.98
     },
     animate: { 
-      x: 0
+      x: 0,
+      opacity: 1,
+      scale: 1
     },
     exit: { 
-      x: vector === 1 ? '100%' : '-100%'
+      x: direction === 1 ? '-100%' : '100%',
+      opacity: 0,
+      scale: 1,
+      zIndex: 0
     },
     transition: { 
-      duration: 0.35, 
-      ease: [0.33, 1, 0.68, 1] 
+      duration: 0.3, 
+      ease: [0.32, 0.72, 0, 1] 
     }
   };
 }
@@ -103,7 +110,7 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { direction, headerTitle, headerActions } = useNavigator();
-  const { bootstrap } = useAuth();
+  const { bootstrap, logout } = useAuth();
   const edgeSwipeRef = useRef<{ active: boolean; startX: number; startY: number }>({
     active: false,
     startX: 0,
@@ -244,8 +251,37 @@ export function AppLayout() {
                   )}
                 </div>
 
+                {!resolvedHeaderTitle && (
+                  <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+                    <img
+                      src="https://cdn.kedyapp.com/kedylogo_koyu.png"
+                      alt="Kedy Logo"
+                      className="h-8 w-auto dark:hidden"
+                      loading="eager"
+                    />
+                    <img
+                      src="https://cdn.kedyapp.com/kedylogo_beyazturuncu.png"
+                      alt="Kedy Logo"
+                      className="hidden h-8 w-auto dark:block"
+                      loading="eager"
+                    />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mt-0.5">
+                      {bootstrap?.salon?.name || 'Kedy App'}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 min-w-[36px] justify-end">
-                  {headerActions ? headerActions : <div className="h-9 w-9" />}
+                  {headerActions ? headerActions : (
+                    <button
+                      type="button"
+                      onClick={() => void logout()}
+                      className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground transition-all active:scale-90 hover:text-destructive"
+                      aria-label="Çıkış Yap"
+                    >
+                      <LogOut className="h-5 w-5" />
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -254,18 +290,24 @@ export function AppLayout() {
       )}
 
       <main
-        className="pb-24 overflow-x-hidden min-h-screen relative"
-        style={{ paddingTop: showTopBar ? 'calc(4rem + var(--safe-area-top))' : 'calc(var(--safe-area-top) + 1rem)' }}
+        className="pb-24 overflow-x-hidden min-h-screen relative scrollbar-gutter-stable"
+        style={{ 
+          paddingTop: showTopBar ? 'calc(4rem + var(--safe-area-top))' : 'calc(var(--safe-area-top) + 1rem)',
+          contain: 'paint' 
+        }}
       >
-        <div className="max-w-screen-xl mx-auto px-2 lg:px-8">
-          <AnimatePresence mode="popLayout" initial={false}>
+        <div className="max-w-screen-xl mx-auto px-2 lg:px-8 grid h-full overflow-hidden">
+          <AnimatePresence 
+            mode="popLayout" 
+            initial={false}
+          >
             <motion.div
               key={location.pathname}
               initial={transitionMotion.initial}
               animate={transitionMotion.animate}
               exit={transitionMotion.exit}
               transition={transitionMotion.transition}
-              className="w-full h-full"
+              className="w-full h-full col-start-1 row-start-1 bg-background flex flex-col"
             >
               <Outlet />
             </motion.div>

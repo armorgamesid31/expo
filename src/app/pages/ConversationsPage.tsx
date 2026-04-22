@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Search, Send, MessageSquareDashed, ChevronLeft, Instagram } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Search, Send, MessageSquareDashed, ChevronLeft, Instagram, LogOut, Sparkles, SendHorizontal } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -276,8 +276,6 @@ function mergeAndSortMessages(responses: Array<{ items: MessageItem[]; } | null 
       const direction = (msg.direction || '').toLowerCase();
       const text = (msg.text || '').trim();
       
-      // WhatsApp messages might not have unique providerMessageIds for outbound messages in some cases,
-      // or they might have different direction strings. We'll use a more comprehensive fingerprint.
       const fingerprint = providerId ?
         `provider:${providerId}` :
         `fallback:${direction}|${msg.messageType}|${msg.eventTimestamp}|${text.substring(0, 100)}`;
@@ -317,6 +315,7 @@ export function ConversationsPage() {
   const [replyText, setReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const [sendingResume, setSendingResume] = useState(false);
+  const [sendingHandover, setSendingHandover] = useState(false);
   const [manualComposeRequested, setManualComposeRequested] = useState(false);
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>(() => {
     const cached = readSnapshot<'LIST' | 'CHAT'>(CONVERSATIONS_MOBILE_VIEW_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
@@ -650,6 +649,24 @@ export function ConversationsPage() {
     }
   };
 
+  const requestHandover = async () => {
+    if (!selectedConversation) return;
+    setSendingHandover(true);
+    try {
+      await apiFetch(
+        `/api/admin/conversations/${selectedConversation.channel}/${encodeURIComponent(selectedConversation.conversationKey)}/request-handover`,
+        { method: 'POST' }
+      );
+      showToast('Canlı destek talebi iletildi.', 'success');
+      await loadMessages(selectedConversation.channel, selectedConversation.conversationKey, false);
+      await loadKonuşmalar(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Talep iletilemedi.', 'error');
+    } finally {
+      setSendingHandover(false);
+    }
+  };
+
   const isSupportedReplyChannel = selectedConversation?.channel === 'INSTAGRAM' || selectedConversation?.channel === 'WHATSAPP';
   const selectedMode = normalizeAutomationMode(selectedConversation?.automationMode);
   const handoverInProgress = isHandoverInProgress(selectedMode);
@@ -754,30 +771,72 @@ export function ConversationsPage() {
         </div>
       </div>
 
-      {channelBlocked ?
-        <div className="rounded-2xl border border-border bg-background p-4 mx-1 sm:mx-2">
-          <p className="text-base font-semibold">
-            {channelView === 'INSTAGRAM' ? "Instagram bağlantısı gerekli" : "WhatsApp bağlantısı gerekli"}
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {selectedChannelHealth?.message || "Bu kanal için sohbetleri görmek önce bağlantı kurulmasını gerektirir."}
-          </p>
-          {selectedChannelHealth?.missingRequirements?.length ?
-            <div className="mt-3 text-xs text-muted-foreground">
-              Eksikler: {selectedChannelHealth.missingRequirements.join(', ')}
-            </div> :
-            null}
-          <Button
-            type="button"
-            className="mt-4"
-            onClick={() =>
-              navigate('/app/features/social-channels', {
-                state: { navDirection: 'forward' }
-              })
-            }>
+      {!channelBlocked && selectedChannelHealth && (
+        <div className="mt-2 overflow-hidden rounded-2xl border border-border/50 bg-background/50 shadow-sm backdrop-blur-md px-4 py-3 sm:mx-2 mb-4 mx-1">
+          <div className="flex items-center gap-3">
+            <div className={`size-2 rounded-full animate-pulse ${
+              channelView === 'INSTAGRAM' ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+            }`} />
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+              {channelView} Canlı Yayın
+            </span>
+            <div className="ml-auto flex items-center gap-1.5 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+              <div className="size-1 rounded-full bg-muted-foreground/40" />
+              Sisteme Bağlı
+            </div>
+          </div>
+        </div>
+      )}
 
-            {channelView === 'INSTAGRAM' ? "Instagram Ayarları" : "WhatsApp Ayarları"}
-          </Button>
+      {channelBlocked ?
+        <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-md w-full rounded-[32px] border border-white/20 bg-background/40 backdrop-blur-2xl p-8 shadow-2xl text-center overflow-hidden relative"
+          >
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-emerald-500" />
+            <div className={`size-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg ${channelView === 'INSTAGRAM' ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 text-white' : 'bg-emerald-500 text-white'}`}>
+              {channelView === 'INSTAGRAM' ? <Instagram className="size-10" /> : <MessageCircle className="size-10" />}
+            </div>
+            
+            <h2 className="text-2xl font-bold tracking-tight mb-2">
+              {channelView === 'INSTAGRAM' ? "Instagram'ı Bağlayın" : "WhatsApp'ı Bağlayın"}
+            </h2>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-8">
+              {selectedChannelHealth?.message || "Müşterilerinizle iletişime geçmek ve yapay zeka asistanını devreye almak için önce kanal bağlantısını tamamlamalısınız."}
+            </p>
+
+            {selectedChannelHealth?.missingRequirements?.length ? (
+              <div className="mb-8 p-4 rounded-2xl bg-muted/50 border border-border/40 text-left">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Eksik Gereksinimler</p>
+                <ul className="space-y-1.5">
+                  {selectedChannelHealth.missingRequirements.map((req, i) => (
+                    <li key={i} className="text-xs flex items-center gap-2 font-medium">
+                      <div className="size-1 rounded-full bg-rose-500" />
+                      {req}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            <Button
+              type="button"
+              className="w-full h-12 rounded-2xl bg-[var(--deep-indigo)] hover:bg-[var(--deep-indigo)]/90 text-white font-bold shadow-xl shadow-[var(--deep-indigo)]/20 group"
+              onClick={() =>
+                navigate('/app/features/social-channels', {
+                  state: { navDirection: 'forward' }
+                })
+              }>
+              Hemen Bağla
+              <ChevronLeft className="size-4 ml-2 rotate-180 transition-transform group-hover:translate-x-1" />
+            </Button>
+            
+            <p className="mt-6 text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+              Kedy Akıllı Mesajlaşma Altyapısı
+            </p>
+          </motion.div>
         </div> :
 
         <div className="flex flex-col h-full lg:grid lg:grid-cols-[300px,minmax(0,1fr)] gap-2 relative z-10 px-1 sm:px-2">
@@ -786,14 +845,32 @@ export function ConversationsPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <div className="relative px-2 pt-2">
-              <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="flex items-center gap-2 p-4 overflow-x-auto scrollbar-none">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/40 bg-background/60 shadow-sm whitespace-nowrap">
+                <div className="size-2 rounded-full bg-foreground/20" />
+                <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">{filteredKonuşmalar.length} Sohbet</span>
+              </div>
+              {unreadTotal > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/5 shadow-sm whitespace-nowrap">
+                  <div className="size-2 rounded-full bg-orange-500 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-tight text-orange-700">{unreadTotal} Okunmamış</span>
+                </div>
+              )}
+              {handoverTotal > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 shadow-sm whitespace-nowrap">
+                  <div className="size-2 rounded-full bg-amber-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-tight text-amber-700">{handoverTotal} Bekleyen</span>
+                </div>
+              )}
+            </div>
+
+            <div className="relative px-4 mb-4">
+              <Search className="pointer-events-none absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Ad, kullanıcı adı, mesaj ara"
-                className="pl-9 h-9" />
-
+                className="pl-9 h-9 border-border/40 bg-background/40 rounded-xl" />
             </div>
 
             {loadingKonuşmalar ?
@@ -812,7 +889,7 @@ export function ConversationsPage() {
                 ))}
               </div> :
               filteredKonuşmalar.length === 0 ?
-                <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
                   <MessageSquareDashed className="w-12 h-12 mb-4 opacity-20" />
                   <p className="text-sm font-semibold text-foreground/80">Sohbet kutusu boş</p>
                   <p className="text-xs opacity-80 mt-1">
@@ -852,22 +929,17 @@ export function ConversationsPage() {
                         }}
                         className={`w-full group rounded-[18px] p-2.5 text-left transition-all duration-300 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'}`
                         }>
-                        <div className="flex gap-2.5 relative z-10">
-                          <div className="relative shrink-0 size-10">
-                            <Avatar className={`size-10 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
-                              {item.profilePicUrl ? (
-                                <AvatarImage
-                                  src={
-                                    buildConversationAvatarSrc({
-                                      channel: item.channel,
-                                      conversationKey: item.conversationKey,
-                                      sourceUrl: item.profilePicUrl,
-                                      accessToken,
-                                    }) || undefined
-                                  }
-                                  alt={displayName} />
-                              ) : null}
-                              <AvatarFallback className="bg-[var(--deep-indigo)]/10 text-[var(--deep-indigo)] font-bold">{initialsFromLabel(displayName)}</AvatarFallback>
+                        <div className="flex gap-4 relative z-10">
+                          <div className="relative shrink-0">
+                            <Avatar className={`size-12 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
+                              {item.profilePicUrl ? <AvatarImage src={item.profilePicUrl} alt={displayName} /> : null}
+                              <AvatarFallback className={`font-bold text-white shadow-inner bg-gradient-to-br ${
+                                index % 3 === 0 ? 'from-indigo-500 to-purple-600' : 
+                                index % 3 === 1 ? 'from-violet-500 to-fuchsia-600' : 
+                                'from-blue-500 to-indigo-600'
+                              }`}>
+                                {initialsFromLabel(displayName)}
+                              </AvatarFallback>
                             </Avatar>
                             {/* Unread pulsing indicator */}
                             {item.unreadCount > 0 && (
@@ -917,10 +989,10 @@ export function ConversationsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className={`flex flex-col h-[calc(100vh-150px)] min-h-[560px] rounded-2xl border border-border/50 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden sm:min-h-[680px] lg:h-[calc(100vh-150px)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
+            className={`flex flex-col h-[calc(100vh-150px)] min-h-[560px] rounded-2xl border border-border/40 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden sm:min-h-[680px] lg:h-[calc(100vh-150px)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
             {selectedConversation ?
               <>
-                <div className="flex items-center justify-between gap-2 border-b border-border/60 px-1.5 pb-2">
+                <div className="flex items-center justify-between gap-2 border-b border-border/40 px-1.5 pb-2">
                   <div className="flex items-center gap-2 min-w-0">
                       <Button
                         variant="ghost"
@@ -931,7 +1003,7 @@ export function ConversationsPage() {
                       >
                         <ChevronLeft className="w-5 h-5 text-muted-foreground" />
                       </Button>
-                    <Avatar className="size-9 border border-border/60">
+                    <Avatar className="size-9 border border-border/40">
                       {selectedConversation.profilePicUrl ?
                         <AvatarImage
                           src={
@@ -950,25 +1022,22 @@ export function ConversationsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-[14px] font-semibold truncate">
+                      <p className="text-[14px] font-semibold truncate leading-tight">
                         {conversationDisplayName(selectedConversation)}
                       </p>
-                      <p className="text-[12px] text-muted-foreground truncate">
-                        {selectedConversation.channel}
-                        <span className="hidden sm:inline"> • {selectedConversation.conversationKey}</span>
-                      </p>
-                      {(() => {
-                        const username = normalizeUsername(selectedConversation.profileUsername);
-                        return username ?
-                          <p className="text-[11px] text-muted-foreground truncate">@{username}</p> :
-                          null;
-                      })()}
-                      <div className="mt-1 text-[11px] font-medium text-muted-foreground">
-                        {selectedConversation.identityLinked ? 'Profil bağlı' : 'Profil bağlı değil'}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] items-center gap-1 font-bold uppercase tracking-tight text-muted-foreground/60 flex">
+                          {selectedConversation.channel} • {selectedConversation.conversationKey}
+                        </span>
+                        {isHandoverInProgress(normalizeAutomationMode(selectedConversation.automationMode)) && (
+                          <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-tight text-amber-600 shadow-sm shadow-amber-500/10">
+                            <Sparkles className="size-1.5 fill-current" />
+                            Canlı Destek
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-                  {selectedConversation.hasHandoverRequest ? <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" /> : null}
                 </div>
 
                 <div
@@ -1045,8 +1114,8 @@ export function ConversationsPage() {
                                       
                                       <div className={`group relative px-4 py-2.5 shadow-sm transition-all duration-300 hover:shadow-md ${
                                         isOutbound ? 
-                                          `bg-gradient-to-br from-[var(--deep-indigo)] to-indigo-600 text-white border border-indigo-500/20 ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px] rounded-r-md' : isSameSenderAsNext ? 'rounded-[20px] rounded-br-md' : isSameSenderAsPrev ? 'rounded-[20px] rounded-tr-md' : 'rounded-[20px] rounded-tr-sm'}` : 
-                                          `bg-card/40 backdrop-blur-lg border border-white/10 text-foreground ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px] rounded-l-md' : isSameSenderAsNext ? 'rounded-[20px] rounded-bl-md' : isSameSenderAsPrev ? 'rounded-[20px] rounded-tl-md' : 'rounded-[20px] rounded-tl-sm'}`
+                                          `bg-gradient-to-br from-[var(--deep-indigo)] to-indigo-600 text-white border border-indigo-500/20 ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px]' : isSameSenderAsNext ? 'rounded-t-[20px] rounded-bl-[20px] rounded-br-[8px]' : isSameSenderAsPrev ? 'rounded-b-[20px] rounded-tl-[20px] rounded-tr-[8px]' : 'rounded-[20px] rounded-tr-[4px]'}` : 
+                                          `bg-card/40 backdrop-blur-lg border border-white/10 text-foreground ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px]' : isSameSenderAsNext ? 'rounded-t-[20px] rounded-br-[20px] rounded-bl-[8px]' : isSameSenderAsPrev ? 'rounded-b-[20px] rounded-tr-[20px] rounded-tl-[8px]' : 'rounded-[20px] rounded-tl-[4px]'}`
                                       }`}>
                                         <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
                                           {formatOperatorMessage(msg.text) || formatMessageTypeLabel(msg.messageType)}
@@ -1067,72 +1136,69 @@ export function ConversationsPage() {
                   }
                 </div>
 
-                <div className="sticky bottom-0 z-20 mt-2 rounded-xl border border-border/60 bg-background shadow-sm p-1.5 focus-within:border-[var(--deep-indigo)]/50 focus-within:ring-1 focus-within:ring-[var(--deep-indigo)]/20 transition-all">
-                  {isSupportedReplyChannel && !manualReplyUnlocked ? (
-                    <div className="px-2 py-2">
-                      <Button
-                        type="button"
-                        className="w-full h-9 text-[12px] font-semibold"
-                        onClick={() => {
-                          setManualComposeRequested(true);
-                          showToast('Manuel yanıt modu açıldı.', 'success');
-                        }}
-                      >
-                        Ben Yanıtlayacağım
+                <div className="sticky bottom-0 z-20 mt-2 space-y-2">
+                  <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-1.5">
+                       <div className={`size-1.5 rounded-full ${handoverInProgress ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                         {handoverInProgress ? 'Manuel Mod: Canlı Destek' : 'Bot Modu: AI Yanıtlıyor'}
+                       </span>
+                    </div>
+                    {handoverInProgress ? (
+                      <Button type="button" size="sm" variant="ghost" className="h-7 text-[10px] font-bold uppercase tracking-tight text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50" onClick={resumeAuto} disabled={sendingResume}>
+                        <Sparkles className="size-3 mr-1" />
+                        {sendingResume ? 'Bot Açılıyor...' : "Botu Devreye Al"}
+                      </Button>
+                    ) : (
+                      <Button type="button" size="sm" variant="ghost" className="h-7 text-[10px] font-bold uppercase tracking-tight text-amber-600 hover:text-amber-700 hover:bg-amber-50" onClick={requestHandover} disabled={sendingHandover}>
+                        <Sparkles className="size-3 mr-1" />
+                        {sendingHandover ? 'Alınıyor...' : 'Ben Yanıtlayacağım'}
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-border/40 bg-background/80 backdrop-blur-md shadow-2xl p-2 focus-within:border-indigo-500/50 transition-all">
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={replyText}
+                        onChange={(event) => setReplyText(event.target.value)}
+                        placeholder={canReply ? "Mesajınızı yazın..." : "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"}
+                        disabled={!canReply}
+                        rows={1}
+                        className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' && !event.shiftKey) {
+                            event.preventDefault();
+                            if (canReply) void sendReply();
+                          }
+                        }} />
+
+                      <Button 
+                        type="button" 
+                        aria-label="Mesaj gönder" 
+                        onClick={sendReply} 
+                        disabled={sendingReply || !replyText.trim() || !canReply} 
+                        className={`rounded-lg px-4 transition-all h-10 w-10 p-0 flex items-center justify-center shrink-0 ${replyText.trim() && canReply ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-muted text-muted-foreground'}`}>
+                        {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizontal className="w-4 h-4" />}
                       </Button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex gap-2">
-                        <Textarea
-                          value={replyText}
-                          onChange={(event) => setReplyText(event.target.value)}
-                          placeholder={canReply ? "Mesajınızı yazın..." : "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"}
-                          disabled={!canReply}
-                          rows={1}
-                          className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[14px] focus-visible:ring-0 focus-visible:ring-offset-0"
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter' && !event.shiftKey) {
-                              event.preventDefault();
-                              if (canReply) void sendReply();
-                            }
-                          }} />
-
-                        <Button type="button" aria-label="Mesaj gönder" onClick={sendReply} disabled={sendingReply || !replyText.trim() || !canReply} className={`rounded-lg px-4 transition-all ${replyText.trim() ? 'bg-[var(--deep-indigo)] hover:bg-[var(--deep-indigo)]/90 text-white' : 'bg-muted text-muted-foreground'}`}>
-                          {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                      {manualReplyUnlocked ? (
-                        <div className="px-2 pt-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-[11px]"
-                            onClick={resumeAuto}
-                            disabled={sendingResume}
-                          >
-                            {sendingResume ? 'Bot devreye alınıyor...' : 'Bot Yanıtlasın'}
-                          </Button>
-                        </div>
-                      ) : null}
-                    </>
-                  )}
+                  </div>
                 </div>
               </> :
 
-              <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground py-20">
-                <div className="size-20 rounded-full bg-gradient-to-br from-[var(--deep-indigo)]/10 to-transparent flex items-center justify-center mb-5 border border-[var(--deep-indigo)]/5">
-                  <MessageCircle className="w-8 h-8 text-[var(--deep-indigo)] opacity-80" />
+              <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground py-20 relative">
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent" />
+                <div className="size-24 rounded-[32px] bg-gradient-to-br from-indigo-500/10 to-transparent flex items-center justify-center mb-6 border border-indigo-500/10 shadow-inner relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-indigo-500/5 scale-0 group-hover:scale-100 transition-transform duration-700 rounded-full blur-2xl" />
+                  <MessageCircle className="w-10 h-10 text-indigo-500/60 relative z-10" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground shadow-sm">Bir Sohbet Seçin</h3>
-                <p className="text-sm mt-2 max-w-[250px]">Okumak veya mesaj göndermek için sol taraftan bir konuşmaya tıklayın.</p>
+                <h3 className="text-xl font-black text-foreground/90 tracking-tight">Diyalog Seçin</h3>
+                <p className="text-sm mt-2 max-w-[280px] font-medium leading-relaxed opacity-60">Mesajlaşmak ve randevuları yönetmek için sol listeden bir sohbet seçebilirsiniz.</p>
               </div>
             }
           </motion.div>
         </div>
       }
-    </div>);
-
+    </div>
+  );
 }
-

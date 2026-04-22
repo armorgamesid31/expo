@@ -1,8 +1,9 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, Pencil, Plus, Trash2, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNavigator } from '../context/NavigatorContext';
+import { notifyDataChanged, subscribeDataChanged } from '../lib/ui-cache';
 
 interface ServiceItem {
   id: number;
@@ -144,7 +145,7 @@ export function StaffCrudPage() {
     [serviceDrafts]
   );
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -163,7 +164,7 @@ export function StaffCrudPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiFetch]);
 
   const { setHeaderTitle, setHeaderActions } = useNavigator();
 
@@ -187,7 +188,15 @@ export function StaffCrudPage() {
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
+
+  useEffect(() => {
+    return subscribeDataChanged((domains) => {
+      if (domains.length === 0 || domains.includes('staff')) {
+        void load();
+      }
+    });
+  }, [load]);
 
   const resetDrafts = (nextServices: ServiceItem[], preset?: StaffItem) => {
     const draft: Record<number, StaffDraftService> = {};
@@ -357,6 +366,7 @@ export function StaffCrudPage() {
         setStaff((prev) => [response.item, ...prev].sort((a, b) => a.name.localeCompare(b.name, 'tr')));
       }
 
+      notifyDataChanged(['staff', 'schedule', 'dashboard', 'customers']);
       setModalOpen(false);
       setEditingStaffId(null);
     } catch (err: any) {
@@ -373,6 +383,7 @@ export function StaffCrudPage() {
     try {
       await apiFetch(`/api/admin/staff/${item.id}`, { method: 'DELETE' });
       setStaff((prev) => prev.filter((entry) => entry.id !== item.id));
+      notifyDataChanged(['staff', 'schedule', 'dashboard', 'customers']);
     } catch (err: any) {
       setError(err?.message || 'Personel silinemedi.');
     }
