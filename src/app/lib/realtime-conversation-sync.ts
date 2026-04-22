@@ -15,19 +15,21 @@ export type ConversationRealtimeEvent = {
   eventTimestamp: string;
 };
 
-type RealtimeSyncResponse = {
-  events: ConversationRealtimeEvent[];
-  latestCursor: number;
-  hasGap: boolean;
-  requiresFullRefresh: boolean;
-};
-
 type RealtimeEventReady = {
   latestCursor?: unknown;
   channel?: unknown;
 };
 
 type RealtimeEventHeartbeat = {
+  latestCursor?: unknown;
+};
+
+type RealtimeWireMessage = {
+  type?: unknown;
+  payload?: unknown;
+};
+
+type RealtimeSyncRequired = {
   latestCursor?: unknown;
 };
 
@@ -47,7 +49,6 @@ type UseConversationRealtimeSyncOptions = {
 
 const BACKOFF_MIN_MS = 500;
 const BACKOFF_MAX_MS = 15000;
-const SYNC_LIMIT = 300;
 
 function toSafeCursor(value: unknown): number {
   const numeric = typeof value === 'string' ? Number(value) : typeof value === 'number' ? value : NaN;
@@ -92,14 +93,28 @@ function safeParse<T>(raw: string): T | null {
   }
 }
 
+function buildRealtimeWsUrl(): string {
+  const base = API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+  if (!base) {
+    return '/api/admin/conversations/ws';
+  }
+
+  const wsBase = base.startsWith('https://')
+    ? `wss://${base.slice('https://'.length)}`
+    : base.startsWith('http://')
+      ? `ws://${base.slice('http://'.length)}`
+      : base;
+
+  return `${wsBase.replace(/\/$/, '')}/api/admin/conversations/ws`;
+}
+
 export function useConversationRealtimeSync(options: UseConversationRealtimeSyncOptions): void {
   const cursorRef = useRef<number>(0);
   const reconnectAttemptRef = useRef(0);
-  const streamRef = useRef<EventSource | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
   const recoverTimerRef = useRef<number | null>(null);
   const destroyedRef = useRef(false);
   const statusRef = useRef<RealtimeSyncStatus>('connecting');
-  const syncInFlightRef = useRef(false);
 
   const onEventsRef = useRef(options.onEvents);
   const onRequireFullRefreshRef = useRef(options.onRequireFullRefresh);
@@ -130,51 +145,6 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
       persistCursor(options.cursorScopeKey, options.channel || null, safeNext);
     };
 
-    const runSync = async (reason: 'startup' | 'reconnect' | 'lifecycle'): Promise<void> => {
-      if (syncInFlightRef.current) return;
-      syncInFlightRef.current = true;
-      try {
-        setStatus('recovering');
-        const params = new URLSearchParams();
-        params.set('since', String(cursorRef.current));
-        params.set('limit', String(SYNC_LIMIT));
-        if (options.channel) {
-          params.set('channel', options.channel);
-        }
-
-        const response = await options.apiFetch<RealtimeSyncResponse>(
-          `/api/admin/conversations/realtime/sync?${params.toString()}`,
-          { __cache: { mode: 'network-only' } },
-        );
-
-        if (response.requiresFullRefresh || response.hasGap) {
-          await onRequireFullRefreshRef.current(reason === 'startup' ? 'reconnect' : 'gap');
-          applyCursor(toSafeCursor(response.latestCursor), true);
-          return;
-        }
-
-        const events = Array.isArray(response.events) ? response.events : [];
-        if (events.length > 0) {
-          await onEventsRef.current(events, 'sync');
-          for (const event of events) {
-            applyCursor(toSafeCursor(event.cursor));
-          }
-        }
-        const latest = toSafeCursor(response.latestCursor);
-        if (events.length === 0 && latest < cursorRef.current) {
-          // Session cursor can be ahead after environment/db switches; reset to server cursor.
-          applyCursor(latest, true);
-        } else {
-          applyCursor(latest);
-        }
-      } catch (error) {
-        console.warn('[realtime-sync] sync failed:', error);
-        setStatus('degraded');
-      } finally {
-        syncInFlightRef.current = false;
-      }
-    };
-
     const clearRecoverTimer = () => {
       if (recoverTimerRef.current) {
         window.clearTimeout(recoverTimerRef.current);
@@ -182,93 +152,117 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
       }
     };
 
-    const closeStream = () => {
-      const stream = streamRef.current;
-      streamRef.current = null;
-      if (!stream) return;
-      stream.close();
+    const closeSocket = () => {
+      const socket = socketRef.current;
+      socketRef.current = null;
+      if (!socket) return;
+      socket.close();
     };
 
-    const openStream = () => {
+    const scheduleReconnect = () => {
+      if (destroyedRef.current) return;
+      const attempt = reconnectAttemptRef.current;
+      reconnectAttemptRef.current += 1;
+      const waitMs = computeBackoffMs(attempt);
+      clearRecoverTimer();
+      setStatus('degraded');
+      recoverTimerRef.current = window.setTimeout(() => {
+        openSocket();
+      }, waitMs);
+    };
+
+    const openSocket = () => {
       if (destroyedRef.current) return;
 
       setStatus('connecting');
-      if (typeof window.EventSource !== 'function') {
-        setStatus('degraded');
-        const attempt = reconnectAttemptRef.current;
-        reconnectAttemptRef.current += 1;
-        const waitMs = computeBackoffMs(attempt);
-        clearRecoverTimer();
-        recoverTimerRef.current = window.setTimeout(async () => {
-          await runSync('reconnect');
-          openStream();
-        }, waitMs);
-        return;
-      }
 
-      const params = new URLSearchParams();
-      params.set('authToken', options.accessToken || '');
-      params.set('cursor', String(cursorRef.current));
-      if (options.channel) {
-        params.set('channel', options.channel);
-      }
-      const streamUrl = `${API_BASE_URL}/api/admin/conversations/stream?${params.toString()}`;
-      let stream: EventSource;
+      let socket: WebSocket;
       try {
-        stream = new EventSource(streamUrl);
+        socket = new WebSocket(buildRealtimeWsUrl());
       } catch (error) {
-        console.warn('[realtime-sync] stream open failed:', error);
-        setStatus('degraded');
-        const attempt = reconnectAttemptRef.current;
-        reconnectAttemptRef.current += 1;
-        const waitMs = computeBackoffMs(attempt);
-        clearRecoverTimer();
-        recoverTimerRef.current = window.setTimeout(async () => {
-          await runSync('reconnect');
-          openStream();
-        }, waitMs);
+        console.warn('[realtime-sync] websocket open failed:', error);
+        scheduleReconnect();
         return;
       }
-      streamRef.current = stream;
 
-      stream.addEventListener('ready', (event) => {
-        reconnectAttemptRef.current = 0;
-        const payload = safeParse<RealtimeEventReady>((event as MessageEvent).data || '{}');
-        if (!payload) return;
-        applyCursor(toSafeCursor(payload.latestCursor), true);
-        setStatus('live');
-      });
+      socketRef.current = socket;
 
-      stream.addEventListener('conversation.update', async (event) => {
-        const payload = safeParse<ConversationRealtimeEvent>((event as MessageEvent).data || '{}');
-        if (!payload) return;
-        await onEventsRef.current([payload], 'stream');
-        applyCursor(toSafeCursor(payload.cursor));
-      });
+      socket.onopen = () => {
+        setStatus('recovering');
+        const subscribePayload = {
+          type: 'subscribe',
+          payload: {
+            authToken: options.accessToken,
+            cursor: cursorRef.current,
+            channel: options.channel || null,
+          },
+        };
+        socket.send(JSON.stringify(subscribePayload));
+      };
 
-      stream.addEventListener('heartbeat', (event) => {
-        const payload = safeParse<RealtimeEventHeartbeat>((event as MessageEvent).data || '{}');
-        if (!payload) return;
-        applyCursor(toSafeCursor(payload.latestCursor));
-      });
+      socket.onmessage = async (event) => {
+        const wire = safeParse<RealtimeWireMessage>(String(event.data || ''));
+        if (!wire || typeof wire.type !== 'string') return;
 
-      stream.onerror = () => {
+        if (wire.type === 'ready') {
+          reconnectAttemptRef.current = 0;
+          const payload = (wire.payload || {}) as RealtimeEventReady;
+          applyCursor(toSafeCursor(payload.latestCursor), true);
+          setStatus('live');
+          return;
+        }
+
+        if (wire.type === 'conversation.update') {
+          const payload = (wire.payload || null) as ConversationRealtimeEvent | null;
+          if (!payload) return;
+
+          const nextCursor = toSafeCursor(payload.cursor);
+          if (nextCursor > 0 && nextCursor <= cursorRef.current) {
+            return;
+          }
+
+          await onEventsRef.current([payload], 'stream');
+          applyCursor(nextCursor);
+          return;
+        }
+
+        if (wire.type === 'heartbeat') {
+          const payload = (wire.payload || {}) as RealtimeEventHeartbeat;
+          applyCursor(toSafeCursor(payload.latestCursor));
+          return;
+        }
+
+        if (wire.type === 'sync_required') {
+          const payload = (wire.payload || {}) as RealtimeSyncRequired;
+          await onRequireFullRefreshRef.current('gap');
+          applyCursor(toSafeCursor(payload.latestCursor), true);
+          return;
+        }
+
+        if (wire.type === 'error') {
+          console.warn('[realtime-sync] websocket server error payload:', wire.payload);
+        }
+      };
+
+      socket.onerror = () => {
         if (destroyedRef.current) return;
-        closeStream();
-        const attempt = reconnectAttemptRef.current;
-        reconnectAttemptRef.current += 1;
-        const waitMs = computeBackoffMs(attempt);
-        clearRecoverTimer();
-        recoverTimerRef.current = window.setTimeout(async () => {
-          await runSync('reconnect');
-          openStream();
-        }, waitMs);
+        closeSocket();
+        scheduleReconnect();
+      };
+
+      socket.onclose = () => {
+        if (destroyedRef.current) return;
+        closeSocket();
+        scheduleReconnect();
       };
     };
 
     const handleLifecycleSync = () => {
       if (destroyedRef.current) return;
-      void runSync('lifecycle');
+      const socket = socketRef.current;
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        openSocket();
+      }
     };
 
     const visibilityHandler = () => {
@@ -284,14 +278,12 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
     window.addEventListener('focus', focusHandler);
     window.addEventListener('online', onlineHandler);
 
-    void runSync('startup').finally(() => {
-      openStream();
-    });
+    openSocket();
 
     return () => {
       destroyedRef.current = true;
       clearRecoverTimer();
-      closeStream();
+      closeSocket();
       document.removeEventListener('visibilitychange', visibilityHandler);
       window.removeEventListener('focus', focusHandler);
       window.removeEventListener('online', onlineHandler);
