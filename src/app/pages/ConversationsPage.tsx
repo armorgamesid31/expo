@@ -15,10 +15,23 @@ import { ConversationRealtimeEvent, RealtimeSyncStatus, useConversationRealtimeS
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 import { API_BASE_URL } from '../lib/config';
 import { httpRequest } from '../lib/http';
+import { ConversationsList } from '../components/conversations/ConversationsList';
+import { ConversationDetail } from '../components/conversations/ConversationDetail';
 
-type ChannelType = 'INSTAGRAM' | 'WHATSAPP';
-type ChannelFilter = 'ALL' | ChannelType;
-type AutomationMode = 'AUTO' | 'HUMAN_PENDING' | 'HUMAN_ACTIVE' | 'MANUAL_ALWAYS' | 'AUTO_RESUME_PENDING';
+import type {
+  ChannelType,
+  ChannelFilter,
+  AutomationMode,
+  ConversationItem,
+  MessageItem,
+  ConversationStatePayload,
+  InstagramChannelHealth,
+  WhatsAppChannelHealth,
+  ChannelHealthPayload,
+  LinkedCustomerProfile,
+  BlacklistCheckResult,
+  ReadReceiptMap
+} from '../components/conversations/types';
 const SHOW_WHATSAPP_INBOX = true;
 const CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY = 'conversations:selected-channel';
 const CONVERSATIONS_SELECTED_ID_CACHE_KEY = 'conversations:selected-id';
@@ -26,116 +39,6 @@ const CONVERSATIONS_MOBILE_VIEW_CACHE_KEY = 'conversations:mobile-view';
 const CONVERSATIONS_READ_RECEIPTS_CACHE_KEY = 'conversations:read-receipts';
 const INSTAGRAM_REPLY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-interface ConversationItem {
-  channel: ChannelType;
-  conversationKey: string;
-  customerName: string | null;
-  profileUsername?: string | null;
-  profilePicUrl?: string | null;
-  lastMessageType: string;
-  lastMessageText: string | null;
-  lastEventTimestamp: string;
-  unreadCount: number;
-  messageCount: number;
-  hasHandoverRequest: boolean;
-  identityLinked?: boolean;
-  linkedCustomerId?: number | null;
-  automationMode?: AutomationMode;
-  manualAlways?: boolean;
-  humanPendingSince?: string | null;
-  humanActiveUntil?: string | null;
-  lastHumanMessageAt?: string | null;
-  lastCustomerMessageAt?: string | null;
-}
-
-interface MessageItem {
-  id: number;
-  conversationKey?: string;
-  providerMessageId: string;
-  messageType: string;
-  text: string | null;
-  status: string;
-  direction: 'inbound' | 'outbound' | 'system';
-  deliveryChannel?: 'INSTAGRAM' | 'WHATSAPP';
-  outboundSource?: 'AI_AGENT' | 'HUMAN_APP' | 'HUMAN_EXTERNAL' | null;
-  outboundSourceLabel?: string | null;
-  outboundSenderUserId?: number | null;
-  outboundSenderEmail?: string | null;
-  systemAction?: string | null;
-  systemActorUserId?: number | null;
-  systemActorEmail?: string | null;
-  systemActorDisplayName?: string | null;
-  eventTimestamp: string;
-  raw?: Record<string, unknown>;
-}
-
-interface ConversationStatePayload {
-  automationMode?: AutomationMode;
-  mode?: AutomationMode;
-  manualAlways?: boolean;
-  humanPendingSince?: string | null;
-  humanActiveUntil?: string | null;
-  lastHumanMessageAt?: string | null;
-  lastCustomerMessageAt?: string | null;
-}
-
-interface InstagramChannelHealth {
-  connected: boolean;
-  status: string;
-  message: string;
-  bindingReady: boolean;
-  missingRequirements?: string[];
-}
-
-interface WhatsAppChannelHealth {
-  connected: boolean;
-  isActive: boolean;
-  hasPlugin: boolean;
-  whatsappPhoneNumberId?: string | null;
-  message: string;
-  missingRequirements?: string[];
-}
-
-interface ChannelHealthPayload {
-  instagram: InstagramChannelHealth;
-  whatsapp: WhatsAppChannelHealth;
-}
-
-interface LinkedCustomerProfile {
-  customer: {
-    id: number;
-    name: string | null;
-    phone: string;
-    instagram?: string | null;
-    birthDate?: string | null;
-    acceptMarketing?: boolean | null;
-  };
-  summary: {
-    totalAppointmentDays: number;
-    totalRevenue: number;
-    noShowRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
-    noShowCount: number;
-    totalBookings: number;
-  };
-  discount?: {
-    kind: 'PERCENT' | 'FIXED';
-    value: number;
-    note: string | null;
-    notifyCustomer: boolean;
-    messageTemplate: string | null;
-    lastNotificationStatus: string | null;
-    updatedAt: string;
-  } | null;
-}
-
-interface BlacklistCheckResult {
-  blocked: boolean;
-  reason: string | null;
-  entryId: number | null;
-  matchType: 'CUSTOMER' | 'PHONE' | 'IDENTITY' | null;
-}
-
-type ReadReceiptMap = Record<string, string>;
 
 function WhatsAppLogo({ className }: { className?: string; }) {
   return (
@@ -635,10 +538,19 @@ export function ConversationsPage() {
 
   const fetchGetWithFallback = useCallback(
     async <T,>(path: string): Promise<{ data: T; usedFallback: boolean }> => {
+      if (!accessToken) {
+        throw new Error('Not authenticated');
+      }
+
       try {
+        // Conversations are realtime-sensitive; bypass central GET cache in fresh reads.
         const data = await withTimeout(
-          apiFetch<T>(path, { __cache: { mode: 'network-only' } }),
-          3500,
+          httpRequest<T>(path, {
+            method: 'GET',
+            token: accessToken,
+            salonId: bootstrap?.salon?.id || null,
+          }),
+          10000,
           'Network request timed out.',
         );
         return { data, usedFallback: false };
@@ -646,24 +558,12 @@ export function ConversationsPage() {
         try {
           const data = await withTimeout(
             apiFetch<T>(path, { __cache: { mode: 'swr' } }),
-            1200,
+            5000,
             'Cache fallback timed out.',
           );
           return { data, usedFallback: true };
-        } catch {
-          if (!accessToken) {
-            throw new Error('Not authenticated');
-          }
-          const data = await withTimeout(
-            httpRequest<T>(path, {
-              method: 'GET',
-              token: accessToken,
-              salonId: bootstrap?.salon?.id || null,
-            }),
-            3500,
-            'Direct network fallback timed out.',
-          );
-          return { data, usedFallback: false };
+        } catch (fallbackError) {
+          throw fallbackError;
         }
       }
     },
@@ -908,10 +808,23 @@ export function ConversationsPage() {
     const shouldToggleLoading = showLoading && conversationsRef.current.length === 0;
     if (shouldToggleLoading) setLoadingKonuşmalar(true);
     try {
-      const response = await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
-        '/api/admin/conversations?limit=120',
-        { __cache: { mode: cacheMode } },
-      );
+      const response = cacheMode === 'network-only' && accessToken
+        ? await withTimeout(
+          httpRequest<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
+            '/api/admin/conversations?limit=120',
+            {
+              method: 'GET',
+              token: accessToken,
+              salonId: bootstrap?.salon?.id || null,
+            },
+          ),
+          10000,
+          'Conversations network request timed out.',
+        )
+        : await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
+          '/api/admin/conversations?limit=120',
+          { __cache: { mode: cacheMode } },
+        );
       const items = response?.items || [];
       setChannelHealth(response?.channelHealth || null);
 
@@ -939,7 +852,7 @@ export function ConversationsPage() {
     } finally {
       if (shouldToggleLoading) setLoadingKonuşmalar(false);
     }
-  }, [apiFetch, showToast]);
+  }, [accessToken, apiFetch, bootstrap?.salon?.id, showToast]);
 
   const applyConversationStatePatch = useCallback(
     (channel: ChannelType, conversationKey: string, patch?: ConversationStatePayload | null) => {
@@ -960,7 +873,12 @@ export function ConversationsPage() {
     [],
   );
 
-  const loadMessages = useCallback(async (channel: ChannelType, conversationKey: string, showLoading = true) => {
+  const loadMessages = useCallback(async (
+    channel: ChannelType,
+    conversationKey: string,
+    showLoading = true,
+    preferFresh = false,
+  ) => {
     const seq = messagesLoadSeqRef.current + 1;
     messagesLoadSeqRef.current = seq;
     if (showLoading) setLoadingMessages(true);
@@ -968,9 +886,28 @@ export function ConversationsPage() {
       const relatedKeys = findRelatedConversationKeys(conversationsRef.current, { channel, conversationKey }).slice(0, 3);
       const primary = relatedKeys[0] || { channel, conversationKey };
 
-      const primaryResult = await fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
-        `/api/admin/conversations/${primary.channel}/${encodeURIComponent(primary.conversationKey)}/messages?limit=120`
-      );
+      const primaryPath = `/api/admin/conversations/${primary.channel}/${encodeURIComponent(primary.conversationKey)}/messages?limit=120`;
+      const primaryResult = preferFresh
+        ? await (async () => {
+          try {
+            const data = await withTimeout(
+              httpRequest<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
+                primaryPath,
+                {
+                  method: 'GET',
+                  token: accessToken || '',
+                  salonId: bootstrap?.salon?.id || null,
+                },
+              ),
+              8000,
+              'Fresh messages request timed out.',
+            );
+            return { data, usedFallback: false } as const;
+          } catch {
+            return await fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(primaryPath);
+          }
+        })()
+        : await fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(primaryPath);
       if (messagesLoadSeqRef.current !== seq) return;
 
       const primaryItems = primaryResult.data?.items || [];
@@ -1008,7 +945,7 @@ export function ConversationsPage() {
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
-  }, [applyConversationStatePatch, fetchGetWithFallback, showToast]);
+  }, [accessToken, applyConversationStatePatch, bootstrap?.salon?.id, fetchGetWithFallback, showToast]);
 
   const refreshConversationList = useCallback(async () => {
     if (listRefreshInFlightRef.current) return;
@@ -1029,7 +966,7 @@ export function ConversationsPage() {
     if ((rawChannel !== 'INSTAGRAM' && rawChannel !== 'WHATSAPP') || !rawKey) return;
     messagesRefreshInFlightRef.current = true;
     try {
-      await loadMessages(rawChannel as ChannelType, rawKey, false);
+      await loadMessages(rawChannel as ChannelType, rawKey, false, true);
     } finally {
       messagesRefreshInFlightRef.current = false;
     }
@@ -1149,7 +1086,7 @@ export function ConversationsPage() {
         const touchedIds = events.map((event) => toConversationId(event.channel, event.conversationKey));
         markLiveConversation(touchedIds);
         const activeId = selectedConversationIdRef.current;
-        if (activeId && touchedIds.includes(activeId)) {
+        if (activeId) {
           scheduleActiveMessagesRefresh(60);
         }
       }
@@ -1248,7 +1185,7 @@ export function ConversationsPage() {
       }
       setReplyText('');
       showToast('Yanıt başarıyla gönderildi.', 'success');
-      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false, true);
       scheduleRealtimeRefresh();
     } catch (err: any) {
       if (err?.body?.errorCode === 'INSTAGRAM_WINDOW_EXPIRED') {
@@ -1302,7 +1239,7 @@ export function ConversationsPage() {
       }
       setManualComposeConversationId(null);
       showToast('Yapay zeka otomasyonu tekrar devreye alındı.', 'success');
-      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false, true);
       scheduleRealtimeRefresh();
     } catch (err: any) {
       showToast(toUserFriendlyError(err, 'Otomasyon başlatılamadı.'), 'error');
@@ -1354,7 +1291,7 @@ export function ConversationsPage() {
         setManualComposeConversationId(nextSelectedId);
       }
       showToast('Manuel yanıt modu açıldı.', 'success');
-      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false, true);
       scheduleRealtimeRefresh();
     } catch (err: any) {
       setManualComposeConversationId(null);
@@ -1522,382 +1459,81 @@ export function ConversationsPage() {
           </div>
         </div> :
 
-        <div className="flex flex-col h-full lg:grid lg:grid-cols-[300px,minmax(0,1fr)] gap-2 relative z-10 px-1 sm:px-2">
-          <div className={`flex flex-col bg-background/40 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden h-[calc(100dvh-11.5rem)] min-h-0 lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'}`}>
-            <div className="px-4 pt-4 pb-1">
-              <h1 className="text-lg font-semibold tracking-tight">Konuşmalar</h1>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 p-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/40 bg-background/60 shadow-sm whitespace-nowrap">
-                <div className="size-2 rounded-full bg-foreground/20" />
-                <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">{filteredKonuşmalar.length} Sohbet</span>
-              </div>
-              {handoverTotal > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 shadow-sm whitespace-nowrap">
-                  <div className="size-2 rounded-full bg-amber-500" />
-                  <span className="text-[10px] font-bold uppercase tracking-tight text-amber-700">{handoverTotal} Bekleyen</span>
-                </div>
-              )}
-            </div>
-
-            <div className="relative px-4 mb-4">
-              <Search className="pointer-events-none absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Ad, kullanıcı adı, mesaj ara"
-                className="pl-9 h-9 border-border/40 bg-background/40 rounded-xl" />
-            </div>
-
-            {loadingKonuşmalar ?
-              <div className="space-y-2 mt-2 px-2">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="flex p-2 gap-2 border border-transparent">
-                    <Skeleton className="w-9 h-9 rounded-full shrink-0" />
-                    <div className="flex-1 space-y-2 mt-1">
-                      <div className="flex justify-between">
-                         <Skeleton className="h-4 w-28" />
-                         <Skeleton className="h-3 w-10" />
-                      </div>
-                      <Skeleton className="h-3 w-3/4 opacity-60" />
-                    </div>
-                  </div>
-                ))}
-              </div> :
-              filteredKonuşmalar.length === 0 ?
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                  <MessageSquareDashed className="w-12 h-12 mb-4 opacity-20" />
-                  <p className="text-sm font-semibold text-foreground/80">Sohbet kutusu boş</p>
-                  <p className="text-xs opacity-80 mt-1">
-                    {channelView === 'ALL' ? "Henüz görüntülenecek sohbet yok." : "Bu kanal için mesaj yok."}
-                  </p>
-                </div> :
-
-                <div className="flex-1 min-w-0 space-y-1.5 overflow-y-auto overflow-x-hidden pr-1 pb-1 scrollbar-thin px-2">
-                    {filteredKonuşmalar.map((item, index) => {
-                    const id = `${item.channel}:${item.conversationKey}`;
-                    const active = id === selectedConversationId;
-                    const isLive = !!liveConversationMap[id];
-                    const displayName = conversationDisplayName(item);
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => {
-                          lastAutoScrolledConversationRef.current = null;
-                          setSelectedConversationId(id);
-                          markConversationAsReadLocal(id);
-                          setMobileView('CHAT');
-                          navigate(`/app/conversations/${encodeURIComponent(id)}`, {
-                            state: { navDirection: 'forward', from: '/app/conversations' },
-                          });
-                        }}
-                        className={`w-full max-w-full min-w-0 group rounded-[18px] p-2.5 text-left transition-all duration-200 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'} ${isLive ? 'ring-2 ring-[var(--deep-indigo)]/20' : ''}`}
-                        >
-                        <div className="flex min-w-0 gap-4 relative z-10">
-                          <div className="relative shrink-0">
-                            <Avatar className={`size-12 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
-                              {item.profilePicUrl ?
-                                <AvatarImage
-                                  src={
-                                    buildConversationAvatarSrc({
-                                      channel: item.channel,
-                                      conversationKey: item.conversationKey,
-                                      sourceUrl: item.profilePicUrl,
-                                      accessToken,
-                                    }) || undefined
-                                  }
-                                  alt={displayName} /> :
-
-                                null}
-                              <AvatarFallback className={`font-bold text-white shadow-inner bg-gradient-to-br ${
-                                index % 3 === 0 ? 'from-indigo-500 to-purple-600' : 
-                                index % 3 === 1 ? 'from-violet-500 to-fuchsia-600' : 
-                                'from-blue-500 to-indigo-600'
-                              }`}>
-                                {initialsFromLabel(displayName)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {/* Unread pulsing indicator */}
-                            {item.unreadCount > 0 && (
-                              <div className="absolute -top-1 -right-1 flex h-4 min-w-4">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                <span className="relative inline-flex min-w-4 h-4 px-1 rounded-full bg-orange-500 border border-background items-center justify-center text-[9px] leading-none text-white font-black shadow-sm">
-                                  {item.unreadCount > 99 ? '99+' : item.unreadCount}
-                                </span>
-                              </div>
-                            )}
-                            {/* Channel Icon Overlay */}
-                            <div className={`absolute -right-0.5 -bottom-0.5 z-20 size-5 rounded-full border-2 border-background shadow-sm flex items-center justify-center ${item.channel === 'WHATSAPP' ? 'bg-emerald-500' : 'bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500'}`}>
-                                {item.channel === 'WHATSAPP' ? <WhatsAppLogo className="size-2.5 text-white" /> : <Instagram className="size-2.5 text-white" />}
-                            </div>
-                          </div>
-                          
-                          <div className="w-0 min-w-0 flex-1 py-0">
-                            <div className="flex min-w-0 items-center justify-between mb-1">
-                              <div className="flex min-w-0 items-center gap-1.5">
-                                {isHandoverInProgress(normalizeAutomationMode(item.automationMode)) && (
-                                  <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-600">
-                                    <LifeBuoy className="size-3.5" />
-                                  </span>
-                                )}
-                                <h4 className={`text-[15px] font-bold truncate ${active ? 'text-[var(--deep-indigo)]' : 'text-foreground/90'}`}>{displayName}</h4>
-                              </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                {isLive && (
-                                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                )}
-                                <span className="text-[12px] text-muted-foreground/80 font-semibold tracking-tighter">{formatRelativeTime(item.lastEventTimestamp)}</span>
-                              </div>
-                            </div>
-                            <p className={`block max-w-full min-w-0 overflow-hidden text-[13px] text-ellipsis whitespace-nowrap transition-colors ${item.unreadCount > 0 ? 'text-foreground font-semibold' : 'text-muted-foreground/70'}`}>
-                              {getPreview(item)}
-                            </p>
-                          </div>
-                        </div>
-                        {active && (
-                          <div className="absolute left-0 top-3 bottom-3 w-1.5 bg-[var(--deep-indigo)] rounded-r-full shadow-[0_0_15px_var(--deep-indigo)]" />
-                        )}
-                      </button>
-                    );
-                  })}
-              </div>
-            }
+        
+        <div className="flex flex-col h-[100dvh] lg:h-full lg:grid lg:grid-cols-[300px,minmax(0,1fr)] gap-2 relative z-10 px-1 sm:px-2">
+          <div className={`flex flex-col h-[calc(100dvh-11.5rem)] min-h-0 lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'}`}>
+            <ConversationsList
+              filteredConversations={filteredKonuşmalar}
+              conversations={conversations}
+              loading={loadingKonuşmalar}
+              channelView={channelView}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              selectedConversationId={selectedConversationId}
+              liveConversationMap={liveConversationMap}
+              onSelectConversation={(id) => {
+                lastAutoScrolledConversationRef.current = null;
+                setSelectedConversationId(id);
+                markConversationAsReadLocal(id);
+                setMobileView('CHAT');
+                navigate(`/app/conversations/${encodeURIComponent(id)}`, {
+                  state: { navDirection: 'forward', from: '/app/conversations' },
+                });
+              }}
+              handoverTotal={handoverTotal}
+              conversationDisplayName={conversationDisplayName}
+              buildConversationAvatarSrc={(item) => buildConversationAvatarSrc({
+                channel: item.channel,
+                conversationKey: item.conversationKey,
+                sourceUrl: item.profilePicUrl,
+                accessToken
+              })}
+              initialsFromLabel={initialsFromLabel}
+              getPreview={getPreview}
+              formatRelativeTime={formatRelativeTime}
+              isHandoverInProgress={(mode) => isHandoverInProgress(mode as AutomationMode)}
+              normalizeAutomationMode={normalizeAutomationMode}
+              WhatsAppLogo={WhatsAppLogo}
+            />
           </div>
-
-          <div className={`flex flex-col h-[calc(100dvh-11.5rem)] min-h-0 rounded-2xl border border-border/40 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
-            {selectedConversation ?
-              <>
-                <div className="flex items-center justify-between gap-2 border-b border-border/40 px-1.5 pb-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Sohbet listesine dön"
-                        className="lg:hidden -ml-1 h-8 w-8 hover:bg-white/10"
-                        onClick={() => {
-                          setMobileView('LIST');
-                          navigate('/app/conversations', { state: { navDirection: 'back' } });
-                        }}
-                      >
-                        <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-                      </Button>
-                    <button
-                      type="button"
-                      onClick={() => void openLinkedCustomerProfile(selectedConversation)}
-                      className="min-h-11 min-w-0 flex items-center gap-2 rounded-xl px-1.5 py-1 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--deep-indigo)]/40 cursor-pointer"
-                      aria-label="Sohbet profilini aç"
-                    >
-                      <Avatar className="size-9 border border-border/40">
-                        {selectedConversation.profilePicUrl ?
-                          <AvatarImage
-                            src={
-                              buildConversationAvatarSrc({
-                                channel: selectedConversation.channel,
-                                conversationKey: selectedConversation.conversationKey,
-                                sourceUrl: selectedConversation.profilePicUrl,
-                                accessToken,
-                              }) || undefined
-                            }
-                            alt={conversationDisplayName(selectedConversation)} /> :
-
-                          null}
-                        <AvatarFallback className="text-xs">
-                          {initialsFromLabel(conversationDisplayName(selectedConversation))}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="text-[14px] font-semibold truncate leading-tight">
-                          {conversationDisplayName(selectedConversation)}
-                        </p>
-                        <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
-                          <span className="text-[10px] min-w-0 font-bold uppercase tracking-tight text-muted-foreground/60 truncate">
-                            {selectedConversation.channel === 'INSTAGRAM' ? 'Instagram Sohbeti' : 'WhatsApp Sohbeti'}
-                          </span>
-                          {isHandoverInProgress(normalizeAutomationMode(selectedConversation.automationMode)) && (
-                            <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-tight text-amber-600 shadow-sm shadow-amber-500/10">
-                              <Sparkles className="size-1.5 fill-current" />
-                              Canlı Destek
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  ref={messagesViewportRef}
-                  onScroll={(event) => {
-                    const el = event.currentTarget;
-                    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-                    stickToBottomRef.current = distanceToBottom < 48;
-                  }}
-                  className="flex-1 min-h-0 mt-2 space-y-3 overflow-y-auto rounded-2xl border border-border/40 bg-gradient-to-b from-muted/10 to-transparent p-2 scrollbar-thin lg:min-h-[420px]">
-
-                  {loadingMessages ?
-                    <div className="space-y-6 py-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-                           <Skeleton className={`h-16 w-[70%] rounded-[24px] ${i % 2 === 0 ? 'bg-[var(--deep-indigo)]/5' : 'bg-muted/30'}`} />
-                        </div>
-                      ))}
-                    </div> :
-                    messages.length === 0 ?
-                      <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
-                        <MessageCircle className="w-12 h-12 mb-4 opacity-10" />
-                        <p className="text-sm font-medium">Henüz mesaj bulunmuyor</p>
-                        <p className="text-xs opacity-60 mt-1">İlk mesajı siz gönderin.</p>
-                      </div> :
-
-                      <div className="flex flex-col gap-1 min-h-full pb-4">
-                          {messages.map((msg, index) => {
-                            const direction = msg.direction?.toLowerCase();
-                            const isOutbound = direction === 'outbound' || direction === 'outgoing' || !!msg.outboundSource;
-                            const isSystem = direction === 'system';
-                            const prevMsg = messages[index - 1];
-                            const nextMsg = messages[index + 1];
-                            
-                            const isSameSenderAsPrev = !isSystem && prevMsg?.direction === msg.direction;
-                            const isSameSenderAsNext = !isSystem && nextMsg?.direction === msg.direction;
-
-                            const dt = new Date(msg.eventTimestamp);
-                            const prevDt = prevMsg ? new Date(prevMsg.eventTimestamp) : null;
-                            const showDateHeader = !prevDt || !isToday(dt) && format(dt, 'yyyy-MM-dd') !== format(prevDt, 'yyyy-MM-dd');
-
-                            const senderLabel = isSystem ? 'Sistem' : isOutbound ? (msg.outboundSourceLabel || 'Siz') : "Müşteri";
-
-                            return (
-                              <React.Fragment key={msg.id || index}>
-                                {showDateHeader && (
-                                  <div className="flex justify-center my-8 pointer-events-none">
-                                    <span className="px-4 py-1.5 rounded-full bg-background/60 backdrop-blur-xl border border-white/20 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground shadow-2xl glass-panel">
-                                      {isToday(dt) ? 'Bugün' : isYesterday(dt) ? 'Dün' : format(dt, 'd MMMM yyyy', { locale: tr })}
-                                    </span>
-                                  </div>
-                                )}
-                                
-                                {isSystem ? (
-                                  <div className="max-w-[70%] mx-auto my-4 text-center">
-                                    <div className="px-3 py-1.5 rounded-lg bg-amber-500/5 border border-amber-500/10 text-amber-700/80 text-[11px] font-medium leading-relaxed">
-                                      <AlertTriangle className="size-3 inline mr-1.5 mb-0.5 opacity-60" />
-                                      {msg.text}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className={`flex ${isOutbound ? 'justify-end' : 'justify-start'} ${isSameSenderAsPrev ? 'mt-0.5' : 'mt-4'}`}>
-                                    <div className={`flex flex-col max-w-[85%] lg:max-w-[75%] ${isOutbound ? 'items-end' : 'items-start'}`}>
-                                      {!isSameSenderAsPrev && (
-                                        <span className={`text-[10px] font-bold mb-1 opacity-40 px-3 uppercase tracking-wider ${isOutbound ? 'text-right' : 'text-left'}`}>
-                                          {senderLabel}
-                                        </span>
-                                      )}
-                                      
-                                      <div className={`group relative px-4 py-2.5 shadow-sm transition-all duration-300 hover:shadow-md ${
-                                        isOutbound ? 
-                                          `bg-gradient-to-br from-[var(--deep-indigo)] to-indigo-600 text-white border border-indigo-500/20 ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px]' : isSameSenderAsNext ? 'rounded-t-[20px] rounded-bl-[20px] rounded-br-[8px]' : isSameSenderAsPrev ? 'rounded-b-[20px] rounded-tl-[20px] rounded-tr-[8px]' : 'rounded-[20px] rounded-tr-[4px]'}` : 
-                                          `bg-card/40 backdrop-blur-lg border border-white/10 text-foreground ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px]' : isSameSenderAsNext ? 'rounded-t-[20px] rounded-br-[20px] rounded-bl-[8px]' : isSameSenderAsPrev ? 'rounded-b-[20px] rounded-tr-[20px] rounded-tl-[8px]' : 'rounded-[20px] rounded-tl-[4px]'}`
-                                      }`}
-                                      onContextMenu={(event) => {
-                                        event.preventDefault();
-                                        openMessageMeta(msg);
-                                      }}
-                                      onTouchStart={() => beginLongPress(msg)}
-                                      onTouchEnd={clearLongPressTimer}
-                                      onTouchCancel={clearLongPressTimer}
-                                      onTouchMove={clearLongPressTimer}
-                                      title="Mesaj detayı için uzun basın">
-                                        <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
-                                          {formatOperatorMessage(msg.text) || formatMessageTypeLabel(msg.messageType)}
-                                        </p>
-                                        <div className={`text-[9px] mt-1.5 font-bold opacity-40 flex items-center gap-1.5 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
-                                          {format(dt, 'HH:mm')}
-                                          {isOutbound && msg.status === 'READ' && <CheckCircle2 className="size-2.5 text-sky-300" />}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </React.Fragment>
-                            );
-                          })}
-                      </div>
-                  }
-                </div>
-
-                <div className="sticky bottom-0 z-20 mt-2 space-y-2">
-                  <div className="flex items-center justify-between px-2">
-                    <div className="flex items-center gap-1.5">
-                       <div className={`size-1.5 rounded-full ${handoverInProgress ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
-                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                         {handoverInProgress ? 'Kedy AI: Pasif' : 'Kedy AI: Aktif'}
-                       </span>
-                    </div>
-                    {handoverInProgress ? (
-                      <Button type="button" size="sm" variant="ghost" className="h-7 text-[10px] font-bold uppercase tracking-tight text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50" onClick={resumeAuto} disabled={sendingResume}>
-                        <Sparkles className="size-3 mr-1" />
-                        {sendingResume ? 'Bot Açılıyor...' : "Botu Devreye Al"}
-                      </Button>
-                    ) : (
-                      <Button type="button" size="sm" variant="ghost" className="h-7 text-[10px] font-bold uppercase tracking-tight text-amber-600 hover:text-amber-700 hover:bg-amber-50" onClick={requestHandover} disabled={sendingHandover}>
-                        <Sparkles className="size-3 mr-1" />
-                        {sendingHandover ? 'Alınıyor...' : 'Ben Yanıtlayacağım'}
-                      </Button>
-                    )}
-                  </div>
-                  {instagramWindowExpired ? (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
-                      <AlertTriangle className="size-3.5 mt-0.5 shrink-0" />
-                      <span>Instagram 24 saat yanıt penceresi dolmuş olabilir. Mesaj gönderimi başarısız olursa müşterinin tekrar yazması gerekir.</span>
-                    </div>
-                  ) : null}
-
-                  <div className="rounded-2xl border border-border/40 bg-background/80 backdrop-blur-md shadow-2xl p-2 focus-within:border-indigo-500/50 transition-all">
-                    <div className="flex gap-2">
-                      <Textarea
-                        value={replyText}
-                        onChange={(event) => setReplyText(event.target.value)}
-                        placeholder={
-                          instagramWindowExpired ?
-                            'Instagram 24 saat penceresi dolmuş olabilir. Yine de deneyebilirsiniz.' :
-                            canReply ?
-                              'Mesajınızı yazın...' :
-                              "Yanıtlamak için önce 'Ben Yanıtlayacağım' seçeneğine dokunun"
-                        }
-                        disabled={!canReply}
-                        rows={1}
-                        className="max-h-28 min-h-10 resize-none border-0 bg-transparent px-3 text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' && !event.shiftKey) {
-                            event.preventDefault();
-                            if (canReply) void sendReply();
-                          }
-                        }} />
-
-                      <Button 
-                        type="button" 
-                        aria-label="Mesaj gönder" 
-                        onClick={sendReply} 
-                        disabled={sendingReply || !replyText.trim() || !canReply} 
-                        className={`rounded-lg px-4 transition-all h-10 w-10 p-0 flex items-center justify-center shrink-0 ${replyText.trim() && canReply ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-muted text-muted-foreground'}`}>
-                        {sendingReply ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizontal className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </> :
-
-              <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground py-20 relative">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent" />
-                <div className="size-24 rounded-[32px] bg-gradient-to-br from-indigo-500/10 to-transparent flex items-center justify-center mb-6 border border-indigo-500/10 shadow-inner relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-indigo-500/5 scale-0 group-hover:scale-100 transition-transform duration-700 rounded-full blur-2xl" />
-                  <MessageCircle className="w-10 h-10 text-indigo-500/60 relative z-10" />
-                </div>
-                <h3 className="text-xl font-black text-foreground/90 tracking-tight">Diyalog Seçin</h3>
-                <p className="text-sm mt-2 max-w-[280px] font-medium leading-relaxed opacity-60">Mesajlaşmak ve randevuları yönetmek için sol listeden bir sohbet seçebilirsiniz.</p>
-              </div>
-            }
-          </div>
+          
+          <ConversationDetail
+            mobileView={mobileView}
+            setMobileView={setMobileView}
+            selectedConversation={selectedConversation}
+            messages={messages}
+            loadingMessages={loadingMessages}
+            replyText={replyText}
+            setReplyText={setReplyText}
+            canReply={canReply}
+            sendingReply={sendingReply}
+            sendReply={sendReply}
+            handoverInProgress={handoverInProgress}
+            sendingHandover={sendingHandover}
+            sendingResume={sendingResume}
+            requestHandover={requestHandover}
+            resumeAuto={resumeAuto}
+            instagramWindowExpired={instagramWindowExpired}
+            messagesViewportRef={messagesViewportRef}
+            openLinkedCustomerProfile={openLinkedCustomerProfile}
+            navigateBack={() => navigate('/app/conversations', { state: { navDirection: 'back' } })}
+            conversationDisplayName={conversationDisplayName}
+            buildConversationAvatarSrc={(item) => buildConversationAvatarSrc({
+              channel: item.channel,
+              conversationKey: item.conversationKey,
+              sourceUrl: item.profilePicUrl,
+              accessToken
+            })}
+            initialsFromLabel={initialsFromLabel}
+            isHandoverInProgress={(mode) => isHandoverInProgress(mode as AutomationMode)}
+            normalizeAutomationMode={normalizeAutomationMode}
+            formatOperatorMessage={formatOperatorMessage}
+            formatMessageTypeLabel={formatMessageTypeLabel}
+            openMessageMeta={openMessageMeta}
+            beginLongPress={beginLongPress}
+            clearLongPressTimer={clearLongPressTimer}
+            stickToBottomRef={stickToBottomRef}
+          />
         </div>
       }
       <Dialog
