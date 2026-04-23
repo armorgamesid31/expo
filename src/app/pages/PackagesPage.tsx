@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { PackageTemplateItem } from '../types/mobile-api';
 import { useNavigator } from '../context/NavigatorContext';
+import { useToasts } from '../context/ToastContext';
 
 interface ServiceItem {
   id: number;
@@ -19,8 +19,8 @@ const EMPTY_FORM_SERVICE: TemplateFormService = { serviceId: '', initialQuota: '
 
 export function PackagesPage() {
   const { apiFetch } = useAuth();
-  const navigate = useNavigate();
   const { setHeaderTitle, setHeaderActions } = useNavigator();
+  const { showToast } = useToasts();
 
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [templates, setTemplates] = useState<PackageTemplateItem[]>([]);
@@ -37,24 +37,32 @@ export function PackagesPage() {
   const [notes, setNotes] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [rows, setRows] = useState<TemplateFormService[]>([{ ...EMPTY_FORM_SERVICE }]);
+  const [templateSheetOpen, setTemplateSheetOpen] = useState(false);
 
   useEffect(() => {
     setHeaderTitle('Paket Yönetimi');
     setHeaderActions(
       <button
         type="button"
-        onClick={submitTemplate}
-        disabled={saving}
+        onClick={() => {
+          if (templateSheetOpen) {
+            void submitTemplate();
+            return;
+          }
+          resetForm();
+          setTemplateSheetOpen(true);
+        }}
+        disabled={saving && templateSheetOpen}
         className="h-10 px-4 rounded-xl bg-[var(--rose-gold)] text-white inline-flex items-center gap-2 font-bold shadow-lg border-0 transition-all active:scale-95 disabled:opacity-60"
       >
-        <span>Kaydet</span>
+        <span>{templateSheetOpen ? 'Kaydet' : 'Yeni Paket'}</span>
       </button>
     );
     return () => {
       setHeaderTitle(null);
       setHeaderActions(null);
     };
-  }, [setHeaderTitle, setHeaderActions, saving, name, rows, price, validityDays]);
+  }, [setHeaderTitle, setHeaderActions, saving, templateSheetOpen, name, rows, price, validityDays]);
 
   const serviceOptions = useMemo(
     () => services.map((service) => ({ label: service.name, value: String(service.id) })),
@@ -180,18 +188,22 @@ export function PackagesPage() {
           body: JSON.stringify(payload)
         });
         setSuccess('Şablon güncellendi.');
+        showToast('Paket şablonu güncellendi.', 'success');
       } else {
         await apiFetch<{ item: PackageTemplateItem; }>('/api/admin/package-templates', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
         setSuccess('Şablon oluşturuldu.');
+        showToast('Paket şablonu oluşturuldu.', 'success');
       }
 
       resetForm();
+      setTemplateSheetOpen(false);
       await loadData();
     } catch (err: any) {
       setError(err?.message || 'Şablon kaydedilemedi.');
+      showToast('Paket şablonu kaydedilemedi.', 'error');
     } finally {
       setSaving(false);
     }
@@ -199,120 +211,134 @@ export function PackagesPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="rounded-xl border border-border bg-card p-3 space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold">{editingId ? "Şablonu Düzenle" : "Yeni Şablon"}</p>
-          {editingId ?
-            <button type="button" className="rounded-md border border-border px-3 py-1.5 text-xs" onClick={resetForm}>
-              İptal
-            </button> :
-            null}
+      {!templateSheetOpen ? (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="text-sm font-semibold">Paket şablonlarını daha hızlı oluşturmak için “Yeni Paket” ile alt paneli açın.</p>
         </div>
+      ) : null}
+      {templateSheetOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/35 p-3 sm:p-4 flex items-end" onClick={() => !saving && setTemplateSheetOpen(false)}>
+          <div className="w-full mx-auto max-w-md rounded-t-3xl sm:rounded-2xl border border-border bg-card p-3 space-y-3 max-h-[88vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold">{editingId ? "Şablonu Düzenle" : "Yeni Şablon"}</p>
+              <button type="button" className="rounded-md border border-border px-3 py-1.5 text-xs" onClick={() => { resetForm(); setTemplateSheetOpen(false); }} disabled={saving}>
+                Kapat
+              </button>
+            </div>
 
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          className="w-full rounded-md border border-border px-3 py-2 text-sm"
-          placeholder="Şablon adı" />
-
-
-        <div className="grid grid-cols-2 gap-2">
-          <select
-            value={scopeType}
-            onChange={(event) => setScopeType(event.target.value === 'POOL' ? 'POOL' : 'SINGLE_SERVICE')}
-            className="h-10 rounded-md border border-border px-3 text-sm bg-background">
-
-            <option value="SINGLE_SERVICE">Tek Hizmet</option>
-            <option value="POOL">Pool</option>
-          </select>
-          <select
-            value={isActive ? '1' : '0'}
-            onChange={(event) => setIsActive(event.target.value === '1')}
-            className="h-10 rounded-md border border-border px-3 text-sm bg-background">
-
-            <option value="1">Aktif</option>
-            <option value="0">Pasif</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            value={price}
-            type="number"
-            min="0"
-            step="0.01"
-            onChange={(event) => setPrice(event.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-sm"
-            placeholder="Fiyat (isteğe bağlı)" />
-
-          <input
-            value={validityDays}
-            type="number"
-            min="1"
-            step="1"
-            onChange={(event) => setValidityDays(event.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-sm"
-            placeholder="Geçerlilik günü" />
-
-        </div>
-
-        <textarea
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-          className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[80px]"
-          placeholder="Notlar (isteğe bağlı)" />
+            <input
+              value={name}
+              name="template_name"
+              onChange={(event) => setName(event.target.value)}
+              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              placeholder="Şablon adı" />
 
 
-        <div className="space-y-2 rounded-md border border-border p-2">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Hizmetler ve Haklar</p>
-            <button type="button" onClick={addRow} className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1 text-xs text-primary font-bold">
-              + Ekle
-            </button>
-          </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={scopeType}
+                onChange={(event) => setScopeType(event.target.value === 'POOL' ? 'POOL' : 'SINGLE_SERVICE')}
+                className="h-10 rounded-md border border-border px-3 text-sm bg-background">
 
-          <div className="space-y-2">
-            {rows.map((row, idx) =>
-              <div key={idx} className="flex gap-2">
-                <select
-                  value={row.serviceId}
-                  onChange={(event) => setRowValue(idx, { serviceId: event.target.value })}
-                  className="flex-1 h-10 rounded-md border border-border px-2 text-sm bg-background min-w-0">
-                  <option value="">Hizmet seçin</option>
-                  {serviceOptions.map((option) =>
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  )}
-                </select>
+                <option value="SINGLE_SERVICE">Tek Hizmet</option>
+                <option value="POOL">Pool</option>
+              </select>
+              <select
+                value={isActive ? '1' : '0'}
+                onChange={(event) => setIsActive(event.target.value === '1')}
+                className="h-10 rounded-md border border-border px-3 text-sm bg-background">
 
-                <input
-                  value={row.initialQuota}
-                  onChange={(event) => setRowValue(idx, { initialQuota: event.target.value })}
-                  type="number"
-                  min="1"
-                  className="w-16 h-10 rounded-md border border-border px-2 text-sm text-center"
-                  placeholder="Hak" />
+                <option value="1">Aktif</option>
+                <option value="0">Pasif</option>
+              </select>
+            </div>
 
-                <button
-                  type="button"
-                  onClick={() => removeRow(idx)}
-                  className="w-10 h-10 rounded-md border border-red-100 text-red-500 bg-red-50 flex items-center justify-center shrink-0"
-                  disabled={rows.length <= 1}>
-                  <Trash2 className="h-4 w-4" />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                value={price}
+                name="template_price"
+                type="number"
+                min="0"
+                step="0.01"
+                onChange={(event) => setPrice(event.target.value)}
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                placeholder="Fiyat (isteğe bağlı)" />
+
+              <input
+                value={validityDays}
+                name="template_validity_days"
+                type="number"
+                min="1"
+                step="1"
+                onChange={(event) => setValidityDays(event.target.value)}
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                placeholder="Geçerlilik günü" />
+
+            </div>
+
+            <textarea
+              value={notes}
+              name="template_notes"
+              onChange={(event) => setNotes(event.target.value)}
+              className="w-full rounded-md border border-border px-3 py-2 text-sm min-h-[80px]"
+              placeholder="Notlar (isteğe bağlı)" />
+
+
+            <div className="space-y-2 rounded-md border border-border p-2">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Hizmetler ve Haklar</p>
+                <button type="button" onClick={addRow} className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1 text-xs text-primary font-bold">
+                  + Ekle
                 </button>
               </div>
-            )}
+
+              <div className="space-y-2">
+                {rows.map((row, idx) =>
+                  <div key={idx} className="flex gap-2">
+                    <select
+                      value={row.serviceId}
+                      onChange={(event) => setRowValue(idx, { serviceId: event.target.value })}
+                      className="flex-1 h-10 rounded-md border border-border px-2 text-sm bg-background min-w-0">
+                      <option value="">Hizmet seçin</option>
+                      {serviceOptions.map((option) =>
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      )}
+                    </select>
+
+                    <input
+                      value={row.initialQuota}
+                      name={`template_service_quota_${idx}`}
+                      onChange={(event) => setRowValue(idx, { initialQuota: event.target.value })}
+                      type="number"
+                      min="1"
+                      className="w-16 h-10 rounded-md border border-border px-2 text-sm text-center"
+                      placeholder="Hak" />
+
+                    <button
+                      type="button"
+                      onClick={() => removeRow(idx)}
+                      className="w-10 h-10 rounded-md border border-red-100 text-red-500 bg-red-50 flex items-center justify-center shrink-0"
+                      aria-label={`Satır ${idx + 1} hizmetini kaldır`}
+                      title="Satırı kaldır"
+                      disabled={rows.length <= 1}>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {error ? <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{error}</div> : null}
+            {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm">{success}</div> : null}
           </div>
         </div>
-
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
-        {success ? <p className="text-sm text-emerald-600">{success}</p> : null}
-
-
-      </div>
-
+      ) : null}
+      
       <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+        {error ? <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{error}</div> : null}
+        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm">{success}</div> : null}
         <p className="text-sm font-bold">Mevcut Şablonlar</p>
         {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
         
@@ -324,7 +350,10 @@ export function PackagesPage() {
                 <button
                   type="button"
                   className="rounded-md bg-background border border-border px-2.5 py-1 text-[11px] font-bold"
-                  onClick={() => hydrateFormFromTemplate(template)}>
+                  onClick={() => {
+                    hydrateFormFromTemplate(template);
+                    setTemplateSheetOpen(true);
+                  }}>
                   Düzenle
                 </button>
               </div>

@@ -7,7 +7,6 @@ import { AuthGuard } from './components/app-shell/AuthGuard';
 import { AppLayout } from './components/app-shell/AppLayout';
 import { ToastProvider, useToasts } from './context/ToastContext';
 import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
 import { SchedulePage } from './pages/SchedulePage';
 import { CustomersPage } from './pages/CustomersPage';
 import { FeaturesPage } from './pages/FeaturesPage';
@@ -32,6 +31,8 @@ import { TeamAccessPage } from './pages/TeamAccessPage';
 import { TeamManagementPage } from './pages/TeamManagementPage';
 import { TimeOffManagementPage } from './pages/TimeOffManagementPage';
 import { OperationsManagementPage } from './pages/OperationsManagementPage';
+import { CustomerRiskMenuPage } from './pages/CustomerRiskMenuPage';
+import { CustomerAttendanceSettingsPage } from './pages/CustomerAttendanceSettingsPage';
 import { BrandGrowthHubPage } from './pages/BrandGrowthHubPage';
 import { DataImportWizardPage } from './pages/DataImportWizardPage';
 import { LocaleProvider } from './context/LocaleContext';
@@ -260,12 +261,12 @@ function RootRedirect() {
 
   }
 
-  return <Navigate to={isAuthenticated ? '/app/dashboard' : '/auth/login'} replace />;
+  return <Navigate to={isAuthenticated ? '/app/schedule' : '/auth/login'} replace />;
 }
 
 function PermissionGuard({
   permissionKey,
-  fallback = '/app/dashboard',
+  fallback = '/app/schedule',
   children
 
 
@@ -281,7 +282,7 @@ function PermissionGuard({
 
 function AnyPermissionGuard({
   permissionKeys,
-  fallback = '/app/dashboard',
+  fallback = '/app/schedule',
   children
 
 
@@ -303,11 +304,17 @@ function AppRoutes() {
 
       <Route element={<AuthGuard />}>
         <Route path="/app" element={<AppLayout />}>
-          <Route index element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+          <Route index element={<Navigate to="/app/schedule" replace />} />
+          <Route path="dashboard" element={<Navigate to="/app/schedule" replace />} />
           <Route path="schedule" element={<SchedulePage />} />
+          <Route path="schedule/new" element={<SchedulePage />} />
+          <Route path="schedule/waitlist/new" element={<SchedulePage />} />
           <Route path="conversations" element={<ConversationsPage />} />
+          <Route path="conversations/:conversationId" element={<ConversationsPage />} />
           <Route path="customers" element={<CustomersPage />} />
+          <Route path="customers/new" element={<CustomersPage />} />
+          <Route path="customers/risk-menu" element={<CustomerRiskMenuPage />} />
+          <Route path="customers/attendance-settings" element={<CustomerAttendanceSettingsPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="campaigns" element={<CampaignsCrudPage />} />

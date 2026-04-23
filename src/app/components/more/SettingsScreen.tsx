@@ -27,7 +27,7 @@ export function SettingsScreen({
       title: "Hesap ve İşletme",
       items: [
         { icon: User, label: "Profil Bilgileri", description: "Kişisel bilgiler ve fotoğraf", color: "var(--rose-gold)" },
-        { icon: Palette, label: "Görünüm", description: "Tema ve yazı tipi", color: "var(--deep-indigo)", isThemeToggle: true },
+        { icon: Palette, label: "Görünüm", description: "Tema ve yazı tipi", color: "var(--deep-indigo)", isThemeToggle: true, onClick: () => onToggleDarkMode(!isDarkMode) },
         { icon: Shield, label: "Güvenlik", description: "Şifre ve iki aşamalı doğrulama", color: "var(--rose-gold)" }]
 
     },
@@ -63,32 +63,55 @@ export function SettingsScreen({
             <Card className="border-border/50 divide-y divide-border/30">
               {group.items.map((item, iIdx) => {
                 const Icon = item.icon;
+                const isInteractive = Boolean(item.onClick || item.isThemeToggle || item.hasSwitch);
+                const rowContent = (
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${item.color}15` }}>
+
+                      <Icon className="w-5 h-5" style={{ color: item.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground">{item.label}</p>
+                      <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                    </div>
+
+                    {item.isThemeToggle ?
+                      <Switch
+                        checked={isDarkMode}
+                        onCheckedChange={onToggleDarkMode}
+                        aria-label="Koyu tema görünümünü değiştir" /> :
+                      item.hasSwitch ?
+                        <Switch defaultChecked aria-label={`${item.label} durumunu değiştir`} /> :
+
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+                    }
+                  </div>
+                );
+
+                if (isInteractive) {
+                  return (
+                    <CardContent
+                      key={iIdx}
+                      className="p-0">
+                      <button
+                        type="button"
+                        onClick={item.onClick}
+                        className="w-full p-4 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+                      >
+                        {rowContent}
+                      </button>
+                    </CardContent>
+                  );
+                }
+
                 return (
                   <CardContent
                     key={iIdx}
-                    className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={item.onClick}>
-
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: `${item.color}15` }}>
-
-                        <Icon className="w-5 h-5" style={{ color: item.color }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-foreground">{item.label}</p>
-                        <p className="text-xs text-muted-foreground truncate">{item.description}</p>
-                      </div>
-
-                      {item.isThemeToggle ?
-                        <Switch checked={isDarkMode} onCheckedChange={onToggleDarkMode} /> :
-                        item.hasSwitch ?
-                          <Switch defaultChecked /> :
-
-                          <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
-                      }
-                    </div>
+                    className="p-4"
+                  >
+                    {rowContent}
                   </CardContent>);
 
               })}

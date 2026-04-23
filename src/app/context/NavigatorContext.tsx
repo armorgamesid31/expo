@@ -15,7 +15,7 @@ interface NavigatorContextType {
 
 const NavigatorContext = createContext<NavigatorContextType | undefined>(undefined);
 
-const HUB_ORDER = ['/app/dashboard', '/app/schedule', '/app/conversations', '/app/features', '/app/brand-growth-hub'];
+const HUB_ORDER = ['/app/schedule', '/app/customers', '/app/conversations', '/app/features', '/app/brand-growth-hub'];
 
 function getHierarchyLevel(path: string): number {
   if (HUB_ORDER.some(h => path === h || path === h + '/')) return 1;
@@ -35,8 +35,8 @@ function getHierarchyLevel(path: string): number {
 }
 
 function getTabRank(path: string): number {
-  if (path.startsWith('/app/dashboard')) return 0;
-  if (path.startsWith('/app/schedule')) return 1;
+  if (path.startsWith('/app/schedule')) return 0;
+  if (path.startsWith('/app/customers')) return 1;
   if (path.startsWith('/app/conversations')) return 2;
   if (path.startsWith('/app/features') || path.startsWith('/app/brand-growth-hub')) return 3;
   return 0;

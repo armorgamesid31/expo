@@ -27,9 +27,9 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-300">Completed</Badge>;
+        return <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-300">Tamamlandı</Badge>;
       case 'no-show':
-        return <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-300">No-show</Badge>;
+        return <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-300">Randevu İhlali</Badge>;
       case 'cancelled':
         return <Badge variant="secondary" className="bg-gray-500/10 text-gray-700 dark:text-gray-300">İptal</Badge>;
       default:
@@ -55,7 +55,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
                 className={`text-xs ${getRiskBadgeStyle(customer.riskLevel)}`}>
                 
                 {customer.riskLevel === 'high' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                <span className="capitalize">Risk: {customer.riskLevel === 'low' ? 'Low' : customer.riskLevel === 'medium' ? 'Medium' : 'High'}</span>
+                <span className="capitalize">Risk: {customer.riskLevel === 'low' ? 'Düşük' : customer.riskLevel === 'medium' ? 'Orta' : 'Yüksek'}</span>
               </Badge>
             </div>
           </div>
@@ -123,11 +123,11 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">No-show Count:</span>
+                <span className="text-muted-foreground">Randevu İhlali Sayısı:</span>
                 <span className="font-semibold text-red-600">{customer.noShowCount}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">No-show Rate:</span>
+                <span className="text-muted-foreground">Randevu İhlali Oranı:</span>
                 <span className="font-semibold">
                   %{(customer.noShowCount / customer.visitCount * 100).toFixed(1)}
                 </span>
@@ -159,7 +159,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
         {/* Visit History */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle className="text-base">Visit History</CardTitle>
+            <CardTitle className="text-base">Ziyaret Geçmişi</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {visits.map((visit) =>
@@ -189,7 +189,7 @@ export function CustomerDetail({ customer, onBack }: CustomerDetailProps) {
         <div className="grid grid-cols-2 gap-3">
           <Button variant="outline" className="w-full">
             <Calendar className="w-4 h-4 mr-2" />
-            Appointment Al
+            Randevu Al
           </Button>
           <Button className="w-full bg-[var(--rose-gold)] hover:bg-[var(--rose-gold-dark)]">
             <Phone className="w-4 h-4 mr-2" />

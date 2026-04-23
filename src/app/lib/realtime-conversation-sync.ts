@@ -288,5 +288,5 @@ export function useConversationRealtimeSync(options: UseConversationRealtimeSync
       window.removeEventListener('focus', focusHandler);
       window.removeEventListener('online', onlineHandler);
     };
-  }, [options.accessToken, options.apiFetch, options.channel, options.cursorScopeKey, options.enabled]);
+  }, [options.accessToken, options.channel, options.cursorScopeKey, options.enabled]);
 }

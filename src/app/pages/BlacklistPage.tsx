@@ -16,6 +16,51 @@ interface BlacklistItem {
   isActive: boolean;
 }
 
+interface CustomerOption {
+  id: number;
+  name: string | null;
+  phone: string | null;
+}
+
+interface CustomerOptionResponseItem {
+  id: number;
+  name?: string | null;
+  fullName?: string | null;
+  phone?: string | null;
+  customer?: {
+    id?: number;
+    name?: string | null;
+    fullName?: string | null;
+    phone?: string | null;
+  } | null;
+}
+
+function normalizeCustomerOption(item: CustomerOptionResponseItem): CustomerOption {
+  const nested = item.customer || null;
+  const rawId = item.id ?? nested?.id ?? 0;
+  return {
+    id: Number(rawId),
+    name: item.name ?? item.fullName ?? nested?.name ?? nested?.fullName ?? null,
+    phone: item.phone ?? nested?.phone ?? null
+  };
+}
+
+function extractCustomerItems(payload: any): CustomerOptionResponseItem[] {
+  if (Array.isArray(payload?.items)) return payload.items as CustomerOptionResponseItem[];
+  if (Array.isArray(payload?.data?.items)) return payload.data.items as CustomerOptionResponseItem[];
+  if (Array.isArray(payload?.data)) return payload.data as CustomerOptionResponseItem[];
+  return [];
+}
+
+function normalizeBlacklistReason(reason: string | null): string {
+  if (!reason) return 'Sebep belirtilmedi';
+  const normalized = reason.trim().toLowerCase();
+  if (normalized.includes('manual ban from customer profile')) {
+    return 'Müşteri profilinden manuel yasaklama';
+  }
+  return reason;
+}
+
 export function BlacklistPage() {
   const { apiFetch } = useAuth();
   const [items, setItems] = useState<BlacklistItem[]>([]);
@@ -24,6 +69,10 @@ export function BlacklistPage() {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ fullName: '', phone: '', reason: '' });
   const [searchQuery, setSearchQuery] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerLoading, setCustomerLoading] = useState(false);
+  const [customerOptions, setCustomerOptions] = useState<CustomerOption[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerOption | null>(null);
 
   const load = async (search = '') => {
     setLoading(true);
@@ -48,9 +97,86 @@ export function BlacklistPage() {
     void load(searchQuery);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const query = customerSearch.trim();
+    if (!query) {
+      let active = true;
+      void (async () => {
+        try {
+          const recent = await apiFetch<any>('/api/admin/customers?limit=8');
+          if (!active) return;
+          const options = extractCustomerItems(recent).
+            map(normalizeCustomerOption).
+            filter((item) => Number.isFinite(item.id) && item.id > 0);
+          setCustomerOptions(options);
+        } catch {
+          if (active) {
+            setCustomerOptions([]);
+          }
+        }
+      })();
+      return () => {
+        active = false;
+      };
+    }
+    if (query.length < 2) {
+      setCustomerOptions([]);
+      return;
+    }
+
+    let active = true;
+    const timeoutId = window.setTimeout(async () => {
+      setCustomerLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams({ limit: '8', search: query });
+        const response = await apiFetch<any>(`/api/admin/customers?${params.toString()}`);
+        const normalizedItems = extractCustomerItems(response).
+          map(normalizeCustomerOption).
+          filter((item) => Number.isFinite(item.id) && item.id > 0);
+
+        // Some environments do not return short search terms reliably.
+        // Fallback: fetch a small list and filter client-side for discoverability.
+        if (normalizedItems.length === 0 && query.length < 3) {
+          const fallback = await apiFetch<any>('/api/admin/customers?limit=30');
+          const lowerQuery = query.toLowerCase();
+          const filtered = extractCustomerItems(fallback).
+            map(normalizeCustomerOption).
+            filter((item) => Number.isFinite(item.id) && item.id > 0).
+            filter((customer) =>
+              `${customer.name || ''} ${customer.phone || ''}`.toLowerCase().includes(lowerQuery)
+            ).
+            slice(0, 8);
+          if (active) {
+            setCustomerOptions(filtered);
+          }
+          return;
+        }
+
+        if (active) {
+          setCustomerOptions(normalizedItems);
+        }
+      } catch (err: any) {
+        if (active) {
+          setCustomerOptions([]);
+          setError(err?.message || 'Müşteri listesi alınamadı.');
+        }
+      } finally {
+        if (active) {
+          setCustomerLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [apiFetch, customerSearch]);
+
   const createItem = async (event: FormEvent) => {
     event.preventDefault();
-    if (!form.phone.trim()) {
+    if (!form.phone.trim() && !selectedCustomer?.id) {
       return;
     }
 
@@ -59,10 +185,16 @@ export function BlacklistPage() {
     try {
       const response = await apiFetch<{ item: BlacklistItem; }>('/api/admin/blacklist', {
         method: 'POST',
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          ...form,
+          customerId: selectedCustomer?.id || undefined
+        })
       });
       setItems((prev) => [response.item, ...prev]);
       setForm({ fullName: '', phone: '', reason: '' });
+      setSelectedCustomer(null);
+      setCustomerSearch('');
+      setCustomerOptions([]);
     } catch (err: any) {
       setError(err?.message || 'Kayıt eklenemedi.');
     } finally {
@@ -103,6 +235,7 @@ export function BlacklistPage() {
             className="pl-9"
             placeholder="İsim, telefon veya neden ile arayın..."
             value={searchQuery}
+            name="blacklist_search"
             onChange={(event) => setSearchQuery(event.target.value)} 
           />
         </div>
@@ -115,19 +248,79 @@ export function BlacklistPage() {
           <Card className="border-border/50">
             <CardContent className="p-4">
               <form className="space-y-3" onSubmit={createItem}>
+                <div className="space-y-2 rounded-lg border border-border/60 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Müşterilerden Seç (Opsiyonel)</p>
+                  <Input
+                    placeholder="Müşteri adı veya telefon ile ara..."
+                    value={customerSearch}
+                    name="customer_search"
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                  />
+                  {customerLoading ? <p className="text-xs text-muted-foreground">Müşteriler aranıyor...</p> : null}
+                  {customerSearch.trim().length >= 2 && !customerLoading && customerOptions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Sonuç bulunamadı.</p>
+                  ) : null}
+                  {customerOptions.length > 0 ? (
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {customerOptions.map((customer) => (
+                        <button
+                          key={customer.id}
+                          type="button"
+                          className="w-full text-left rounded-md border border-border px-3 py-2 text-xs hover:border-[var(--rose-gold)]/40"
+                          onClick={() => {
+                            setSelectedCustomer(customer);
+                            setForm((prev) => ({
+                              ...prev,
+                              fullName: customer.name || prev.fullName,
+                              phone: customer.phone || prev.phone
+                            }));
+                            setCustomerOptions([]);
+                            setCustomerSearch(customer.name || customer.phone || '');
+                          }}
+                        >
+                          <p className="font-medium">{customer.name || `Müşteri #${customer.id}`}</p>
+                          <p className="text-muted-foreground">{customer.phone || 'Telefon yok'}</p>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {selectedCustomer ? (
+                    <div className="flex items-center justify-between rounded-md bg-[var(--rose-gold)]/10 px-3 py-2">
+                      <p className="text-xs">
+                        Seçili: <span className="font-semibold">{selectedCustomer.name || `Müşteri #${selectedCustomer.id}`}</span>
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => {
+                          setSelectedCustomer(null);
+                          setCustomerSearch('');
+                          setCustomerOptions([]);
+                        }}
+                      >
+                        Temizle
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
                 <Input 
                   placeholder="Ad Soyad" 
                   value={form.fullName} 
+                  name="full_name"
                   onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} 
                 />
                 <Input 
                   placeholder="Telefon Numarası" 
                   value={form.phone} 
+                  name="phone"
                   onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} 
                 />
                 <Input 
                   placeholder="Engelleme Nedeni" 
                   value={form.reason} 
+                  name="reason"
                   onChange={(e) => setForm((prev) => ({ ...prev, reason: e.target.value }))} 
                 />
                 <Button 
@@ -180,7 +373,7 @@ export function BlacklistPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-sm truncate">{item.fullName || item.phone || `#${item.id}`}</p>
-                          <p className="text-xs text-muted-foreground truncate">{item.phone || "Telefon yok"} • {item.reason || "Sebep belirtilmedi"}</p>
+                          <p className="text-xs text-muted-foreground truncate">{item.phone || "Telefon yok"} • {normalizeBlacklistReason(item.reason)}</p>
                         </div>
                       </div>
                       <Button 
@@ -214,4 +407,4 @@ export function BlacklistPage() {
       </div>
     </div>
   );
-}
+}

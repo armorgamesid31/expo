@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { cn } from '../components/ui/utils';
 import { useNavigator } from '../context/NavigatorContext';
+import { useToasts } from '../context/ToastContext';
 
 interface InventoryItem {
   id: number;
@@ -22,10 +23,12 @@ interface InventoryItem {
 export function InventoryPage() {
   const { apiFetch } = useAuth();
   const { setHeaderTitle, setHeaderActions } = useNavigator();
+  const { showToast } = useToasts();
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [adjustingItemId, setAdjustingItemId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', category: '', unit: 'adet', currentStock: 0, minStock: 0 });
 
@@ -83,6 +86,7 @@ export function InventoryPage() {
         body: JSON.stringify(form)
       });
       setForm({ name: '', category: '', unit: 'adet', currentStock: 0, minStock: 0 });
+      showToast('Ürün eklendi.', 'success');
       await load();
     } catch (err: any) {
       setError(err?.message || 'Kayıt eklenemedi.');
@@ -92,14 +96,33 @@ export function InventoryPage() {
   };
 
   const adjust = async (id: number, type: 'IN' | 'OUT') => {
+    setAdjustingItemId(id);
+    setError(null);
+    const snapshot = items;
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const nextStock = type === 'IN' ? item.currentStock + 1 : Math.max(0, item.currentStock - 1);
+        return {
+          ...item,
+          currentStock: nextStock,
+          lowStock: nextStock <= item.minStock
+        };
+      })
+    );
+
     try {
       await apiFetch(`/api/admin/inventory/items/${id}/adjust`, {
         method: 'POST',
         body: JSON.stringify({ type, quantity: 1 })
       });
-      await load();
+      showToast(type === 'IN' ? 'Stok 1 artırıldı.' : 'Stok 1 azaltıldı.', 'success');
     } catch (err: any) {
+      setItems(snapshot);
       setError(err?.message || 'Stok güncellenemedi.');
+      showToast('Stok güncellenemedi.', 'error');
+    } finally {
+      setAdjustingItemId(null);
     }
   };
 
@@ -122,6 +145,7 @@ export function InventoryPage() {
                   <Input 
                     placeholder="Ürün Adı" 
                     value={form.name} 
+                    name="inventory_name"
                     onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                     className="h-11 rounded-xl"
                   />
@@ -129,12 +153,14 @@ export function InventoryPage() {
                 <Input 
                   placeholder="Kategori" 
                   value={form.category} 
+                  name="inventory_category"
                   onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
                   className="h-11 rounded-xl"
                 />
                 <Input 
                   placeholder="Birim (adet, ml)" 
                   value={form.unit} 
+                  name="inventory_unit"
                   onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))}
                   className="h-11 rounded-xl"
                 />
@@ -144,6 +170,7 @@ export function InventoryPage() {
                     type="number" 
                     min={0} 
                     value={form.currentStock} 
+                    name="inventory_current_stock"
                     onChange={(e) => setForm((prev) => ({ ...prev, currentStock: Number(e.target.value) }))}
                     className="h-11 rounded-xl"
                   />
@@ -154,6 +181,7 @@ export function InventoryPage() {
                     type="number" 
                     min={0} 
                     value={form.minStock} 
+                    name="inventory_min_stock"
                     onChange={(e) => setForm((prev) => ({ ...prev, minStock: Number(e.target.value) }))}
                     className="h-11 rounded-xl"
                   />
@@ -219,6 +247,9 @@ export function InventoryPage() {
                           size="sm" 
                           className="h-10 w-10 p-0 rounded-xl border-border bg-card text-foreground shadow-sm active:scale-90"
                           onClick={() => void adjust(item.id, 'OUT')}
+                          aria-label={`${item.name} stok azalt`}
+                          title="Stok azalt"
+                          disabled={adjustingItemId === item.id}
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
@@ -227,6 +258,9 @@ export function InventoryPage() {
                           size="sm" 
                           className="h-10 w-10 p-0 rounded-xl border-border bg-card text-foreground shadow-sm active:scale-90"
                           onClick={() => void adjust(item.id, 'IN')}
+                          aria-label={`${item.name} stok artır`}
+                          title="Stok artır"
+                          disabled={adjustingItemId === item.id}
                         >
                           <Plus className="w-4 h-4" />
                         </Button>

@@ -2,12 +2,7 @@
 import {
   ChevronRight,
   CircleHelp,
-  Building2,
-  Briefcase,
-  Users,
-  Package,
-  Boxes,
-  CalendarRange
+  Building2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNavigator } from '../context/NavigatorContext';
@@ -64,108 +59,6 @@ export function SalonSetupPage() {
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </div>
       </button>
-
-      <div className="pt-1">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-1 mb-2">
-          Diğer Menüler
-        </p>
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => navigate('/app/services', { state: { navDirection: 'forward', from: '/app/salon-info' } })}
-            className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.98] transition-all"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/10 flex items-center justify-center shrink-0">
-                  <Briefcase className="h-5 w-5 text-[var(--rose-gold)]" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold leading-none mb-1.5">Hizmet Yönetimi</p>
-                  <p className="text-xs text-muted-foreground leading-tight">Salon hizmetlerini düzenleyin</p>
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/app/staff', { state: { navDirection: 'forward', from: '/app/salon-info' } })}
-            className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.98] transition-all"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/10 flex items-center justify-center shrink-0">
-                  <Users className="h-5 w-5 text-[var(--deep-indigo)]" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold leading-none mb-1.5">Personel Yönetimi</p>
-                  <p className="text-xs text-muted-foreground leading-tight">Çalışan bilgilerini yönetin</p>
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/app/packages', { state: { navDirection: 'forward', from: '/app/salon-info' } })}
-            className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.98] transition-all"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/10 flex items-center justify-center shrink-0">
-                  <Package className="h-5 w-5 text-[var(--rose-gold)]" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold leading-none mb-1.5">Paket Yönetimi</p>
-                  <p className="text-xs text-muted-foreground leading-tight">Paket ve kampanya paketlerini düzenleyin</p>
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/app/inventory', { state: { navDirection: 'forward', from: '/app/salon-info' } })}
-            className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.98] transition-all"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-[var(--deep-indigo)]/10 flex items-center justify-center shrink-0">
-                  <Boxes className="h-5 w-5 text-[var(--deep-indigo)]" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold leading-none mb-1.5">Envanter</p>
-                  <p className="text-xs text-muted-foreground leading-tight">Stok ve ürün takibini yönetin</p>
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/app/time-off-management', { state: { navDirection: 'forward', from: '/app/salon-info' } })}
-            className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.98] transition-all"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-[var(--rose-gold)]/10 flex items-center justify-center shrink-0">
-                  <CalendarRange className="h-5 w-5 text-[var(--rose-gold)]" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold leading-none mb-1.5">Tatil ve İzin Yönetimi</p>
-                  <p className="text-xs text-muted-foreground leading-tight">Salon tatilleri ve personel izinleri</p>
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

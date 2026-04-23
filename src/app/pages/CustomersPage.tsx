@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Search, UserPlus, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, type ReactNode } from 'react';
+import { CalendarX2, Search, TriangleAlert, UserPlus, UserRoundX, X } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToasts } from '../context/ToastContext';
 import { FloatingLabelInput } from '../components/ui/FloatingLabelInput';
@@ -135,6 +135,7 @@ interface CustomersListSnapshot {
 
 type ValidityWindow = '1m' | '3m' | '6m' | '1y' | 'unlimited';
 type AttendanceRangeKey = '0_3' | '4_5' | '6_7' | '8_9' | '10_plus';
+type RiskCenterSection = 'blacklist' | 'attendance';
 type AttendancePenaltyAction =
   'normal' |
   'simple_warning' |
@@ -179,6 +180,8 @@ const VALIDITY_OPTIONS: Array<{ value: ValidityWindow; label: string; }> = [
   { value: '6m', label: '6 ay' },
   { value: '1y', label: '1 yıl' },
   { value: 'unlimited', label: 'Sınırsız' }];
+
+const HOUR_THRESHOLD_OPTIONS = [1, 2, 3, 6, 12, 24, 48, 72];
 
 const DEFAULT_ATTENDANCE_CONFIG: AttendanceConfig = {
   countMissedAppointments: true,
@@ -278,8 +281,70 @@ function normalizeRiskPolicy(policy: unknown): CustomerRiskPolicy {
   };
 }
 
+function ToggleButton({
+  checked,
+  onClick,
+  disabled,
+  ariaLabel
+}: {
+  checked: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      className={`relative h-6 w-11 rounded-full transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0 ${
+        checked ? 'bg-[var(--rose-gold)]' : 'bg-muted'
+      }`}>
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full transition-all duration-200 ${
+          checked ? 'left-[22px] bg-white' : 'left-[2px] bg-white'
+        }`}
+      />
+    </button>
+  );
+}
+
+function OptionRow({
+  icon,
+  title,
+  description,
+  checked,
+  onToggle,
+  children
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  checked: boolean;
+  onToggle: () => void;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-border p-3 bg-muted/20">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex items-start gap-3">
+          <div className="mt-0.5 text-muted-foreground">{icon}</div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{title}</p>
+            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          </div>
+        </div>
+        <ToggleButton checked={checked} onClick={onToggle} ariaLabel={title} />
+      </div>
+      {children ? <div className="mt-3 border-t border-border pt-3">{children}</div> : null}
+    </div>
+  );
+}
+
 export function CustomersPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { apiFetch } = useAuth();
   const { showToast } = useToasts();
   const [initialListSnapshot] = useState<CustomersListSnapshot | null>(
@@ -325,7 +390,8 @@ export function CustomersPage() {
   const [riskPolicyLoading, setRiskPolicyLoading] = useState(true);
   const [riskPolicySaving, setRiskPolicySaving] = useState(false);
   const [riskPolicyError, setRiskPolicyError] = useState<string | null>(null);
-  const [showRiskCenter, setShowRiskCenter] = useState(false);
+  const [riskCenterOpen, setRiskCenterOpen] = useState(false);
+  const [riskCenterSection, setRiskCenterSection] = useState<RiskCenterSection>('attendance');
   const [banStatus, setBanStatus] = useState<BlacklistCheckResponse | null>(null);
   const [banLoading, setBanLoading] = useState(false);
   const [banSaving, setBanSaving] = useState(false);
@@ -347,6 +413,23 @@ export function CustomersPage() {
   const [packageAdjustReason, setPackageAdjustReason] = useState('');
   const [packageAdjusting, setPackageAdjusting] = useState(false);
 
+  const closeCreatePanel = () => {
+    setShowCreateForm(false);
+    if (location.pathname === '/app/customers/new') {
+      navigate('/app/customers', { replace: true, state: { navDirection: 'back' } });
+    }
+  };
+
+  useEffect(() => {
+    if (location.pathname === '/app/customers/new') {
+      setShowCreateForm(true);
+      return;
+    }
+    if (location.pathname === '/app/customers') {
+      setShowCreateForm(false);
+    }
+  }, [location.pathname]);
+
   const loadPage = async (nextCursor?: string | null, search?: string) => {
     const query = new URLSearchParams({ limit: String(PAGE_LIMIT) });
     if (nextCursor) {
@@ -367,7 +450,7 @@ export function CustomersPage() {
       const response = await apiFetch<CustomerRiskPolicyResponse>('/api/admin/customer-risk-policy');
       setRiskPolicy(normalizeRiskPolicy(response.policy));
     } catch (err: any) {
-      setRiskPolicyError(err?.message || 'No-show policy alınamadı.');
+      setRiskPolicyError(err?.message || 'Randevu ihlali politikası alınamadı.');
     } finally {
       setRiskPolicyLoading(false);
     }
@@ -391,6 +474,49 @@ export function CustomersPage() {
     } finally {
       setRiskPolicySaving(false);
     }
+  };
+
+  const updateAttendanceConfig = (updater: (config: AttendanceConfig) => AttendanceConfig) => {
+    setRiskPolicy((prev) => ({
+      ...prev,
+      attendanceConfig: updater(prev.attendanceConfig)
+    }));
+  };
+
+  const toggleAttendanceRule = (
+    key: 'countMissedAppointments' | 'countLateCancellations' | 'countLateReschedules'
+  ) => {
+    updateAttendanceConfig((config) => ({
+      ...config,
+      [key]: !config[key]
+    }));
+  };
+
+  const setAttendanceHourThreshold = (
+    key: 'lateCancellationHours' | 'lateRescheduleHours',
+    value: string
+  ) => {
+    updateAttendanceConfig((config) => ({
+      ...config,
+      [key]: Math.max(1, Number(value) || 1)
+    }));
+  };
+
+  const setAttendanceValidity = (value: string) => {
+    updateAttendanceConfig((config) => ({
+      ...config,
+      validityWindow: value as ValidityWindow
+    }));
+  };
+
+  const setPenaltyAction = (rangeKey: AttendanceRangeKey, value: string) => {
+    updateAttendanceConfig((config) => ({
+      ...config,
+      penaltyPolicy: {
+        ...config.penaltyPolicy,
+        [rangeKey]: value as AttendancePenaltyAction
+      }
+    }));
   };
 
   const loadSelectedCustomerBan = async (customerId: number, phone?: string | null, instagram?: string | null) => {
@@ -455,10 +581,6 @@ export function CustomersPage() {
       mounted = false;
     };
   }, [searchQuery]);
-
-  useEffect(() => {
-    void loadRiskPolicy();
-  }, []);
 
   const handleLoadMore = async () => {
     if (!cursor || loadingMore) {
@@ -535,7 +657,7 @@ export function CustomersPage() {
       setInstagram('');
       setBirthDate('');
       setAcceptMarketing(false);
-      setShowCreateForm(false);
+      closeCreatePanel();
       showToast(`${name.trim()} müşterisi başarıyla oluşturuldu.`, 'success');
       setName('');
     } finally {
@@ -856,7 +978,7 @@ export function CustomersPage() {
             customerId: selectedCustomer.customer.id,
             phone: selectedCustomer.customer.phone,
             fullName: selectedCustomer.customer.name || null,
-            reason: banReasonInput.trim() || 'Manual ban from customer profile'
+            reason: banReasonInput.trim() || 'Müşteri profilinden manuel yasaklama'
           })
         });
         await loadSelectedCustomerBan(
@@ -973,35 +1095,29 @@ export function CustomersPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Müşteriler</h1>
-        <p className="text-xs text-muted-foreground">Profil, ban ve risk takibi</p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium">Risk Merkezi</p>
-            <p className="text-xs text-muted-foreground">
-              Kara liste ve randevu ihlali ayarları bu panelden yönetilir.
-            </p>
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Search className="h-4 w-4" />
           </div>
-          <button
-            type="button"
-            onClick={() => setShowRiskCenter(true)}
-            className="min-h-11 rounded-md border border-border px-4 py-2 text-sm font-medium hover:border-[var(--rose-gold)]/40 transition-colors">
-            Risk & Yasaklama
-          </button>
+          <input
+            className="w-full rounded-xl border border-border bg-input-background pl-10 pr-3 py-3 text-sm focus:ring-4 focus:ring-input-focus focus:border-primary transition-all"
+            placeholder="Ad, telefon veya Instagram..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)} />
         </div>
-      </div>
-
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-          <Search className="h-4 w-4" />
-        </div>
-        <input
-          className="w-full rounded-xl border border-border bg-input-background pl-10 pr-3 py-3 text-sm focus:ring-4 focus:ring-input-focus focus:border-primary transition-all"
-          placeholder="Ad, telefon veya Instagram..."
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)} />
+        <button
+          type="button"
+          onClick={() =>
+            navigate('/app/customers/risk-menu', {
+              state: { navDirection: 'forward', from: '/app/customers' }
+            })
+          }
+          className="shrink-0 min-h-11 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5">
+          Risk Merkezi
+        </button>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-3 space-y-2">
@@ -1009,63 +1125,18 @@ export function CustomersPage() {
           <p className="text-sm font-medium">Yeni Müşteri</p>
           <button
             type="button"
-            onClick={() => setShowCreateForm((prev) => !prev)}
+            onClick={() =>
+              navigate('/app/customers/new', {
+                state: { navDirection: 'forward', from: '/app/customers' }
+              })
+            }
             className="rounded-md border border-border px-3 py-1.5 text-xs">
-
-            {showCreateForm ? 'Kapat' : "Müşteri Ekle"}
+            Müşteri Ekle
           </button>
         </div>
-
-        {showCreateForm ?
-          <div className="space-y-4 pt-2">
-            <FloatingLabelInput
-              id="cust-name"
-              label="Ad Soyad"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <FloatingLabelInput
-              id="cust-phone"
-              label="Telefon"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
-            <FloatingLabelInput
-              id="cust-ig"
-              label="Instagram"
-              value={instagram}
-              onChange={(e) => setInstagram(e.target.value)}
-            />
-            <div className="space-y-1.5">
-              <label htmlFor="cust-birth" className="text-xs font-medium text-muted-foreground ml-1">Doğum Tarihi</label>
-              <input
-                id="cust-birth"
-                type="date"
-                className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-sm focus:ring-4 focus:ring-input-focus focus:border-primary transition-all"
-                value={birthDate}
-                onChange={(event) => setBirthDate(event.target.value)} />
-            </div>
-
-            <label className="flex items-center gap-2 text-sm rounded-md border border-border px-3 py-2">
-              <input
-                type="checkbox"
-                checked={acceptMarketing}
-                onChange={(event) => setAcceptMarketing(event.target.checked)} />
-
-              Kampanya iletişim izni
-            </label>
-            <button
-              type="button"
-              onClick={() => void handleCreate()}
-              disabled={creating}
-              className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">
-
-              {creating ? "Ekleniyor..." : "Müşteriyi Kaydet"}
-            </button>
-          </div> :
-          null}
+        <p className="text-xs text-muted-foreground">
+          Yeni müşteri ekleme formu ayrı bir panelde açılır.
+        </p>
       </div>
 
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
@@ -1099,7 +1170,11 @@ export function CustomersPage() {
             title="Müşteri Bulunamadı" 
             description={searchQuery.trim() ? "Arama kriterine uygun müşteri bulunamadı." : "Henüz bir müşteriniz yok. İlk müşterinizi ekleyerek başlayın."}
             actionLabel={!searchQuery.trim() ? "Yeni Müşteri Ekle" : undefined}
-            onAction={() => setShowCreateForm(true)}
+            onAction={() =>
+              navigate('/app/customers/new', {
+                state: { navDirection: 'forward', from: '/app/customers' }
+              })
+            }
           />
         </div>
       ) : null}
@@ -1115,280 +1190,76 @@ export function CustomersPage() {
         </button> :
         null}
 
-      {showRiskCenter ?
-        <div className="fixed inset-0 z-[58] bg-black/40 backdrop-blur-[1px] flex items-end">
-          <div className="w-full max-h-[88vh] overflow-y-auto rounded-t-2xl bg-background border-t border-border p-4 pb-24 space-y-4">
+      {showCreateForm ? (
+        <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-[1px] flex items-end" onClick={closeCreatePanel}>
+          <div
+            className="w-full max-h-[88vh] overflow-y-auto rounded-t-2xl bg-background border-t border-border p-4 pb-10 space-y-4"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Risk Merkezi</h2>
+              <h2 className="text-lg font-semibold">Yeni Müşteri Ekle</h2>
               <button
                 type="button"
+                onClick={closeCreatePanel}
                 className="h-8 w-8 grid place-items-center rounded-md border border-border"
-                onClick={() => setShowRiskCenter(false)}>
+                aria-label="Paneli kapat"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-2">
-              <button
-                type="button"
-                onClick={() => navigate('/app/blacklist')}
-                className="min-h-11 rounded-md border border-border px-3 py-2 text-sm text-left hover:border-[var(--rose-gold)]/40 transition-colors">
-                Kara Liste Kayıtları
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/app/automations?section=attendance')}
-                className="min-h-11 rounded-md border border-border px-3 py-2 text-sm text-left hover:border-[var(--rose-gold)]/40 transition-colors">
-                Randevu İhlali Akışı
-              </button>
-            </div>
+            <div className="space-y-4">
+              <FloatingLabelInput
+                id="cust-name"
+                label="Ad Soyad"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <FloatingLabelInput
+                id="cust-phone"
+                label="Telefon"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+              <FloatingLabelInput
+                id="cust-ig"
+                label="Instagram"
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+              />
+              <div className="space-y-1.5">
+                <label htmlFor="cust-birth" className="text-xs font-medium text-muted-foreground ml-1">Doğum Tarihi</label>
+                <input
+                  id="cust-birth"
+                  type="date"
+                  className="w-full rounded-xl border border-border bg-input-background px-4 py-3 text-sm focus:ring-4 focus:ring-input-focus focus:border-primary transition-all"
+                  value={birthDate}
+                  onChange={(event) => setBirthDate(event.target.value)}
+                />
+              </div>
 
-            <div className="rounded-lg border border-border p-3 space-y-3">
-              <p className="text-sm font-medium">Ban Politikası</p>
-              <label className="flex items-center justify-between gap-3 text-sm">
-                <span>No-show eşiğinde otomatik yasakla</span>
+              <label className="flex items-center gap-2 text-sm rounded-md border border-border px-3 py-2">
                 <input
                   type="checkbox"
-                  checked={riskPolicy.autoBanEnabled}
-                  disabled={riskPolicySaving || riskPolicyLoading}
-                  onChange={(event) => setRiskPolicy((prev) => ({ ...prev, autoBanEnabled: event.target.checked }))}
+                  checked={acceptMarketing}
+                  onChange={(event) => setAcceptMarketing(event.target.checked)}
                 />
+                Kampanya iletişim izni
               </label>
-              <label className="flex items-center justify-between gap-3 text-sm">
-                <span>No-show eşiği</span>
-                <input
-                  type="number"
-                  min={1}
-                  className="w-24 rounded-md border border-border bg-input-background px-2 py-1 text-sm"
-                  value={riskPolicy.noShowThreshold}
-                  disabled={riskPolicySaving || riskPolicyLoading}
-                  onChange={(event) =>
-                    setRiskPolicy((prev) => ({
-                      ...prev,
-                      noShowThreshold: Math.max(1, Number(event.target.value) || 1)
-                    }))}
-                />
-              </label>
-              <label className="flex items-center justify-between gap-3 text-sm">
-                <span>Banlı müşteriyi her kanalda blokla</span>
-                <input
-                  type="checkbox"
-                  checked={riskPolicy.blockBookingWhenBanned}
-                  disabled={riskPolicySaving || riskPolicyLoading}
-                  onChange={(event) =>
-                    setRiskPolicy((prev) => ({ ...prev, blockBookingWhenBanned: event.target.checked }))}
-                />
-              </label>
+              <button
+                type="button"
+                onClick={() => void handleCreate()}
+                disabled={creating}
+                className="w-full rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60"
+              >
+                {creating ? "Ekleniyor..." : "Müşteriyi Kaydet"}
+              </button>
             </div>
-
-            <div className="rounded-lg border border-border p-3 space-y-3">
-              <p className="text-sm font-medium">Randevu İhlali Konfigürasyonu</p>
-              <p className="text-xs text-muted-foreground">
-                Esnek model: sayım tipleri, süre penceresi, bildirim olayları ve ceza matrisi.
-              </p>
-
-              <div className="grid grid-cols-1 gap-2 text-sm">
-                <label className="flex items-center justify-between gap-3">
-                  <span>Gelmedi say</span>
-                  <input
-                    type="checkbox"
-                    checked={riskPolicy.attendanceConfig.countMissedAppointments}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          countMissedAppointments: event.target.checked
-                        }
-                      }))}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3">
-                  <span>Geç iptal say</span>
-                  <input
-                    type="checkbox"
-                    checked={riskPolicy.attendanceConfig.countLateCancellations}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          countLateCancellations: event.target.checked
-                        }
-                      }))}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3">
-                  <span>Geç iptal saat eşiği</span>
-                  <input
-                    type="number"
-                    min={1}
-                    className="w-24 rounded-md border border-border bg-input-background px-2 py-1 text-sm"
-                    value={riskPolicy.attendanceConfig.lateCancellationHours}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          lateCancellationHours: Math.max(1, Number(event.target.value) || 1)
-                        }
-                      }))}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3">
-                  <span>Geç erteleme say</span>
-                  <input
-                    type="checkbox"
-                    checked={riskPolicy.attendanceConfig.countLateReschedules}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          countLateReschedules: event.target.checked
-                        }
-                      }))}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3">
-                  <span>Geç erteleme saat eşiği</span>
-                  <input
-                    type="number"
-                    min={1}
-                    className="w-24 rounded-md border border-border bg-input-background px-2 py-1 text-sm"
-                    value={riskPolicy.attendanceConfig.lateRescheduleHours}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          lateRescheduleHours: Math.max(1, Number(event.target.value) || 1)
-                        }
-                      }))}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3">
-                  <span>Geçerlilik penceresi</span>
-                  <select
-                    className="h-9 rounded-md border border-border bg-input-background px-2 text-sm"
-                    value={riskPolicy.attendanceConfig.validityWindow}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          validityWindow: event.target.value as ValidityWindow
-                        }
-                      }))}>
-                    {VALIDITY_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <div className="rounded-md border border-border p-2.5 space-y-2">
-                <p className="text-xs font-medium">Bildirim Olayları</p>
-                <label className="flex items-center justify-between gap-3 text-sm">
-                  <span>Gelmedi bildirimi</span>
-                  <input
-                    type="checkbox"
-                    checked={riskPolicy.attendanceConfig.notificationEvents.missedAppointments}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          notificationEvents: {
-                            ...prev.attendanceConfig.notificationEvents,
-                            missedAppointments: event.target.checked
-                          }
-                        }
-                      }))}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3 text-sm">
-                  <span>Geç iptal bildirimi</span>
-                  <input
-                    type="checkbox"
-                    checked={riskPolicy.attendanceConfig.notificationEvents.lateCancellations}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          notificationEvents: {
-                            ...prev.attendanceConfig.notificationEvents,
-                            lateCancellations: event.target.checked
-                          }
-                        }
-                      }))}
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3 text-sm">
-                  <span>Geç erteleme bildirimi</span>
-                  <input
-                    type="checkbox"
-                    checked={riskPolicy.attendanceConfig.notificationEvents.lateReschedules}
-                    onChange={(event) =>
-                      setRiskPolicy((prev) => ({
-                        ...prev,
-                        attendanceConfig: {
-                          ...prev.attendanceConfig,
-                          notificationEvents: {
-                            ...prev.attendanceConfig.notificationEvents,
-                            lateReschedules: event.target.checked
-                          }
-                        }
-                      }))}
-                  />
-                </label>
-              </div>
-
-              <div className="rounded-md border border-border p-2.5 space-y-2">
-                <p className="text-xs font-medium">Ceza Matrisi</p>
-                {ATTENDANCE_RANGES.map((range) => (
-                  <label key={range.key} className="flex items-center justify-between gap-3 text-sm">
-                    <span>{range.label} ihlal</span>
-                    <select
-                      className="h-9 rounded-md border border-border bg-input-background px-2 text-sm"
-                      value={riskPolicy.attendanceConfig.penaltyPolicy[range.key]}
-                      onChange={(event) =>
-                        setRiskPolicy((prev) => ({
-                          ...prev,
-                          attendanceConfig: {
-                            ...prev.attendanceConfig,
-                            penaltyPolicy: {
-                              ...prev.attendanceConfig.penaltyPolicy,
-                              [range.key]: event.target.value as AttendancePenaltyAction
-                            }
-                          }
-                        }))}>
-                      {PENALTY_ACTION_OPTIONS.map((action) => (
-                        <option key={action.value} value={action.value}>
-                          {action.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {riskPolicyLoading ? <p className="text-xs text-muted-foreground">Politika yükleniyor...</p> : null}
-            {riskPolicyError ? <p className="text-xs text-red-500">{riskPolicyError}</p> : null}
-            <button
-              type="button"
-              onClick={() => void saveRiskPolicy(riskPolicy)}
-              disabled={riskPolicySaving || riskPolicyLoading}
-              className="w-full min-h-11 rounded-md bg-[var(--rose-gold)] px-4 py-2 text-sm text-white disabled:opacity-60">
-              {riskPolicySaving ? 'Kaydediliyor...' : 'Risk Ayarlarını Kaydet'}
-            </button>
           </div>
-        </div> :
-        null}
+        </div>
+      ) : null}
 
       {detailLoading || detailError || selectedCustomer ?
         <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[1px] flex items-end">
@@ -1590,7 +1461,7 @@ export function CustomersPage() {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Banlı müşteri WhatsApp, Instagram veya kayıtlı profil ile randevu alamaz.
+                    Yasaklı müşteri WhatsApp, Instagram veya kayıtlı profil ile randevu alamaz.
                   </p>
                   {!banStatus?.blocked ? (
                     <input

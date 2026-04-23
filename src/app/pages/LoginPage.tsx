@@ -12,7 +12,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      navigate('/app/dashboard', { replace: true });
+      navigate('/app/schedule', { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 
@@ -23,7 +23,7 @@ export function LoginPage() {
 
     try {
       await login(email, password);
-      navigate('/app/dashboard', { replace: true });
+      navigate('/app/schedule', { replace: true });
     } catch (err: any) {
       setError(err?.message || "Giriş başarısız.");
     } finally {

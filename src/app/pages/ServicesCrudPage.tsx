@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronUp, ListOrdered, P
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNavigator } from '../context/NavigatorContext';
+import { useToasts } from '../context/ToastContext';
 
 interface ServiceItem {
   id: number;
@@ -148,12 +149,14 @@ function formatGenderLabel(genders?: string[] | null) {
 export function ServicesCrudPage() {
   const { apiFetch } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToasts();
 
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [groups, setGroups] = useState<ServiceGroupItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const [expandedCategories, setExpandedCategories] = useState<Record<number, boolean>>({});
 
@@ -421,6 +424,7 @@ export function ServicesCrudPage() {
 
     setSaving(true);
     setError(null);
+    setSuccess(null);
 
     const category = categories.find((item) => item.id === categoryId);
     const genders: string[] = [];
@@ -451,12 +455,16 @@ export function ServicesCrudPage() {
           body: JSON.stringify(payload)
         });
         setServices((prev) => prev.map((item) => item.id === editingService.id ? response.item : item));
+        showToast('Hizmet güncellendi.', 'success');
+        setSuccess('Hizmet güncellendi.');
       } else {
         const response = await apiFetch<{ item: ServiceItem; }>('/api/admin/services', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
         setServices((prev) => [response.item, ...prev]);
+        showToast('Hizmet eklendi.', 'success');
+        setSuccess('Hizmet eklendi.');
       }
 
       // Keep category-level defaults in sync with service-level numeric settings when provided.
@@ -493,6 +501,7 @@ export function ServicesCrudPage() {
       await load();
     } catch (err: any) {
       setError(err?.message || "Hizmet kaydedilemedi.");
+      showToast('Hizmet kaydedilemedi.', 'error');
     } finally {
       setSaving(false);
     }
@@ -526,6 +535,7 @@ export function ServicesCrudPage() {
 
     setSaving(true);
     setError(null);
+    setSuccess(null);
 
     try {
       await apiFetch(`/api/admin/service-categories/${editingCategory.id}`, {
@@ -535,9 +545,12 @@ export function ServicesCrudPage() {
 
       setCategoryDialogOpen(false);
       setEditingCategory(null);
+      showToast('Kategori ayarları güncellendi.', 'success');
+      setSuccess('Kategori ayarları güncellendi.');
       await load();
     } catch (err: any) {
       setError(err?.message || "Kategori ayarları kaydedilemedi.");
+      showToast('Kategori ayarları kaydedilemedi.', 'error');
     } finally {
       setSaving(false);
     }
@@ -556,6 +569,7 @@ export function ServicesCrudPage() {
 
     setSaving(true);
     setError(null);
+    setSuccess(null);
 
     try {
       await apiFetch(`/api/admin/service-categories/${editingCategoryFaq.id}`, {
@@ -565,9 +579,12 @@ export function ServicesCrudPage() {
 
       setCategoryFaqDialogOpen(false);
       setEditingCategoryFaq(null);
+      showToast('Kategori sık soruları kaydedildi.', 'success');
+      setSuccess('Kategori sık soruları kaydedildi.');
       await load();
     } catch (err: any) {
       setError(err?.message || 'Kategori SSS kaydedilemedi.');
+      showToast('Kategori SSS kaydedilemedi.', 'error');
     } finally {
       setSaving(false);
     }
@@ -586,8 +603,11 @@ export function ServicesCrudPage() {
         method: 'POST',
         body: JSON.stringify({ orderedIds: next.map((item) => item.id) })
       });
+      showToast('Kategori sıralaması güncellendi.', 'success');
+      setSuccess('Kategori sıralaması güncellendi.');
     } catch (err: any) {
       setError(err?.message || "Kategori sırası kaydedilemedi.");
+      showToast('Kategori sırası kaydedilemedi.', 'error');
       await load();
     }
   };
@@ -613,8 +633,11 @@ export function ServicesCrudPage() {
     try {
       await apiFetch(`/api/admin/services/${item.id}`, { method: 'DELETE' });
       setServices((prev) => prev.filter((entry) => entry.id !== item.id));
+      showToast('Hizmet silindi.', 'success');
+      setSuccess('Hizmet silindi.');
     } catch (err: any) {
       setError(err?.message || "Hizmet silinemedi.");
+      showToast('Hizmet silinemedi.', 'error');
     }
   };
 
@@ -663,6 +686,7 @@ export function ServicesCrudPage() {
 
     setSaving(true);
     setError(null);
+    setSuccess(null);
 
     const payload = {
       name: groupForm.name.trim(),
@@ -678,11 +702,15 @@ export function ServicesCrudPage() {
           method: 'PUT',
           body: JSON.stringify(payload)
         });
+        showToast('Grup güncellendi.', 'success');
+        setSuccess('Grup güncellendi.');
       } else {
         await apiFetch('/api/admin/service-groups', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
+        showToast('Grup oluşturuldu.', 'success');
+        setSuccess('Grup oluşturuldu.');
       }
 
       setGroupDialogOpen(false);
@@ -690,6 +718,7 @@ export function ServicesCrudPage() {
       await load();
     } catch (err: any) {
       setError(err?.message || 'Grup kaydedilemedi.');
+      showToast('Grup kaydedilemedi.', 'error');
     } finally {
       setSaving(false);
     }
@@ -708,8 +737,11 @@ export function ServicesCrudPage() {
         method: 'POST',
         body: JSON.stringify({ orderedIds: next.map((item) => item.id) })
       });
+      showToast('Grup sıralaması güncellendi.', 'success');
+      setSuccess('Grup sıralaması güncellendi.');
     } catch (err: any) {
       setError(err?.message || "Grup sırası kaydedilemedi.");
+      showToast('Grup sırası kaydedilemedi.', 'error');
       await load();
     }
   };
@@ -721,8 +753,11 @@ export function ServicesCrudPage() {
         body: JSON.stringify({ isActive: next })
       });
       setCategories((prev) => prev.map((item) => item.id === category.id ? { ...item, isActive: next } : item));
+      showToast(next ? 'Kategori aktif edildi.' : 'Kategori pasif edildi.', 'success');
+      setSuccess(next ? 'Kategori aktif edildi.' : 'Kategori pasif edildi.');
     } catch (err: any) {
       setError(err?.message || "Kategori durumu güncellenemedi.");
+      showToast('Kategori durumu güncellenemedi.', 'error');
     }
   };
 
@@ -733,8 +768,11 @@ export function ServicesCrudPage() {
         body: JSON.stringify({ isActive: next })
       });
       setServices((prev) => prev.map((row) => row.id === item.id ? { ...row, isActive: next } : row));
+      showToast(next ? 'Hizmet aktif edildi.' : 'Hizmet pasif edildi.', 'success');
+      setSuccess(next ? 'Hizmet aktif edildi.' : 'Hizmet pasif edildi.');
     } catch (err: any) {
       setError(err?.message || 'Hizmet durumu güncellenemedi.');
+      showToast('Hizmet durumu güncellenemedi.', 'error');
     }
   };
 
@@ -745,15 +783,19 @@ export function ServicesCrudPage() {
         body: JSON.stringify({ isActive: next })
       });
       setGroups((prev) => prev.map((item) => item.id === group.id ? { ...item, isActive: next } : item));
+      showToast(next ? 'Grup aktif edildi.' : 'Grup pasif edildi.', 'success');
+      setSuccess(next ? 'Grup aktif edildi.' : 'Grup pasif edildi.');
     } catch (err: any) {
       setError(err?.message || 'Grup durumu güncellenemedi.');
+      showToast('Grup durumu güncellenemedi.', 'error');
     }
   };
   return (
     <div className="pb-20 space-y-4">
 
 
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {error ? <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{error}</div> : null}
+      {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm">{success}</div> : null}
       {loading ? <p className="text-sm text-muted-foreground">Yükleniyor...</p> : null}
 
       {!loading ?
@@ -768,7 +810,9 @@ export function ServicesCrudPage() {
                   <button
                     type="button"
                     onClick={() => toggleCategory(category.id)}
-                    className="h-7 w-7 grid place-items-center rounded-md hover:bg-muted">
+                    className="h-7 w-7 grid place-items-center rounded-md hover:bg-muted"
+                    aria-label={expanded ? `${category.name} kategorisini daralt` : `${category.name} kategorisini genişlet`}
+                    title={expanded ? 'Daralt' : 'Genişlet'}>
 
                     {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
@@ -789,6 +833,7 @@ export function ServicesCrudPage() {
                       type="button"
                       onClick={() => openCategoryFaq(category)}
                       className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                      aria-label={`${category.name} kategori sık sorularını düzenle`}
                       title="Kategori Sık Sorular">
 
                       <HelpCircle className="h-4 w-4" />
@@ -803,6 +848,7 @@ export function ServicesCrudPage() {
                       type="button"
                       onClick={() => openCategorySettings(category)}
                       className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+                      aria-label={`${category.name} kategori ayarlarını aç`}
                       title="Kategori ayarları">
 
                       <Settings2 className="h-4 w-4" />
@@ -849,9 +895,11 @@ export function ServicesCrudPage() {
                             onToggle={(next) => void toggleServiceActive(item, next)} />
 
                           <button type="button" onClick={() => openEditService(item)} className="h-8 w-8 grid place-items-center text-muted-foreground hover:text-foreground">
+                            <span className="sr-only">{item.name} hizmetini düzenle</span>
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button type="button" onClick={() => void deleteService(item)} className="h-8 w-8 grid place-items-center text-red-500 hover:text-red-600">
+                            <span className="sr-only">{item.name} hizmetini sil</span>
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -866,8 +914,8 @@ export function ServicesCrudPage() {
         null}
 
       {serviceDialogOpen ?
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
-          <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-40 bg-black/35 p-3 sm:p-4 flex items-end">
+          <div className="mx-auto w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{editingService ? "Hizmeti Düzenle" : "Yeni Hizmet Ekle"}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
@@ -1121,8 +1169,8 @@ export function ServicesCrudPage() {
         null}
 
       {categoryDialogOpen && editingCategory ?
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
-          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-40 bg-black/35 p-3 sm:p-4 flex items-end">
+          <div className="mx-auto w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Ayarları · {editingCategory.name}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
@@ -1257,8 +1305,8 @@ export function ServicesCrudPage() {
         null}
 
       {categoryFaqDialogOpen && editingCategoryFaq ?
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
-          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-40 bg-black/35 p-3 sm:p-4 flex items-end">
+          <div className="mx-auto w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Sık Sorular · {editingCategoryFaq.name}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
@@ -1314,8 +1362,8 @@ export function ServicesCrudPage() {
         null}
 
       {categoryOrderDialogOpen ?
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
-          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-40 bg-black/35 p-3 sm:p-4 flex items-end">
+          <div className="mx-auto w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Kategori Sıralama</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>
@@ -1353,8 +1401,8 @@ export function ServicesCrudPage() {
         null}
 
       {groupManagerOpen ?
-        <div className="fixed inset-0 z-40 bg-black/35 p-4">
-          <div className="mx-auto mt-8 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-40 bg-black/35 p-3 sm:p-4 flex items-end">
+          <div className="mx-auto w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Hizmet Grupları</h2>
               <button type="button" onClick={() => setGroupManagerOpen(false)} className="text-sm text-muted-foreground">Kapat</button>
@@ -1419,8 +1467,8 @@ export function ServicesCrudPage() {
         null}
 
       {groupDialogOpen ?
-        <div className="fixed inset-0 z-50 bg-black/35 p-4">
-          <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/35 p-3 sm:p-4 flex items-end">
+          <div className="mx-auto w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{editingGroup ? "Grubu Düzenle" : "Yeni Grup Oluştur"}</h2>
               <button type="button" onClick={closeDialogs} className="text-sm text-muted-foreground">Kapat</button>

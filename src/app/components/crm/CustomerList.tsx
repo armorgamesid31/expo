@@ -66,13 +66,13 @@ export function CustomerList() {
             <p className="text-2xl font-bold text-green-600">
               {customers.filter((c) => c.riskLevel === 'low').length}
             </p>
-            <p className="text-xs text-muted-foreground">Low Risk</p>
+            <p className="text-xs text-muted-foreground">Düşük Risk</p>
           </div>
           <div className="text-center p-3 bg-card rounded-lg border border-border">
             <p className="text-2xl font-bold text-red-600">
               {customers.filter((c) => c.riskLevel === 'high').length}
             </p>
-            <p className="text-xs text-muted-foreground">High Risk</p>
+            <p className="text-xs text-muted-foreground">Yüksek Risk</p>
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function CustomerList() {
                     className={`text-xs ${getRiskBadgeStyle(customer.riskLevel)}`}>
                     
                       {getRiskIcon(customer.riskLevel)}
-                      <span className="ml-1 capitalize">{customer.riskLevel === 'low' ? 'low' : customer.riskLevel === 'medium' ? 'orta' : 'high'}</span>
+                      <span className="ml-1 capitalize">{customer.riskLevel === 'low' ? 'düşük' : customer.riskLevel === 'medium' ? 'orta' : 'yüksek'}</span>
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{customer.phone}</p>
@@ -116,7 +116,7 @@ export function CustomerList() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">No-show</p>
+                  <p className="text-xs text-muted-foreground">Randevu İhlali</p>
                   <p className="text-sm font-semibold">{customer.noShowCount}</p>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export function CustomerList() {
             <div className="mt-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
                   <p className="text-xs text-red-700 dark:text-red-300 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    High risk - Deposit required for booking
+                    Yüksek risk - Randevu için kapora önerilir
                   </p>
                 </div>
             }

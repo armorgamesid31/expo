@@ -62,6 +62,23 @@ function analyticsOverviewCacheKey(fromIso: string, toIso: string): string {
   return `${ANALYTICS_OVERVIEW_CACHE_PREFIX}:${fromIso}:${toIso}`;
 }
 
+function formatDateLabel(value?: string): string {
+  if (!value) return '';
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
+function rangeLabelFromParams(params: { preset: AnalyticsRangePreset; fromDate?: string; toDate?: string; }): string {
+  if (params.preset === 'week') return 'Bu Hafta';
+  if (params.preset === 'month') return 'Bu Ay';
+  if (params.preset === 'last30') return 'Son 30 Gün';
+  const from = formatDateLabel(params.fromDate);
+  const to = formatDateLabel(params.toDate);
+  if (from && to) return `${from} - ${to}`;
+  return 'Özel Aralık';
+}
+
 export function AnalyticsPage() {
   const { apiFetch } = useAuth();
   const defaults = defaultCustomDates();
@@ -74,6 +91,7 @@ export function AnalyticsPage() {
   const [customFromDate, setCustomFromDate] = useState(defaults.fromDate);
   const [customToDate, setCustomToDate] = useState(defaults.toDate);
   const [rangeError, setRangeError] = useState<string | null>(null);
+  const [appliedRangeLabel, setAppliedRangeLabel] = useState('Bu Hafta');
 
   const loadOverview = async (params: { preset: AnalyticsRangePreset; fromDate?: string; toDate?: string; }) => {
     const resolved = resolveAnalyticsRange({
@@ -87,6 +105,8 @@ export function AnalyticsPage() {
       setLoading(false);
       return;
     }
+
+    setAppliedRangeLabel(rangeLabelFromParams(params));
 
     const cacheKey = analyticsOverviewCacheKey(resolved.range.fromIso, resolved.range.toIso);
     const cachedOverview = readSnapshot<AnalyticsResponse>(cacheKey, 1000 * 60 * 60 * 24);
@@ -260,7 +280,7 @@ export function AnalyticsPage() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-base font-semibold flex items-center gap-2 mb-3">
               <span className="h-2 w-2 rounded-full bg-[var(--rose-gold)]" />
-              Salon Nabzı - Bu Hafta
+              Salon Nabzı - {appliedRangeLabel}
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={weeklyPulse}>

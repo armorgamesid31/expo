@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { LayoutDashboard, Calendar, MessagesSquare, Settings } from 'lucide-react';
+import { Calendar, MessagesSquare, Menu, Plus, Users } from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: string;
@@ -8,10 +8,11 @@ interface BottomNavProps {
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
-    { id: 'dashboard', label: 'Ana Sayfa', icon: LayoutDashboard },
     { id: 'schedule', label: 'Randevular', icon: Calendar },
+    { id: 'customers', label: 'Müşteriler', icon: Users },
+    { id: 'create', label: 'Oluştur', icon: Plus },
     { id: 'conversations', label: 'Konuşmalar', icon: MessagesSquare },
-    { id: 'settings', label: "Yönetim", icon: Settings }
+    { id: 'menu', label: 'Menü', icon: Menu }
   ];
 
   return (
@@ -26,10 +27,14 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`relative flex flex-col items-center justify-center gap-1 flex-1 h-full pt-0.5 transition-colors min-w-[60px] ${
-                isActive ? 'text-primary' : 'text-muted-foreground'
+                tab.id === 'create'
+                  ? 'text-white'
+                  : isActive
+                    ? 'text-primary'
+                    : 'text-muted-foreground'
               }`}
             >
-              {isActive && (
+              {isActive && tab.id !== 'create' && (
                 <motion.div
                   layoutId="activeTab"
                   className="absolute -top-[1px] left-1/2 -translate-x-1/2 w-12 h-[2px] bg-primary"
@@ -40,11 +45,12 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               <motion.div
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className={tab.id === 'create' ? 'rounded-full bg-[var(--primary)] p-2.5 shadow-lg shadow-[var(--primary)]/35 -mt-6' : ''}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'fill-primary/10' : ''}`} />
               </motion.div>
               
-              <span className={`text-[10px] font-medium transition-all ${isActive ? 'opacity-100 transform -translate-y-0.5' : 'opacity-70'}`}>
+              <span className={`text-[10px] font-medium transition-all ${tab.id === 'create' ? 'opacity-100 -mt-1' : isActive ? 'opacity-100 transform -translate-y-0.5' : 'opacity-70'}`}>
                 {tab.label}
               </span>
             </button>

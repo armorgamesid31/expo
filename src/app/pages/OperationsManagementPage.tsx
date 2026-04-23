@@ -79,7 +79,11 @@ export function OperationsManagementPage() {
           <button
             key={tool.id}
             type="button"
-            onClick={() => navigate(tool.path, { state: { navDirection: 'forward' } })}
+            onClick={() =>
+              navigate(tool.path, {
+                state: { navDirection: 'forward', from: '/app/operations-management' }
+              })
+            }
             className="w-full rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.98] transition-all"
           >
             <div className="flex items-center justify-between gap-3">

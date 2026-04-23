@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from 'rea
 import { addDays, addMinutes, endOfDay, format, formatISO, startOfDay, subDays } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { Banknote, CalendarDays, CircleHelp, CreditCard, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type {
   AdminAppointmentItem,
@@ -212,6 +213,8 @@ function translateWaitlistStatus(status: string | null | undefined) {
 
 export function SchedulePage() {
   const { apiFetch } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeDate, setActiveDate] = useState<Date>(() => readScheduleSelectedDate());
   const [initialScheduleSnapshot] = useState<ScheduleSnapshot | null>(() => readScheduleSnapshot(activeDate));
   const [isCompactCalendar, setIsCompactCalendar] = useState<boolean>(() => {
@@ -224,6 +227,7 @@ export function SchedulePage() {
     }
     return 'calendar';
   });
+  const [scheduleTab, setScheduleTab] = useState<'calendar' | 'waitlist'>('calendar');
   const [mobileCalendarStaffId, setMobileCalendarStaffId] = useState<number | 'ALL'>('ALL');
 
   const [staff, setStaff] = useState<StaffItem[]>(() => initialScheduleSnapshot?.staff || []);
@@ -648,6 +652,18 @@ export function SchedulePage() {
     }
     setCreateOpen(false);
     setCreateError(null);
+    if (location.pathname === '/app/schedule/new') {
+      navigate('/app/schedule', { replace: true, state: { navDirection: 'back' } });
+    }
+  };
+
+  const closeWaitlistModal = () => {
+    if (waitlistSaving) return;
+    setWaitlistOpen(false);
+    setWaitlistCreateError(null);
+    if (location.pathname === '/app/schedule/waitlist/new') {
+      navigate('/app/schedule', { replace: true, state: { navDirection: 'back' } });
+    }
   };
 
   const handleCustomerSelect = (idValue: string) => {
@@ -737,7 +753,7 @@ export function SchedulePage() {
         })
       });
 
-      setCreateOpen(false);
+      closeCreateModal();
       setSelectedServiceIds([]);
       setSelectedStaffByService({});
       setForm((prev) => ({ ...prev, customerId: '', customerName: '', customerPhone: '', notes: '' }));
@@ -1083,7 +1099,7 @@ export function SchedulePage() {
         })
       });
 
-      setWaitlistOpen(false);
+      closeWaitlistModal();
       await loadWaitlist();
     } catch (err: any) {
       setWaitlistCreateError(err?.message || 'Bekleme listesi kaydı oluşturulamadı.');
@@ -1170,6 +1186,21 @@ export function SchedulePage() {
       };
     });
   };
+
+  useEffect(() => {
+    if (location.pathname === '/app/schedule/new' && !createOpen) {
+      void openCreateModal();
+      return;
+    }
+    if (location.pathname === '/app/schedule/waitlist/new' && !waitlistOpen) {
+      void openWaitlistModal();
+      return;
+    }
+    if (location.pathname === '/app/schedule') {
+      setCreateOpen(false);
+      setWaitlistOpen(false);
+    }
+  }, [createOpen, location.pathname, openCreateModal, openWaitlistModal, waitlistOpen]);
 
   useEffect(() => {
     if (!rescheduleSelection?.date) return;
@@ -1394,21 +1425,19 @@ export function SchedulePage() {
       <div className="inline-flex rounded-lg border border-border bg-card p-1">
         <button
           type="button"
-          onClick={() => setViewMode('calendar')}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-300 ${viewMode === 'calendar' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted font-medium'}`
+          onClick={() => setScheduleTab('calendar')}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-300 ${scheduleTab === 'calendar' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted font-medium'}`
           }>
-
           <CalendarDays className="h-3.5 w-3.5" />
           Takvim
         </button>
         <button
           type="button"
-          onClick={() => setViewMode('list')}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-300 ${viewMode === 'list' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted font-medium'}`
+          onClick={() => setScheduleTab('waitlist')}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-300 ${scheduleTab === 'waitlist' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted font-medium'}`
           }>
-
           <List className="h-3.5 w-3.5" />
-          Liste
+          Bekleme Listesi
         </button>
       </div>
 
@@ -1419,14 +1448,36 @@ export function SchedulePage() {
         onNextDay={() => setActiveDate((prev) => addDays(prev, 1))}
       />
 
-      {loading && viewMode === 'calendar' && <CalendarSkeleton />}
-      {loading && viewMode === 'list' && <ListSkeleton />}
+      {scheduleTab === 'calendar' && (
+        <div className="inline-flex rounded-lg border border-border bg-card p-1">
+          <button
+            type="button"
+            onClick={() => setViewMode('calendar')}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-300 ${viewMode === 'calendar' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted font-medium'}`}
+          >
+            <CalendarDays className="h-3.5 w-3.5" />
+            Takvim
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('list')}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-300 ${viewMode === 'list' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted-foreground hover:bg-muted font-medium'}`}
+          >
+            <List className="h-3.5 w-3.5" />
+            Liste
+          </button>
+        </div>
+      )}
+
+      {scheduleTab === 'calendar' && loading && viewMode === 'calendar' && <CalendarSkeleton />}
+      {scheduleTab === 'calendar' && loading && viewMode === 'list' && <ListSkeleton />}
       
       {error && (
         <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
           {error}
         </div>
       )}
+      {scheduleTab === 'waitlist' ? (
       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -1444,7 +1495,11 @@ export function SchedulePage() {
             </button>
             <button
               type="button"
-              onClick={() => void openWaitlistModal()}
+              onClick={() =>
+                navigate('/app/schedule/waitlist/new', {
+                  state: { navDirection: 'forward', from: '/app/schedule' }
+                })
+              }
               className="rounded-lg bg-[var(--primary)] px-3 py-2 text-xs font-semibold text-white">
 
               Bekleme Listesi Ekle
@@ -1515,9 +1570,10 @@ export function SchedulePage() {
             <p className="text-xs text-muted-foreground">Bu gün için henüz bekleme listesi talebi yok.</p>
         }
       </div>
-      {statusFeedback ? <p className="text-sm text-[var(--deep-indigo)]">{statusFeedback}</p> : null}
+      ) : null}
+      {scheduleTab === 'calendar' && statusFeedback ? <p className="text-sm text-[var(--deep-indigo)]">{statusFeedback}</p> : null}
 
-      {viewMode === 'calendar' ?
+      {scheduleTab === 'calendar' && (viewMode === 'calendar' ?
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
           {isCompactCalendar && staff.length > 1 ? (
             <div className="border-b border-border bg-card px-3 py-2">
@@ -1619,8 +1675,20 @@ export function SchedulePage() {
 
         <div className="space-y-4">
           {groupedAppointments.length === 0 ? (
-            <div className="glass-card p-8 rounded-2xl border-dashed border-2 text-center text-muted-foreground">
-              Bu gün için randevu bulunmuyor.
+            <div className="glass-card p-8 rounded-2xl border-dashed border-2 text-center text-muted-foreground space-y-3">
+              <p>Bu gün için randevu bulunmuyor.</p>
+              <button
+                type="button"
+                onClick={() =>
+                  navigate('/app/schedule/new', {
+                    state: { navDirection: 'forward', from: '/app/schedule' }
+                  })
+                }
+                className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-white"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Yeni Randevu Ekle
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -1642,11 +1710,23 @@ export function SchedulePage() {
             </div>
           )}
         </div>
-      }
+      )}
 
-      {!loading && !appointments.length && viewMode === 'calendar' ?
-        <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-          Bu gün için randevu yok.
+      {scheduleTab === 'calendar' && !loading && !appointments.length && viewMode === 'calendar' ?
+        <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground space-y-3">
+          <p>Bu gün için randevu yok.</p>
+          <button
+            type="button"
+            onClick={() =>
+              navigate('/app/schedule/new', {
+                state: { navDirection: 'forward', from: '/app/schedule' }
+              })
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-white"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Yeni Randevu Ekle
+          </button>
         </div> :
         null}
 
@@ -1990,7 +2070,7 @@ export function SchedulePage() {
           <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-background p-4 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Yeni Bekleme Listesi Kaydı</h2>
-              <button type="button" onClick={() => setWaitlistOpen(false)} className="text-sm text-muted-foreground">
+              <button type="button" onClick={closeWaitlistModal} className="text-sm text-muted-foreground">
                 Kapat
               </button>
             </div>

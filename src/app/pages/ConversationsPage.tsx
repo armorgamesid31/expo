@@ -10,8 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToasts } from '../context/ToastContext';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale/tr';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ConversationRealtimeEvent, RealtimeSyncStatus, useConversationRealtimeSync } from '../lib/realtime-conversation-sync';
 import { readSnapshot, writeSnapshot } from '../lib/ui-cache';
 import { API_BASE_URL } from '../lib/config';
@@ -62,7 +61,12 @@ interface MessageItem {
   outboundSourceLabel?: string | null;
   outboundSenderUserId?: number | null;
   outboundSenderEmail?: string | null;
+  systemAction?: string | null;
+  systemActorUserId?: number | null;
+  systemActorEmail?: string | null;
+  systemActorDisplayName?: string | null;
   eventTimestamp: string;
+  raw?: Record<string, unknown>;
 }
 
 interface ConversationStatePayload {
@@ -326,6 +330,23 @@ function toConversationId(channel: ChannelType, conversationKey: string): string
   return `${channel}:${normalizedKey || conversationKey.trim()}`;
 }
 
+function normalizeConversationRouteParam(value: string | undefined): string | null {
+  if (!value) return null;
+  let decoded = value;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    decoded = value;
+  }
+  if (!decoded.includes(':')) return null;
+  const [rawChannel, ...rest] = decoded.split(':');
+  const channel = rawChannel === 'INSTAGRAM' || rawChannel === 'WHATSAPP' ? rawChannel : null;
+  const key = rest.join(':').trim();
+  if (!channel || !key) return null;
+  const normalizedKey = normalizeConversationKeyForClient(channel, key);
+  return normalizedKey ? `${channel}:${normalizedKey}` : null;
+}
+
 async function withTimeout<T>(task: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
   return await new Promise<T>((resolve, reject) => {
     const timeoutId = window.setTimeout(() => {
@@ -345,7 +366,7 @@ function describeMessageSource(msg: MessageItem, selectedChannel?: ChannelType):
     return `${channelLabel(activeChannel)} uygulaması`;
   }
   if (msg.direction === 'system') {
-    return 'Kedy Sistem';
+    return `${channelLabel(activeChannel)} · Kedy Sistem`;
   }
 
   if (msg.outboundSource === 'AI_AGENT') {
@@ -359,7 +380,17 @@ function describeMessageSource(msg: MessageItem, selectedChannel?: ChannelType):
 
 function describeMessageAuthor(msg: MessageItem): string {
   if (msg.direction === 'inbound') return 'Müşteri';
-  if (msg.direction === 'system') return 'Sistem';
+  if (msg.direction === 'system') {
+    const displayName =
+      typeof msg.systemActorDisplayName === 'string' ? msg.systemActorDisplayName.trim() : '';
+    if (displayName) return displayName;
+    const email = typeof msg.systemActorEmail === 'string' ? msg.systemActorEmail.trim() : '';
+    if (email) return email;
+    if (Number.isInteger(Number(msg.systemActorUserId)) && Number(msg.systemActorUserId) > 0) {
+      return `Kullanıcı #${Number(msg.systemActorUserId)}`;
+    }
+    return 'Sistem';
+  }
   if (msg.outboundSource === 'AI_AGENT') return 'Kedy AI';
 
   const senderEmail = typeof msg.outboundSenderEmail === 'string' ? msg.outboundSenderEmail.trim() : '';
@@ -446,6 +477,12 @@ export function ConversationsPage() {
   const { apiFetch, accessToken, bootstrap } = useAuth();
   const { showToast } = useToasts();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { conversationId: conversationRouteId } = useParams<{ conversationId?: string }>();
+  const normalizedRouteConversationId = useMemo(
+    () => normalizeConversationRouteParam(conversationRouteId),
+    [conversationRouteId]
+  );
   const [channelView, setChannelView] = useState<ChannelFilter>(() => {
     const cached = readSnapshot<ChannelFilter>(CONVERSATIONS_SELECTED_CHANNEL_CACHE_KEY, 1000 * 60 * 60 * 24 * 180);
     return cached === 'ALL' || cached === 'WHATSAPP' || cached === 'INSTAGRAM' ? cached : 'ALL';
@@ -494,14 +531,18 @@ export function ConversationsPage() {
   const [liveConversationMap, setLiveConversationMap] = useState<Record<string, number>>({});
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeSyncStatus>('connecting');
   const realtimeRefreshTimerRef = useRef<number | null>(null);
+  const realtimeMessagesRefreshTimerRef = useRef<number | null>(null);
   const degradedRefreshTimerRef = useRef<number | null>(null);
   const degradedRefreshAttemptRef = useRef(0);
-  const refreshInFlightRef = useRef(false);
+  const listRefreshInFlightRef = useRef(false);
+  const messagesRefreshInFlightRef = useRef(false);
+  const messagesLoadSeqRef = useRef(0);
   const liveConversationTimersRef = useRef<Record<string, number>>({});
   const longPressTimerRef = useRef<number | null>(null);
   const conversationsRef = useRef<ConversationItem[]>([]);
   const readReceiptRef = useRef<ReadReceiptMap>({});
   const selectedConversationIdRef = useRef<string | null>(null);
+  const messagesRef = useRef<MessageItem[]>([]);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
   const lastAutoScrolledConversationRef = useRef<string | null>(null);
@@ -528,6 +569,10 @@ export function ConversationsPage() {
   }, [selectedConversationId]);
 
   useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
     if (mobileView !== 'CHAT') return;
     const hasValidSelection =
       !!selectedConversationId &&
@@ -536,12 +581,64 @@ export function ConversationsPage() {
     setMobileView('LIST');
   }, [conversations, mobileView, selectedConversationId]);
 
+  useEffect(() => {
+    if (!normalizedRouteConversationId) return;
+
+    const isDetailRoute = location.pathname.startsWith('/app/conversations/');
+    if (loadingKonuşmalar) {
+      return;
+    }
+
+    const routeConversationExists = conversations.some(
+      (item) => `${item.channel}:${item.conversationKey}` === normalizedRouteConversationId,
+    );
+
+    if (!routeConversationExists) {
+      if (selectedConversationId === normalizedRouteConversationId) {
+        setSelectedConversationId(null);
+      }
+      setMobileView('LIST');
+      if (isDetailRoute) {
+        navigate('/app/conversations', { replace: true, state: { navDirection: 'back' } });
+      }
+      return;
+    }
+
+    if (normalizedRouteConversationId !== selectedConversationId) {
+      setSelectedConversationId(normalizedRouteConversationId);
+    }
+    setMobileView('CHAT');
+  }, [
+    conversations,
+    loadingKonuşmalar,
+    location.pathname,
+    navigate,
+    normalizedRouteConversationId,
+    selectedConversationId,
+  ]);
+
+  useEffect(() => {
+    const isDetailRoute = location.pathname.startsWith('/app/conversations/');
+    if (!isDetailRoute) {
+      return;
+    }
+
+    if (!selectedConversationId) {
+      navigate('/app/conversations', { replace: true, state: { navDirection: 'back' } });
+      return;
+    }
+
+    const targetPath = `/app/conversations/${encodeURIComponent(selectedConversationId)}`;
+    if (location.pathname === targetPath) return;
+    navigate(targetPath, { replace: true, state: { navDirection: 'forward', from: '/app/conversations' } });
+  }, [location.pathname, navigate, selectedConversationId]);
+
   const fetchGetWithFallback = useCallback(
     async <T,>(path: string): Promise<{ data: T; usedFallback: boolean }> => {
       try {
         const data = await withTimeout(
           apiFetch<T>(path, { __cache: { mode: 'network-only' } }),
-          10000,
+          3500,
           'Network request timed out.',
         );
         return { data, usedFallback: false };
@@ -549,7 +646,7 @@ export function ConversationsPage() {
         try {
           const data = await withTimeout(
             apiFetch<T>(path, { __cache: { mode: 'swr' } }),
-            5000,
+            1200,
             'Cache fallback timed out.',
           );
           return { data, usedFallback: true };
@@ -563,7 +660,7 @@ export function ConversationsPage() {
               token: accessToken,
               salonId: bootstrap?.salon?.id || null,
             }),
-            10000,
+            3500,
             'Direct network fallback timed out.',
           );
           return { data, usedFallback: false };
@@ -709,7 +806,7 @@ export function ConversationsPage() {
         showToast('Yasak kaldırıldı.', 'success');
       } else {
         const payload: Record<string, unknown> = {
-          reason: linkedCustomerBanReason.trim() || 'Manual ban from conversation profile',
+          reason: linkedCustomerBanReason.trim() || 'Sohbet profilinden manuel yasaklama',
           fullName: linkedCustomerProfile?.customer?.name || profileModalConversation.customerName || null,
         };
         if (linkedCustomerProfile?.customer?.id) {
@@ -751,6 +848,7 @@ export function ConversationsPage() {
   const filteredKonuşmalar = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const filtered = conversations.filter((item) => {
+      if (channelView !== 'ALL' && item.channel !== channelView) return false;
       if (!query) return true;
       const haystack = [
         conversationDisplayName(item),
@@ -768,7 +866,7 @@ export function ConversationsPage() {
       if (aHandover !== bHandover) return aHandover ? -1 : 1;
       return new Date(b.lastEventTimestamp).getTime() - new Date(a.lastEventTimestamp).getTime();
     });
-  }, [conversations, searchQuery]);
+  }, [channelView, conversations, searchQuery]);
 
   useEffect(() => {
     conversationsRef.current = conversations;
@@ -806,36 +904,16 @@ export function ConversationsPage() {
     markConversationAsReadLocal(selectedConversationId);
   }, [markConversationAsReadLocal, selectedConversationId]);
 
-  const loadKonuşmalar = useCallback(async (showLoading = true) => {
-    if (showLoading) setLoadingKonuşmalar(true);
+  const loadKonuşmalar = useCallback(async (showLoading = true, cacheMode: 'swr' | 'network-only' = 'swr') => {
+    const shouldToggleLoading = showLoading && conversationsRef.current.length === 0;
+    if (shouldToggleLoading) setLoadingKonuşmalar(true);
     try {
-      const { data: response, usedFallback } = await fetchGetWithFallback<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
-        channelView === 'ALL'
-          ? '/api/admin/conversations?limit=60'
-          : `/api/admin/conversations?limit=60&channel=${channelView}`
+      const response = await apiFetch<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
+        '/api/admin/conversations?limit=120',
+        { __cache: { mode: cacheMode } },
       );
-      let items = response?.items || [];
-
-      // If a channel filter is empty, transparently retry with ALL to avoid
-      // leaving the user in a blank view due stale filter/cache state.
-      if (items.length === 0 && channelView !== 'ALL') {
-        const { data: allResponse } = await fetchGetWithFallback<{ items: ConversationItem[]; channelHealth?: ChannelHealthPayload; }>(
-          '/api/admin/conversations?limit=60',
-        );
-        if ((allResponse?.items || []).length > 0) {
-          setChannelView('ALL');
-          items = allResponse.items || [];
-          setChannelHealth(allResponse?.channelHealth || response?.channelHealth || null);
-        } else {
-          setChannelHealth(response?.channelHealth || allResponse?.channelHealth || null);
-        }
-      } else {
-        setChannelHealth(response?.channelHealth || null);
-      }
-
-      if (usedFallback && items.length === 0 && conversationsRef.current.length > 0) {
-        return;
-      }
+      const items = response?.items || [];
+      setChannelHealth(response?.channelHealth || null);
 
       const selectedId = selectedConversationIdRef.current;
       const next = items.map((item) => {
@@ -859,71 +937,103 @@ export function ConversationsPage() {
     } catch (err: any) {
       showToast(toUserFriendlyError(err, "Konuşmalar yüklenemedi."), 'error');
     } finally {
-      if (showLoading) setLoadingKonuşmalar(false);
+      if (shouldToggleLoading) setLoadingKonuşmalar(false);
     }
-  }, [channelView, fetchGetWithFallback]);
+  }, [apiFetch, showToast]);
 
-  const loadMessages = useCallback(async (channel: ChannelType, conversationKey: string, showLoading = true) => {
-    if (showLoading) setLoadingMessages(true);
-    try {
-      const relatedKeys = findRelatedConversationKeys(conversationsRef.current, { channel, conversationKey }).slice(0, 5);
-      let usedFallbackInAny = false;
-      const responses = await Promise.all(
-        relatedKeys.map((item) =>
-          fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
-            `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`
-          ).then((result) => {
-            if (result.usedFallback) usedFallbackInAny = true;
-            return result.data;
-          }),
+  const applyConversationStatePatch = useCallback(
+    (channel: ChannelType, conversationKey: string, patch?: ConversationStatePayload | null) => {
+      if (!patch) return;
+      const rawMode = patch.automationMode || patch.mode;
+      setKonuşmalar((prev) =>
+        prev.map((item) =>
+          item.channel === channel && item.conversationKey === conversationKey ?
+            {
+              ...item,
+              ...patch,
+              automationMode: rawMode ? normalizeAutomationMode(rawMode) : item.automationMode
+            } :
+            item
         )
       );
-      const response = responses[0];
-      const merged = mergeAndSortMessages(responses);
-      if (usedFallbackInAny && merged.length === 0 && messages.length > 0) {
+    },
+    [],
+  );
+
+  const loadMessages = useCallback(async (channel: ChannelType, conversationKey: string, showLoading = true) => {
+    const seq = messagesLoadSeqRef.current + 1;
+    messagesLoadSeqRef.current = seq;
+    if (showLoading) setLoadingMessages(true);
+    try {
+      const relatedKeys = findRelatedConversationKeys(conversationsRef.current, { channel, conversationKey }).slice(0, 3);
+      const primary = relatedKeys[0] || { channel, conversationKey };
+
+      const primaryResult = await fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
+        `/api/admin/conversations/${primary.channel}/${encodeURIComponent(primary.conversationKey)}/messages?limit=120`
+      );
+      if (messagesLoadSeqRef.current !== seq) return;
+
+      const primaryItems = primaryResult.data?.items || [];
+      const primaryMerged = mergeAndSortMessages([primaryResult.data]);
+      if (primaryResult.usedFallback && primaryMerged.length === 0 && messagesRef.current.length > 0) {
         return;
       }
-      setMessages(merged);
-      if (response?.conversationState) {
-        const patch = response.conversationState;
-        const rawMode = patch.automationMode || patch.mode;
-        setKonuşmalar((prev) =>
-          prev.map((item) =>
-            item.channel === channel && item.conversationKey === conversationKey ?
-              {
-                ...item,
-                ...patch,
-                automationMode: rawMode ? normalizeAutomationMode(rawMode) : item.automationMode
-              } :
-              item
+
+      setMessages(primaryItems.length > 0 ? primaryMerged : []);
+      applyConversationStatePatch(channel, conversationKey, primaryResult.data?.conversationState);
+
+      if (relatedKeys.length > 1) {
+        const extraKeys = relatedKeys.slice(1);
+        void Promise.allSettled(
+          extraKeys.map((item) =>
+            fetchGetWithFallback<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }>(
+              `/api/admin/conversations/${item.channel}/${encodeURIComponent(item.conversationKey)}/messages?limit=120`
+            ).then((result) => result.data)
           )
-        );
+        ).then((settled) => {
+          if (messagesLoadSeqRef.current !== seq) return;
+          if (selectedConversationIdRef.current !== `${channel}:${conversationKey}`) return;
+          const successful = settled
+            .filter((entry): entry is PromiseFulfilledResult<{ items: MessageItem[]; conversationState?: ConversationStatePayload; }> => entry.status === 'fulfilled')
+            .map((entry) => entry.value);
+          if (!successful.length) return;
+          const merged = mergeAndSortMessages([primaryResult.data, ...successful]);
+          if (!merged.length) return;
+          setMessages(merged);
+          applyConversationStatePatch(channel, conversationKey, primaryResult.data?.conversationState);
+        });
       }
     } catch (err: any) {
       showToast(toUserFriendlyError(err, "Konuşma mesajları yüklenemedi."), 'error');
     } finally {
       if (showLoading) setLoadingMessages(false);
     }
-  }, [fetchGetWithFallback, messages.length]);
+  }, [applyConversationStatePatch, fetchGetWithFallback, showToast]);
 
-  const refreshConversationsView = useCallback(async () => {
-    if (refreshInFlightRef.current) return;
-    refreshInFlightRef.current = true;
+  const refreshConversationList = useCallback(async () => {
+    if (listRefreshInFlightRef.current) return;
+    listRefreshInFlightRef.current = true;
     try {
-      const liveSelectedId = selectedConversationIdRef.current;
-      if (liveSelectedId && liveSelectedId.includes(':')) {
-        const [rawChannel, ...rest] = liveSelectedId.split(':');
-        const rawKey = rest.join(':');
-        if ((rawChannel === 'INSTAGRAM' || rawChannel === 'WHATSAPP') && rawKey) {
-          await loadMessages(rawChannel as ChannelType, rawKey, false);
-        }
-      }
-
-      await loadKonuşmalar(false);
+      await loadKonuşmalar(false, 'network-only');
     } finally {
-      refreshInFlightRef.current = false;
+      listRefreshInFlightRef.current = false;
     }
-  }, [loadKonuşmalar, loadMessages]);
+  }, [loadKonuşmalar]);
+
+  const refreshActiveConversationMessages = useCallback(async () => {
+    if (messagesRefreshInFlightRef.current) return;
+    const liveSelectedId = selectedConversationIdRef.current;
+    if (!liveSelectedId || !liveSelectedId.includes(':')) return;
+    const [rawChannel, ...rest] = liveSelectedId.split(':');
+    const rawKey = rest.join(':');
+    if ((rawChannel !== 'INSTAGRAM' && rawChannel !== 'WHATSAPP') || !rawKey) return;
+    messagesRefreshInFlightRef.current = true;
+    try {
+      await loadMessages(rawChannel as ChannelType, rawKey, false);
+    } finally {
+      messagesRefreshInFlightRef.current = false;
+    }
+  }, [loadMessages]);
 
   const scheduleRealtimeRefresh = useCallback((events?: ConversationRealtimeEvent[]) => {
     if (realtimeRefreshTimerRef.current) return;
@@ -932,13 +1042,21 @@ export function ConversationsPage() {
       activeId &&
       events?.some((event) => toConversationId(event.channel, event.conversationKey) === activeId),
     );
-    const waitMs = activeConversationTouched ? 60 : 160;
+    const waitMs = activeConversationTouched ? 120 : 220;
 
     realtimeRefreshTimerRef.current = window.setTimeout(() => {
       realtimeRefreshTimerRef.current = null;
-      void refreshConversationsView();
+      void refreshConversationList();
     }, waitMs);
-  }, [refreshConversationsView]);
+  }, [refreshConversationList]);
+
+  const scheduleActiveMessagesRefresh = useCallback((waitMs = 80) => {
+    if (realtimeMessagesRefreshTimerRef.current) return;
+    realtimeMessagesRefreshTimerRef.current = window.setTimeout(() => {
+      realtimeMessagesRefreshTimerRef.current = null;
+      void refreshActiveConversationMessages();
+    }, waitMs);
+  }, [refreshActiveConversationMessages]);
 
   useEffect(() => {
     void loadKonuşmalar();
@@ -1006,7 +1124,7 @@ export function ConversationsPage() {
       if (degradedRefreshTimerRef.current) return;
       degradedRefreshTimerRef.current = window.setTimeout(async () => {
         degradedRefreshTimerRef.current = null;
-        await refreshConversationsView();
+        await Promise.all([refreshConversationList(), refreshActiveConversationMessages()]);
         degradedRefreshAttemptRef.current = Math.min(degradedRefreshAttemptRef.current + 1, 10);
         scheduleNext();
       }, nextDelayMs());
@@ -1018,23 +1136,27 @@ export function ConversationsPage() {
       window.clearTimeout(degradedRefreshTimerRef.current);
       degradedRefreshTimerRef.current = null;
     };
-  }, [realtimeStatus, refreshConversationsView]);
+  }, [realtimeStatus, refreshActiveConversationMessages, refreshConversationList]);
 
   useConversationRealtimeSync({
     enabled: !!accessToken,
     accessToken,
-    channel: channelView === 'ALL' ? undefined : channelView,
+    channel: undefined,
     cursorScopeKey: 'conversations-page',
     apiFetch,
     onEvents: (events, source) => {
       if (source === 'stream') {
-        markLiveConversation(
-          events.map((event) => toConversationId(event.channel, event.conversationKey)),
-        );
+        const touchedIds = events.map((event) => toConversationId(event.channel, event.conversationKey));
+        markLiveConversation(touchedIds);
+        const activeId = selectedConversationIdRef.current;
+        if (activeId && touchedIds.includes(activeId)) {
+          scheduleActiveMessagesRefresh(60);
+        }
       }
       scheduleRealtimeRefresh(events);
     },
     onRequireFullRefresh: () => {
+      scheduleActiveMessagesRefresh(80);
       scheduleRealtimeRefresh();
     },
     onStatusChange: setRealtimeStatus,
@@ -1051,9 +1173,14 @@ export function ConversationsPage() {
 
   useEffect(() => {
     return () => {
-      if (!realtimeRefreshTimerRef.current) return;
-      window.clearTimeout(realtimeRefreshTimerRef.current);
-      realtimeRefreshTimerRef.current = null;
+      if (realtimeRefreshTimerRef.current) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+        realtimeRefreshTimerRef.current = null;
+      }
+      if (realtimeMessagesRefreshTimerRef.current) {
+        window.clearTimeout(realtimeMessagesRefreshTimerRef.current);
+        realtimeMessagesRefreshTimerRef.current = null;
+      }
     };
   }, []);
 
@@ -1121,10 +1248,8 @@ export function ConversationsPage() {
       }
       setReplyText('');
       showToast('Yanıt başarıyla gönderildi.', 'success');
-      await Promise.all([
-        loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false),
-        loadKonuşmalar(false),
-      ]);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
+      scheduleRealtimeRefresh();
     } catch (err: any) {
       if (err?.body?.errorCode === 'INSTAGRAM_WINDOW_EXPIRED') {
         showToast('Instagram 24 saat penceresi dolduğu için mesaj gönderilemez. Müşterinin tekrar yazması gerekiyor.', 'error');
@@ -1177,10 +1302,8 @@ export function ConversationsPage() {
       }
       setManualComposeConversationId(null);
       showToast('Yapay zeka otomasyonu tekrar devreye alındı.', 'success');
-      await Promise.all([
-        loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false),
-        loadKonuşmalar(false),
-      ]);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
+      scheduleRealtimeRefresh();
     } catch (err: any) {
       showToast(toUserFriendlyError(err, 'Otomasyon başlatılamadı.'), 'error');
     } finally {
@@ -1231,10 +1354,8 @@ export function ConversationsPage() {
         setManualComposeConversationId(nextSelectedId);
       }
       showToast('Manuel yanıt modu açıldı.', 'success');
-      await Promise.all([
-        loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false),
-        loadKonuşmalar(false),
-      ]);
+      await loadMessages(selectedConversation.channel, normalizedEffectiveConversationKey, false);
+      scheduleRealtimeRefresh();
     } catch (err: any) {
       setManualComposeConversationId(null);
       showToast(toUserFriendlyError(err, 'Talep iletilemedi.'), 'error');
@@ -1289,9 +1410,6 @@ export function ConversationsPage() {
             aria-pressed={channelView === 'ALL'}
             onClick={() => {
               setChannelView('ALL');
-              setSelectedConversationId(null);
-              setMessages([]);
-              setSearchQuery('');
             }}
             className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
               channelView === 'ALL'
@@ -1306,9 +1424,6 @@ export function ConversationsPage() {
             aria-pressed={channelView === 'INSTAGRAM'}
             onClick={() => {
               setChannelView('INSTAGRAM');
-              setSelectedConversationId(null);
-              setMessages([]);
-              setSearchQuery('');
             }}
             className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
               channelView === 'INSTAGRAM'
@@ -1325,9 +1440,6 @@ export function ConversationsPage() {
               aria-pressed={channelView === 'WHATSAPP'}
               onClick={() => {
                 setChannelView('WHATSAPP');
-                setSelectedConversationId(null);
-                setMessages([]);
-                setSearchQuery('');
               }}
               className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
                 channelView === 'WHATSAPP'
@@ -1365,11 +1477,7 @@ export function ConversationsPage() {
 
       {channelBlocked ?
         <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md w-full rounded-[32px] border border-white/20 bg-background/40 backdrop-blur-2xl p-8 shadow-2xl text-center overflow-hidden relative"
-          >
+          <div className="max-w-md w-full rounded-[32px] border border-white/20 bg-background/40 backdrop-blur-2xl p-8 shadow-2xl text-center overflow-hidden relative">
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-emerald-500" />
             <div className={`size-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg ${channelView === 'INSTAGRAM' ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 text-white' : 'bg-emerald-500 text-white'}`}>
               {channelView === 'INSTAGRAM' ? <Instagram className="size-10" /> : <MessageCircle className="size-10" />}
@@ -1411,15 +1519,14 @@ export function ConversationsPage() {
             <p className="mt-6 text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
               Kedy Akıllı Mesajlaşma Altyapısı
             </p>
-          </motion.div>
+          </div>
         </div> :
 
         <div className="flex flex-col h-full lg:grid lg:grid-cols-[300px,minmax(0,1fr)] gap-2 relative z-10 px-1 sm:px-2">
-          <motion.div
-            className={`flex flex-col bg-background/40 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden h-[calc(100dvh-11.5rem)] min-h-0 lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'}`}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
+          <div className={`flex flex-col bg-background/40 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden h-[calc(100dvh-11.5rem)] min-h-0 lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'hidden lg:flex' : 'flex'}`}>
+            <div className="px-4 pt-4 pb-1">
+              <h1 className="text-lg font-semibold tracking-tight">Konuşmalar</h1>
+            </div>
             <div className="flex flex-wrap items-center gap-2 p-4">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/40 bg-background/60 shadow-sm whitespace-nowrap">
                 <div className="size-2 rounded-full bg-foreground/20" />
@@ -1467,27 +1574,13 @@ export function ConversationsPage() {
                 </div> :
 
                 <div className="flex-1 min-w-0 space-y-1.5 overflow-y-auto overflow-x-hidden pr-1 pb-1 scrollbar-thin px-2">
-                  <AnimatePresence mode="popLayout">
                     {filteredKonuşmalar.map((item, index) => {
                     const id = `${item.channel}:${item.conversationKey}`;
                     const active = id === selectedConversationId;
                     const isLive = !!liveConversationMap[id];
                     const displayName = conversationDisplayName(item);
                     return (
-                      <motion.button
-                        layout
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{
-                          opacity: 1,
-                          scale: isLive ? [1, 1.01, 1] : 1,
-                          boxShadow: isLive ?
-                            ['0 0 0 rgba(99,102,241,0)', '0 0 0 3px rgba(99,102,241,0.16)', '0 0 0 rgba(99,102,241,0)'] :
-                            '0 0 0 rgba(99,102,241,0)',
-                        }}
-                        transition={{
-                          duration: isLive ? 0.45 : 0.2,
-                          ease: 'easeOut',
-                        }}
+                      <button
                         key={id}
                         type="button"
                         onClick={() => {
@@ -1495,9 +1588,12 @@ export function ConversationsPage() {
                           setSelectedConversationId(id);
                           markConversationAsReadLocal(id);
                           setMobileView('CHAT');
+                          navigate(`/app/conversations/${encodeURIComponent(id)}`, {
+                            state: { navDirection: 'forward', from: '/app/conversations' },
+                          });
                         }}
-                        className={`w-full max-w-full min-w-0 group rounded-[18px] p-2.5 text-left transition-all duration-300 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'}`
-                        }>
+                        className={`w-full max-w-full min-w-0 group rounded-[18px] p-2.5 text-left transition-all duration-200 border relative overflow-hidden ${active ? 'border-[var(--deep-indigo)]/40 bg-gradient-to-r from-[var(--deep-indigo)]/15 via-[var(--deep-indigo)]/5 to-transparent shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-white/20 hover:bg-white/5'} ${isLive ? 'ring-2 ring-[var(--deep-indigo)]/20' : ''}`}
+                        >
                         <div className="flex min-w-0 gap-4 relative z-10">
                           <div className="relative shrink-0">
                             <Avatar className={`size-12 border-2 transition-transform duration-300 group-hover:scale-105 ${active ? 'border-[var(--deep-indigo)]/50 shadow-lg' : 'border-white/20'}`}>
@@ -1560,24 +1656,16 @@ export function ConversationsPage() {
                           </div>
                         </div>
                         {active && (
-                          <motion.div 
-                            layoutId="active-sidebar-pill"
-                            className="absolute left-0 top-3 bottom-3 w-1.5 bg-[var(--deep-indigo)] rounded-r-full shadow-[0_0_15px_var(--deep-indigo)]" 
-                          />
+                          <div className="absolute left-0 top-3 bottom-3 w-1.5 bg-[var(--deep-indigo)] rounded-r-full shadow-[0_0_15px_var(--deep-indigo)]" />
                         )}
-                      </motion.button>
+                      </button>
                     );
                   })}
-                </AnimatePresence>
               </div>
             }
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className={`flex flex-col h-[calc(100dvh-11.5rem)] min-h-0 rounded-2xl border border-border/40 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
+          <div className={`flex flex-col h-[calc(100dvh-11.5rem)] min-h-0 rounded-2xl border border-border/40 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden lg:h-[calc(100dvh-11.5rem)] lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex' : 'hidden lg:flex'}`}>
             {selectedConversation ?
               <>
                 <div className="flex items-center justify-between gap-2 border-b border-border/40 px-1.5 pb-2">
@@ -1587,7 +1675,10 @@ export function ConversationsPage() {
                         size="icon"
                         aria-label="Sohbet listesine dön"
                         className="lg:hidden -ml-1 h-8 w-8 hover:bg-white/10"
-                        onClick={() => setMobileView('LIST')}
+                        onClick={() => {
+                          setMobileView('LIST');
+                          navigate('/app/conversations', { state: { navDirection: 'back' } });
+                        }}
                       >
                         <ChevronLeft className="w-5 h-5 text-muted-foreground" />
                       </Button>
@@ -1660,7 +1751,6 @@ export function ConversationsPage() {
                       </div> :
 
                       <div className="flex flex-col gap-1 min-h-full pb-4">
-                        <AnimatePresence initial={false}>
                           {messages.map((msg, index) => {
                             const direction = msg.direction?.toLowerCase();
                             const isOutbound = direction === 'outbound' || direction === 'outgoing' || !!msg.outboundSource;
@@ -1695,11 +1785,7 @@ export function ConversationsPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <motion.div
-                                    initial={{ opacity: 0, x: isOutbound ? 10 : -10, scale: 0.95 }}
-                                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                                    className={`flex ${isOutbound ? 'justify-end' : 'justify-start'} ${isSameSenderAsPrev ? 'mt-0.5' : 'mt-4'}`}
-                                  >
+                                  <div className={`flex ${isOutbound ? 'justify-end' : 'justify-start'} ${isSameSenderAsPrev ? 'mt-0.5' : 'mt-4'}`}>
                                     <div className={`flex flex-col max-w-[85%] lg:max-w-[75%] ${isOutbound ? 'items-end' : 'items-start'}`}>
                                       {!isSameSenderAsPrev && (
                                         <span className={`text-[10px] font-bold mb-1 opacity-40 px-3 uppercase tracking-wider ${isOutbound ? 'text-right' : 'text-left'}`}>
@@ -1712,9 +1798,6 @@ export function ConversationsPage() {
                                           `bg-gradient-to-br from-[var(--deep-indigo)] to-indigo-600 text-white border border-indigo-500/20 ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px]' : isSameSenderAsNext ? 'rounded-t-[20px] rounded-bl-[20px] rounded-br-[8px]' : isSameSenderAsPrev ? 'rounded-b-[20px] rounded-tl-[20px] rounded-tr-[8px]' : 'rounded-[20px] rounded-tr-[4px]'}` : 
                                           `bg-card/40 backdrop-blur-lg border border-white/10 text-foreground ${isSameSenderAsNext && isSameSenderAsPrev ? 'rounded-[20px]' : isSameSenderAsNext ? 'rounded-t-[20px] rounded-br-[20px] rounded-bl-[8px]' : isSameSenderAsPrev ? 'rounded-b-[20px] rounded-tr-[20px] rounded-tl-[8px]' : 'rounded-[20px] rounded-tl-[4px]'}`
                                       }`}
-                                      role="button"
-                                      tabIndex={0}
-                                      aria-label="Mesaj detaylarını görüntüle"
                                       onContextMenu={(event) => {
                                         event.preventDefault();
                                         openMessageMeta(msg);
@@ -1723,12 +1806,7 @@ export function ConversationsPage() {
                                       onTouchEnd={clearLongPressTimer}
                                       onTouchCancel={clearLongPressTimer}
                                       onTouchMove={clearLongPressTimer}
-                                      onKeyDown={(event) => {
-                                        if (event.key === 'Enter' || event.key === ' ') {
-                                          event.preventDefault();
-                                          openMessageMeta(msg);
-                                        }
-                                      }}>
+                                      title="Mesaj detayı için uzun basın">
                                         <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
                                           {formatOperatorMessage(msg.text) || formatMessageTypeLabel(msg.messageType)}
                                         </p>
@@ -1738,12 +1816,11 @@ export function ConversationsPage() {
                                         </div>
                                       </div>
                                     </div>
-                                  </motion.div>
+                                  </div>
                                 )}
                               </React.Fragment>
                             );
                           })}
-                        </AnimatePresence>
                       </div>
                   }
                 </div>
@@ -1820,7 +1897,7 @@ export function ConversationsPage() {
                 <p className="text-sm mt-2 max-w-[280px] font-medium leading-relaxed opacity-60">Mesajlaşmak ve randevuları yönetmek için sol listeden bir sohbet seçebilirsiniz.</p>
               </div>
             }
-          </motion.div>
+          </div>
         </div>
       }
       <Dialog
@@ -1932,7 +2009,7 @@ export function ConversationsPage() {
                   <p className="font-medium">{linkedCustomerProfile?.summary.totalBookings ?? 0}</p>
                 </div>
                 <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">No-show</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Randevu İhlali</p>
                   <p className="font-medium">{linkedCustomerProfile?.summary.noShowCount ?? 0}</p>
                 </div>
                 <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
