@@ -1,0 +1,126 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@media ios {
+  :root {
+    --font-sans: system-ui;
+    --font-heading: system-ui;
+    --font-mono: ui-monospace;
+    --font-rounded: ui-rounded;
+  }
+}
+
+@media android {
+  :root {
+    --font-sans: normal;
+    --font-heading: normal;
+    --font-mono: monospace;
+    --font-rounded: normal;
+  }
+}
+
+:root {
+  --background: #F8F8F8;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --primary: #1A1A1A;
+  --primary-foreground: #F8F8F8;
+  --secondary: #F07122;
+  --secondary-foreground: #FFFFFF;
+  --muted: #F1F1F1;
+  --muted-foreground: #666666;
+  --accent: #F07122;
+  --accent-foreground: #FFFFFF;
+  --destructive: #E11D48;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(36, 36, 38, 0.08);
+  --input-background: #FFFFFF;
+  --ring: #00B8FF;
+
+  --rose-gold: #F47A20;
+  --rose-gold-light: #FF9F5A;
+  --deep-indigo: #00B8FF;
+  --deep-indigo-light: #4DCEFF;
+  --luxury-bg: #F7F6F6;
+  --luxury-card: #FFFFFF;
+  --luxury-emerald: #065F46;
+  --luxury-emerald-light: #10B981;
+
+  --chart-1: #F47A20;
+  --chart-2: #00B8FF;
+  --chart-3: #A1C742;
+  --chart-4: #242426;
+  --chart-5: #6B7280;
+  --radius: 0.875rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0A0A0A;
+    --foreground: #F8F8F8;
+    --card: #141414;
+    --card-foreground: #F8F8F8;
+    --popover: #141414;
+    --popover-foreground: #F8F8F8;
+    --primary: #F07122;
+    --primary-foreground: #0A0A0A;
+    --secondary: #27272A;
+    --secondary-foreground: #F8F8F8;
+    --muted: #2F2F31;
+    --muted-foreground: #B7B7BB;
+    --accent: #F07122;
+    --accent-foreground: #0A0A0A;
+    --destructive: #F43F5E;
+    --destructive-foreground: #F8F8F8;
+    --border: rgba(248, 248, 248, 0.08);
+    --input-background: #141414;
+    --ring: #F07122;
+    --luxury-bg: #0A0A0A;
+    --luxury-card: #141414;
+  }
+}
+
+@layer theme {
+  @theme {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input-background: var(--input-background);
+    --color-ring: var(--ring);
+    --color-rose-gold: var(--rose-gold);
+    --color-rose-gold-light: var(--rose-gold-light);
+    --color-deep-indigo: var(--deep-indigo);
+    --color-deep-indigo-light: var(--deep-indigo-light);
+    --color-luxury-bg: var(--luxury-bg);
+    --color-luxury-card: var(--luxury-card);
+    --color-luxury-emerald: var(--luxury-emerald);
+    --color-luxury-emerald-light: var(--luxury-emerald-light);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+  }
+}

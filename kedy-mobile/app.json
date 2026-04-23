@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Kedy Salon Management",
+    "slug": "kedy-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "kedy",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kedyapp.salonmanagement"
+    },
+    "android": {
+      "package": "com.kedyapp.salonmanagement",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-localization",
+      "expo-notifications"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiBaseUrl": "https://app.berkai.shop",
+      "enablePushNotifications": true,
+      "eas": {
+        "projectId": "d892840d-34d7-4a6c-ae4b-c17502a8490b"
+      },
+      "router": {}
+    },
+    "owner": "kedyapp"
+  }
+}

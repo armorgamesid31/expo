@@ -1,0 +1,24 @@
+# Agent Log (WS8-P0-CONVERSATIONS)
+
+- timestamp: 2026-04-23T18:20:00Z
+- status: completed
+- objective: Align RN conversations list/detail with active admin backend contract and enforce stable list->detail identifier strategy.
+- files_touched:
+  - app/(tabs)/conversations/index.tsx
+  - app/(tabs)/conversations/[conversationId].tsx
+- contract_notes:
+  - List endpoint: `GET /api/admin/conversations?limit=120`
+  - Detail/messages endpoint: `GET /api/admin/conversations/{channel}/{conversationKey}/messages?limit=120`
+  - Stable route id strategy: `conversationId = "{channel}:{normalizedConversationKey}"`
+  - Route param is URL-encoded on navigation and decoded on detail page before parsing.
+- changes:
+  - Replaced mobile conversation endpoints with active admin endpoints.
+  - Added null-safe list normalization and hard guards for invalid channel/key entries.
+  - Implemented deterministic list->detail route id generation (`INSTAGRAM|WHATSAPP + conversationKey`).
+  - Hardened detail param parsing (`string | string[]`, decode, channel validation, key normalization).
+  - Kept loading/error/empty/retry deterministic for both list and detail states.
+- blockers: []
+- remaining_risks:
+  - Detail screen currently reads message list endpoint and shows summary; full thread UI parity is intentionally out of 72h scope.
+  - If backend starts returning channels outside `INSTAGRAM|WHATSAPP`, items are intentionally dropped until schema is expanded.
+- next_step: QA should verify navigation with real data where `conversationKey` includes special characters and confirm deep-link stability.

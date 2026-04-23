@@ -278,19 +278,14 @@ export function AppLayout() {
 
   return (
     <div
-      className="min-h-screen bg-background overflow-x-hidden relative"
+      className="min-h-screen bg-background overflow-x-hidden relative ios-optimized"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
-      style={{
-        paddingLeft: 'var(--safe-area-left)',
-        paddingRight: 'var(--safe-area-right)'
-      }}
     >
       {showTopBar && (
         <header
-          className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border"
-          style={{ paddingTop: 'var(--safe-area-top)' }}
+          className="fixed top-0 left-0 right-0 z-40 bg-background/95 border-b border-border safe-top"
         >
           <div className="max-w-screen-xl mx-auto px-2 lg:px-8 h-14 relative">
             <div className="h-full flex items-center justify-between">
@@ -339,10 +334,10 @@ export function AppLayout() {
       )}
 
       <main
-        className="pb-24 overflow-x-hidden min-h-screen relative scrollbar-gutter-stable"
+        className="pb-24 overflow-x-hidden min-h-screen relative"
         style={{ 
-          paddingTop: showTopBar ? 'calc(4rem + var(--safe-area-top))' : 'calc(var(--safe-area-top) + 1rem)',
-          contain: 'paint' 
+          paddingTop: showTopBar ? 'calc(3.5rem + env(safe-area-inset-top))' : 'env(safe-area-inset-top)',
+          contain: 'content' 
         }}
       >
         <div className="max-w-screen-xl mx-auto px-2 lg:px-8 grid h-full overflow-hidden">

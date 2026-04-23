@@ -77,7 +77,7 @@ export function ConversationDetail({
 }: ConversationDetailProps) {
 
   return (
-    <div className={`flex flex-col h-[100dvh] lg:h-[calc(100dvh-11.5rem)] min-h-0 rounded-2xl border border-border/40 bg-background/40 backdrop-blur-xl p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex fixed inset-0 z-50 lg:relative lg:inset-auto lg:z-auto' : 'hidden lg:flex'}`}>
+    <div className={`flex flex-col h-[100dvh] lg:h-[calc(100dvh-11.5rem)] min-h-0 rounded-2xl border border-border/40 bg-background p-2 shadow-sm overflow-hidden lg:min-h-[680px] ${mobileView === 'CHAT' ? 'flex fixed inset-0 z-50 lg:relative lg:inset-auto lg:z-auto safe-top' : 'hidden lg:flex'}`}>
       {selectedConversation ? (
         <>
           <div className="flex items-center justify-between gap-2 border-b border-border/40 px-1.5 pb-2 pt-2 lg:pt-0">
@@ -170,7 +170,7 @@ export function ConversationDetail({
             )}
           </div>
 
-          <div className="sticky bottom-0 z-20 mt-2 space-y-2 pb-safe">
+          <div className="mt-2 space-y-2 pb-safe">
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2">
                   <div className={`size-2 rounded-full ${handoverInProgress ? 'bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
@@ -203,7 +203,7 @@ export function ConversationDetail({
                 </motion.div>
               )}
 
-              <div className="rounded-[24px] border border-white/10 bg-background/60 backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-2 focus-within:border-[var(--deep-indigo)]/40 focus-within:bg-background/80 transition-all duration-300 mx-1">
+              <div className="rounded-[24px] border border-white/10 bg-background shadow-md p-1 focus-within:border-[var(--deep-indigo)]/40 transition-all duration-300 mx-1 mb-1">
                 <div className="flex gap-2 items-end">
                   <Textarea
                     value={replyText}
