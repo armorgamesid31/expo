@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+﻿import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { Button } from '@/components/ui/Button';
@@ -86,12 +86,13 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Screen title="Kedy Giriş" subtitle="Hesabınıza giriş yapın">
+      <Screen title="Salon Mobil Giriş" subtitle="Hesabınızla giriş yapın.">
         <Card>
           <Text className="mb-2 text-sm text-muted-foreground">E-posta</Text>
           <Input
             autoCapitalize="none"
             keyboardType="email-address"
+            placeholder="ornek@salon.com"
             value={email}
             onChangeText={handleEmailChange}
             autoCorrect={false}
@@ -101,6 +102,7 @@ export default function LoginScreen() {
           <Text className="mb-2 mt-3 text-sm text-muted-foreground">Şifre</Text>
           <Input
             secureTextEntry
+            placeholder="Şifrenizi girin"
             value={password}
             onChangeText={handlePasswordChange}
             autoCorrect={false}
@@ -109,16 +111,10 @@ export default function LoginScreen() {
             onSubmitEditing={handleSubmit}
           />
           <View className="mt-3 gap-1">
-            <Text className="text-xs text-muted-foreground">API endpoint: /auth/login</Text>
             {validationError ? <Text className="text-xs text-destructive">{validationError}</Text> : null}
             {submitError ? <Text className="text-xs text-destructive">{submitError}</Text> : null}
           </View>
-          <Button
-            title="Giriş Yap"
-            loading={busy}
-            disabled={!canSubmit}
-            onPress={handleSubmit}
-          />
+          <Button title={busy ? 'Giriş yapılıyor...' : 'Giriş Yap'} loading={busy} disabled={!canSubmit} onPress={handleSubmit} />
         </Card>
       </Screen>
     </KeyboardAvoidingView>

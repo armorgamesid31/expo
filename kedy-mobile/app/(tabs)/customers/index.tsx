@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+﻿import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, RefreshControl } from 'react-native';
 import { Avatar } from '@/components/ui/Avatar';
@@ -73,7 +73,7 @@ export default function CustomersPage() {
     ({ item }: { item: Customer }) => (
       <Card>
         <View className="flex-row items-center gap-3">
-          <Avatar name={item.name || 'Musteri'} />
+          <Avatar name={item.name || 'Müşteri'} />
           <View className="flex-1">
             <Text className="font-semibold text-foreground">{item.name || 'İsimsiz müşteri'}</Text>
             <Text className="text-sm text-muted-foreground">{item.phone || '-'}</Text>
@@ -82,16 +82,16 @@ export default function CustomersPage() {
         </View>
       </Card>
     ),
-    [],
+    []
   );
 
   return (
-    <Screen title="Musteriler" subtitle="P0 dönüşüm ekranı">
+    <Screen title="Müşteriler">
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>
           <Text className="mb-3 text-sm text-destructive">
-            {error instanceof Error ? error.message : 'Müşteri verisi alınamadı.'}
+            {error instanceof Error ? error.message : 'Müşteri verileri alınamadı.'}
           </Text>
           <Button title="Tekrar Dene" variant="outline" onPress={onRetry} />
         </Card>

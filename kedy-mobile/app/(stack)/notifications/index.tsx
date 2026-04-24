@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+﻿import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, RefreshControl } from 'react-native';
 import { Button } from '@/components/ui/Button';
@@ -89,11 +89,11 @@ export default function NotificationsInboxScreen() {
         </Text>
       </Card>
     ),
-    [],
+    []
   );
 
   return (
-    <Screen title="Notifications Inbox" subtitle="Minimum usable bildirim kutusu">
+    <Screen title="Bildirimler">
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>
@@ -103,14 +103,14 @@ export default function NotificationsInboxScreen() {
       ) : null}
       {!isLoading && !isError && items.length === 0 ? (
         <Card>
-          <Text className="text-sm text-muted-foreground">Henüz bildirim yok.</Text>
+          <Text className="text-sm text-muted-foreground">Bildirim yok.</Text>
         </Card>
       ) : null}
       {!isLoading && !isError && items.length > 0 ? (
         <FlatList
           data={items}
           keyExtractor={keyExtractor}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />}
+          refreshControl={<RefreshControl refreshing={isRefetching && !isLoading} onRefresh={onRefresh} />}
           renderItem={renderItem}
           ItemSeparatorComponent={() => <View className="h-3" />}
           initialNumToRender={8}

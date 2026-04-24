@@ -1,0 +1,21 @@
+﻿# API-NATIVE-STABILIZER
+
+- timestamp: 2026-04-24T03:05:00+03:00
+- status: active (temporary)
+- objective: Auth/session ve push contract stabilitesini kapatmak; native build kanitlarini paralelde toplamak.
+- scope:
+  - auth/session runtime parity
+  - push contract governance (`PUSH-2`)
+  - Android/iOS build-smoke evidence (non-blocking parity phase)
+- latest_evidence:
+  - `POST /auth/login` = 200
+  - `GET /api/mobile/bootstrap` = 200
+  - `POST /api/mobile/push/register` (`provider: expo`) = 200
+  - `POST /api/mobile/push/unregister` (`provider: expo`) = 200
+  - `POST /api/mobile/push/register` (`provider: fcm`) = 200 (should be 4xx)
+  - `POST /api/mobile/push/register` (missing `provider`) = 200 (should be 4xx)
+  - `POST /auth/logout` = 204
+- exit:
+  - `PUSH-2` PASS.
+  - Auth runtime ilgili gate'ler PASS.
+  - Native build kanitlari mumkun olan en guncel haliyle kayitli.

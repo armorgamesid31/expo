@@ -1,105 +1,72 @@
-# Work Items
+﻿# Work Items
 
-Last updated: 2026-04-23 22:28 +03
-Source of truth owner: ORCH-3
+Last updated: 2026-04-24 03:05 +03
+Source of truth owner: ORCH-CORE
 
-## Active tasks
+## Active operating model
 
-1. [DONE] Expo 54 dependency freeze and baseline verification
-- Owner: ws1-build
-- Scope: pin toolchain and verify install/typecheck/web boot
-- Evidence: [ws1-build.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws1-build.md)
+- Persistent: `ORCH-CORE`, `PARITY-QA`, `UX-SYSTEM-GUARD`
+- Temporary: `MIGRATOR-CORE`, `MIGRATOR-MENU`, `API-NATIVE-STABILIZER`
+- Definition: `docs/execution/agent-topology.md`
 
-2. [DONE] Auth/session restore hardening
-- Owner: ws2-core
-- Scope: bootstrap cleanup, refresh single-flight, cold start stability
-- Evidence: [ws2-core.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws2-core.md)
+## Current cycle (Cycle-02)
 
-3. [DONE] Push contract alignment (`provider=expo`)
-- Owner: ws5-push
-- Scope: register/unregister payload contract + retry-safe unregister
-- Evidence: [ws5-push.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws5-push.md)
+- Source (`5173`) + target (`8082`) local runtime zorunlu.
+- Parity otoritesi Chrome MCP; Playwright ciktilari sadece yardimci referans.
+- Kritik 6 ekran PASS olmadan faz-2 baslamaz.
 
-4. [DONE] P0-A hardening (Login + Schedule)
-- Owner: ws3-p0a
-- Scope: validation, loading/error/empty/retry, refresh/perf hardening
-- Evidence: [ws3-p0a.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws3-p0a.md)
+## Task board
 
-5. [DONE] P0-B hardening (Customers + Conversations)
-- Owner: ws4-p0b
-- Scope: null-safe list/detail flow, refresh safety, perf knobs
-- Evidence: [ws4-p0b.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws4-p0b.md)
+1. [IN_PROGRESS] ORCH cycle dispatch and gate sync
+- Owner: ORCH-CORE
+- Scope: 2-4 ekran/tur atama, blocker onceliklendirme, docs kapanisi.
 
-6. [DONE] QA checklist gate hardened (binary pass/fail)
-- Owner: ws6-qa
-- Scope: evidence-first checklist update and blocker surfacing
-- Evidence: [ws6-qa.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws6-qa.md)
+2. [IN_PROGRESS] Critical 6 parity closure
+- Owner: MIGRATOR-CORE
+- Scope: login/schedule/customers/conversations/settings/notifications parity farklarini kapat.
+- Done rule: MIGRATOR + PARITY-QA + UX-SYSTEM-GUARD uclu onay.
+- 2026-04-24 update:
+  - Login screen source hierarchy parity aligned (debug text removed).
+  - Schedule endpoint window fixed to ISO day range (`from/to`), removing perpetual loading on 400.
+  - Tabs route inflation fixed to 5-item nav (`schedule/customers/create/conversations/menu`).
 
-7. [DONE] P0 endpoint contract alignment (Schedule + Customers)
-- Owner: ws7-p0-schedule-customers
-- Scope: move to `/api/admin/*`, normalize response shapes, deterministic states
-- Evidence: [ws7-p0-schedule-customers.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws7-p0-schedule-customers.md)
+3. [IN_PROGRESS] Menu/stack parity closure
+- Owner: MIGRATOR-MENU
+- Scope: team/salon-info/feature alt route'lari route-route kapat.
 
-8. [DONE] P0 endpoint contract alignment (Conversations list/detail)
-- Owner: ws8-p0-conversations
-- Scope: move to `/api/admin/*`, stable `conversationId`, deterministic states
-- Evidence: [ws8-p0-conversations.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws8-p0-conversations.md)
+4. [IN_PROGRESS] Chrome MCP parity evidence pipeline
+- Owner: PARITY-QA
+- Scope: route bazli PASS/PARTIAL/FAIL matrisi, snapshot/screenshot, akis notlari.
+- Evidence root: `.parity-logs/` + ilgili agent logu.
+- Latest evidence set:
+  - `chrome-source-login-pass1.png` / `chrome-target-login-pass1.png`
+  - `chrome-source-schedule-pass1.png` / `chrome-target-schedule-pass2.png`
+  - `chrome-source-customers-route.png` / `chrome-target-customers-route.png`
+  - `chrome-source-conversations-route.png` / `chrome-target-conversations-route.png`
+  - `chrome-source-settings-route.png` / `chrome-target-settings-route.png`
+  - `chrome-source-notifications-route.png` / `chrome-target-notifications-route.png`
 
-9. [DONE] Push E2E probe evidence capture
-- Owner: ws9-push-e2e
-- Scope: positive/negative probes against backend push endpoints
-- Evidence: [ws9-push-e2e.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws9-push-e2e.md)
+5. [IN_PROGRESS] UX state parity governance
+- Owner: UX-SYSTEM-GUARD
+- Scope: loading/empty/error/retry ve geri bildirim tutarliligi.
 
-10. [DONE] Build QA baseline evidence capture
-- Owner: ws10-build-qa
-- Scope: typecheck + expo web smoke evidence
-- Evidence: [ws10-build-qa.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws10-build-qa.md), [go-live-checklist.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/go-live-checklist.md)
-
-11. [DONE] Login runtime error clarity hardening
-- Owner: ws11-auth-runtime
-- Scope: deterministic error messages for config/network/401/5xx
-- Evidence: [ws11-auth-runtime.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws11-auth-runtime.md)
-
-12. [IN_PROGRESS] iOS/Android preview build proof capture
-- Owner: ws5-build-release
-- Scope: `eas build --platform ios/android --profile preview` + install/open proof
-- Evidence status: pending (`BUILD-3`, `BUILD-4`)
-
-13. [IN_PROGRESS] Backend push validation governance closure
-- Owner: backend owner + ws9-push-e2e
-- Scope: enforce provider/schema validation (`invalid/missing provider -> 4xx`)
-- Evidence status: pending (`PUSH-4`, `PUSH-5`)
-
-14. [BLOCKED] Full-screen parity audit via Chrome MCP
-- Owner: ws16-chrome-parity
-- Scope: original web vs migrated expo web route-by-route `PASS/PARTIAL/FAIL`
-- Evidence status: blocked by `chrome-devtools/*` transport (`Transport closed`) in this cycle; see `ws16-chrome-parity.md`
+6. [IN_PROGRESS] Auth/push/native stability
+- Owner: API-NATIVE-STABILIZER
+- Scope: auth/session kanitlari, push contract kapanisi, Android/iOS build-smoke.
+- Latest evidence (2026-04-24): login=200, bootstrap=200, push register/unregister expo=200, bad/missing provider=200.
+- Policy: Native build sekteye ugrasa bile web parity akisi durmaz (non-blocking takip).
 
 ## Next 3 tasks
 
-1. Restore Chrome DevTools MCP transport/session, then rerun WS16 six-route mobile parity audit.
-2. Run and capture iOS + Android preview builds with install/open proof; close `BUILD-3/BUILD-4`.
-3. Backend push validation fix + negative probes rerun (`provider=fcm`, missing provider -> `4xx`); close `PUSH-4/PUSH-5`.
+1. Login + shell ust bosluk/tipografi farklarini kapat ve Chrome MCP ile tekrar kiyasla.
+2. Schedule + Customers interaction parity (filter/form/retry) kapatip PASS'e cek.
+3. Push negative probe (`invalid/missing provider`) backend tarafinda 4xx kapanisini dogrula.
 
-## Recently touched files
+## Risky files (first audit)
 
+- `app/(auth)/login.tsx`
 - `app/(tabs)/schedule/index.tsx`
 - `app/(tabs)/customers/index.tsx`
-- `app/(tabs)/conversations/index.tsx`
 - `app/(tabs)/conversations/[conversationId].tsx`
-- `app/(auth)/login.tsx`
-- `docs/execution/agents/ws7-p0-schedule-customers.md`
-- `docs/execution/agents/ws8-p0-conversations.md`
-- `docs/execution/agents/ws9-push-e2e.md`
-- `docs/execution/agents/ws10-build-qa.md`
-- `docs/execution/agents/ws11-auth-runtime.md`
-- `docs/execution/agents/ws16-chrome-parity.md`
-- `docs/execution/go-live-checklist.md`
-
-## Risky files
-
-- `app/(tabs)/conversations/[conversationId].tsx` (channel/key parsing edge cases)
-- `app/(stack)/notifications/index.tsx` (response shape still unconfirmed)
-- `src/services/push-notifications.ts` (depends on backend validation governance)
-- `eas.json` (release path not yet proven)
-- Chrome MCP session/transport instability blocks parity closure (`PARITY-1`)
+- `app/(stack)/notifications/index.tsx`
+- `src/services/push-notifications.ts`

@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+﻿import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
@@ -14,11 +14,11 @@ type SettingsBootstrap = {
 };
 
 const links = [
-  { label: 'Notifications Inbox', href: '/(stack)/notifications' },
-  { label: 'Notification Settings', href: '/(stack)/notifications/settings' },
-  { label: 'Notification Role Matrix', href: '/(stack)/notifications/role-matrix' },
-  { label: 'Team Access', href: '/(stack)/team/access' },
-  { label: 'Team Management', href: '/(stack)/team/management' },
+  { label: 'Bildirim Kutusu', href: '/(stack)/notifications' },
+  { label: 'Bildirim Ayarları', href: '/(stack)/notifications/settings' },
+  { label: 'Bildirim Rol Matrisi', href: '/(stack)/notifications/role-matrix' },
+  { label: 'Ekip Yetkileri', href: '/(stack)/team/access' },
+  { label: 'Ekip Yönetimi', href: '/(stack)/team/management' },
 ];
 
 export default function SettingsScreen() {
@@ -39,11 +39,11 @@ export default function SettingsScreen() {
   const permissionCount = useMemo(() => effective?.permissions?.length ?? 0, [effective]);
 
   return (
-    <Screen title="Settings" subtitle="Minimum usable yönetim ve bildirim ayarları">
+    <Screen title="Ayarlar">
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>
-          <Text className="mb-3 text-sm text-destructive">Ayarlar özeti alınamadı.</Text>
+          <Text className="mb-3 text-sm text-destructive">Ayar özeti alınamadı.</Text>
           <Button title="Tekrar Dene" variant="outline" onPress={() => void refetch()} />
         </Card>
       ) : null}

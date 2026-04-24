@@ -39,3 +39,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# parity artifacts
+.parity-logs/*
+!.parity-logs/latest/
+.parity-logs/latest/*
+!.parity-logs/latest/parity-report.md
+!.parity-logs/latest/parity-report.json
+.runtime-logs/

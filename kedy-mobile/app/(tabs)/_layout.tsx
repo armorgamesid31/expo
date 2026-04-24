@@ -15,40 +15,46 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#F07122',
       }}>
       <Tabs.Screen
-        name="schedule"
+        name="schedule/index"
         options={{
           title: 'Randevular',
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="customers"
+        name="customers/index"
         options={{
-          title: 'Musteriler',
+          title: 'Müşteriler',
           tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="create"
+        name="create/index"
         options={{
-          title: 'Olustur',
+          title: 'Oluştur',
           tabBarIcon: ({ color, size }) => <Ionicons name="add-circle-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="conversations"
+        name="conversations/index"
         options={{
-          title: 'Konusmalar',
+          title: 'Konuşmalar',
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-ellipses-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="menu"
+        name="menu/index"
         options={{
-          title: 'Menu',
+          title: 'Menü',
           tabBarIcon: ({ color, size }) => <Ionicons name="menu-outline" size={size} color={color} />,
         }}
       />
+      <Tabs.Screen name="schedule/new" options={{ href: null }} />
+      <Tabs.Screen name="schedule/waitlist/new" options={{ href: null }} />
+      <Tabs.Screen name="customers/new" options={{ href: null }} />
+      <Tabs.Screen name="customers/risk-menu" options={{ href: null }} />
+      <Tabs.Screen name="customers/attendance-settings" options={{ href: null }} />
+      <Tabs.Screen name="conversations/[conversationId]" options={{ href: null }} />
     </Tabs>
   );
 }

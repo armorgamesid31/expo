@@ -16,7 +16,7 @@ Re-verify push + notifications assumptions with current code, apply minimal hard
 - `docs/execution/agents/ws14-push-notifs.md`
 
 ## Probe evidence (2026-04-23)
-Using `owner@palmbeauty.com` account on `https://app.berkai.shop`:
+Using `<PARITY_EMAIL>` account on `https://app.berkai.shop`:
 
 1. Positive flow:
 - `POST /auth/login` -> success, access token received.
@@ -51,3 +51,4 @@ Using `owner@palmbeauty.com` account on `https://app.berkai.shop`:
 
 ## Validation
 - `npm run typecheck` -> PASS.
+

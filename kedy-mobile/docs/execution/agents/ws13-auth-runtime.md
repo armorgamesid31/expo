@@ -29,7 +29,7 @@ API_BASE=$(grep '^EXPO_PUBLIC_API_BASE_URL=' .env | cut -d= -f2-)
 
 curl -sS -o /tmp/ws13-login.json -w '%{http_code}' "$API_BASE/auth/login" \
   -H 'Content-Type: application/json' \
-  --data '{"email":"owner@palmbeauty.com","password":"123456"}'
+  --data '{"email":"<PARITY_EMAIL>","password":"<PARITY_PASSWORD>"}'
 # LOGIN_STATUS=200
 
 curl -sS -o /tmp/ws13-refresh.json -w '%{http_code}' "$API_BASE/auth/refresh" \
@@ -66,3 +66,4 @@ Run auth runtime smoke on simulator/device:
 - login -> app background/foreground -> token expiry/refresh path
 - logout -> verify route + secure storage cleared
 - cold start with valid token pair -> bootstrap success without flicker/loop
+

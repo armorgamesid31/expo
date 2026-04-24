@@ -1,45 +1,40 @@
-# Decisions
+﻿# Decisions
 
-Last updated: 2026-04-23 21:00 +03
-Owner: ORCH-3
+Last updated: 2026-04-24 03:05 +03
+Owner: ORCH-CORE
 
-1. NativeWind stays in migration scope.
-- Decision: keep current NativeWind stack; no styling-system migration during go-live path.
-- Why: avoids destabilizing already-hardened P0 flows.
+1. Parity otoritesi Chrome MCP olarak kilitlendi.
+- Decision: Route bazli PASS/PARTIAL/FAIL karari yalniz Chrome MCP kaniti ile verilir.
+- Why: calisma kurali ve canli akis kiyasi zorunlulugu.
 
-2. Expo 54 build line is frozen.
-- Decision: keep `react-native-reanimated@4.x`, `react-native-worklets@0.5.1`, `babel-preset-expo~54.0.10`, stable `react-native-css`.
-- Why: prevent dependency drift during final cycle.
+2. Playwright parity ciktisi yardimci kanita indirildi.
+- Decision: `scripts/parity/run-parity.ts` release gate karari vermez.
+- Why: parity gate tek otorite olarak Chrome MCP secildi.
 
-3. Push client contract is Expo-only and typed.
-- Decision: client sends `provider: "expo"` for register/unregister.
-- Why: deterministic payload contract on mobile side.
+3. Kritik 6 ekran faz kapisi zorunlu.
+- Decision: login/schedule/customers/conversations/settings/notifications PASS olmadan faz-2 yok.
+- Why: parity-first yaklasimini korumak.
 
-4. Backend push governance is an explicit go-live gate.
-- Decision: go-live requires backend to reject invalid/missing provider with `4xx` and publish schema examples.
-- Why: WS9 negative probes proved current backend is permissive.
-- Evidence: [ws9-push-e2e.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws9-push-e2e.md), WS14 re-probe (`2026-04-23 21:00 +03`) with same result.
+4. Ekran kapanisinda uclu onay zorunlu.
+- Decision: MIGRATOR tamam + PARITY-QA PASS + UX-SYSTEM-GUARD PASS.
+- Why: sadece gorsel degil akis ve durum davranisini da esitlemek.
 
-5. P0 data routes are locked to active admin namespace.
-- Decision: Schedule, Customers, Conversations use `/api/admin/*` contracts.
-- Why: prior `/api/mobile/*` mismatch caused runtime data gaps.
-- Evidence: [ws7-p0-schedule-customers.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws7-p0-schedule-customers.md), [ws8-p0-conversations.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws8-p0-conversations.md)
+5. Native build sorunlari parity akisini durdurmaz.
+- Decision: iOS/Android build sekteye ugramasi web parity turlarini durdurmaz; BUILD gate'leri non-blocking izlenir.
+- Why: kullanici yonergesi ve teslim hizi.
 
-6. Login runtime error taxonomy is fixed.
-- Decision: login errors are surfaced as config/network/401/5xx with deterministic inline + toast behavior.
-- Why: reduce operator confusion and support faster field diagnostics.
-- Evidence: [ws11-auth-runtime.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/agents/ws11-auth-runtime.md)
+6. Kimlik bilgileri repo icinde duz yazi tutulmaz.
+- Decision: test hesabi yalniz runtime env uzerinden kullanilir.
+- Why: guvenlik ve handover standardi.
 
-7. Production readiness requires evidence-first checklist.
-- Decision: every go-live gate is PASS only with concrete evidence artifacts.
-- Why: avoid subjective readiness claims.
-- Evidence: [go-live-checklist.md](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/docs/execution/go-live-checklist.md)
+7. Push backend governance release kalemi olarak acik kalir.
+- Decision: invalid/missing provider icin backend `4xx` donene kadar `PUSH-4/PUSH-5` acik.
+- Why: 2026-04-24 canli probe sonucunda halen `200` donuyor.
 
-8. Lightweight multi-agent continuation remains docs-only.
-- Decision: keep takeover model in `work-items.md`, `blockers.md`, `decisions.md`, `handover.md`, and per-agent logs.
-- Why: maintain handover safety without heavy orchestration framework.
+8. Schedule data window ISO date zorunlulugu.
+- Decision: `app/(tabs)/schedule/index.tsx` endpoint query paramlari `today` yerine ISO start/end of day ile gonderilir.
+- Why: backend `/api/admin/appointments` `from/to` icin ISO tarih bekliyor; `today` ile `400` donup ekran yuklemede kaliyordu.
 
-9. Notifications inbox mapping is compatibility-first and backend-shape tolerant.
-- Decision: notifications UI accepts both `{ items: [] }` and raw `[]`, and normalizes id/read fields from `id|deliveryId|notificationId` and `isRead|readAt`.
-- Why: live data probe returned delivery-centric fields (`deliveryId`, `readAt`, `deliveryCreatedAt`) and strict single-shape assumption is brittle.
-- Evidence: WS14 live probe against `GET /api/mobile/notifications?limit=5` and mapping update in [notifications/index.tsx](/Users/ezgi/Documents/repolar/Salonmanagementsaasapp-rn-migration/kedy-mobile/app/(stack)/notifications/index.tsx).
+9. Tabs only-index policy for Expo web parity.
+- Decision: Tab root screen names `*/index` olarak tanimlandi ve nested tab routes `href:null` ile gizlendi.
+- Why: webde route-sisimi tab bar (fazladan tab itemlari) parity'i bozuyordu.

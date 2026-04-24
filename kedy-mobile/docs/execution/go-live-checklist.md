@@ -1,104 +1,51 @@
-# Go-Live Checklist (72h Migration)
+﻿# Go-Live Checklist (Parity-First)
 
-Last updated: 2026-04-23 21:12 +03
-Rule: Every gate is binary (`PASS` or `FAIL`). If evidence is missing, status is `FAIL`.
+Last updated: 2026-04-24 03:05 +03
+Rule: Gate kaniti yoksa durum `FAIL` kabul edilir.
 
-## Gate Status
+## Gate status
 
-| ID | Gate | Status | Evidence | Owner |
-|---|---|---|---|---|
-| AUTH-1 | Login works against target production API base URL | PASS | `POST /auth/login -> 200`, `GET /api/mobile/bootstrap -> 200` at 2026-04-23 21:10 +03 | ws13-auth-runtime |
-| AUTH-2 | Refresh flow has no redirect/login loop (cold + warm start) | FAIL | `POST /auth/refresh -> 200` verified, but UI/device loop evidence missing | ws13-auth-runtime |
-| AUTH-3 | Logout clears tokens/session and returns to login | FAIL | `POST /auth/logout -> 204` verified, but client token clear + redirect evidence missing | ws13-auth-runtime |
-| AUTH-4 | Cold start session restore works with valid tokens | FAIL | No simulator/device cold-start evidence recorded in this session | ws13-auth-runtime |
-| P0-1 | Schedule screen handles loading/error/empty/retry without crash | FAIL | Implementation exists; no signed QA run | ws3-p0a + ws6-qa |
-| P0-2 | Customers screen handles loading/error/empty/retry without crash | FAIL | Implementation exists; no signed QA run | ws4-p0b + ws6-qa |
-| P0-3 | Conversations list -> detail works with loading/error/retry | FAIL | Implementation exists; no signed QA run | ws4-p0b + ws6-qa |
-| P1-1 | Settings + Notifications minimum usable path works | PASS | `GET /api/mobile/notifications?limit=5 -> 200` with populated `items[]`; compatibility mapper landed in `app/(stack)/notifications/index.tsx` at 2026-04-23 21:00 +03 | ws14-push-notifs |
-| PUSH-1 | Register payload sends `provider: "expo"` | PASS | Code updated in `src/services/push-notifications.ts` | ws5-push |
-| PUSH-2 | Unregister payload sends `provider: "expo"` | PASS | Code updated in `src/services/push-notifications.ts` | ws5-push |
-| PUSH-3 | Backend accepts Expo token format in register/unregister | PASS | Positive probes: register/unregister with `provider:\"expo\"` returned `200 {\"ok\":true}` at 2026-04-23 21:00 +03 | ws14-push-notifs + backend |
-| BUILD-1 | `npm run typecheck` passes on current branch | PASS | `npm run typecheck` -> exit code `0` at 2026-04-23 20:50 +03 | ws10-build-qa |
-| BUILD-2 | Expo web smoke serves `/login` | PASS | `CI=1 npx expo start --web --non-interactive --port 8088` + `curl http://127.0.0.1:8088/login` -> `HTTP_STATUS=200` at 2026-04-23 20:51 +03 | ws10-build-qa |
-| BUILD-3 | iOS preview build succeeds | FAIL | `npx eas-cli build --platform ios --profile preview --non-interactive` -> `An Expo user account is required to proceed` at 2026-04-23 20:59 +03 | ws15-build-release |
-| BUILD-4 | Android preview build succeeds | FAIL | `npx eas-cli build --platform android --profile preview --non-interactive` -> `An Expo user account is required to proceed` at 2026-04-23 20:59 +03 | ws15-build-release |
-| REL-1 | Open critical blockers count = 0 | FAIL | 3 open blockers remain | ORCH-1 |
+| ID | Gate | Status | Blocking | Evidence | Owner |
+|---|---|---|---|---|---|
+| PARITY-1 | Login visual + flow parity | FAIL | YES | Chrome MCP full PASS kaniti eksik | PARITY-QA + MIGRATOR-CORE |
+| PARITY-2 | Schedule visual + flow parity | FAIL | YES | Chrome MCP full PASS kaniti eksik | PARITY-QA + MIGRATOR-CORE |
+| PARITY-3 | Customers visual + flow parity | FAIL | YES | Chrome MCP full PASS kaniti eksik | PARITY-QA + MIGRATOR-CORE |
+| PARITY-4 | Conversations visual + flow parity | FAIL | YES | Chrome MCP full PASS kaniti eksik | PARITY-QA + MIGRATOR-CORE |
+| PARITY-5 | Settings visual + flow parity | FAIL | YES | Chrome MCP full PASS kaniti eksik | PARITY-QA + MIGRATOR-MENU |
+| PARITY-6 | Notifications visual + flow parity | FAIL | YES | Chrome MCP full PASS kaniti eksik | PARITY-QA + MIGRATOR-MENU |
+| UX-1 | Loading/empty/error/retry parity (critical 6) | FAIL | YES | UX guard sign-off eksik | UX-SYSTEM-GUARD |
+| AUTH-1 | Login/auth bootstrap works on target API | PASS | YES | 2026-04-24 probe: `POST /auth/login=200`, `GET /api/mobile/bootstrap=200` | API-NATIVE-STABILIZER |
+| PUSH-1 | Push register/unregister expo provider contract | PASS | YES | 2026-04-24 probe: `register(expo)=200`, `unregister(expo)=200` | API-NATIVE-STABILIZER |
+| PUSH-2 | Invalid/missing provider rejected by backend (`4xx`) | FAIL | YES | 2026-04-24 negative probe: `provider=fcm -> 200`, `provider missing -> 200` | API-NATIVE-STABILIZER + backend |
+| BUILD-3 | iOS preview build + smoke evidence | FAIL | NO | Non-blocking: iOS build kesintisi web parity akisini durdurmaz | API-NATIVE-STABILIZER |
+| BUILD-4 | Android preview build + smoke evidence | FAIL | NO | Non-blocking: Android build kesintisi web parity akisini durdurmaz | API-NATIVE-STABILIZER |
+| REL-1 | Blocking gates closed (`YES` blockers = 0) | FAIL | YES | parity + push acik | ORCH-CORE |
 
-## Pass criteria for go-live
+## Pass criteria
 
-- All gates above must be `PASS`.
-- Any new Sev-1 bug discovered after this update sets `REL-1` to `FAIL` until closed.
+- Kritik 6 ekranin tamami Chrome MCP'de PASS.
+- UX-1 PASS.
+- Push validation gate (`PUSH-2`) PASS.
+- `REL-1` PASS.
 
-## Validation evidence snippets (WS10)
+## Evidence policy
 
-```bash
-npm run typecheck
-# > kedy-mobile@1.0.0 typecheck
-# > tsc --noEmit
-# exit code: 0
-```
+- Kanit tek kaynak: `docs/execution/*` + `.parity-logs/*`.
+- Kimlik bilgileri dokumana yazilmaz; komut orneklerinde placeholder kullanilir.
+- Native build gate'leri (`BUILD-3/BUILD-4`) kayit zorunlulugudur; web parity kapanisini bloke etmez.
+
+## Command templates (redacted)
 
 ```bash
-CI=1 npx expo start --web --non-interactive --port 8088
-curl -s -o /tmp/ws10-expo-web.html -w "%{http_code}" http://127.0.0.1:8088/login
-# 200
-# log tail includes:
-# Waiting on http://localhost:8088
-# Web Bundled ... expo-router/entry.js
-```
-
-## Validation evidence snippets (WS15)
-
-```bash
-npx eas-cli --version
-# eas-cli/18.8.1 darwin-arm64 node-v25.4.0
-```
-
-```bash
-npx eas-cli whoami
-# Not logged in
-```
-
-```bash
-npx eas-cli build --platform ios --profile preview --non-interactive
-# An Expo user account is required to proceed.
-# Either log in with eas login or set the EXPO_TOKEN environment variable...
-# Error: build command failed.
-```
-
-```bash
-npx eas-cli build --platform android --profile preview --non-interactive
-# An Expo user account is required to proceed.
-# Either log in with eas login or set the EXPO_TOKEN environment variable...
-# Error: build command failed.
-```
-
-## Validation evidence snippets (WS13)
-
-```bash
-API_BASE=$(grep '^EXPO_PUBLIC_API_BASE_URL=' .env | cut -d= -f2-)
-curl -sS -o /tmp/ws13-login.json -w '%{http_code}' "$API_BASE/auth/login" \
+API_BASE=<EXPO_PUBLIC_API_BASE_URL>
+curl -sS -o /tmp/login.json -w '%{http_code}' "$API_BASE/auth/login" \
   -H 'Content-Type: application/json' \
-  --data '{"email":"owner@palmbeauty.com","password":"123456"}'
-# 200
+  --data '{"email":"<PARITY_EMAIL>","password":"<PARITY_PASSWORD>"}'
 ```
 
 ```bash
-curl -sS -o /tmp/ws13-bootstrap.json -w '%{http_code}' "$API_BASE/api/mobile/bootstrap" \
-  -H "Authorization: Bearer <accessToken>"
-# 200
-```
-
-```bash
-curl -sS -o /tmp/ws13-refresh.json -w '%{http_code}' "$API_BASE/auth/refresh" \
+curl -sS -o /tmp/register.json -w '%{http_code}' "$API_BASE/api/mobile/push/register" \
+  -H 'Authorization: Bearer <ACCESS_TOKEN>' \
   -H 'Content-Type: application/json' \
-  --data '{"refreshToken":"<refreshToken>"}'
-# 200
-```
-
-```bash
-curl -sS -o /tmp/ws13-logout.json -w '%{http_code}' "$API_BASE/auth/logout" \
-  -H 'Content-Type: application/json' \
-  --data '{"refreshToken":"<refreshToken>"}'
-# 204
+  --data '{"provider":"expo","token":"<EXPO_PUSH_TOKEN>"}'
 ```

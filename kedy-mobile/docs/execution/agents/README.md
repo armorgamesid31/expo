@@ -1,20 +1,28 @@
 # Agent Logs
 
-Purpose: Each sub-agent writes progress in its own file to enable safe takeover by another agent/session/account.
+Purpose: 6-agent modeli ile parity-first yürütmeyi izlemek.
 
-Rules:
-- One file per workstream agent.
-- Append-only updates with timestamp.
-- Include: objective, files touched, status, blockers, next step.
-- If agent stops, successor continues in same file under "takeover" entry.
+## Persistent agents
+- `ORCH-CORE.md`
+- `PARITY-QA.md`
+- `UX-SYSTEM-GUARD.md`
 
-Orchestrator files:
-- `orchestrator.md`: global status, cross-stream blockers, priorities.
+## Temporary agents
+- `MIGRATOR-CORE.md`
+- `MIGRATOR-MENU.md`
+- `API-NATIVE-STABILIZER.md`
 
-Worker files:
-- `ws1-build.md`
-- `ws2-core.md`
-- `ws3-p0a.md`
-- `ws4-p0b.md`
-- `ws5-push.md`
-- `ws6-qa.md`
+## Legacy logs
+- `orchestrator.md`
+- `ws*.md`
+
+## Rules
+- Güncellemeler timestamp ile append edilir.
+- Her agent kaydı şunları içerir: objective, scope, blockers, next step.
+- Tur sonu zorunlu kapanış dosyaları:
+  - `docs/execution/work-items.md`
+  - `docs/execution/blockers.md`
+  - `docs/execution/decisions.md`
+  - `docs/execution/go-live-checklist.md`
+  - `docs/execution/handover.md`
+- Ekran DONE kararı: MIGRATOR + PARITY-QA + UX-SYSTEM-GUARD onayı.

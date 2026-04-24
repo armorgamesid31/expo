@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+﻿import { useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, RefreshControl } from 'react-native';
@@ -63,6 +63,12 @@ function getResponseItems(payload: unknown, endpoint: string): AdminConversation
   return items as AdminConversationItem[];
 }
 
+function channelLabel(channel: ConversationChannel): string {
+  if (channel === 'INSTAGRAM') return 'Instagram';
+  if (channel === 'WHATSAPP') return 'WhatsApp';
+  return channel;
+}
+
 export default function ConversationsPage() {
   const router = useRouter();
   const { apiFetch } = useAuth();
@@ -110,30 +116,29 @@ export default function ConversationsPage() {
 
       router.push(`/(tabs)/conversations/${encodeURIComponent(conversationId)}` as never);
     },
-    [router],
+    [router]
   );
+
   const renderItem = useCallback(
     ({ item }: { item: ConversationListItem }) => (
       <Pressable onPress={() => handlePressConversation(item.conversationId)}>
         <Card>
-          <Text className="font-semibold text-foreground">{item.customerName || 'Musteri'}</Text>
+          <Text className="font-semibold text-foreground">{item.customerName || 'İsimsiz kullanıcı'}</Text>
           <Text className="text-sm text-muted-foreground">{item.lastMessage || 'Son mesaj yok'}</Text>
-          <Text className="text-xs text-muted-foreground">
-            Kanal: {item.channel} | Key: {item.conversationKey}
-          </Text>
+          <Text className="text-xs text-muted-foreground">Kanal: {channelLabel(item.channel)}</Text>
         </Card>
       </Pressable>
     ),
-    [handlePressConversation],
+    [handlePressConversation]
   );
 
   return (
-    <Screen title="Konusmalar" subtitle="P0 dönüşüm ekranı">
+    <Screen title="Konuşmalar">
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>
           <Text className="mb-3 text-sm text-destructive">
-            {toSafeErrorMessage(error, 'Konuşma verisi alınamadı.')}
+            {toSafeErrorMessage(error, 'Konuşma verileri alınamadı.')}
           </Text>
           <Button title="Tekrar Dene" variant="outline" onPress={() => void refetch()} />
         </Card>

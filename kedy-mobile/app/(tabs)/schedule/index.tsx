@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+﻿import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, RefreshControl } from 'react-native';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +19,21 @@ type AppointmentsResponse = {
   items: unknown[];
 };
 
-const APPOINTMENTS_ENDPOINT = '/api/admin/appointments?from=today&to=today&limit=120';
+function toIsoDayWindow(date: Date) {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+  return {
+    from: start.toISOString(),
+    to: end.toISOString(),
+  };
+}
+
+function buildAppointmentsEndpoint(date: Date) {
+  const window = toIsoDayWindow(date);
+  return `/api/admin/appointments?from=${encodeURIComponent(window.from)}&to=${encodeURIComponent(window.to)}&limit=120`;
+}
 
 function getResponseItems(payload: unknown, endpoint: string): unknown[] {
   const items = (payload as { items?: unknown } | null | undefined)?.items;
@@ -29,8 +43,8 @@ function getResponseItems(payload: unknown, endpoint: string): unknown[] {
   return items;
 }
 
-function normalizeAppointments(payload: AppointmentsResponse): Appointment[] {
-  const rawItems = getResponseItems(payload, APPOINTMENTS_ENDPOINT);
+function normalizeAppointments(payload: AppointmentsResponse, endpoint: string): Appointment[] {
+  const rawItems = getResponseItems(payload, endpoint);
 
   return rawItems.map((item, idx) => {
     const record = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
@@ -47,17 +61,23 @@ function normalizeAppointments(payload: AppointmentsResponse): Appointment[] {
   });
 }
 
+function statusText(status?: string): string {
+  if (!status) return 'Bilinmiyor';
+  return status;
+}
+
 export default function SchedulePage() {
   const { apiFetch } = useAuth();
+  const appointmentsEndpoint = useMemo(() => buildAppointmentsEndpoint(new Date()), []);
 
   const { data, isLoading, isError, isRefetching, error, refetch } = useQuery({
-    queryKey: ['schedule-today'],
+    queryKey: ['schedule-today', appointmentsEndpoint],
     retry: 1,
     queryFn: async () => {
-      const response = await apiFetch<AppointmentsResponse>(APPOINTMENTS_ENDPOINT, {
+      const response = await apiFetch<AppointmentsResponse>(appointmentsEndpoint, {
         method: 'GET',
       });
-      return normalizeAppointments(response);
+      return normalizeAppointments(response, appointmentsEndpoint);
     },
   });
 
@@ -80,19 +100,19 @@ export default function SchedulePage() {
         <Text className="text-sm text-muted-foreground">
           {item.startTime || '-'} - {item.endTime || '-'}
         </Text>
-        <Text className="text-xs text-muted-foreground">Durum: {item.status || 'unknown'}</Text>
+        <Text className="text-xs text-muted-foreground">Durum: {statusText(item.status)}</Text>
       </Card>
     ),
     []
   );
 
   return (
-    <Screen title="Randevular" subtitle="P0 dönüşüm ekranı">
+    <Screen title="Randevular">
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>
           <Text className="mb-3 text-sm text-destructive">
-            {error instanceof Error ? error.message : 'Randevu verisi alınamadı.'}
+            {error instanceof Error ? error.message : 'Randevu verileri alınamadı.'}
           </Text>
           <Button title="Tekrar Dene" variant="outline" onPress={onRetry} />
         </Card>

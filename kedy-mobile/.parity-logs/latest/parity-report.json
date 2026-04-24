@@ -1,0 +1,309 @@
+{
+  "generatedAt": "2026-04-23T22:25:22.092Z",
+  "sourceBaseUrl": "http://127.0.0.1:5173",
+  "targetBaseUrl": "http://127.0.0.1:8082",
+  "thresholds": {
+    "pass": 0.3,
+    "partial": 1.5
+  },
+  "credentialsUsed": {
+    "email": "owner@palmbeauty.com",
+    "password": "<redacted>"
+  },
+  "results": [
+    {
+      "routeId": "login",
+      "sourcePath": "/auth/login",
+      "targetPath": "/login",
+      "expectedFlow": "public-login",
+      "viewports": [
+        {
+          "viewportId": "iphone12",
+          "flowPass": true,
+          "diffPercent": 11.335,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\login-iphone12-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\login-iphone12-target.png",
+            "error": null
+          }
+        },
+        {
+          "viewportId": "pixel5",
+          "flowPass": true,
+          "diffPercent": 10.047,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\login-pixel5-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\login-pixel5-target.png",
+            "error": null
+          }
+        }
+      ],
+      "overallVerdict": "FAIL"
+    },
+    {
+      "routeId": "schedule",
+      "sourcePath": "/app/schedule",
+      "targetPath": "/schedule",
+      "expectedFlow": "auth-gated",
+      "viewports": [
+        {
+          "viewportId": "iphone12",
+          "flowPass": false,
+          "diffPercent": 11.335,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\schedule-iphone12-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\schedule-iphone12-target.png",
+            "error": null
+          }
+        },
+        {
+          "viewportId": "pixel5",
+          "flowPass": false,
+          "diffPercent": 10.047,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\schedule-pixel5-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\schedule-pixel5-target.png",
+            "error": null
+          }
+        }
+      ],
+      "overallVerdict": "FAIL"
+    },
+    {
+      "routeId": "customers",
+      "sourcePath": "/app/customers",
+      "targetPath": "/customers",
+      "expectedFlow": "auth-gated",
+      "viewports": [
+        {
+          "viewportId": "iphone12",
+          "flowPass": false,
+          "diffPercent": 11.335,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\customers-iphone12-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\customers-iphone12-target.png",
+            "error": null
+          }
+        },
+        {
+          "viewportId": "pixel5",
+          "flowPass": false,
+          "diffPercent": 10.047,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\customers-pixel5-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\customers-pixel5-target.png",
+            "error": null
+          }
+        }
+      ],
+      "overallVerdict": "FAIL"
+    },
+    {
+      "routeId": "conversations",
+      "sourcePath": "/app/conversations",
+      "targetPath": "/conversations",
+      "expectedFlow": "auth-gated",
+      "viewports": [
+        {
+          "viewportId": "iphone12",
+          "flowPass": false,
+          "diffPercent": 11.335,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\conversations-iphone12-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\conversations-iphone12-target.png",
+            "error": null
+          }
+        },
+        {
+          "viewportId": "pixel5",
+          "flowPass": false,
+          "diffPercent": 10.047,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\conversations-pixel5-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\conversations-pixel5-target.png",
+            "error": null
+          }
+        }
+      ],
+      "overallVerdict": "FAIL"
+    },
+    {
+      "routeId": "settings",
+      "sourcePath": "/app/settings",
+      "targetPath": "/settings",
+      "expectedFlow": "auth-gated",
+      "viewports": [
+        {
+          "viewportId": "iphone12",
+          "flowPass": false,
+          "diffPercent": 11.335,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\settings-iphone12-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\settings-iphone12-target.png",
+            "error": null
+          }
+        },
+        {
+          "viewportId": "pixel5",
+          "flowPass": false,
+          "diffPercent": 10.047,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\settings-pixel5-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\settings-pixel5-target.png",
+            "error": null
+          }
+        }
+      ],
+      "overallVerdict": "FAIL"
+    },
+    {
+      "routeId": "notifications",
+      "sourcePath": "/app/notifications",
+      "targetPath": "/notifications",
+      "expectedFlow": "auth-gated",
+      "viewports": [
+        {
+          "viewportId": "iphone12",
+          "flowPass": false,
+          "diffPercent": 11.335,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\notifications-iphone12-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\notifications-iphone12-target.png",
+            "error": null
+          }
+        },
+        {
+          "viewportId": "pixel5",
+          "flowPass": false,
+          "diffPercent": 10.047,
+          "verdict": "FAIL",
+          "source": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:5173/auth/login",
+            "text": "Salon Mobil Giriş Hesabınızla giriş yapın. E-posta Şifre Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\notifications-pixel5-source.png",
+            "error": null
+          },
+          "target": {
+            "status": 200,
+            "finalUrl": "http://127.0.0.1:8082/login",
+            "text": "Kedy Giriş Hesabınıza giriş yapın E-posta Şifre API endpoint: /auth/login Giriş Yap",
+            "screenshotPath": "C:\\Users\\berka\\projeler\\expo\\kedy-mobile\\.parity-logs\\2026-04-23T22-24-17-295Z\\notifications-pixel5-target.png",
+            "error": null
+          }
+        }
+      ],
+      "overallVerdict": "FAIL"
+    }
+  ]
+}

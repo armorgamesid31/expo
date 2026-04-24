@@ -1,5 +1,13 @@
-import { PlaceholderScreen } from '@/components/features/PlaceholderScreen';
+import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
 
 export default function TeamTimeOffScreen() {
-  return <PlaceholderScreen title="Team Time Off" />;
+  return (
+    <WorkInProgressScreen
+      title="Tatil ve Ýzin Yönetimi"
+      subtitle="Ekip uygunluk yönetimi"
+      summary="Ýzin ve tatil detay ekraný hazýrlanýyor."
+      details="Müsaitlik motoru ile entegre izin kurallarý taþýnýrken menü ve geri dönüþ akýþý parity seviyesinde çalýþýr durumda tutuluyor."
+      backHref="/(stack)/team/management"
+    />
+  );
 }

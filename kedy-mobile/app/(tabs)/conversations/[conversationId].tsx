@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
@@ -85,6 +85,12 @@ function getResponseItems(payload: unknown, endpoint: string): ConversationMessa
   return items as ConversationMessage[];
 }
 
+function channelLabel(channel: ConversationChannel): string {
+  if (channel === 'INSTAGRAM') return 'Instagram';
+  if (channel === 'WHATSAPP') return 'WhatsApp';
+  return channel;
+}
+
 export default function ConversationDetailPage() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const { apiFetch } = useAuth();
@@ -101,31 +107,25 @@ export default function ConversationDetailPage() {
       }
 
       const endpoint = `/api/admin/conversations/${parsedRoute.channel}/${encodeURIComponent(parsedRoute.conversationKey)}/messages?limit=120`;
-      return apiFetch<AdminConversationMessagesResponse>(
-        endpoint,
-        { method: 'GET' },
-      );
+      return apiFetch<AdminConversationMessagesResponse>(endpoint, { method: 'GET' });
     },
   });
 
-  const messages = useMemo(
-    () => {
-      if (!data || !parsedRoute) return [];
-      const endpoint = `/api/admin/conversations/${parsedRoute.channel}/${encodeURIComponent(parsedRoute.conversationKey)}/messages?limit=120`;
-      return getResponseItems(data, endpoint).map((item) => ({
-        id: item.id ?? null,
-        text: item.text ?? null,
-        messageType: item.messageType ?? null,
-        direction: item.direction ?? null,
-        eventTimestamp: item.eventTimestamp ?? null,
-      }));
-    },
-    [data, parsedRoute],
-  );
+  const messages = useMemo(() => {
+    if (!data || !parsedRoute) return [];
+    const endpoint = `/api/admin/conversations/${parsedRoute.channel}/${encodeURIComponent(parsedRoute.conversationKey)}/messages?limit=120`;
+    return getResponseItems(data, endpoint).map((item) => ({
+      id: item.id ?? null,
+      text: item.text ?? null,
+      messageType: item.messageType ?? null,
+      direction: item.direction ?? null,
+      eventTimestamp: item.eventTimestamp ?? null,
+    }));
+  }, [data, parsedRoute]);
   const messagesCount = messages.length;
 
   return (
-    <Screen title="Konusma Detayi" subtitle={`ID: ${normalizedConversationId || '-'}`}>
+    <Screen title="Konuşma Detayı">
       {!parsedRoute ? (
         <Card>
           <Text className="text-sm text-destructive">Geçersiz konuşma kimliği.</Text>
@@ -142,9 +142,8 @@ export default function ConversationDetailPage() {
       ) : null}
       {parsedRoute && !isLoading && !isError ? (
         <Card>
-          <Text className="font-semibold text-foreground">Kanal: {parsedRoute.channel}</Text>
-          <Text className="text-sm text-muted-foreground">Key: {parsedRoute.conversationKey}</Text>
-          <Text className="mt-2 text-xs text-muted-foreground">Mesaj sayısı: {messagesCount}</Text>
+          <Text className="font-semibold text-foreground">Kanal: {channelLabel(parsedRoute.channel)}</Text>
+          <Text className="text-sm text-muted-foreground">Mesaj sayısı: {messagesCount}</Text>
         </Card>
       ) : null}
       {parsedRoute && !isLoading && !isError && messagesCount === 0 ? (

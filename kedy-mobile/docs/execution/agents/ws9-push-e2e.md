@@ -65,3 +65,16 @@ Observed response:
 
 ## Next step
 Backend owner to implement input validation + schema docs, then WS9 reruns the same probes and expects `400/422` for invalid provider/missing provider.
+
+## Re-probe addendum (2026-04-24 00:30 +03)
+
+Command output:
+
+```bash
+BAD_PROVIDER_STATUS=200
+MISSING_PROVIDER_STATUS=200
+```
+
+Conclusion:
+- Provider validation still permissive in production API.
+- `PUSH-4` and `PUSH-5` remain open.

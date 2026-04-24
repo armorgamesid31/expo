@@ -1,0 +1,42 @@
+{
+  "sourceBaseUrl": "http://127.0.0.1:5173",
+  "targetBaseUrl": "http://127.0.0.1:8082",
+  "routes": [
+    {
+      "id": "login",
+      "sourcePath": "/auth/login",
+      "targetPath": "/login",
+      "expectedFlow": "public-login"
+    },
+    {
+      "id": "schedule",
+      "sourcePath": "/app/schedule",
+      "targetPath": "/schedule",
+      "expectedFlow": "auth-gated"
+    },
+    {
+      "id": "customers",
+      "sourcePath": "/app/customers",
+      "targetPath": "/customers",
+      "expectedFlow": "auth-gated"
+    },
+    {
+      "id": "conversations",
+      "sourcePath": "/app/conversations",
+      "targetPath": "/conversations",
+      "expectedFlow": "auth-gated"
+    },
+    {
+      "id": "settings",
+      "sourcePath": "/app/settings",
+      "targetPath": "/settings",
+      "expectedFlow": "auth-gated"
+    },
+    {
+      "id": "notifications",
+      "sourcePath": "/app/notifications",
+      "targetPath": "/notifications",
+      "expectedFlow": "auth-gated"
+    }
+  ]
+}
