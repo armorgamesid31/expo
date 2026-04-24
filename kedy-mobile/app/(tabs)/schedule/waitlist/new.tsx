@@ -1,13 +1,14 @@
-import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
+ï»¿import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
 
 export default function NewWaitlistPage() {
   return (
     <WorkInProgressScreen
-      title="Yeni Bekleme Listesi Kaydý"
-      subtitle="Bekleme listesi oluþturma"
-      summary="Bekleme listesi formu hazýrlanýyor."
-      details="Parity turunda baþlýk dili, spacing ve dönüþ CTA'larý eþitlendi. Servis-personel eþleþtirme adýmlarý sonraki turda tamamlanacak."
+      title="Yeni Bekleme Listesi KaydÄ±"
+      subtitle="Bekleme listesi oluÅŸturma"
+      summary="Bekleme listesi ekranÄ± hazÄ±rlanÄ±yor."
+      details="Servis-personel eÅŸleÅŸtirme ve kayÄ±t adÄ±mÄ± taÅŸÄ±nÄ±yor. Bu turda ekran hiyerarÅŸisi, spacing ve retry CTA davranÄ±ÅŸÄ± parity seviyesine Ã§ekildi."
       backHref="/(tabs)/schedule"
+      state="empty"
     />
   );
 }

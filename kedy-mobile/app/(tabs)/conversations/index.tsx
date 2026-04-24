@@ -1,9 +1,10 @@
-﻿import { useCallback, useMemo } from 'react';
+﻿import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, RefreshControl } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
 import { useAuth } from '@/providers/AuthProvider';
 import { Pressable, Text, View } from '@/tw';
@@ -47,7 +48,8 @@ function toConversationId(channel: ConversationChannel, conversationKey: string)
 }
 
 function toSafeErrorMessage(error: unknown, fallback: string): string {
-  const message = typeof (error as { message?: unknown })?.message === 'string' ? (error as { message: string }).message.trim() : '';
+  const message =
+    typeof (error as { message?: unknown })?.message === 'string' ? (error as { message: string }).message.trim() : '';
   if (!message) return fallback;
   if (/^request failed \(\d+\)$/i.test(message)) return fallback;
   return message;
@@ -72,6 +74,8 @@ function channelLabel(channel: ConversationChannel): string {
 export default function ConversationsPage() {
   const router = useRouter();
   const { apiFetch } = useAuth();
+  const [channelFilter, setChannelFilter] = useState<'ALL' | ConversationChannel>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data, isLoading, isError, isRefetching, error, refetch } = useQuery({
     queryKey: ['conversations'],
@@ -103,6 +107,18 @@ export default function ConversationsPage() {
       .filter((entry): entry is ConversationListItem => Boolean(entry));
   }, [data]);
 
+  const filteredItems = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLocaleLowerCase('tr');
+
+    return items.filter((item) => {
+      if (channelFilter !== 'ALL' && item.channel !== channelFilter) return false;
+      if (!normalizedSearch) return true;
+
+      const haystack = `${item.customerName ?? ''} ${item.lastMessage ?? ''} ${item.conversationKey}`.toLocaleLowerCase('tr');
+      return haystack.includes(normalizedSearch);
+    });
+  }, [channelFilter, items, searchQuery]);
+
   const onRefresh = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -121,11 +137,13 @@ export default function ConversationsPage() {
 
   const renderItem = useCallback(
     ({ item }: { item: ConversationListItem }) => (
-      <Pressable onPress={() => handlePressConversation(item.conversationId)}>
+      <Pressable onPress={() => handlePressConversation(item.conversationId)} className="active:opacity-90">
         <Card>
-          <Text className="font-semibold text-foreground">{item.customerName || 'İsimsiz kullanıcı'}</Text>
-          <Text className="text-sm text-muted-foreground">{item.lastMessage || 'Son mesaj yok'}</Text>
-          <Text className="text-xs text-muted-foreground">Kanal: {channelLabel(item.channel)}</Text>
+          <View className="gap-1.5">
+            <Text className="font-semibold text-foreground">{item.customerName || 'İsimsiz kullanıcı'}</Text>
+            <Text className="text-sm text-muted-foreground">{item.lastMessage || 'Son mesaj yok'}</Text>
+            <Text className="text-xs font-medium text-muted-foreground">Kanal: {channelLabel(item.channel)}</Text>
+          </View>
         </Card>
       </Pressable>
     ),
@@ -133,24 +151,59 @@ export default function ConversationsPage() {
   );
 
   return (
-    <Screen title="Konuşmalar">
+    <Screen title="Konuşmalar" subtitle="WhatsApp ve Instagram sohbetleri">
+      <View className="gap-3 rounded-2xl border border-border bg-card/60 p-3">
+        <View className="gap-1">
+          <Text className="text-base font-semibold text-foreground">Sohbet Kutusu</Text>
+          <Text className="text-sm text-muted-foreground">Kanal filtresiyle konuşmaları hızlıca daraltın.</Text>
+        </View>
+
+        <View className="flex-row gap-2">
+          <Button title="Tümü" variant={channelFilter === 'ALL' ? 'primary' : 'outline'} onPress={() => setChannelFilter('ALL')} />
+          <Button
+            title="Instagram"
+            variant={channelFilter === 'INSTAGRAM' ? 'primary' : 'outline'}
+            onPress={() => setChannelFilter('INSTAGRAM')}
+          />
+          <Button
+            title="WhatsApp"
+            variant={channelFilter === 'WHATSAPP' ? 'primary' : 'outline'}
+            onPress={() => setChannelFilter('WHATSAPP')}
+          />
+        </View>
+
+        <View className="flex-row gap-4">
+          <Text className="text-sm text-muted-foreground">{filteredItems.length} SOHBET</Text>
+          <Text className="text-sm text-muted-foreground">0 BEKLEYEN</Text>
+        </View>
+
+        <Input
+          placeholder="Ad, kullanıcı adı, mesaj ara"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+      </View>
+
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>
-          <Text className="mb-3 text-sm text-destructive">
-            {toSafeErrorMessage(error, 'Konuşma verileri alınamadı.')}
-          </Text>
+          <Text className="mb-3 text-sm text-destructive">{toSafeErrorMessage(error, 'Konuşma verileri alınamadı.')}</Text>
           <Button title="Tekrar Dene" variant="outline" onPress={() => void refetch()} />
         </Card>
       ) : null}
-      {!isLoading && !isError && items.length === 0 ? (
+      {!isLoading && !isError && filteredItems.length === 0 ? (
         <Card>
-          <Text className="text-sm text-muted-foreground">Aktif konuşma bulunamadı.</Text>
+          <View className="gap-1">
+            <Text className="text-sm font-semibold text-foreground">Sohbet kutusu boş</Text>
+            <Text className="text-sm text-muted-foreground">Henüz görüntülenecek konuşma yok.</Text>
+          </View>
         </Card>
       ) : null}
-      {!isLoading && !isError && items.length > 0 ? (
+      {!isLoading && !isError && filteredItems.length > 0 ? (
         <FlatList
-          data={items}
+          data={filteredItems}
           keyExtractor={keyExtractor}
           refreshControl={<RefreshControl refreshing={isRefetching && !isLoading} onRefresh={onRefresh} />}
           renderItem={renderItem}

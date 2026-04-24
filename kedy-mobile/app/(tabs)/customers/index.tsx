@@ -1,9 +1,11 @@
 ﻿import { useCallback, useMemo } from 'react';
+import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, RefreshControl } from 'react-native';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
 import { useAuth } from '@/providers/AuthProvider';
 import { Text, View } from '@/tw';
@@ -47,6 +49,7 @@ function normalizeCustomers(payload: CustomersResponse): Customer[] {
 }
 
 export default function CustomersPage() {
+  const router = useRouter();
   const { apiFetch } = useAuth();
 
   const { data, isLoading, isError, isRefetching, error, refetch } = useQuery({
@@ -87,6 +90,19 @@ export default function CustomersPage() {
 
   return (
     <Screen title="Müşteriler">
+      <View className="gap-3">
+        <Input placeholder="Ad, telefon veya Instagram..." editable={false} />
+        <View className="flex-row gap-2">
+          <View className="flex-1">
+            <Button title="Risk Merkezi" variant="outline" onPress={() => router.push('/(tabs)/customers/risk-menu')} />
+          </View>
+          <View className="flex-1">
+            <Button title="Müşteri Ekle" onPress={() => router.push('/(tabs)/customers/new')} />
+          </View>
+        </View>
+        <Text className="text-xs text-muted-foreground">Yeni müşteri ekleme formu ayrı bir panelde açılır.</Text>
+      </View>
+
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>

@@ -42,6 +42,18 @@ function getResponseItems(payload: unknown, endpoint: string): NotificationApiIt
   return items as NotificationApiItem[];
 }
 
+function formatTs(ts: string) {
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) return ts;
+  return new Intl.DateTimeFormat('tr-TR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
 export default function NotificationsInboxScreen() {
   const { apiFetch } = useAuth();
 
@@ -85,7 +97,7 @@ export default function NotificationsInboxScreen() {
         <Text className="font-semibold text-foreground">{item.title}</Text>
         <Text className="text-sm text-muted-foreground">{item.body}</Text>
         <Text className="text-xs text-muted-foreground">
-          {item.createdAt} · {item.isRead ? 'Okundu' : 'Yeni'}
+          {formatTs(item.createdAt)} · {item.isRead ? 'Okundu' : 'Yeni'}
         </Text>
       </Card>
     ),
@@ -94,6 +106,8 @@ export default function NotificationsInboxScreen() {
 
   return (
     <Screen title="Bildirimler">
+      <Button title="Tümünü okundu yap" variant="outline" onPress={() => {}} />
+
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>

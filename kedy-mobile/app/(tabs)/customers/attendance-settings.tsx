@@ -1,13 +1,14 @@
-import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
+ï»¿import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
 
 export default function AttendanceSettingsPage() {
   return (
     <WorkInProgressScreen
-      title="Randevu Ýhlali"
-      subtitle="Katýlým ve yaptýrým ayarlarý"
-      summary="Randevu ihlali ayarlarý ekraný hazýrlanýyor."
-      details="Loading/empty/error/retry davranýþlarý parity þablonuna taþýndý. Kural seti ve kayýt API baðlarý bir sonraki turda tamamlanacak."
+      title="Randevu Ä°hlali"
+      subtitle="KatÄ±lÄ±m ve yaptÄ±rÄ±m ayarlarÄ±"
+      summary="Randevu ihlali ayar ekranÄ± hazÄ±rlanÄ±yor."
+      details="Ä°hlal politikasÄ± ve yaptÄ±rÄ±m formlarÄ± taÅŸÄ±nma hattÄ±nda. Bu turda empty/retry davranÄ±ÅŸÄ±, metin hiyerarÅŸisi ve CTA dili parity standardÄ±na alÄ±ndÄ±."
       backHref="/(tabs)/customers/risk-menu"
+      state="empty"
     />
   );
 }

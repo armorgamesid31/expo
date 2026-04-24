@@ -1,13 +1,14 @@
-import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
+ï»¿import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
 
 export default function SalonInfoFaqScreen() {
   return (
     <WorkInProgressScreen
-      title="Sýk Sorulan Sorular"
-      subtitle="Müþteri bilgilendirme içeriði"
-      summary="SSS düzenleme ekraný hazýrlanýyor."
-      details="Parity hattýnda menü geçiþleri tamamlandý. Ýçerik editörü ve kayýt akýþý bir sonraki turda taþýnacak."
+      title="SÄ±k Sorulan Sorular"
+      subtitle="MÃ¼ÅŸteri bilgilendirme iÃ§eriÄŸi"
+      summary="SSS ekranÄ± hazÄ±rlanÄ±yor."
+      details="Ã–n tanÄ±mlÄ± soru-cevap ve Ã¶zel soru alanlarÄ± taÅŸÄ±nma hattÄ±nda. Bu turda baÅŸlÄ±k hiyerarÅŸisi, spacing ve geri dÃ¶nÃ¼ÅŸ akÄ±ÅŸÄ± hizalandÄ±."
       backHref="/(stack)/salon-info"
+      state="empty"
     />
   );
 }

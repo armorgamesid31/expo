@@ -1,13 +1,14 @@
-import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
+ï»¿import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
 
 export default function SalonInfoBasicScreen() {
   return (
     <WorkInProgressScreen
       title="Temel Bilgiler"
       subtitle="Salon profil bilgileri"
-      summary="Temel bilgiler formu hazýrlanýyor."
-      details="Bu adýmda baþlýk, spacing ve geri dönüþ davranýþý parity ile hizalandý. Form alanlarý kaynak uygulamadaki düzenle bir sonraki turda tamamlanacak."
+      summary="Temel bilgiler ekranÄ± hazÄ±rlanÄ±yor."
+      details="Salon adÄ±, adres, iletiÅŸim ve Ã§alÄ±ÅŸma saatleri formu taÅŸÄ±nÄ±yor. Bu turda metin dÃ¼zeni ve empty/retry davranÄ±ÅŸÄ± parity Ã§izgisine getirildi."
       backHref="/(stack)/salon-info"
+      state="empty"
     />
   );
 }

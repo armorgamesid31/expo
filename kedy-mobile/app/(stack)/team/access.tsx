@@ -1,13 +1,14 @@
-import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
+ï»¿import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
 
 export default function TeamAccessScreen() {
   return (
     <WorkInProgressScreen
       title="Ekip ve Yetki"
-      subtitle="Rol ve eriþim ayarlarý"
-      summary="Bu ekranýn detay formu taþýnma hattýnda hazýrlanýyor."
-      details="Parity kapsamýnda ilk adýmda menü akýþý ve baþlýk dili eþitlendi. Form ve kayýt akýþý bir sonraki turda tamamlanacak."
+      subtitle="Roller ve eriÅŸim ayarlarÄ±"
+      summary="Ekip ve yetki ekranÄ± hazÄ±rlanÄ±yor."
+      details="KullanÄ±cÄ±, rol ve yetki formlarÄ± taÅŸÄ±nma hattÄ±nda. Bu turda menÃ¼ akÄ±ÅŸÄ±, metin hiyerarÅŸisi ve geri dÃ¶nÃ¼ÅŸ CTA'larÄ± hizalandÄ±."
       backHref="/(stack)/team/management"
+      state="empty"
     />
   );
 }

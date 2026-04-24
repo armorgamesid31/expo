@@ -1,26 +1,26 @@
-import { MenuScreen } from '@/components/features/menu/MenuScreen';
+ï»¿import { MenuScreen } from '@/components/features/menu/MenuScreen';
 
 const items = [
   {
     id: 'staff',
-    title: 'Personel Yönetimi',
-    description: 'Personel profillerini ve görev daðýlýmlarýný yönetin.',
+    title: 'Personel YÃ¶netimi',
+    description: 'Personel profilleri, atamalar ve hizmet yetkileri.',
     href: '/(stack)/staff',
   },
   {
     id: 'access',
     title: 'Ekip ve Yetki',
-    description: 'Rol ve eriþim izinlerini düzenleyin.',
+    description: 'Ekip kullanÄ±cÄ± hesaplarÄ±, roller ve yetkiler.',
     href: '/(stack)/team/access',
   },
   {
     id: 'time-off',
-    title: 'Tatil ve Ýzin Yönetimi',
-    description: 'Salon tatilleri ve ekip izinleri takibini açýn.',
+    title: 'Tatil ve Ä°zin YÃ¶netimi',
+    description: 'Salon tatilleri ve personel izin tarihleri.',
     href: '/(stack)/team/time-off',
   },
 ];
 
 export default function TeamManagementScreen() {
-  return <MenuScreen title="Ekip Yönetimi" subtitle="Ekip operasyon menüsü" items={items} />;
+  return <MenuScreen title="Ekip YÃ¶netimi" subtitle="Ekip kullanÄ±cÄ±larÄ±, roller ve izinler" items={items} />;
 }

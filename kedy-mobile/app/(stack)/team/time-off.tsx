@@ -1,13 +1,14 @@
-import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
+ï»¿import { WorkInProgressScreen } from '@/components/features/menu/WorkInProgressScreen';
 
 export default function TeamTimeOffScreen() {
   return (
     <WorkInProgressScreen
-      title="Tatil ve Ýzin Yönetimi"
-      subtitle="Ekip uygunluk yönetimi"
-      summary="Ýzin ve tatil detay ekraný hazýrlanýyor."
-      details="Müsaitlik motoru ile entegre izin kurallarý taþýnýrken menü ve geri dönüþ akýþý parity seviyesinde çalýþýr durumda tutuluyor."
+      title="Tatil ve Ä°zin YÃ¶netimi"
+      subtitle="Ekip uygunluk yÃ¶netimi"
+      summary="Tatil ve izin ekranÄ± hazÄ±rlanÄ±yor."
+      details="Salon tatilleri ve personel izin kurallarÄ± taÅŸÄ±nma hattÄ±nda. Bu turda empty/retry davranÄ±ÅŸÄ± ve geri dÃ¶nÃ¼ÅŸ CTA'larÄ± parity standardÄ±na Ã§ekildi."
       backHref="/(stack)/team/management"
+      state="empty"
     />
   );
 }

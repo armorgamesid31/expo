@@ -1,9 +1,11 @@
 ﻿import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { FlatList, RefreshControl } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { httpRequest } from '@/lib/http';
 import { useAuth } from '@/providers/AuthProvider';
 import { Text, View } from '@/tw';
 
@@ -67,15 +69,22 @@ function statusText(status?: string): string {
 }
 
 export default function SchedulePage() {
-  const { apiFetch } = useAuth();
+  const router = useRouter();
+  const { accessToken, bootstrap } = useAuth();
   const appointmentsEndpoint = useMemo(() => buildAppointmentsEndpoint(new Date()), []);
 
   const { data, isLoading, isError, isRefetching, error, refetch } = useQuery({
     queryKey: ['schedule-today', appointmentsEndpoint],
+    enabled: Boolean(accessToken),
     retry: 1,
     queryFn: async () => {
-      const response = await apiFetch<AppointmentsResponse>(appointmentsEndpoint, {
+      if (!accessToken) {
+        throw new Error('Not authenticated');
+      }
+      const response = await httpRequest<AppointmentsResponse>(appointmentsEndpoint, {
         method: 'GET',
+        token: accessToken,
+        salonId: bootstrap?.salon?.id ?? null,
       });
       return normalizeAppointments(response, appointmentsEndpoint);
     },
@@ -108,6 +117,22 @@ export default function SchedulePage() {
 
   return (
     <Screen title="Randevular">
+      <View className="gap-3">
+        <View className="flex-row gap-2">
+          <View className="flex-1">
+            <Button title="Takvim" variant="outline" onPress={() => {}} />
+          </View>
+          <View className="flex-1">
+            <Button title="Bekleme Listesi" variant="outline" onPress={() => router.push('/(tabs)/schedule/waitlist/new')} />
+          </View>
+        </View>
+        <View className="flex-row items-center justify-between">
+          <Button title="Önceki gün" variant="outline" onPress={() => {}} />
+          <Text className="text-sm text-foreground">Bugün</Text>
+          <Button title="Sonraki gün" variant="outline" onPress={() => {}} />
+        </View>
+      </View>
+
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
         <Card>
@@ -136,6 +161,8 @@ export default function SchedulePage() {
           removeClippedSubviews
         />
       ) : null}
+
+      <Button title="Yeni Randevu Ekle" onPress={() => router.push('/(tabs)/schedule/new')} />
     </Screen>
   );
 }

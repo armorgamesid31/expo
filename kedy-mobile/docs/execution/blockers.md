@@ -36,3 +36,18 @@ Owner: ORCH-CORE
 
 - `API-1` P0 endpoint mismatch closure (`/api/admin/*` hizasi).
 - `P1-1` notifications response shape compatibility closure.
+
+## 2026-04-24 03:41 +03 PARITY-QA blocker update
+
+- `PARITY-CORE-1` durumu devam ediyor.
+- Chrome MCP mobile route matrix: PASS 0 / PARTIAL 5 / FAIL 1
+- `settings` route FAIL (IA/yapi source ile kritik uyumsuz).
+- Diger kritik route'lar PARTIAL seviyede; PASS kapanisi yok.
+- Kanit: `.parity-logs/latest/{login,schedule,customers,conversations,settings,notifications}-{source,target}.png`
+
+## 2026-04-24 13:00 +03 blocker delta
+
+- `PARITY-CORE-1` acik kaldi (PASS sayisi 0).
+- Kritik iyilesme: `settings` artik FAIL degil, PARTIAL.
+- Kapanis icin kalan durum: 6 route'un da PASS seviyesine cikmasi gerekiyor.
+- Kanit: `.parity-logs/latest/*-r2.png`

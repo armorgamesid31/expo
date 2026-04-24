@@ -1,16 +1,16 @@
-import { MenuScreen } from '@/components/features/menu/MenuScreen';
+ï»¿import { MenuScreen } from '@/components/features/menu/MenuScreen';
 
 const items = [
   {
     id: 'blacklist',
     title: 'Kara Liste',
-    description: 'Yasaklı müşteri kayıtlarını görüntüleyin ve yönetin.',
+    description: 'YasaklÄ± mÃ¼ÅŸteri kayÄ±tlarÄ±nÄ± gÃ¶rÃ¼ntÃ¼le ve yÃ¶net.',
     href: '/(stack)/blacklist',
   },
   {
     id: 'attendance-settings',
-    title: 'Randevu İhlali',
-    description: 'İhlal sayımı ve yaptırım kurallarını düzenleyin.',
+    title: 'Randevu Ä°hlali',
+    description: 'Ä°hlal sayÄ±mÄ± ve yaptÄ±rÄ±m kurallarÄ±nÄ± dÃ¼zenle.',
     href: '/(tabs)/customers/attendance-settings',
   },
 ];

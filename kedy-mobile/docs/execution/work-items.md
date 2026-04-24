@@ -70,3 +70,26 @@ Source of truth owner: ORCH-CORE
 - `app/(tabs)/conversations/[conversationId].tsx`
 - `app/(stack)/notifications/index.tsx`
 - `src/services/push-notifications.ts`
+
+## 2026-04-24 03:41 +03 PARITY-QA update (Chrome MCP mobile)
+
+- Owner: PARITY-QA
+- Scope: critical 6 ekran route bazli source/target kiyas (390x844)
+- Result matrix: PASS 0 / PARTIAL 5 / FAIL 1
+- Status detail:
+  - login: PARTIAL
+  - schedule: PARTIAL
+  - customers: PARTIAL
+  - conversations: PARTIAL
+  - settings: FAIL
+  - notifications: PARTIAL
+- Evidence root: `.parity-logs/latest`
+- Not: target schedule bu turda loading lock'a dusmedi; console hata yok, fetch tarafinda `GET /api/mobile/bootstrap [304]` goruldu.
+
+## 2026-04-24 13:00 +03 PARITY-QA re-check
+
+- Owner: PARITY-QA
+- Scope: critical 6 route yeniden olcum (Chrome MCP mobile)
+- Result matrix: PASS 0 / PARTIAL 6 / FAIL 0
+- Delta: `settings` FAIL'den PARTIAL'e dondu.
+- Evidence: `.parity-logs/latest/*-r2.png`

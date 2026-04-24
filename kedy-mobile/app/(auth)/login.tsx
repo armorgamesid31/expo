@@ -9,6 +9,7 @@ import { ApiError } from '@/lib/http';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToasts } from '@/providers/ToastProvider';
 import { Text, View } from '@/tw';
+import { Image } from '@/tw/image';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -88,6 +89,13 @@ export default function LoginScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Screen title="Salon Mobil Giriş" subtitle="Hesabınızla giriş yapın.">
         <Card>
+          <View className="mb-4 items-center">
+            <Image
+              source={{ uri: 'https://cdn.kedyapp.com/kedylogo_koyu.png' }}
+              contentFit="contain"
+              style={{ width: 160, height: 52 }}
+            />
+          </View>
           <Text className="mb-2 text-sm text-muted-foreground">E-posta</Text>
           <Input
             autoCapitalize="none"
