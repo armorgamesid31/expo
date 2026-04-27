@@ -89,14 +89,22 @@ export default function LoginScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Screen title="Salon Mobil Giriş" subtitle="Hesabınızla giriş yapın.">
         <Card>
-          <View className="mb-4 items-center">
+          <View className="mb-4 items-center gap-2">
             <Image
               source={{ uri: 'https://cdn.kedyapp.com/kedylogo_koyu.png' }}
               contentFit="contain"
               style={{ width: 160, height: 52 }}
             />
+            <View className="items-center gap-1">
+              <Text className="text-base font-semibold text-foreground">Hoş geldiniz</Text>
+              <Text className="text-xs text-muted-foreground">Salon yönetimi için hesabınızla devam edin.</Text>
+            </View>
           </View>
-          <Text className="mb-2 text-sm text-muted-foreground">E-posta</Text>
+
+          <View className="gap-1">
+            <Text className="text-sm font-medium text-foreground">E-posta</Text>
+            <Text className="text-xs text-muted-foreground">Giriş için kullandığınız e-posta adresi</Text>
+          </View>
           <Input
             autoCapitalize="none"
             keyboardType="email-address"
@@ -107,7 +115,11 @@ export default function LoginScreen() {
             editable={!busy}
             returnKeyType="next"
           />
-          <Text className="mb-2 mt-3 text-sm text-muted-foreground">Şifre</Text>
+
+          <View className="mt-1 gap-1">
+            <Text className="text-sm font-medium text-foreground">Şifre</Text>
+            <Text className="text-xs text-muted-foreground">En az 6 karakter olmalı</Text>
+          </View>
           <Input
             secureTextEntry
             placeholder="Şifrenizi girin"
@@ -118,11 +130,16 @@ export default function LoginScreen() {
             returnKeyType="done"
             onSubmitEditing={handleSubmit}
           />
-          <View className="mt-3 gap-1">
+          <View className="mt-3 gap-1.5">
             {validationError ? <Text className="text-xs text-destructive">{validationError}</Text> : null}
             {submitError ? <Text className="text-xs text-destructive">{submitError}</Text> : null}
           </View>
-          <Button title={busy ? 'Giriş yapılıyor...' : 'Giriş Yap'} loading={busy} disabled={!canSubmit} onPress={handleSubmit} />
+          <View className="mt-1 gap-2">
+            <Button title={busy ? 'Giriş yapılıyor...' : 'Giriş Yap'} loading={busy} disabled={!canSubmit} onPress={handleSubmit} />
+            <Text className="text-center text-[11px] text-muted-foreground">
+              Girişten sonra doğrudan takvim ekranına yönlendirilirsiniz.
+            </Text>
+          </View>
         </Card>
       </Screen>
     </KeyboardAvoidingView>

@@ -94,19 +94,35 @@ export default function NotificationsInboxScreen() {
   const renderItem = useCallback(
     ({ item }: { item: NotificationItem }) => (
       <Card>
-        <Text className="font-semibold text-foreground">{item.title}</Text>
-        <Text className="text-sm text-muted-foreground">{item.body}</Text>
-        <Text className="text-xs text-muted-foreground">
-          {formatTs(item.createdAt)} · {item.isRead ? 'Okundu' : 'Yeni'}
-        </Text>
+        <View className="gap-1.5">
+          <View className="flex-row items-center justify-between gap-2">
+            <Text className="font-semibold text-foreground">{item.title}</Text>
+            <Text className={`text-[11px] font-semibold ${item.isRead ? 'text-muted-foreground' : 'text-primary'}`}>
+              {item.isRead ? 'Okundu' : 'Yeni'}
+            </Text>
+          </View>
+          <Text className="text-sm text-muted-foreground">{item.body}</Text>
+          <Text className="text-xs text-muted-foreground">{formatTs(item.createdAt)}</Text>
+        </View>
       </Card>
     ),
     []
   );
 
   return (
-    <Screen title="Bildirimler">
-      <Button title="Tümünü okundu yap" variant="outline" onPress={() => {}} />
+    <Screen title="Bildirimler" subtitle="Uygulama içi uyarılar ve duyurular">
+      <Card>
+        <View className="gap-3">
+          <View className="gap-1">
+            <Text className="text-base font-semibold text-foreground">Bildirim Kutusu</Text>
+            <Text className="text-sm text-muted-foreground">Yeni bildirimleri takip edin ve tek dokunuşla okunduya alın.</Text>
+          </View>
+          <View className="flex-row items-center justify-between gap-3">
+            <Text className="text-xs font-medium text-muted-foreground">Toplam: {items.length}</Text>
+            <Button title="Tümünü okundu yap" variant="outline" onPress={() => {}} />
+          </View>
+        </View>
+      </Card>
 
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
       {isError ? (
@@ -117,7 +133,10 @@ export default function NotificationsInboxScreen() {
       ) : null}
       {!isLoading && !isError && items.length === 0 ? (
         <Card>
-          <Text className="text-sm text-muted-foreground">Bildirim yok.</Text>
+          <View className="gap-1">
+            <Text className="text-sm font-semibold text-foreground">Bildirim yok</Text>
+            <Text className="text-sm text-muted-foreground">Yeni uyarılar burada listelenecek.</Text>
+          </View>
         </Card>
       ) : null}
       {!isLoading && !isError && items.length > 0 ? (

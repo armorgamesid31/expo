@@ -77,10 +77,10 @@ export default function CustomersPage() {
       <Card>
         <View className="flex-row items-center gap-3">
           <Avatar name={item.name || 'Müşteri'} />
-          <View className="flex-1">
+          <View className="flex-1 gap-0.5">
             <Text className="font-semibold text-foreground">{item.name || 'İsimsiz müşteri'}</Text>
             <Text className="text-sm text-muted-foreground">{item.phone || '-'}</Text>
-            <Text className="text-xs text-muted-foreground">Randevu: {item.appointmentCount ?? 0}</Text>
+            <Text className="text-xs font-medium text-muted-foreground">Randevu: {item.appointmentCount ?? 0}</Text>
           </View>
         </View>
       </Card>
@@ -89,8 +89,17 @@ export default function CustomersPage() {
   );
 
   return (
-    <Screen title="Müşteriler">
-      <View className="gap-3">
+    <Screen title="Müşteriler" subtitle="Müşteri listesi ve risk merkezi">
+      <Card>
+        <View className="gap-2">
+          <Text className="text-base font-semibold text-foreground">Müşteri Merkezi</Text>
+          <Text className="text-sm text-muted-foreground">
+            Müşteri kaydı, risk merkezi ve hızlı arama aksiyonlarını bu alandan yönetin.
+          </Text>
+        </View>
+      </Card>
+
+      <View className="gap-3 rounded-2xl border border-border bg-card/60 p-3">
         <Input placeholder="Ad, telefon veya Instagram..." editable={false} />
         <View className="flex-row gap-2">
           <View className="flex-1">
@@ -100,7 +109,8 @@ export default function CustomersPage() {
             <Button title="Müşteri Ekle" onPress={() => router.push('/(tabs)/customers/new')} />
           </View>
         </View>
-        <Text className="text-xs text-muted-foreground">Yeni müşteri ekleme formu ayrı bir panelde açılır.</Text>
+        <Text className="text-xs text-muted-foreground">Yeni müşteri formu ayrı ekranda açılır.</Text>
+        <Text className="text-xs font-medium text-muted-foreground">Toplam müşteri: {items.length}</Text>
       </View>
 
       {isLoading ? <Text className="text-sm text-muted-foreground">Yükleniyor...</Text> : null}
@@ -114,7 +124,10 @@ export default function CustomersPage() {
       ) : null}
       {!isLoading && !isError && items.length === 0 ? (
         <Card>
-          <Text className="text-sm text-muted-foreground">Müşteri kaydı bulunamadı.</Text>
+          <View className="gap-1">
+            <Text className="text-sm font-semibold text-foreground">Müşteri kaydı bulunamadı</Text>
+            <Text className="text-sm text-muted-foreground">Yeni müşteri ekleyerek listeyi başlatabilirsiniz.</Text>
+          </View>
         </Card>
       ) : null}
       {!isLoading && !isError && items.length > 0 ? (
